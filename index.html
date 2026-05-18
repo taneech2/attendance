@@ -501,10 +501,7 @@ let classPin = '1234';
 
 function toggleLock(){
   if(pinUnlocked){
-    const choice = prompt('กำลังปลดล็อกอยู่
-
-1 = ล็อก
-2 = เปลี่ยน PIN');
+    const choice = prompt('กำลังปลดล็อกอยู่\n\n1 = ล็อก\n2 = เปลี่ยน PIN');
     if(choice===null) return;
     if(choice==='2'){
       const np = prompt('ใส่ PIN ใหม่ (อย่างน้อย 4 ตัว):');
