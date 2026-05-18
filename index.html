@@ -206,14 +206,7 @@ for(let w=1;w<=18;w++){
 let currentWeek = 1;
 const TOTAL_WEEKS = 18;
 
-// ===== INIT =====
-function init(){
-  buildTabs();
-  buildPanels();
-  renderStudentChips();
-  renderWeek(currentWeek);
-  bindInfoBar();
-}
+// ===== INIT ===== (see async init() below)
 
 // ===== TABS =====
 function buildTabs(){
@@ -508,8 +501,7 @@ let classPin = '1234';
 
 function toggleLock(){
   if(pinUnlocked){ pinUnlocked=false; updateLockBtn(); showStatus('🔒 ล็อกแล้ว','#c9a84c'); return; }
-  const entered = prompt('ใส่ PIN อาจารย์ (ค่าเริ่มต้น: 1234)
-หรือ พิมพ์ เปลี่ยน:PINใหม่ เพื่อเปลี่ยน PIN');
+  const entered = prompt('ใส่ PIN อาจารย์ (ค่าเริ่มต้น: 1234)\nหรือพิมพ์ เปลี่ยน:PINใหม่ เพื่อเปลี่ยน PIN');
   if(!entered) return;
   if(entered.startsWith('เปลี่ยน:')){
     if(!pinUnlocked){ alert('ต้องปลดล็อกก่อนจึงจะเปลี่ยน PIN ได้'); return; }
