@@ -689,6 +689,8 @@ function closeFaceModal() {
   if(faceDetectLoop) { cancelAnimationFrame(faceDetectLoop); faceDetectLoop = null; }
   if(faceStream) { faceStream.getTracks().forEach(t => t.stop()); faceStream = null; }
   document.getElementById('face-log').innerHTML = '';
+  // re-render ตารางหลังปิด modal เพื่อให้แน่ใจข้อมูลล่าสุดแสดงผล
+  if(faceWeek > 0) renderWeek(faceWeek);
 }
 
 function setFaceMode(mode) {
@@ -840,17 +842,18 @@ function findBestFaceMatch(descriptor) {
   return best;
 }
 
-function markFaceAttend(idx, date) {
+async function markFaceAttend(idx, date) {
   if(!weekData[faceWeek] || !weekData[faceWeek].dates.includes(date)){
     addFaceLog('⚠️ ไม่พบวันที่: ' + date, 'log-dup'); return;
   }
   if(!weekData[faceWeek].attendance[idx]) weekData[faceWeek].attendance[idx] = {};
   weekData[faceWeek].attendance[idx][date] = 1; // ✓ มา
   renderWeek(faceWeek);
-  saveToFirebase();
-  addFaceLog('✓ ' + students[idx], 'log-ok');
-  setFaceStatus('✅ เช็คชื่อ: ' + students[idx]);
+  addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
+  setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
   updateFaceCount();
+  await saveToFirebase();
+  setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]);
 }
 
 async function captureDescriptor() {
