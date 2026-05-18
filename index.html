@@ -806,7 +806,7 @@ async function runFaceLoop() {
           ctx.font = '14px Sarabun';
           ctx.fillText(match.name, box.x + 4, box.y - 6);
           // เช็คชื่อหลังเห็นหน้า 5 เฟรมติดต่อกัน
-          if(!faceMarked[key] && faceConfirmCount[key] >= 5) {
+          if(!faceMarked[key] && faceConfirmCount[key] >= 2) {
             faceMarked[key] = true;
             markFaceAttend(key, date);
           }
@@ -816,7 +816,7 @@ async function runFaceLoop() {
           ctx.fillStyle = '#aaa';
           ctx.font = '13px Sarabun';
           ctx.fillText('ไม่รู้จัก', box.x + 4, box.y - 6);
-          faceConfirmCount = {};
+          // ไม่ reset count ของคนอื่น
         }
       } else if(faceMode === 'register') {
         ctx.fillStyle = 'rgba(76,175,138,0.15)';
@@ -841,7 +841,9 @@ function findBestFaceMatch(descriptor) {
 }
 
 function markFaceAttend(idx, date) {
-  if(!weekData[faceWeek].dates.includes(date)) return;
+  if(!weekData[faceWeek] || !weekData[faceWeek].dates.includes(date)){
+    addFaceLog('⚠️ ไม่พบวันที่: ' + date, 'log-dup'); return;
+  }
   if(!weekData[faceWeek].attendance[idx]) weekData[faceWeek].attendance[idx] = {};
   weekData[faceWeek].attendance[idx][date] = 1; // ✓ มา
   renderWeek(faceWeek);
