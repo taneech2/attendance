@@ -500,19 +500,27 @@ let pinUnlocked = false;
 let classPin = '1234';
 
 function toggleLock(){
-  if(pinUnlocked){ pinUnlocked=false; updateLockBtn(); showStatus('🔒 ล็อกแล้ว','#c9a84c'); return; }
-  const entered = prompt('ใส่ PIN อาจารย์ (ค่าเริ่มต้น: 1234)\nหรือพิมพ์ เปลี่ยน:PINใหม่ เพื่อเปลี่ยน PIN');
-  if(!entered) return;
-  if(entered.startsWith('เปลี่ยน:')){
-    if(!pinUnlocked){ alert('ต้องปลดล็อกก่อนจึงจะเปลี่ยน PIN ได้'); return; }
-    const np = entered.split(':')[1]||'';
-    if(np.length<4){ alert('PIN ต้องมีอย่างน้อย 4 ตัว'); return; }
-    classPin=np; saveToFirebase(); showStatus('🔑 เปลี่ยน PIN แล้ว'); return;
+  if(pinUnlocked){
+    const choice = prompt('กำลังปลดล็อกอยู่
+
+1 = ล็อก
+2 = เปลี่ยน PIN');
+    if(choice===null) return;
+    if(choice==='2'){
+      const np = prompt('ใส่ PIN ใหม่ (อย่างน้อย 4 ตัว):');
+      if(!np) return;
+      if(np.length<4){ showStatus('❌ PIN ต้องมีอย่างน้อย 4 ตัว','#c0392b'); return; }
+      classPin=np; saveToFirebase(); showStatus('🔑 เปลี่ยน PIN เป็น '+np+' แล้ว');
+      return;
+    }
+    pinUnlocked=false; updateLockBtn(); showStatus('🔒 ล็อกแล้ว','#c9a84c');
+    return;
   }
+  const entered = prompt('ใส่ PIN อาจารย์เพื่อปลดล็อก:');
+  if(!entered) return;
   if(entered===classPin){ pinUnlocked=true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); }
   else { showStatus('❌ PIN ไม่ถูกต้อง','#c0392b'); }
 }
-
 function updateLockBtn(){
   const btn=document.getElementById('lock-btn');
   if(!btn)return;
@@ -614,7 +622,12 @@ async function loadFromFirebase(){
 // ===== INFO BAR =====
 function bindInfoBar(){
   [['inp-term','lbl-term'],['inp-year','lbl-year'],['inp-class','lbl-class'],['inp-teacher','lbl-teacher']].forEach(([inp,lbl])=>{
-    document.getElementById(inp).addEventListener('input',e=>{
+    const el = document.getElementById(inp);
+    el.addEventListener('focus', e=>{
+      if(!pinUnlocked){ el.blur(); if(requireUnlock()) el.focus(); }
+    });
+    el.addEventListener('input',e=>{
+      if(!pinUnlocked){ el.blur(); return; }
       document.getElementById(lbl).textContent=e.target.value;
       saveToFirebase();
     });
