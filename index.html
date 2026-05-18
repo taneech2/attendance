@@ -713,6 +713,28 @@ function populateDateSelect() {
     : '<option value="">— ยังไม่มีวันที่ในสัปดาห์นี้ —</option>';
 }
 
+function addFaceDate() {
+  const inp = document.getElementById('inp-face-date');
+  const val = inp.value.trim();
+  if(!val) { setFaceStatus('⚠️ กรุณากรอกวันที่ก่อน'); return; }
+  if(!weekData[faceWeek]) return;
+  if(weekData[faceWeek].dates.includes(val)) {
+    setFaceStatus('⚠️ วันที่ ' + val + ' มีแล้วในตาราง');
+    document.getElementById('sel-att-date').value = val;
+    inp.value = '';
+    return;
+  }
+  weekData[faceWeek].dates.push(val);
+  renderWeek(faceWeek);
+  populateDateSelect();
+  document.getElementById('sel-att-date').value = val;
+  inp.value = '';
+  faceMarked = {}; faceConfirmCount = {};
+  updateFaceCount();
+  saveToFirebase();
+  setFaceStatus('✅ เพิ่มวันที่ ' + val + ' แล้ว — พร้อมสแกน');
+}
+
 function populateStudentSelect() {
   const sel = document.getElementById('sel-reg-student');
   sel.innerHTML = students.map((n, i) => '<option value="' + i + '">' + (i+1) + '. ' + n + '</option>').join('');
@@ -897,6 +919,8 @@ init();
     </div>
     <div id="face-attend-ctrl" class="face-ctrl">
       <select id="sel-att-date"><option value="">— เลือกวันที่ —</option></select>
+      <input id="inp-face-date" placeholder="เพิ่มวันที่ใหม่" style="flex:1;min-width:100px;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:6px 8px;border-radius:4px;font-family:Sarabun,sans-serif;font-size:13px;" onkeydown="if(event.key==='Enter')addFaceDate()">
+      <button class="btn" style="padding:6px 10px;font-size:13px;" onclick="addFaceDate()">+</button>
       <span class="face-count" id="face-count">0 / 0 คน</span>
     </div>
     <div id="face-register-ctrl" class="face-ctrl" style="display:none">
