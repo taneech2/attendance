@@ -254,6 +254,7 @@ function buildPanels(){
       <div class="date-controls no-print">
         <input id="inp-date-${w}" placeholder="เพิ่มวันที่ เช่น 15-พ.ค.-69" onkeydown="if(event.key==='Enter')addDate(${w})">
         <button class="btn" onclick="addDate(${w})">+ เพิ่มวันที่</button>
+        <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
         <button class="btn" onclick="window.print()" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
       </div>
       <div class="table-wrapper"><table id="tbl-${w}"><thead id="thead-${w}"></thead><tbody id="tbody-${w}"></tbody></table></div>
@@ -360,6 +361,22 @@ function addDate(w){
   inp.value='';
   renderWeek(w);
   saveToFirebase();
+}
+
+function importDates(w){
+  const raw=prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n15-พ.ค.-69\n19-พ.ค.-69\n22-พ.ค.-69');
+  if(!raw)return;
+  const dates=raw.split('\n').map(d=>d.trim()).filter(d=>d.length>0);
+  if(dates.length===0)return;
+  let added=0;
+  dates.forEach(d=>{
+    if(weekData[w].dates.includes(d))return;
+    weekData[w].dates.push(d);
+    students.forEach((_,i)=>{ if(!weekData[w].attendance[i])weekData[w].attendance[i]={}; weekData[w].attendance[i][d]=0; });
+    added++;
+  });
+  if(added>0){ renderWeek(w); saveToFirebase(); showStatus(`✅ เพิ่ม ${added} วันแล้ว`); }
+  else showStatus('⚠️ วันที่ซ้ำทั้งหมด ไม่มีวันใหม่','#e67e22');
 }
 
 function removeDate(w,d){
