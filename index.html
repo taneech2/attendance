@@ -345,6 +345,7 @@ function cycle(w,i,d){
   if(!wd.attendance[i]) wd.attendance[i]={};
   wd.attendance[i][d]=((wd.attendance[i][d]||0)+1)%3;
   renderWeek(w);
+  saveToFirebase();
 }
 
 // ===== DATE MANAGEMENT =====
@@ -357,6 +358,7 @@ function addDate(w){
   students.forEach((_,i)=>{ if(!weekData[w].attendance[i])weekData[w].attendance[i]={}; weekData[w].attendance[i][d]=0; });
   inp.value='';
   renderWeek(w);
+  saveToFirebase();
 }
 
 function removeDate(w,d){
@@ -364,6 +366,7 @@ function removeDate(w,d){
   weekData[w].dates=weekData[w].dates.filter(x=>x!==d);
   Object.keys(weekData[w].attendance).forEach(i=>delete weekData[w].attendance[i][d]);
   renderWeek(w);
+  saveToFirebase();
 }
 
 // ===== STUDENT MANAGEMENT =====
@@ -392,6 +395,7 @@ function addStudent(){
   inp.value='';
   renderStudentChips();
   renderWeek(currentWeek>0?currentWeek:1);
+  saveToFirebase();
 }
 
 function removeStudent(idx){
@@ -408,6 +412,7 @@ function removeStudent(idx){
   }
   renderStudentChips();
   renderWeek(currentWeek>0?currentWeek:1);
+  saveToFirebase();
 }
 
 function importStudents(){
@@ -426,6 +431,7 @@ function importStudents(){
   });
   renderStudentChips();
   renderWeek(currentWeek>0?currentWeek:1);
+  saveToFirebase();
 }
 
 // ===== SUMMARY =====
@@ -465,13 +471,73 @@ function renderSummary(){
   wrap.innerHTML=html;
 }
 
+// ===== FIREBASE =====
+const DB_URL = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json';
+
+function showStatus(msg, color='#4caf8a'){
+  let el = document.getElementById('fb-status');
+  if(!el){ el=document.createElement('div'); el.id='fb-status';
+    el.style.cssText='position:fixed;bottom:16px;right:16px;padding:8px 16px;border-radius:6px;font-size:13px;font-family:Sarabun,sans-serif;z-index:9999;transition:opacity .5s;';
+    document.body.appendChild(el); }
+  el.style.background=color; el.style.color='#fff'; el.textContent=msg; el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0', 2500);
+}
+
+async function saveToFirebase(){
+  const infoBar = {
+    term: document.getElementById('inp-term')?.value||'',
+    year: document.getElementById('inp-year')?.value||'',
+    cls:  document.getElementById('inp-class')?.value||'',
+    teacher: document.getElementById('inp-teacher')?.value||''
+  };
+  try{
+    const res = await fetch(DB_URL,{method:'PUT',body:JSON.stringify({students,weekData,infoBar})});
+    if(res.ok) showStatus('☁️ บันทึกแล้ว');
+    else showStatus('❌ บันทึกไม่สำเร็จ','#c0392b');
+  }catch(e){ showStatus('❌ ไม่มีอินเตอร์เน็ต','#c0392b'); }
+}
+
+async function loadFromFirebase(){
+  showStatus('⏳ กำลังโหลด...','#c9a84c');
+  try{
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    if(data && data.students){
+      students = data.students;
+      // rebuild weekData (keys may come back as strings)
+      weekData = {};
+      for(let w=1;w<=18;w++) weekData[w] = data.weekData[w] || {dates:[],attendance:{}};
+      if(data.infoBar){
+        ['term','year','cls','teacher'].forEach((k,idx)=>{
+          const ids=['inp-term','inp-year','inp-class','inp-teacher'];
+          const lids=['lbl-term','lbl-year','lbl-class','lbl-teacher'];
+          const el=document.getElementById(ids[idx]);
+          const lel=document.getElementById(lids[idx]);
+          if(el&&data.infoBar[k]!==undefined){ el.value=data.infoBar[k]; if(lel)lel.textContent=data.infoBar[k]; }
+        });
+      }
+      showStatus('✅ โหลดข้อมูลแล้ว');
+    } else { showStatus('📋 เริ่มต้นใหม่','#c9a84c'); }
+  }catch(e){ showStatus('❌ โหลดไม่สำเร็จ','#c0392b'); }
+}
+
 // ===== INFO BAR =====
 function bindInfoBar(){
   [['inp-term','lbl-term'],['inp-year','lbl-year'],['inp-class','lbl-class'],['inp-teacher','lbl-teacher']].forEach(([inp,lbl])=>{
     document.getElementById(inp).addEventListener('input',e=>{
       document.getElementById(lbl).textContent=e.target.value;
+      saveToFirebase();
     });
   });
+}
+
+async function init(){
+  await loadFromFirebase();
+  buildTabs();
+  buildPanels();
+  renderStudentChips();
+  renderWeek(currentWeek);
+  bindInfoBar();
 }
 
 init();
