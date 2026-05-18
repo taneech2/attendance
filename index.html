@@ -119,6 +119,26 @@ td.num{color:#c9a84c;font-weight:600;}
 .lock-btn{position:fixed;top:16px;right:16px;z-index:1000;background:#0d1530;border:2px solid #c9a84c;color:#c9a84c;font-size:22px;width:48px;height:48px;border-radius:50%;cursor:pointer;box-shadow:0 0 14px rgba(201,168,76,.35);transition:.2s;}
 .lock-btn:hover{background:#c9a84c22;}
 .lock-btn.unlocked{border-color:#4caf8a;color:#4caf8a;box-shadow:0 0 14px rgba(76,175,138,.35);}
+
+/* ===== FACE MODAL ===== */
+.face-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;display:none;align-items:center;justify-content:center;}
+.face-overlay.active{display:flex;}
+.face-box{background:#0d1530;border:2px solid #c9a84c;border-radius:12px;padding:20px;width:min(560px,96vw);max-height:96vh;overflow-y:auto;}
+.face-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.face-header span{font-size:18px;font-weight:700;color:#c9a84c;}
+.face-header button{background:none;border:1px solid #c9a84c55;color:#c9a84c;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;}
+.face-mode-bar{display:flex;gap:8px;margin-bottom:12px;}
+.face-ctrl{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.face-ctrl select{flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:6px 10px;border-radius:4px;font-family:Sarabun,sans-serif;font-size:13px;}
+.face-video-wrap{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#000;margin-bottom:10px;}
+#face-video{width:100%;display:block;transform:scaleX(-1);}
+#face-canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
+.face-status{text-align:center;padding:8px;font-size:13px;color:#c9a84c;min-height:32px;}
+.face-log{max-height:100px;overflow-y:auto;font-size:12px;}
+.face-log div{padding:3px 6px;border-bottom:1px solid #c9a84c22;}
+.face-log .log-ok{color:#4caf8a;}
+.face-log .log-dup{color:#e67e22;}
+.face-count{color:#4caf8a;font-size:13px;font-weight:600;}
 </style>
 </head>
 <body>
@@ -187,6 +207,7 @@ td.num{color:#c9a84c;font-weight:600;}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
 // ===== DATA =====
 const DEFAULT_STUDENTS = [
@@ -254,7 +275,7 @@ function buildPanels(){
         <input id="inp-date-${w}" placeholder="เพิ่มวันที่ เช่น 15-พ.ค.-69" onkeydown="if(event.key==='Enter')addDate(${w})">
         <button class="btn" onclick="addDate(${w})">+ เพิ่มวันที่</button>
         <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
-        <button class="btn" onclick="window.print()" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
+        <button class="btn" style="background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a55;" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button><button class="btn" onclick="window.print()" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
       </div>
       <div class="table-wrapper"><table id="tbl-${w}"><thead id="thead-${w}"></thead><tbody id="tbody-${w}"></tbody></table></div>
     `;
@@ -583,7 +604,7 @@ function applyData(parsed){
 }
 
 async function saveToFirebase(){
-  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin });
+  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD() });
   // บันทึก localStorage ก่อนเสมอ (ทันที ไม่รอเน็ต)
   localStorage.setItem(LS_KEY, payload);
   try{
@@ -605,12 +626,12 @@ async function loadFromFirebase(){
     const data = await res.json();
     if(data && data.p){
       const parsed = JSON.parse(data.p);
-      if(parsed.pin) classPin=parsed.pin; if(applyData(parsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+      if(parsed.pin) classPin=parsed.pin; if(parsed.fd) deserializeFD(parsed.fd); if(applyData(parsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
     }
   }catch(e){}
   // fallback: localStorage
   const local = localStorage.getItem(LS_KEY);
-  if(local){ try{ const lp=JSON.parse(local); if(lp.pin) classPin=lp.pin; if(applyData(lp)){ showStatus('📱 โหลดจาก Local','#e67e22'); return; } }catch(e){} }
+  if(local){ try{ const lp=JSON.parse(local); if(lp.pin) classPin=lp.pin; if(lp.fd) deserializeFD(lp.fd); if(applyData(lp)){ showStatus('📱 โหลดจาก Local','#e67e22'); return; } }catch(e){} }
   // fallback: รายชื่อเริ่มต้น
   students = [...DEFAULT_STUDENTS];
   showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
@@ -631,6 +652,221 @@ function bindInfoBar(){
   });
 }
 
+
+// ===== FACE RECOGNITION =====
+const FACE_MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+let faceModelsLoaded = false;
+let faceStream = null;
+let faceDetectLoop = null;
+let faceMode = 'attend';
+let faceWeek = 1;
+let faceDescriptors = {}; // { studentIdx: Float32Array }
+let faceMarked = {};       // { studentIdx: true } — เช็คแล้วในรอบนี้
+let faceConfirmCount = {}; // { studentIdx: count } — กี่เฟรมแล้วที่เห็นหน้านี้
+
+function serializeFD() {
+  const out = {};
+  Object.keys(faceDescriptors).forEach(k => { out[k] = Array.from(faceDescriptors[k]); });
+  return out;
+}
+function deserializeFD(raw) {
+  faceDescriptors = {};
+  if(!raw) return;
+  Object.keys(raw).forEach(k => { faceDescriptors[Number(k)] = new Float32Array(raw[k]); });
+}
+
+async function openFaceModal(w) {
+  if(!requireUnlock()) return;
+  faceWeek = w;
+  faceMarked = {}; faceConfirmCount = {};
+  document.getElementById('face-overlay').classList.add('active');
+  setFaceMode('attend');
+  await initFaceSystem();
+}
+
+function closeFaceModal() {
+  document.getElementById('face-overlay').classList.remove('active');
+  if(faceDetectLoop) { cancelAnimationFrame(faceDetectLoop); faceDetectLoop = null; }
+  if(faceStream) { faceStream.getTracks().forEach(t => t.stop()); faceStream = null; }
+  document.getElementById('face-log').innerHTML = '';
+}
+
+function setFaceMode(mode) {
+  faceMode = mode;
+  document.getElementById('face-attend-ctrl').style.display = mode === 'attend' ? 'flex' : 'none';
+  document.getElementById('face-register-ctrl').style.display = mode === 'register' ? 'flex' : 'none';
+  document.getElementById('btn-mode-attend').style.opacity = mode === 'attend' ? '1' : '0.5';
+  document.getElementById('btn-mode-register').style.opacity = mode === 'register' ? '1' : '0.5';
+  if(mode === 'attend') populateDateSelect();
+  if(mode === 'register') populateStudentSelect();
+  faceMarked = {}; faceConfirmCount = {};
+  updateFaceCount();
+}
+
+function populateDateSelect() {
+  const sel = document.getElementById('sel-att-date');
+  const dates = weekData[faceWeek] ? weekData[faceWeek].dates : [];
+  sel.innerHTML = dates.length
+    ? dates.map(d => '<option value="' + d + '">' + d + '</option>').join('')
+    : '<option value="">— ยังไม่มีวันที่ในสัปดาห์นี้ —</option>';
+}
+
+function populateStudentSelect() {
+  const sel = document.getElementById('sel-reg-student');
+  sel.innerHTML = students.map((n, i) => '<option value="' + i + '">' + (i+1) + '. ' + n + '</option>').join('');
+}
+
+function updateFaceCount() {
+  const total = students.filter((_, i) => faceDescriptors[i]).length;
+  const marked = Object.keys(faceMarked).length;
+  document.getElementById('face-count').textContent = marked + ' / ' + total + ' คน';
+}
+
+function setFaceStatus(msg) {
+  document.getElementById('face-status-msg').textContent = msg;
+}
+
+function addFaceLog(msg, cls) {
+  const log = document.getElementById('face-log');
+  const d = document.createElement('div');
+  d.className = cls || '';
+  d.textContent = msg;
+  log.prepend(d);
+  if(log.children.length > 20) log.lastChild.remove();
+}
+
+async function initFaceSystem() {
+  setFaceStatus('⏳ โหลด AI model (ครั้งแรกอาจนาน 10-20 วิ)...');
+  try {
+    if(!faceModelsLoaded) {
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
+        faceapi.nets.faceLandmark68TinyNet.loadFromUri(FACE_MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODEL_URL),
+      ]);
+      faceModelsLoaded = true;
+    }
+    setFaceStatus('📷 กำลังเปิดกล้อง...');
+    faceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+    const video = document.getElementById('face-video');
+    video.srcObject = faceStream;
+    await new Promise(r => video.onloadedmetadata = r);
+    const canvas = document.getElementById('face-canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    setFaceStatus('✅ พร้อมแล้ว — หันหน้าเข้ากล้อง');
+    runFaceLoop();
+  } catch(e) {
+    setFaceStatus('❌ เกิดข้อผิดพลาด: ' + e.message);
+  }
+}
+
+async function runFaceLoop() {
+  const video = document.getElementById('face-video');
+  const canvas = document.getElementById('face-canvas');
+  if(!video || !faceStream) return;
+
+  const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
+  const results = await faceapi.detectAllFaces(video, opts)
+    .withFaceLandmarks(true)
+    .withFaceDescriptors();
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if(results.length > 0) {
+    // mirror ผล detection กลับ (วิดีโอถูก mirror ด้วย CSS)
+    const mirrored = results.map(r => {
+      const box = r.detection.box;
+      const mirroredBox = new faceapi.Box({
+        x: canvas.width - box.x - box.width,
+        y: box.y, width: box.width, height: box.height
+      });
+      return { ...r, mirroredBox };
+    });
+
+    mirrored.forEach((r, ri) => {
+      const box = r.mirroredBox;
+      // วาดกรอบ
+      ctx.strokeStyle = '#4caf8a';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+      if(faceMode === 'attend') {
+        const date = document.getElementById('sel-att-date').value;
+        if(!date) return;
+        const match = findBestFaceMatch(r.descriptor);
+        if(match) {
+          const key = match.idx;
+          faceConfirmCount[key] = (faceConfirmCount[key] || 0) + 1;
+          // แสดงชื่อ
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(box.x, box.y - 24, box.width, 24);
+          ctx.fillStyle = faceMarked[key] ? '#e67e22' : '#4caf8a';
+          ctx.font = '14px Sarabun';
+          ctx.fillText(match.name, box.x + 4, box.y - 6);
+          // เช็คชื่อหลังเห็นหน้า 5 เฟรมติดต่อกัน
+          if(!faceMarked[key] && faceConfirmCount[key] >= 5) {
+            faceMarked[key] = true;
+            markFaceAttend(key, date);
+          }
+        } else {
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(box.x, box.y - 24, box.width, 24);
+          ctx.fillStyle = '#aaa';
+          ctx.font = '13px Sarabun';
+          ctx.fillText('ไม่รู้จัก', box.x + 4, box.y - 6);
+          faceConfirmCount = {};
+        }
+      } else if(faceMode === 'register') {
+        ctx.fillStyle = 'rgba(76,175,138,0.15)';
+        ctx.fillRect(box.x, box.y, box.width, box.height);
+        ctx.fillStyle = '#4caf8a';
+        ctx.font = '14px Sarabun';
+        ctx.fillText('พร้อมถ่าย', box.x + 4, box.y + box.height - 6);
+      }
+    });
+  }
+
+  faceDetectLoop = requestAnimationFrame(runFaceLoop);
+}
+
+function findBestFaceMatch(descriptor) {
+  let best = null, bestDist = 0.52; // threshold
+  Object.keys(faceDescriptors).forEach(k => {
+    const dist = faceapi.euclideanDistance(descriptor, faceDescriptors[k]);
+    if(dist < bestDist) { bestDist = dist; best = { idx: Number(k), name: students[Number(k)], dist }; }
+  });
+  return best;
+}
+
+function markFaceAttend(idx, date) {
+  if(!weekData[faceWeek].dates.includes(date)) return;
+  if(!weekData[faceWeek].attendance[idx]) weekData[faceWeek].attendance[idx] = {};
+  weekData[faceWeek].attendance[idx][date] = 1; // ✓ มา
+  renderWeek(faceWeek);
+  saveToFirebase();
+  addFaceLog('✓ ' + students[idx], 'log-ok');
+  setFaceStatus('✅ เช็คชื่อ: ' + students[idx]);
+  updateFaceCount();
+}
+
+async function captureDescriptor() {
+  const idx = Number(document.getElementById('sel-reg-student').value);
+  const video = document.getElementById('face-video');
+  setFaceStatus('⏳ กำลังจับใบหน้า...');
+  const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
+  const result = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
+  if(!result) { setFaceStatus('❌ ไม่พบใบหน้า ลองใหม่อีกครั้ง'); return; }
+  faceDescriptors[idx] = result.descriptor;
+  saveToFirebase();
+  addFaceLog('บันทึกใบหน้า: ' + students[idx], 'log-ok');
+  setFaceStatus('✅ บันทึกใบหน้า ' + students[idx] + ' แล้ว');
+  // เลื่อนไปนักเรียนคนถัดไปอัตโนมัติ
+  const sel = document.getElementById('sel-reg-student');
+  if(idx + 1 < students.length) sel.value = idx + 1;
+}
+
 async function init(){
   await loadFromFirebase();
   buildTabs();
@@ -642,5 +878,33 @@ async function init(){
 
 init();
 </script>
+
+<!-- FACE MODAL -->
+<div id="face-overlay" class="face-overlay no-print">
+  <div class="face-box">
+    <div class="face-header">
+      <span>📷 เช็คชื่อด้วยใบหน้า</span>
+      <button onclick="closeFaceModal()">✕</button>
+    </div>
+    <div class="face-mode-bar">
+      <button id="btn-mode-attend" class="btn" onclick="setFaceMode('attend')">🎯 เช็คชื่อ</button>
+      <button id="btn-mode-register" class="btn" onclick="setFaceMode('register')">📋 ลงทะเบียนใบหน้า</button>
+    </div>
+    <div id="face-attend-ctrl" class="face-ctrl">
+      <select id="sel-att-date"><option value="">— เลือกวันที่ —</option></select>
+      <span class="face-count" id="face-count">0 / 0 คน</span>
+    </div>
+    <div id="face-register-ctrl" class="face-ctrl" style="display:none">
+      <select id="sel-reg-student"></select>
+      <button class="btn" onclick="captureDescriptor()">📸 ถ่ายใบหน้า</button>
+    </div>
+    <div class="face-video-wrap">
+      <video id="face-video" autoplay muted playsinline></video>
+      <canvas id="face-canvas"></canvas>
+    </div>
+    <div class="face-status" id="face-status-msg">กำลังเตรียมระบบ...</div>
+    <div class="face-log" id="face-log"></div>
+  </div>
+</div>
 </body>
 </html>
