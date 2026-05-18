@@ -114,9 +114,15 @@ td.num{color:#c9a84c;font-weight:600;}
   .week-panel{display:none!important;}
   .week-panel.print-active{display:block!important;}
 }
+
+/* LOCK BUTTON */
+.lock-btn{position:fixed;top:16px;right:16px;z-index:1000;background:#0d1530;border:2px solid #c9a84c;color:#c9a84c;font-size:22px;width:48px;height:48px;border-radius:50%;cursor:pointer;box-shadow:0 0 14px rgba(201,168,76,.35);transition:.2s;}
+.lock-btn:hover{background:#c9a84c22;}
+.lock-btn.unlocked{border-color:#4caf8a;color:#4caf8a;box-shadow:0 0 14px rgba(76,175,138,.35);}
 </style>
 </head>
 <body>
+<button class="lock-btn no-print" id="lock-btn" onclick="toggleLock()" title="ล็อก/ปลดล็อก">🔒</button>
 <div class="page">
   <div class="corner-tr"></div><div class="corner-bl"></div>
 
@@ -343,6 +349,7 @@ function sym(s){
 }
 
 function cycle(w,i,d){
+  if(!requireUnlock())return;
   const wd=weekData[w];
   if(!wd.attendance[i]) wd.attendance[i]={};
   wd.attendance[i][d]=((wd.attendance[i][d]||0)+1)%3;
@@ -352,6 +359,7 @@ function cycle(w,i,d){
 
 // ===== DATE MANAGEMENT =====
 function addDate(w){
+  if(!requireUnlock())return;
   const inp=document.getElementById(`inp-date-${w}`);
   const d=inp.value.trim();
   if(!d){alert('กรุณาใส่วันที่');return;}
@@ -364,6 +372,7 @@ function addDate(w){
 }
 
 function importDates(w){
+  if(!requireUnlock())return;
   const raw=prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n15-พ.ค.-69\n19-พ.ค.-69\n22-พ.ค.-69');
   if(!raw)return;
   const dates=raw.split('\n').map(d=>d.trim()).filter(d=>d.length>0);
@@ -380,6 +389,7 @@ function importDates(w){
 }
 
 function removeDate(w,d){
+  if(!requireUnlock())return;
   if(!confirm(`ลบวัน "${d}" ออกจากสัปดาห์ที่ ${w}?`))return;
   weekData[w].dates=weekData[w].dates.filter(x=>x!==d);
   Object.keys(weekData[w].attendance).forEach(i=>delete weekData[w].attendance[i][d]);
@@ -400,6 +410,7 @@ function renderStudentChips(){
 }
 
 function addStudent(){
+  if(!requireUnlock())return;
   const inp=document.getElementById('inp-student');
   const name=inp.value.trim();
   if(!name){alert('กรุณาใส่ชื่อ-สกุล');return;}
@@ -417,6 +428,7 @@ function addStudent(){
 }
 
 function removeStudent(idx){
+  if(!requireUnlock())return;
   if(!confirm(`ลบ "${students[idx]}" ออกจากทุกสัปดาห์?`))return;
   students.splice(idx,1);
   // rebuild attendance index for all weeks
@@ -434,6 +446,7 @@ function removeStudent(idx){
 }
 
 function importStudents(){
+  if(!requireUnlock())return;
   const raw=prompt('วางรายชื่อทีเดียว (แต่ละคนขึ้นบรรทัดใหม่):');
   if(!raw)return;
   const names=raw.split('\n').map(n=>n.trim()).filter(n=>n.length>0);
@@ -489,6 +502,40 @@ function renderSummary(){
   wrap.innerHTML=html;
 }
 
+// ===== PIN / LOCK =====
+let pinUnlocked = false;
+let classPin = '1234';
+
+function toggleLock(){
+  if(pinUnlocked){ pinUnlocked=false; updateLockBtn(); showStatus('🔒 ล็อกแล้ว','#c9a84c'); return; }
+  const entered = prompt('ใส่ PIN อาจารย์ (ค่าเริ่มต้น: 1234)
+หรือ พิมพ์ เปลี่ยน:PINใหม่ เพื่อเปลี่ยน PIN');
+  if(!entered) return;
+  if(entered.startsWith('เปลี่ยน:')){
+    if(!pinUnlocked){ alert('ต้องปลดล็อกก่อนจึงจะเปลี่ยน PIN ได้'); return; }
+    const np = entered.split(':')[1]||'';
+    if(np.length<4){ alert('PIN ต้องมีอย่างน้อย 4 ตัว'); return; }
+    classPin=np; saveToFirebase(); showStatus('🔑 เปลี่ยน PIN แล้ว'); return;
+  }
+  if(entered===classPin){ pinUnlocked=true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); }
+  else { showStatus('❌ PIN ไม่ถูกต้อง','#c0392b'); }
+}
+
+function updateLockBtn(){
+  const btn=document.getElementById('lock-btn');
+  if(!btn)return;
+  btn.textContent = pinUnlocked?'🔓':'🔒';
+  btn.className = 'lock-btn no-print' + (pinUnlocked?' unlocked':'');
+}
+
+function requireUnlock(){
+  if(pinUnlocked) return true;
+  const entered = prompt('ใส่ PIN อาจารย์เพื่อแก้ไขข้อมูล');
+  if(entered===classPin){ pinUnlocked=true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); return true; }
+  if(entered!==null) showStatus('❌ PIN ไม่ถูกต้อง','#c0392b');
+  return false;
+}
+
 // ===== FIREBASE =====
 const DB_URL = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json';
 const LS_KEY = 'attendanceData_v2';
@@ -539,7 +586,7 @@ function applyData(parsed){
 }
 
 async function saveToFirebase(){
-  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar() });
+  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin });
   // บันทึก localStorage ก่อนเสมอ (ทันที ไม่รอเน็ต)
   localStorage.setItem(LS_KEY, payload);
   try{
@@ -561,12 +608,12 @@ async function loadFromFirebase(){
     const data = await res.json();
     if(data && data.p){
       const parsed = JSON.parse(data.p);
-      if(applyData(parsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+      if(parsed.pin) classPin=parsed.pin; if(applyData(parsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
     }
   }catch(e){}
   // fallback: localStorage
   const local = localStorage.getItem(LS_KEY);
-  if(local){ try{ if(applyData(JSON.parse(local))){ showStatus('📱 โหลดจาก Local','#e67e22'); return; } }catch(e){} }
+  if(local){ try{ const lp=JSON.parse(local); if(lp.pin) classPin=lp.pin; if(applyData(lp)){ showStatus('📱 โหลดจาก Local','#e67e22'); return; } }catch(e){} }
   // fallback: รายชื่อเริ่มต้น
   students = [...DEFAULT_STUDENTS];
   showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
