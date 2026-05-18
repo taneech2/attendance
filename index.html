@@ -183,6 +183,13 @@ td.num{color:#c9a84c;font-weight:600;}
 
 <script>
 // ===== DATA =====
+const DEFAULT_STUDENTS = [
+  'นางสาวสุนิสา สิงห์แกร','นางสาวอรพิมพ์ เขียวรัมย์','นายณัฐพงษ์ โปรรัมย์',
+  'นายอิสระ คุครัมย์','นายอนันต์ เกตุชาติ','นายภูริภัทร พูนสวัสดิ์',
+  'นายธนารัฐ โชรัมย์','นายสิชิตกร ทอนศรี','นายศีริเดศ กวดวงษาค์',
+  'นางสาวมินตรา พรดอนกอ','นายฐิติกุมิ บุญภูมิ','นายอรรถพร โอทารัมย์',
+  'นายธนายุทธ การะเกศ','นายวิวัฒน์ โคตา','นายนวพล คงมี'
+];
 let students = [];
 
 // weekData[w] = { dates: [], attendance: { studentIdx: { date: 0/1/2 } } }
@@ -543,7 +550,9 @@ async function loadFromFirebase(){
   // fallback: localStorage
   const local = localStorage.getItem(LS_KEY);
   if(local){ try{ if(applyData(JSON.parse(local))){ showStatus('📱 โหลดจาก Local','#e67e22'); return; } }catch(e){} }
-  showStatus('📋 ข้อมูลใหม่','#c9a84c');
+  // fallback: รายชื่อเริ่มต้น
+  students = [...DEFAULT_STUDENTS];
+  showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
 }
 
 // ===== INFO BAR =====
