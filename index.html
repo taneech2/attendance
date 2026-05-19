@@ -80,8 +80,10 @@ td.num{color:#c9a84c;font-weight:600;}
 .student-manager{background:rgba(201,168,76,.04);border:1px solid #c9a84c44;border-radius:6px;padding:16px;margin-bottom:16px;}
 .student-manager h4{color:#c9a84c;font-size:14px;margin-bottom:10px;}
 .student-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
-.student-chip{background:#1a2540;border:1px solid #c9a84c44;color:#d4c4a0;padding:4px 10px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:6px;}
+.student-chip{background:#1a2540;border:1px solid #c9a84c44;color:#d4c4a0;padding:4px 8px 4px 4px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:6px;}
 .student-chip button{background:none;border:none;color:#e05555;cursor:pointer;font-size:12px;padding:0;line-height:1;}
+.face-thumb{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #4caf8a;flex-shrink:0;}
+.face-thumb-none{width:32px;height:32px;border-radius:50%;background:#0d1530;border:2px dashed #c9a84c44;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#555;}
 .add-student-row{display:flex;gap:8px;}
 .add-student-row input{background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:7px 12px;border-radius:4px;font-family:'Sarabun',sans-serif;font-size:13px;flex:1;}
 .add-student-row input:focus{outline:none;border-color:#c9a84c;}
@@ -418,7 +420,10 @@ function renderStudentChips(){
   students.forEach((name,i)=>{
     const chip=document.createElement('div');
     chip.className='student-chip';
-    chip.innerHTML=`<span>${i+1}. ${name}</span><button onclick="removeStudent(${i})" title="ลบ">✕</button>`;
+    const thumbHtml = facePhotos[i]
+      ? `<img class="face-thumb" src="${facePhotos[i]}" title="ใบหน้า: ${name}">`
+      : `<div class="face-thumb-none" title="ยังไม่ได้ลงทะเบียนใบหน้า">👤</div>`;
+    chip.innerHTML=`${thumbHtml}<span>${i+1}. ${name}</span><button onclick="removeStudent(${i})" title="ลบ">✕</button>`;
     wrap.appendChild(chip);
   });
 }
@@ -616,7 +621,7 @@ function applyData(parsed){
 }
 
 async function saveToFirebase(){
-  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD() });
+  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD(), fp: facePhotos });
   // บันทึก localStorage ก่อนเสมอ (ทันที ไม่รอเน็ต)
   localStorage.setItem(LS_KEY, payload);
   try{
@@ -638,12 +643,12 @@ async function loadFromFirebase(){
     const data = await res.json();
     if(data && data.p){
       const parsed = JSON.parse(data.p);
-      if(parsed.pin) classPin=parsed.pin; if(parsed.fd) deserializeFD(parsed.fd); if(applyData(parsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+      if(parsed.pin) classPin=parsed.pin; if(parsed.fd) deserializeFD(parsed.fd); if(parsed.fp) deserializeFP(parsed.fp); if(applyData(parsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
     }
   }catch(e){}
   // fallback: localStorage
   const local = localStorage.getItem(LS_KEY);
-  if(local){ try{ const lp=JSON.parse(local); if(lp.pin) classPin=lp.pin; if(lp.fd) deserializeFD(lp.fd); if(applyData(lp)){ showStatus('📱 โหลดจาก Local','#e67e22'); return; } }catch(e){} }
+  if(local){ try{ const lp=JSON.parse(local); if(lp.pin) classPin=lp.pin; if(lp.fd) deserializeFD(lp.fd); if(lp.fp) deserializeFP(lp.fp); if(applyData(lp)){ showStatus('📱 โหลดจาก Local','#e67e22'); return; } }catch(e){} }
   // fallback: รายชื่อเริ่มต้น
   students = [...DEFAULT_STUDENTS];
   showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
@@ -673,6 +678,7 @@ let faceDetectLoop = null;
 let faceMode = 'attend';
 let faceWeek = 1;
 let faceDescriptors = {}; // { studentIdx: Float32Array }
+let facePhotos = {};       // { studentIdx: base64 JPEG string }
 let faceMarked = {};       // { studentIdx: true } — เช็คแล้วในรอบนี้
 let faceConfirmCount = {}; // { studentIdx: count } — กี่เฟรมแล้วที่เห็นหน้านี้
 
@@ -685,6 +691,11 @@ function deserializeFD(raw) {
   faceDescriptors = {};
   if(!raw) return;
   Object.keys(raw).forEach(k => { faceDescriptors[Number(k)] = new Float32Array(raw[k]); });
+}
+function deserializeFP(raw) {
+  facePhotos = {};
+  if(!raw) return;
+  Object.keys(raw).forEach(k => { facePhotos[Number(k)] = raw[k]; });
 }
 
 async function openFaceModal(w) {
@@ -926,6 +937,16 @@ async function captureDescriptor() {
   const result = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
   if(!result) { setFaceStatus('❌ ไม่พบใบหน้า ลองใหม่อีกครั้ง'); return; }
   faceDescriptors[idx] = result.descriptor;
+  // บันทึก snapshot รูปใบหน้า (80×80px crop จาก bounding box)
+  try {
+    const box = result.detection.box;
+    const snapCanvas = document.createElement('canvas');
+    snapCanvas.width = 80; snapCanvas.height = 80;
+    const snapCtx = snapCanvas.getContext('2d');
+    snapCtx.drawImage(video, Math.max(0, box.x), Math.max(0, box.y), box.width, box.height, 0, 0, 80, 80);
+    facePhotos[idx] = snapCanvas.toDataURL('image/jpeg', 0.7);
+    renderStudentChips();
+  } catch(e) {}
   saveToFirebase();
   addFaceLog('บันทึกใบหน้า: ' + students[idx], 'log-ok');
   setFaceStatus('✅ บันทึกใบหน้า ' + students[idx] + ' แล้ว');
