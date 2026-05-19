@@ -646,7 +646,7 @@ function applyData(parsed){
 }
 
 async function saveToFirebase(){
-  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD(), fp: facePhotos });
+  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD(), fp: facePhotos, savedAt: Date.now() });
   // บันทึก localStorage ก่อนเสมอ (ทันที ไม่รอเน็ต)
   localStorage.setItem(LS_KEY, payload);
   try{
@@ -661,19 +661,39 @@ async function saveToFirebase(){
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
+function applyParsed(parsed, source) {
+  if(parsed.pin) classPin = parsed.pin;
+  if(parsed.fd) deserializeFD(parsed.fd);
+  if(parsed.fp) deserializeFP(parsed.fp);
+  return applyData(parsed);
+}
+
 async function loadFromFirebase(){
   showStatus('⏳ กำลังโหลด...','#c9a84c');
+  let cloudParsed = null, localParsed = null;
+  // โหลด Cloud
   try{
     const res = await fetch(DB_URL);
     const data = await res.json();
-    if(data && data.p){
-      const parsed = JSON.parse(data.p);
-      if(parsed.pin) classPin=parsed.pin; if(parsed.fd) deserializeFD(parsed.fd); if(parsed.fp) deserializeFP(parsed.fp); if(applyData(parsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
-    }
+    if(data && data.p) cloudParsed = JSON.parse(data.p);
   }catch(e){}
-  // fallback: localStorage
+  // โหลด localStorage
   const local = localStorage.getItem(LS_KEY);
-  if(local){ try{ const lp=JSON.parse(local); if(lp.pin) classPin=lp.pin; if(lp.fd) deserializeFD(lp.fd); if(lp.fp) deserializeFP(lp.fp); if(applyData(lp)){ showStatus('📱 โหลดจาก Local','#e67e22'); return; } }catch(e){} }
+  if(local){ try{ localParsed = JSON.parse(local); }catch(e){} }
+
+  // เลือกอันที่ใหม่กว่า (savedAt timestamp)
+  const cloudTs = cloudParsed?.savedAt || 0;
+  const localTs = localParsed?.savedAt || 0;
+
+  if(cloudParsed && cloudTs >= localTs){
+    if(applyParsed(cloudParsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+  }
+  if(localParsed){
+    if(applyParsed(localParsed)){ showStatus('📱 โหลดจาก Local (ใหม่กว่า Cloud)','#e67e22'); return; }
+  }
+  if(cloudParsed){
+    if(applyParsed(cloudParsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+  }
   // fallback: รายชื่อเริ่มต้น
   students = [...DEFAULT_STUDENTS];
   showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
@@ -973,9 +993,11 @@ async function captureDescriptor() {
     facePhotos[idx] = snapCanvas.toDataURL('image/jpeg', 0.7);
     renderStudentChips();
   } catch(e) {}
-  saveToFirebase();
   addFaceLog('บันทึกใบหน้า: ' + students[idx], 'log-ok');
-  setFaceStatus('✅ บันทึกใบหน้า ' + students[idx] + ' แล้ว');
+  setFaceStatus('⏳ กำลังบันทึก Cloud...');
+  await saveToFirebase();
+  playPing();
+  setFaceStatus('✅ บันทึกใบหน้า ' + students[idx] + ' แล้ว (Cloud sync ✓)');
   // เลื่อนไปนักเรียนคนถัดไปอัตโนมัติ
   const sel = document.getElementById('sel-reg-student');
   if(idx + 1 < students.length) sel.value = idx + 1;
