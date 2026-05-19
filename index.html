@@ -74,6 +74,7 @@ td.num{color:#c9a84c;font-weight:600;}
 .btn-tiny{background:transparent;border:1px solid #c9a84c44;color:#c9a84c;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:14px;}
 .btn-tiny:hover{background:rgba(201,168,76,.15);}
 .btn-del-date{background:transparent;border:none;color:#e05555;cursor:pointer;font-size:10px;padding:0 2px;margin-left:3px;opacity:.7;}
+.ts-label{display:block;font-size:9px;color:#7ab;letter-spacing:.3px;line-height:1.2;margin-top:1px;}
 .btn-del-date:hover{opacity:1;}
 
 /* STUDENT MANAGER */
@@ -342,7 +343,8 @@ function renderWeek(w){
     if(wd.dates.length>0){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
-        cells+=`<td onclick="cycle(${w},${i},'${d}')" style="cursor:pointer">${sym(s)}</td>`;
+        const ts=wd.timestamps&&wd.timestamps[i]&&wd.timestamps[i][d]||'';
+        cells+=`<td onclick="cycle(${w},${i},'${d}')" style="cursor:pointer">${sym(s,ts)}</td>`;
       });
     } else {
       cells+=`<td style="color:#555">—</td>`;
@@ -358,11 +360,12 @@ function renderWeek(w){
   if(tab) tab.classList.toggle('has-data', wd.dates.length>0);
 }
 
-function sym(s){
-  if(s===1) return `<span class="check">✓</span>`;
+function sym(s, ts){
+  if(s===1) return `<span class="check">✓</span>${ts?`<span class="ts-label">${ts}</span>`:''}`;
   if(s===2) return `<span class="cross">✗</span>`;
   return `<span class="slash">/</span>`;
 }
+function nowHHMM(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
 
 function cycle(w,i,d){
   if(!requireUnlock())return;
@@ -636,10 +639,12 @@ function applyData(parsed){
   const wd = parsed.weekData||{};
   for(let w=1;w<=18;w++){
     const src = wd[w]||wd[String(w)]||{};
-    weekData[w] = { dates: src.dates||[], attendance: {} };
+    weekData[w] = { dates: src.dates||[], attendance: {}, timestamps: {} };
     // แปลง attendance keys กลับเป็น number-safe object
     const att = src.attendance||{};
     Object.keys(att).forEach(k=>{ weekData[w].attendance[Number(k)] = att[k]; });
+    const ts = src.timestamps||{};
+    Object.keys(ts).forEach(k=>{ weekData[w].timestamps[Number(k)] = ts[k]; });
   }
   applyInfoBar(parsed.infoBar);
   return true;
@@ -966,6 +971,10 @@ async function markFaceAttend(idx, date) {
   }
   if(!weekData[faceWeek].attendance[idx]) weekData[faceWeek].attendance[idx] = {};
   weekData[faceWeek].attendance[idx][date] = 1; // ✓ มา
+  // บันทึกเวลาที่สแกน
+  if(!weekData[faceWeek].timestamps) weekData[faceWeek].timestamps = {};
+  if(!weekData[faceWeek].timestamps[idx]) weekData[faceWeek].timestamps[idx] = {};
+  weekData[faceWeek].timestamps[idx][date] = nowHHMM();
   renderWeek(faceWeek);
   addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');

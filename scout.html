@@ -67,6 +67,7 @@ td.num{width:36px;color:#888;}
 .badge-full{color:#4caf8a;font-weight:700;font-size:15px;}
 .cross{color:#e74c3c;font-weight:700;}
 .slash{color:#555;}
+.ts-label{display:block;font-size:9px;color:#7ab;letter-spacing:.3px;line-height:1.3;margin-top:1px;}
 
 /* ===== SUMMARY ===== */
 .summary-wrap{padding:14px;}
@@ -182,9 +183,11 @@ let filterDept = -1; // -1 = all
 let filterYear = 0;  // 0 = all, 1 = ปี1, 2 = ปี2
 
 // ===== STATUS HELPERS =====
-function sym(s) {
-  if(s === 1) return `<span class="badge-in">▶</span>`;  // เข้าแล้ว ยังไม่ออก
-  if(s === 2) return `<span class="badge-full">✓✓</span>`; // ครบ
+function nowHHMM(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
+function sym(s, ts) {
+  const tsHtml = ts ? `<span class="ts-label">${ts}</span>` : '';
+  if(s === 1) return `<span class="badge-in">▶</span>${tsHtml}`;  // เข้าแล้ว ยังไม่ออก
+  if(s === 2) return `<span class="badge-full">✓✓</span>${tsHtml}`; // ครบ
   if(s === 3) return `<span class="cross">✗</span>`;        // ขาด
   return `<span class="slash">/</span>`;
 }
@@ -275,6 +278,37 @@ async function saveConfig() {
 }
 
 // ===== FIREBASE — MARKS (granular, concurrent-safe) =====
+function playPing() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o1 = ctx.createOscillator(), g1 = ctx.createGain();
+    o1.connect(g1); g1.connect(ctx.destination);
+    o1.frequency.value = 1047; o1.type = 'sine';
+    g1.gain.setValueAtTime(0.4, ctx.currentTime);
+    g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    o1.start(ctx.currentTime); o1.stop(ctx.currentTime + 0.25);
+    const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.frequency.value = 1319; o2.type = 'sine';
+    g2.gain.setValueAtTime(0.3, ctx.currentTime + 0.12);
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+    o2.start(ctx.currentTime + 0.12); o2.stop(ctx.currentTime + 0.45);
+  } catch(e) {}
+}
+
+async function saveTimestampToFirebase(actId, studentIdx, tsObj) {
+  const url = `${DB_MARKS_BASE}/a${actId}/t${studentIdx}.json`;
+  try {
+    const lsMarks = JSON.parse(localStorage.getItem(LS_MARKS_KEY) || '{}');
+    if(!lsMarks[`a${actId}`]) lsMarks[`a${actId}`] = {};
+    lsMarks[`a${actId}`][`t${studentIdx}`] = tsObj;
+    localStorage.setItem(LS_MARKS_KEY, JSON.stringify(lsMarks));
+  } catch(e) {}
+  try {
+    await fetch(url, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(tsObj) });
+  } catch(e) {}
+}
+
 async function saveMarkToFirebase(actId, studentIdx, newStatus) {
   // เขียนเฉพาะช่องนี้ — แต่ละเครื่องเขียน path ต่างกัน ไม่ชนกัน
   const url = `${DB_MARKS_BASE}/a${actId}/s${studentIdx}.json`;
@@ -336,14 +370,20 @@ async function loadMarks() {
     try { marks = JSON.parse(localStorage.getItem(LS_MARKS_KEY) || 'null'); } catch(e2) {}
   }
   if(!marks) return;
-  // Merge marks เข้า activityData
+  // Merge marks เข้า activityData (s{idx} = status, t{idx} = timestamp)
   Object.keys(marks).forEach(aKey => {
     const actId = parseInt(aKey.replace('a',''));
     if(!activityData[actId]) return;
-    Object.keys(marks[aKey]).forEach(sKey => {
-      const sIdx = parseInt(sKey.replace('s',''));
-      if(!activityData[actId].attendance) activityData[actId].attendance = {};
-      activityData[actId].attendance[sIdx] = marks[aKey][sKey];
+    if(!activityData[actId].timestamps) activityData[actId].timestamps = {};
+    Object.keys(marks[aKey]).forEach(key => {
+      if(key.startsWith('s')) {
+        const sIdx = parseInt(key.replace('s',''));
+        if(!activityData[actId].attendance) activityData[actId].attendance = {};
+        activityData[actId].attendance[sIdx] = marks[aKey][key];
+      } else if(key.startsWith('t')) {
+        const sIdx = parseInt(key.replace('t',''));
+        activityData[actId].timestamps[sIdx] = marks[aKey][key];
+      }
     });
   });
 }
@@ -571,12 +611,14 @@ function renderActivity(a) {
             <span class="dept-badge" style="background:${DEPT_COLORS[d]}22;color:${DEPT_COLORS[d]};border:1px solid ${DEPT_COLORS[d]}44;">${DEPT_SHORT[d]}</span>
             ${s.name}
           </td>`;
+        const ts = ad.timestamps && ad.timestamps[s.idx];
+        const tsLabel = ts ? (ts.in && ts.out ? `${ts.in}→${ts.out}` : ts.in || '') : '';
         if(ad.dates.length > 0) {
           ad.dates.forEach(() => {
-            cells += `<td onclick="cycleStatus(${a},${s.idx})" style="cursor:pointer;min-width:80px;">${sym(st)}</td>`;
+            cells += `<td onclick="cycleStatus(${a},${s.idx})" style="cursor:pointer;min-width:80px;">${sym(st, tsLabel)}</td>`;
           });
         } else {
-          cells += `<td onclick="cycleStatus(${a},${s.idx})" style="cursor:pointer;">${sym(st)}</td>`;
+          cells += `<td onclick="cycleStatus(${a},${s.idx})" style="cursor:pointer;">${sym(st, tsLabel)}</td>`;
         }
         cells += `<td><span style="color:#e67e22">${inCount || ''}</span></td>
                  <td><span style="color:#4caf8a">${fullCount || ''}</span></td>
@@ -892,16 +934,26 @@ async function markFaceAttend(idx, date) {
   }
 
   activityData[faceActivity].attendance[idx] = newStatus;
+
+  // บันทึกเวลาเข้า/ออก
+  if(!activityData[faceActivity].timestamps) activityData[faceActivity].timestamps = {};
+  if(!activityData[faceActivity].timestamps[idx]) activityData[faceActivity].timestamps[idx] = {};
+  const t = nowHHMM();
+  if(faceScanType === 'in') activityData[faceActivity].timestamps[idx].in = t;
+  else activityData[faceActivity].timestamps[idx].out = t;
+
   renderActivity(faceActivity);
 
-  const label = faceScanType === 'in' ? '▶ เข้า' : '✓✓ ออก';
-  addFaceLog(label + ': ' + students[idx]?.name + ' (' + date + ')', 'log-ok');
+  const label = faceScanType === 'in' ? `▶ เข้า ${t}` : `✓✓ ออก ${t}`;
+  addFaceLog(label + ': ' + students[idx]?.name, 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก ' + students[idx]?.name + '...');
   updateFaceCount();
 
-  // Granular write — concurrent-safe
+  // Granular write — concurrent-safe (บันทึก status + timestamp)
   await saveMarkToFirebase(faceActivity, idx, newStatus);
-  setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]?.name);
+  await saveTimestampToFirebase(faceActivity, idx, activityData[faceActivity].timestamps[idx]);
+  playPing();
+  setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]?.name + ' ' + t);
 }
 
 // ===== FACE MODAL =====
