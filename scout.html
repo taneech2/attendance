@@ -21,6 +21,10 @@ body{font-family:Sarabun,sans-serif;background:#080f20;color:#d4c4a0;min-height:
 .lock-btn{background:none;border:1px solid #c9a84c55;color:#c9a84c99;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;transition:all .2s;}
 .lock-btn:hover{background:#c9a84c22;}
 .lock-btn.unlocked{border-color:#4caf8a;color:#4caf8a;box-shadow:0 0 14px rgba(76,175,138,.35);}
+.privacy-btn{background:none;border:1px solid #c9a84c55;color:#c9a84c99;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;transition:all .2s;}
+.privacy-btn:hover{background:#c9a84c22;}
+.privacy-btn.hiding{border-color:#e67e22;color:#e67e22;}
+body.hide-names .student-name-cell{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 
 /* ===== TABS ===== */
 .tabs-wrap{background:#0d1530;border-bottom:1px solid #c9a84c22;padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
@@ -127,6 +131,7 @@ td.num{width:36px;color:#888;}
     <div class="info-field"><label>ครู</label><input id="inp-teacher" value="อาจารย์ธานี ชมสุข" maxlength="40"><span id="lbl-teacher" style="display:none"></span></div>
   </div>
   <button class="btn no-print" onclick="openStudentModal()">👥 จัดการนักเรียน</button>
+  <button id="privacy-btn" class="privacy-btn no-print" onclick="togglePrivacy()">👁 ชื่อ</button>
   <button id="lock-btn" class="lock-btn no-print" onclick="toggleLock()">🔒 ล็อก</button>
 </div>
 <div id="status-bar"></div>
@@ -225,6 +230,17 @@ function updateLockBtn() {
   const b = document.getElementById('lock-btn');
   b.textContent = pinUnlocked ? '🔓 ปลดล็อก' : '🔒 ล็อก';
   b.className = 'lock-btn no-print' + (pinUnlocked ? ' unlocked' : '');
+}
+
+// ===== PRIVACY TOGGLE =====
+let namesHidden = false;
+function togglePrivacy() {
+  namesHidden = !namesHidden;
+  document.body.classList.toggle('hide-names', namesHidden);
+  const btn = document.getElementById('privacy-btn');
+  btn.textContent = namesHidden ? '🙈 ซ่อนชื่อ' : '👁 ชื่อ';
+  btn.classList.toggle('hiding', namesHidden);
+  btn.title = namesHidden ? 'กำลังซ่อนชื่อ — กดเพื่อแสดง' : 'กดเพื่อซ่อนชื่อ';
 }
 
 // ===== STATUS BAR =====
@@ -609,7 +625,7 @@ function renderActivity(a) {
         let cells = `<td class="num">${rowNum}</td>
           <td class="name">
             <span class="dept-badge" style="background:${DEPT_COLORS[d]}22;color:${DEPT_COLORS[d]};border:1px solid ${DEPT_COLORS[d]}44;">${DEPT_SHORT[d]}</span>
-            ${s.name}
+            <span class="student-name-cell">${s.name}</span>
           </td>`;
         const ts = ad.timestamps && ad.timestamps[s.idx];
         const tsLabel = ts ? (ts.in && ts.out ? `${ts.in}→${ts.out}` : ts.in || '') : '';
