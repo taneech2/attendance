@@ -596,6 +596,7 @@ function updateLockBtn(){
 // ===== PRIVACY TOGGLE =====
 let namesHidden = false;
 function togglePrivacy(){
+  if(!requireUnlock()) return;
   namesHidden = !namesHidden;
   document.body.classList.toggle('hide-names', namesHidden);
   const btn = document.getElementById('privacy-btn');
