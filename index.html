@@ -275,7 +275,7 @@ function buildPanels(){
         <input id="inp-date-${w}" placeholder="เพิ่มวันที่ เช่น 15-พ.ค.-69" onkeydown="if(event.key==='Enter')addDate(${w})">
         <button class="btn" onclick="addDate(${w})">+ เพิ่มวันที่</button>
         <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
-        <button class="btn" style="background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a55;" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button><button class="btn" onclick="window.print()" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
+        <button class="btn" style="background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a55;" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button><button class="btn" onclick="printWeek(${w})" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
       </div>
       <div class="table-wrapper"><table id="tbl-${w}"><thead id="thead-${w}"></thead><tbody id="tbody-${w}"></tbody></table></div>
     `;
@@ -285,7 +285,7 @@ function buildPanels(){
   const sumDiv = document.createElement('div');
   sumDiv.className = 'week-panel';
   sumDiv.id = 'panel-summary';
-  sumDiv.innerHTML = `<div class="summary-wrap" id="summary-content"></div>`;
+  sumDiv.innerHTML = `<div class="no-print" style="padding:10px 0 0;text-align:right;"><button class="btn" onclick="printWeek(0)">🖨 พิมพ์สรุปทั้งหมด</button></div><div class="summary-wrap" id="summary-content"></div>`;
   wrap.appendChild(sumDiv);
 }
 
@@ -514,6 +514,18 @@ function renderSummary(){
   });
   html+=`</tbody></table>`;
   wrap.innerHTML=html;
+}
+
+// ===== PRINT =====
+function printWeek(w) {
+  // ใส่ print-active ให้ panel ที่ต้องการพิมพ์ก่อน แล้วค่อย print
+  const panel = document.getElementById(w > 0 ? `panel-${w}` : 'panel-summary');
+  if(!panel) return;
+  panel.classList.add('print-active');
+  window.print();
+  // เอา class ออกหลังจาก dialog ปิด (afterprint)
+  const cleanup = () => { panel.classList.remove('print-active'); window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
 }
 
 // ===== PIN / LOCK =====
