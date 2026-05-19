@@ -74,14 +74,17 @@ td.num{color:#c9a84c;font-weight:600;}
 .btn-tiny{background:transparent;border:1px solid #c9a84c44;color:#c9a84c;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:14px;}
 .btn-tiny:hover{background:rgba(201,168,76,.15);}
 .btn-del-date{background:transparent;border:none;color:#e05555;cursor:pointer;font-size:10px;padding:0 2px;margin-left:3px;opacity:.7;}
+.ts-label{display:block;font-size:9px;color:#7ab;letter-spacing:.3px;line-height:1.2;margin-top:1px;}
 .btn-del-date:hover{opacity:1;}
 
 /* STUDENT MANAGER */
 .student-manager{background:rgba(201,168,76,.04);border:1px solid #c9a84c44;border-radius:6px;padding:16px;margin-bottom:16px;}
 .student-manager h4{color:#c9a84c;font-size:14px;margin-bottom:10px;}
 .student-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
-.student-chip{background:#1a2540;border:1px solid #c9a84c44;color:#d4c4a0;padding:4px 10px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:6px;}
+.student-chip{background:#1a2540;border:1px solid #c9a84c44;color:#d4c4a0;padding:4px 8px 4px 4px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:6px;}
 .student-chip button{background:none;border:none;color:#e05555;cursor:pointer;font-size:12px;padding:0;line-height:1;}
+.face-thumb{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #4caf8a;flex-shrink:0;}
+.face-thumb-none{width:32px;height:32px;border-radius:50%;background:#0d1530;border:2px dashed #c9a84c44;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#555;}
 .add-student-row{display:flex;gap:8px;}
 .add-student-row input{background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:7px 12px;border-radius:4px;font-family:'Sarabun',sans-serif;font-size:13px;flex:1;}
 .add-student-row input:focus{outline:none;border-color:#c9a84c;}
@@ -271,7 +274,7 @@ function buildPanels(){
         <input id="inp-date-${w}" placeholder="เพิ่มวันที่ เช่น 15-พ.ค.-69" onkeydown="if(event.key==='Enter')addDate(${w})">
         <button class="btn" onclick="addDate(${w})">+ เพิ่มวันที่</button>
         <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
-        <button class="btn" style="background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a55;" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button><button class="btn" onclick="window.print()" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
+        <button class="btn" style="background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a55;" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button><button class="btn" onclick="printWeek(${w})" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
       </div>
       <div class="table-wrapper"><table id="tbl-${w}"><thead id="thead-${w}"></thead><tbody id="tbody-${w}"></tbody></table></div>
     `;
@@ -281,7 +284,7 @@ function buildPanels(){
   const sumDiv = document.createElement('div');
   sumDiv.className = 'week-panel';
   sumDiv.id = 'panel-summary';
-  sumDiv.innerHTML = `<div class="summary-wrap" id="summary-content"></div>`;
+  sumDiv.innerHTML = `<div class="no-print" style="padding:10px 0 0;text-align:right;"><button class="btn" onclick="printWeek(0)">🖨 พิมพ์สรุปทั้งหมด</button></div><div class="summary-wrap" id="summary-content"></div>`;
   wrap.appendChild(sumDiv);
 }
 
@@ -336,7 +339,8 @@ function renderWeek(w){
     if(wd.dates.length>0){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
-        cells+=`<td onclick="cycle(${w},${i},'${d}')" style="cursor:pointer">${sym(s)}</td>`;
+        const ts=wd.timestamps&&wd.timestamps[i]&&wd.timestamps[i][d]||'';
+        cells+=`<td onclick="cycle(${w},${i},'${d}')" style="cursor:pointer">${sym(s,ts)}</td>`;
       });
     } else {
       cells+=`<td style="color:#555">—</td>`;
@@ -352,11 +356,12 @@ function renderWeek(w){
   if(tab) tab.classList.toggle('has-data', wd.dates.length>0);
 }
 
-function sym(s){
-  if(s===1) return `<span class="check">✓</span>`;
+function sym(s, ts){
+  if(s===1) return `<span class="check">✓</span>${ts?`<span class="ts-label">${ts}</span>`:''}`;
   if(s===2) return `<span class="cross">✗</span>`;
   return `<span class="slash">/</span>`;
 }
+function nowHHMM(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
 
 function cycle(w,i,d){
   if(!requireUnlock())return;
@@ -414,7 +419,10 @@ function renderStudentChips(){
   students.forEach((name,i)=>{
     const chip=document.createElement('div');
     chip.className='student-chip';
-    chip.innerHTML=`<span>${i+1}. ${name}</span><button onclick="removeStudent(${i})" title="ลบ">✕</button>`;
+    const thumbHtml = facePhotos[i]
+      ? `<img class="face-thumb" src="${facePhotos[i]}" title="ใบหน้า: ${name}">`
+      : `<div class="face-thumb-none" title="ยังไม่ได้ลงทะเบียนใบหน้า">👤</div>`;
+    chip.innerHTML=`${thumbHtml}<span>${i+1}. ${name}</span><button onclick="removeStudent(${i})" title="ลบ">✕</button>`;
     wrap.appendChild(chip);
   });
 }
@@ -512,6 +520,43 @@ function renderSummary(){
   wrap.innerHTML=html;
 }
 
+// ===== PRINT =====
+function printWeek(w) {
+  // ใส่ print-active ให้ panel ที่ต้องการพิมพ์ก่อน แล้วค่อย print
+  const panel = document.getElementById(w > 0 ? `panel-${w}` : 'panel-summary');
+  if(!panel) return;
+  panel.classList.add('print-active');
+  window.print();
+  // เอา class ออกหลังจาก dialog ปิด (afterprint)
+  const cleanup = () => { panel.classList.remove('print-active'); window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+}
+
+// ===== SOUND =====
+function playPing() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // โน้ตแรก — ปิ้งสูง
+    const o1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    o1.connect(g1); g1.connect(ctx.destination);
+    o1.frequency.value = 1047; // C6
+    o1.type = 'sine';
+    g1.gain.setValueAtTime(0.4, ctx.currentTime);
+    g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    o1.start(ctx.currentTime); o1.stop(ctx.currentTime + 0.25);
+    // โน้ตสอง — ปิ้งสูงขึ้นอีก
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.frequency.value = 1319; // E6
+    o2.type = 'sine';
+    g2.gain.setValueAtTime(0.3, ctx.currentTime + 0.12);
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+    o2.start(ctx.currentTime + 0.12); o2.stop(ctx.currentTime + 0.45);
+  } catch(e) {}
+}
+
 // ===== PIN / LOCK =====
 let pinUnlocked = false;
 let classPin = '1234';
@@ -590,17 +635,19 @@ function applyData(parsed){
   const wd = parsed.weekData||{};
   for(let w=1;w<=18;w++){
     const src = wd[w]||wd[String(w)]||{};
-    weekData[w] = { dates: src.dates||[], attendance: {} };
+    weekData[w] = { dates: src.dates||[], attendance: {}, timestamps: {} };
     // แปลง attendance keys กลับเป็น number-safe object
     const att = src.attendance||{};
     Object.keys(att).forEach(k=>{ weekData[w].attendance[Number(k)] = att[k]; });
+    const ts = src.timestamps||{};
+    Object.keys(ts).forEach(k=>{ weekData[w].timestamps[Number(k)] = ts[k]; });
   }
   applyInfoBar(parsed.infoBar);
   return true;
 }
 
 async function saveToFirebase(){
-  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD() });
+  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD(), fp: facePhotos, savedAt: Date.now() });
   // บันทึก localStorage ก่อนเสมอ (ทันที ไม่รอเน็ต)
   localStorage.setItem(LS_KEY, payload);
   try{
@@ -615,19 +662,39 @@ async function saveToFirebase(){
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
+function applyParsed(parsed, source) {
+  if(parsed.pin) classPin = parsed.pin;
+  if(parsed.fd) deserializeFD(parsed.fd);
+  if(parsed.fp) deserializeFP(parsed.fp);
+  return applyData(parsed);
+}
+
 async function loadFromFirebase(){
   showStatus('⏳ กำลังโหลด...','#c9a84c');
+  let cloudParsed = null, localParsed = null;
+  // โหลด Cloud
   try{
     const res = await fetch(DB_URL);
     const data = await res.json();
-    if(data && data.p){
-      const parsed = JSON.parse(data.p);
-      if(parsed.pin) classPin=parsed.pin; if(parsed.fd) deserializeFD(parsed.fd); if(applyData(parsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
-    }
+    if(data && data.p) cloudParsed = JSON.parse(data.p);
   }catch(e){}
-  // fallback: localStorage
+  // โหลด localStorage
   const local = localStorage.getItem(LS_KEY);
-  if(local){ try{ const lp=JSON.parse(local); if(lp.pin) classPin=lp.pin; if(lp.fd) deserializeFD(lp.fd); if(applyData(lp)){ showStatus('📱 โหลดจาก Local','#e67e22'); return; } }catch(e){} }
+  if(local){ try{ localParsed = JSON.parse(local); }catch(e){} }
+
+  // เลือกอันที่ใหม่กว่า (savedAt timestamp)
+  const cloudTs = cloudParsed?.savedAt || 0;
+  const localTs = localParsed?.savedAt || 0;
+
+  if(cloudParsed && cloudTs >= localTs){
+    if(applyParsed(cloudParsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+  }
+  if(localParsed){
+    if(applyParsed(localParsed)){ showStatus('📱 โหลดจาก Local (ใหม่กว่า Cloud)','#e67e22'); return; }
+  }
+  if(cloudParsed){
+    if(applyParsed(cloudParsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+  }
   // fallback: รายชื่อเริ่มต้น
   students = [...DEFAULT_STUDENTS];
   showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
@@ -657,6 +724,7 @@ let faceDetectLoop = null;
 let faceMode = 'attend';
 let faceWeek = 1;
 let faceDescriptors = {}; // { studentIdx: Float32Array }
+let facePhotos = {};       // { studentIdx: base64 JPEG string }
 let faceMarked = {};       // { studentIdx: true } — เช็คแล้วในรอบนี้
 let faceConfirmCount = {}; // { studentIdx: count } — กี่เฟรมแล้วที่เห็นหน้านี้
 
@@ -669,6 +737,11 @@ function deserializeFD(raw) {
   faceDescriptors = {};
   if(!raw) return;
   Object.keys(raw).forEach(k => { faceDescriptors[Number(k)] = new Float32Array(raw[k]); });
+}
+function deserializeFP(raw) {
+  facePhotos = {};
+  if(!raw) return;
+  Object.keys(raw).forEach(k => { facePhotos[Number(k)] = raw[k]; });
 }
 
 async function openFaceModal(w) {
@@ -894,11 +967,16 @@ async function markFaceAttend(idx, date) {
   }
   if(!weekData[faceWeek].attendance[idx]) weekData[faceWeek].attendance[idx] = {};
   weekData[faceWeek].attendance[idx][date] = 1; // ✓ มา
+  // บันทึกเวลาที่สแกน
+  if(!weekData[faceWeek].timestamps) weekData[faceWeek].timestamps = {};
+  if(!weekData[faceWeek].timestamps[idx]) weekData[faceWeek].timestamps[idx] = {};
+  weekData[faceWeek].timestamps[idx][date] = nowHHMM();
   renderWeek(faceWeek);
   addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
   updateFaceCount();
   await saveToFirebase();
+  playPing();
   setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]);
 }
 
@@ -910,9 +988,21 @@ async function captureDescriptor() {
   const result = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
   if(!result) { setFaceStatus('❌ ไม่พบใบหน้า ลองใหม่อีกครั้ง'); return; }
   faceDescriptors[idx] = result.descriptor;
-  saveToFirebase();
+  // บันทึก snapshot รูปใบหน้า (80×80px crop จาก bounding box)
+  try {
+    const box = result.detection.box;
+    const snapCanvas = document.createElement('canvas');
+    snapCanvas.width = 80; snapCanvas.height = 80;
+    const snapCtx = snapCanvas.getContext('2d');
+    snapCtx.drawImage(video, Math.max(0, box.x), Math.max(0, box.y), box.width, box.height, 0, 0, 80, 80);
+    facePhotos[idx] = snapCanvas.toDataURL('image/jpeg', 0.7);
+    renderStudentChips();
+  } catch(e) {}
   addFaceLog('บันทึกใบหน้า: ' + students[idx], 'log-ok');
-  setFaceStatus('✅ บันทึกใบหน้า ' + students[idx] + ' แล้ว');
+  setFaceStatus('⏳ กำลังบันทึก Cloud...');
+  await saveToFirebase();
+  playPing();
+  setFaceStatus('✅ บันทึกใบหน้า ' + students[idx] + ' แล้ว (Cloud sync ✓)');
   // เลื่อนไปนักเรียนคนถัดไปอัตโนมัติ
   const sel = document.getElementById('sel-reg-student');
   if(idx + 1 < students.length) sel.value = idx + 1;
