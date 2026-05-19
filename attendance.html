@@ -970,11 +970,16 @@ async function markFaceAttend(idx, date) {
     addFaceLog('⚠️ ไม่พบวันที่: ' + date, 'log-dup'); return;
   }
   if(!weekData[faceWeek].attendance[idx]) weekData[faceWeek].attendance[idx] = {};
+  // ถ้าเช็คชื่อแล้ว — แจ้งเตือนและไม่เขียนทับเวลา
+  if(weekData[faceWeek].attendance[idx][date] === 1) {
+    const existTs = weekData[faceWeek].timestamps?.[idx]?.[date] || '';
+    addFaceLog('⏭ เช็คแล้ว: ' + students[idx] + (existTs?' ('+existTs+')':''), 'log-dup'); return;
+  }
   weekData[faceWeek].attendance[idx][date] = 1; // ✓ มา
-  // บันทึกเวลาที่สแกน
+  // บันทึกเวลาครั้งแรกเท่านั้น — ไม่เขียนทับถ้ามีอยู่แล้ว
   if(!weekData[faceWeek].timestamps) weekData[faceWeek].timestamps = {};
   if(!weekData[faceWeek].timestamps[idx]) weekData[faceWeek].timestamps[idx] = {};
-  weekData[faceWeek].timestamps[idx][date] = nowHHMM();
+  if(!weekData[faceWeek].timestamps[idx][date]) weekData[faceWeek].timestamps[idx][date] = nowHHMM();
   renderWeek(faceWeek);
   addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');

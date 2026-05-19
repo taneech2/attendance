@@ -925,11 +925,17 @@ async function markFaceAttend(idx, date) {
   let newStatus;
 
   if(faceScanType === 'in') {
-    if(currentStatus >= 1) { addFaceLog('⏭ ' + students[idx]?.name + ' เช็คอินแล้ว', 'log-dup'); return; }
+    if(currentStatus >= 1) {
+      const existTs = activityData[faceActivity].timestamps?.[idx]?.in || '';
+      addFaceLog('⏭ ' + students[idx]?.name + ' เช็คอินแล้ว' + (existTs?' ('+existTs+')':''), 'log-dup'); return;
+    }
     newStatus = 1;
   } else {
     if(currentStatus === 0) { addFaceLog('⚠️ ' + students[idx]?.name + ' ยังไม่ได้เช็คอิน', 'log-dup'); return; }
-    if(currentStatus >= 2) { addFaceLog('⏭ ' + students[idx]?.name + ' ครบแล้ว', 'log-dup'); return; }
+    if(currentStatus >= 2) {
+      const existTs = activityData[faceActivity].timestamps?.[idx]?.out || '';
+      addFaceLog('⏭ ' + students[idx]?.name + ' ครบแล้ว' + (existTs?' (ออก '+existTs+')':''), 'log-dup'); return;
+    }
     newStatus = 2;
   }
 
