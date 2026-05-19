@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แบบบันทึกการเข้าร่วมกิจกรรมหน้าเสาธง — ช่างเชื่อม ปวช.2 วิทยาลัยการอาชีพบุรีรัมย์</title>
+<title>แบบบันทึกการเข้าร่วมกิจกรรมหน้าเสาธง — วิทยาลัยการอาชีพบุรีรัมย์</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -168,7 +168,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
       แบบบันทึกผลการเข้าร่วมกิจกรรมหน้าเสาธงของนักเรียน นักศึกษา<br>
       ภาคเรียนที่ <span id="lbl-term">1</span> ปีการศึกษา <span id="lbl-year">2569</span> &nbsp;|&nbsp;
       กลุ่มเรียน <span id="lbl-class">ชช.2 สาขาวิชาช่างเชื่อมโลหะ</span> &nbsp;|&nbsp;
-      ครูที่ปรึกษา <span id="lbl-teacher">ครูที่ปรึกษา ปวช.2</span>
+      ครูที่ปรึกษา <span id="lbl-teacher">นายธานี ชมสุข</span>
     </div>
   </div>
 
@@ -177,7 +177,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
     <input id="inp-term" placeholder="ภาคเรียนที่" value="1">
     <input id="inp-year" placeholder="ปีการศึกษา" value="2569">
     <input id="inp-class" placeholder="กลุ่มเรียน" value="ชช.2 สาขาวิชาช่างเชื่อมโลหะ">
-    <input id="inp-teacher" placeholder="ครูที่ปรึกษา" value="">
+    <input id="inp-teacher" placeholder="ครูที่ปรึกษา" value="นายธานี ชมสุข">
   </div>
 
   <!-- STUDENT MANAGER -->
@@ -220,9 +220,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
 // ===== DATA =====
-const DEFAULT_STUDENTS = [
-    // รายชื่อนักเรียน ปวช.2 — กรอกผ่านปุ่มจัดการรายชื่อ
-];
+const DEFAULT_STUDENTS = [];
 let students = [];
 
 // weekData[w] = { dates: [], attendance: { studentIdx: { date: 0/1/2 } } }
@@ -565,6 +563,7 @@ function playPing() {
 }
 
 // ===== PIN / LOCK =====
+const MASTER_PIN = 'BRiC2569'; // ← Admin เปลี่ยนได้ ห้ามบอกครู
 let pinUnlocked = false;
 let classPin = '1234';
 
@@ -584,7 +583,7 @@ function toggleLock(){
   }
   const entered = prompt('ใส่ PIN อาจารย์เพื่อปลดล็อก:');
   if(!entered) return;
-  if(entered===classPin){ pinUnlocked=true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); }
+  if(entered===classPin || entered===MASTER_PIN){ pinUnlocked=true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); }
   else { showStatus('❌ PIN ไม่ถูกต้อง','#c0392b'); }
 }
 function updateLockBtn(){
@@ -608,13 +607,13 @@ function togglePrivacy(){
 function requireUnlock(){
   if(pinUnlocked) return true;
   const entered = prompt('ใส่ PIN อาจารย์เพื่อแก้ไขข้อมูล');
-  if(entered===classPin){ pinUnlocked=true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); return true; }
+  if(entered===classPin || entered===MASTER_PIN){ pinUnlocked=true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); return true; }
   if(entered!==null) showStatus('❌ PIN ไม่ถูกต้อง','#c0392b');
   return false;
 }
 
 // ===== FIREBASE =====
-const DB_URL = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-y2.json';
+const DB_URL = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json';
 const LS_KEY = 'attendanceData_y2_v2';
 
 function showStatus(msg, color='#4caf8a'){

@@ -173,6 +173,7 @@ const DEFAULT_STUDENTS = makeDefaultStudents();
 let students = [];
 let activityData = {}; // {a: {dates:[], attendance:{idx: status}}}
 let currentActivity = 1;
+const MASTER_PIN = 'BRiC2569'; // ← Admin เปลี่ยนได้ ห้ามบอกครู
 let pinUnlocked = false;
 let classPin = '1234';
 let faceDescriptors = {}; // {idx: Float32Array}
@@ -207,7 +208,7 @@ function symLabel(s) {
 function requireUnlock() {
   if(pinUnlocked) return true;
   const entered = prompt('ใส่ PIN อาจารย์เพื่อแก้ไขข้อมูล');
-  if(entered === classPin) { pinUnlocked = true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); return true; }
+  if(entered === classPin || entered === MASTER_PIN) { pinUnlocked = true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); return true; }
   if(entered !== null) showStatus('❌ PIN ไม่ถูกต้อง','#c0392b');
   return false;
 }
@@ -223,7 +224,7 @@ function toggleLock() {
     pinUnlocked = false; updateLockBtn(); showStatus('🔒 ล็อกแล้ว','#c9a84c'); return;
   }
   const entered = prompt('ใส่ PIN เพื่อปลดล็อก:');
-  if(entered === classPin) { pinUnlocked = true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); }
+  if(entered === classPin || entered === MASTER_PIN) { pinUnlocked = true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); }
   else if(entered !== null) showStatus('❌ PIN ไม่ถูกต้อง','#c0392b');
 }
 function updateLockBtn() {
