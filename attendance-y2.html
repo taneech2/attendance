@@ -820,12 +820,23 @@ function setFaceMode(mode) {
   updateFaceCount();
 }
 
+function todayThaiDate() {
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const n = new Date();
+  return n.getDate() + '-' + months[n.getMonth()] + '-' + ((n.getFullYear() + 543) % 100);
+}
+
 function populateDateSelect() {
   const sel = document.getElementById('sel-att-date');
   const dates = weekData[faceWeek] ? weekData[faceWeek].dates : [];
-  sel.innerHTML = dates.length
-    ? dates.map(d => '<option value="' + d + '">' + d + '</option>').join('')
-    : '<option value="">— ยังไม่มีวันที่ในสัปดาห์นี้ —</option>';
+  if(!dates.length) {
+    sel.innerHTML = '<option value="">— ยังไม่มีวันที่ในสัปดาห์นี้ —</option>';
+    return;
+  }
+  sel.innerHTML = dates.map(d => '<option value="' + d + '">' + d + '</option>').join('');
+  // เลือกวันที่ตรงกับวันนี้อัตโนมัติ ถ้าไม่มีให้เลือกวันล่าสุด
+  const today = todayThaiDate();
+  sel.value = dates.includes(today) ? today : dates[dates.length - 1];
 }
 
 function addFaceDate() {
