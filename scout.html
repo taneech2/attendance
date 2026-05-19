@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>เช็คชื่อลูกเสือ — วอศ.บุรีรัมย์</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Sarabun,sans-serif;background:#080f20;color:#d4c4a0;min-height:100vh;}
+
+/* ===== INFO BAR ===== */
+.info-bar{background:linear-gradient(135deg,#0d1a35,#1a2a50);border-bottom:2px solid #c9a84c44;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.info-logo{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #c9a84c;}
+.info-fields{display:flex;flex-wrap:wrap;gap:8px;flex:1;}
+.info-field{display:flex;align-items:center;gap:6px;background:#0d1530;border:1px solid #c9a84c33;border-radius:6px;padding:4px 10px;}
+.info-field label{font-size:11px;color:#c9a84c99;white-space:nowrap;}
+.info-field input{background:none;border:none;color:#d4c4a0;font-family:Sarabun,sans-serif;font-size:13px;width:120px;outline:none;}
+.info-title{font-size:18px;font-weight:700;color:#c9a84c;margin-left:4px;}
+.lock-btn{background:none;border:1px solid #c9a84c55;color:#c9a84c99;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;transition:all .2s;}
+.lock-btn:hover{background:#c9a84c22;}
+.lock-btn.unlocked{border-color:#4caf8a;color:#4caf8a;box-shadow:0 0 14px rgba(76,175,138,.35);}
+
+/* ===== TABS ===== */
+.tabs-wrap{background:#0d1530;border-bottom:1px solid #c9a84c22;padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.tab{background:#0d1530;border:1px solid #c9a84c33;color:#c9a84c99;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:13px;transition:all .2s;}
+.tab:hover{border-color:#c9a84c88;color:#c9a84c;}
+.tab.active{background:#c9a84c22;border-color:#c9a84c;color:#c9a84c;font-weight:600;}
+.tab.has-data{border-color:#4caf8a55;color:#4caf8add;}
+.tab.has-data.active{background:#4caf8a22;border-color:#4caf8a;}
+.tab-summary{background:#1a1040;border-color:#7c6ccc55;color:#a99bdd;}
+.tab-summary.active{background:#2a1a5c;border-color:#7c6ccc;color:#c9b8ff;}
+
+/* ===== STATUS BAR ===== */
+#status-bar{text-align:center;padding:6px;font-size:13px;color:#4caf8a;min-height:28px;transition:opacity .5s;}
+
+/* ===== PANELS ===== */
+.week-panel{display:none;}
+.week-panel.active{display:block;}
+
+/* ===== DATE CONTROLS ===== */
+.date-controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px;align-items:center;}
+.date-controls input{background:#0d1530;border:1px solid #c9a84c44;color:#d4c4a0;padding:7px 12px;border-radius:6px;font-family:Sarabun,sans-serif;font-size:13px;width:180px;}
+.btn{background:linear-gradient(135deg,#1a2a4c,#0d1a35);border:1px solid #c9a84c55;color:#c9a84c;border-radius:6px;padding:7px 14px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:13px;transition:all .2s;white-space:nowrap;}
+.btn:hover{background:linear-gradient(135deg,#2a3a5c,#1a2a45);border-color:#c9a84c;}
+
+/* ===== TABLE ===== */
+.table-wrapper{overflow-x:auto;padding:0 14px 14px;}
+table{border-collapse:collapse;min-width:100%;font-size:13px;}
+th{background:#0d1a35;color:#c9a84c;padding:8px 10px;border:1px solid #c9a84c22;white-space:nowrap;text-align:center;}
+td{padding:6px 10px;border:1px solid #c9a84c11;text-align:center;vertical-align:middle;}
+tr:hover td{background:#c9a84c08;}
+td.name{text-align:left;min-width:160px;}
+td.num{width:36px;color:#888;}
+.btn-del-date{background:none;border:none;color:#c0392b66;cursor:pointer;font-size:11px;margin-left:4px;padding:1px 3px;}
+.btn-del-date:hover{color:#c0392b;}
+
+/* ===== DEPT HEADER ROW ===== */
+.dept-row td{font-weight:600;font-size:12px;padding:5px 10px;border-top:2px solid;letter-spacing:.5px;}
+
+/* ===== DEPT BADGES ===== */
+.dept-badge{display:inline-block;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:700;margin-right:4px;vertical-align:middle;}
+
+/* ===== STATUS SYMBOLS ===== */
+.badge-in{color:#e67e22;font-weight:700;font-size:16px;}
+.badge-full{color:#4caf8a;font-weight:700;font-size:15px;}
+.cross{color:#e74c3c;font-weight:700;}
+.slash{color:#555;}
+
+/* ===== SUMMARY ===== */
+.summary-wrap{padding:14px;}
+.sum-dept-card{background:#0d1a35;border:1px solid #c9a84c22;border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.sum-dept-header{padding:10px 14px;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
+.sum-stat{display:flex;gap:16px;flex-wrap:wrap;padding:8px 14px 12px;}
+.sum-stat-item{text-align:center;}
+.sum-stat-item .val{font-size:20px;font-weight:700;}
+.sum-stat-item .lbl{font-size:11px;color:#888;}
+
+/* ===== FACE MODAL ===== */
+.face-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;display:none;align-items:center;justify-content:center;}
+.face-overlay.active{display:flex;}
+.face-box{background:#0d1530;border:2px solid #c9a84c;border-radius:12px;padding:20px;width:min(560px,96vw);max-height:96vh;overflow-y:auto;}
+.face-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.face-header span{font-size:18px;font-weight:700;color:#c9a84c;}
+.face-header button{background:none;border:1px solid #c9a84c55;color:#c9a84c;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;}
+.face-ctrl{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.face-ctrl select,.face-ctrl input{flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:7px 10px;border-radius:4px;font-family:Sarabun,sans-serif;font-size:13px;}
+.face-video-wrap{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#000;margin-bottom:10px;}
+#face-video{width:100%;display:block;transform:scaleX(-1);}
+#face-canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
+.face-status{text-align:center;padding:8px;font-size:13px;color:#c9a84c;min-height:32px;}
+.face-log{max-height:100px;overflow-y:auto;font-size:12px;}
+.face-log div{padding:3px 6px;border-bottom:1px solid #c9a84c22;}
+.face-log .log-ok{color:#4caf8a;}
+.face-log .log-dup{color:#e67e22;}
+.scan-type-bar{display:flex;gap:8px;margin-bottom:12px;}
+.scan-type-btn{flex:1;padding:10px;font-size:14px;font-weight:600;border-radius:6px;border:2px solid transparent;cursor:pointer;font-family:Sarabun,sans-serif;transition:all .2s;}
+.scan-type-btn.in-btn{background:#1a2a1c;border-color:#4caf8a55;color:#4caf8a;}
+.scan-type-btn.in-btn.active{background:#2a4a2c;border-color:#4caf8a;box-shadow:0 0 12px rgba(76,175,138,.3);}
+.scan-type-btn.out-btn{background:#2a1a0c;border-color:#e67e2255;color:#e67e22;}
+.scan-type-btn.out-btn.active{background:#4a2a0c;border-color:#e67e22;box-shadow:0 0 12px rgba(230,126,34,.3);}
+
+/* ===== STUDENT MODAL ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal-box{background:#0d1530;border:2px solid #c9a84c;border-radius:12px;padding:20px;width:min(560px,96vw);max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;color:#c9a84c;margin-bottom:14px;}
+
+/* ===== DEPT FILTER ===== */
+.dept-filter{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px 2px;}
+.dept-filter-btn{padding:4px 12px;border-radius:20px;border:1px solid;cursor:pointer;font-family:Sarabun,sans-serif;font-size:12px;font-weight:600;background:transparent;transition:all .2s;opacity:.6;}
+.dept-filter-btn.active{opacity:1;font-weight:700;}
+
+@media print{.no-print{display:none!important;} body{background:#fff;color:#000;} th{background:#ddd!important;} }
+</style>
+</head>
+<body>
+
+<!-- INFO BAR -->
+<div class="info-bar no-print">
+  <div class="info-title">⚜️ ลูกเสือ</div>
+  <div class="info-fields">
+    <div class="info-field"><label>ปีการศึกษา</label><input id="inp-year" value="2569" maxlength="4"><span id="lbl-year" style="display:none"></span></div>
+    <div class="info-field"><label>ชั้น</label><input id="inp-class" value="ปวช.1" maxlength="20"><span id="lbl-class" style="display:none"></span></div>
+    <div class="info-field"><label>ครู</label><input id="inp-teacher" value="อาจารย์ธานี ชมสุข" maxlength="40"><span id="lbl-teacher" style="display:none"></span></div>
+  </div>
+  <button class="btn no-print" onclick="openStudentModal()">👥 จัดการนักเรียน</button>
+  <button id="lock-btn" class="lock-btn no-print" onclick="toggleLock()">🔒 ล็อก</button>
+</div>
+<div id="status-bar"></div>
+
+<!-- TABS -->
+<div class="tabs-wrap no-print" id="tabs-wrap"></div>
+
+<!-- PANELS -->
+<div id="week-panels"></div>
+
+<script>
+// ===== CONFIG =====
+const TOTAL_ACTIVITIES = 18;
+const DB_CONFIG_URL = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/scout.json';
+const DB_MARKS_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/scout-marks';
+const LS_KEY = 'scoutData_v1';
+const LS_MARKS_KEY = 'scoutMarks_v1';
+const FACE_MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+
+const DEPT_NAMES = ['ช่างเชื่อม','ช่างยนต์','ช่างกล','ช่างไฟฟ้า','คอมพิวเตอร์','บัญชี'];
+const DEPT_COLORS = ['#e67e22','#3498db','#9b59b6','#2ecc71','#1abc9c','#e74c3c'];
+const DEPT_SHORT = ['ชย','ชยต','ชก','ชฟ','คอม','บช'];
+
+// Default placeholder students — แก้ไขได้ใน "จัดการนักเรียน"
+function makeDefaultStudents() {
+  const out = [];
+  [1, 2].forEach(yr => {
+    DEPT_NAMES.forEach((_, d) => {
+      for(let i = 1; i <= 20; i++) {
+        out.push({ name: DEPT_SHORT[d] + yr + '.0' + (i < 10 ? '0' : '') + i, dept: d, year: yr });
+      }
+    });
+  });
+  return out;
+}
+const DEFAULT_STUDENTS = makeDefaultStudents();
+
+// ===== STATE =====
+let students = [];
+let activityData = {}; // {a: {dates:[], attendance:{idx: status}}}
+let currentActivity = 1;
+let pinUnlocked = false;
+let classPin = '1234';
+let faceDescriptors = {}; // {idx: Float32Array}
+let faceModelsLoaded = false;
+let faceStream = null;
+let faceDetectLoop = null;
+let faceMode = 'attend';
+let faceScanType = 'in'; // 'in' or 'out'
+let faceActivity = 1;
+let faceMarked = {};
+let faceConfirmCount = {};
+let filterDept = -1; // -1 = all
+let filterYear = 0;  // 0 = all, 1 = ปี1, 2 = ปี2
+
+// ===== STATUS HELPERS =====
+function sym(s) {
+  if(s === 1) return `<span class="badge-in">▶</span>`;  // เข้าแล้ว ยังไม่ออก
+  if(s === 2) return `<span class="badge-full">✓✓</span>`; // ครบ
+  if(s === 3) return `<span class="cross">✗</span>`;        // ขาด
+  return `<span class="slash">/</span>`;
+}
+function symLabel(s) {
+  if(s === 1) return 'เข้าแล้ว';
+  if(s === 2) return 'ครบ';
+  if(s === 3) return 'ขาด';
+  return '-';
+}
+
+// ===== PIN =====
+function requireUnlock() {
+  if(pinUnlocked) return true;
+  const entered = prompt('ใส่ PIN อาจารย์เพื่อแก้ไขข้อมูล');
+  if(entered === classPin) { pinUnlocked = true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); return true; }
+  if(entered !== null) showStatus('❌ PIN ไม่ถูกต้อง','#c0392b');
+  return false;
+}
+function toggleLock() {
+  if(pinUnlocked) {
+    const c = prompt('1 = ล็อก\n2 = เปลี่ยน PIN');
+    if(!c) return;
+    if(c === '2') {
+      const np = prompt('ใส่ PIN ใหม่ (อย่างน้อย 4 ตัว):');
+      if(!np || np.length < 4) { showStatus('❌ PIN ต้องมีอย่างน้อย 4 ตัว','#c0392b'); return; }
+      classPin = np; saveConfig(); showStatus('🔑 เปลี่ยน PIN เป็น ' + np + ' แล้ว'); return;
+    }
+    pinUnlocked = false; updateLockBtn(); showStatus('🔒 ล็อกแล้ว','#c9a84c'); return;
+  }
+  const entered = prompt('ใส่ PIN เพื่อปลดล็อก:');
+  if(entered === classPin) { pinUnlocked = true; updateLockBtn(); showStatus('🔓 ปลดล็อกแล้ว','#4caf8a'); }
+  else if(entered !== null) showStatus('❌ PIN ไม่ถูกต้อง','#c0392b');
+}
+function updateLockBtn() {
+  const b = document.getElementById('lock-btn');
+  b.textContent = pinUnlocked ? '🔓 ปลดล็อก' : '🔒 ล็อก';
+  b.className = 'lock-btn no-print' + (pinUnlocked ? ' unlocked' : '');
+}
+
+// ===== STATUS BAR =====
+let _stTimer;
+function showStatus(msg, color) {
+  const el = document.getElementById('status-bar');
+  el.textContent = msg; el.style.color = color||'#4caf8a'; el.style.opacity = 1;
+  clearTimeout(_stTimer);
+  _stTimer = setTimeout(() => { el.style.opacity = 0; }, 3500);
+}
+
+// ===== INFO BAR =====
+function bindInfoBar() {
+  [['inp-year'],['inp-class'],['inp-teacher']].forEach(([id]) => {
+    const el = document.getElementById(id);
+    el.addEventListener('focus', () => { if(!pinUnlocked) { el.blur(); requireUnlock() && el.focus(); }});
+    el.addEventListener('input', () => { if(pinUnlocked) saveConfig(); });
+  });
+}
+function getInfoBar() {
+  return { year: document.getElementById('inp-year').value, cls: document.getElementById('inp-class').value, teacher: document.getElementById('inp-teacher').value };
+}
+function applyInfoBar(info) {
+  if(!info) return;
+  if(info.year) document.getElementById('inp-year').value = info.year;
+  if(info.cls) document.getElementById('inp-class').value = info.cls;
+  if(info.teacher) document.getElementById('inp-teacher').value = info.teacher;
+}
+
+// ===== FACE DESCRIPTORS =====
+function serializeFD() {
+  const out = {};
+  Object.keys(faceDescriptors).forEach(k => { out[k] = Array.from(faceDescriptors[k]); });
+  return out;
+}
+function deserializeFD(raw) {
+  faceDescriptors = {};
+  if(!raw) return;
+  Object.keys(raw).forEach(k => { faceDescriptors[Number(k)] = new Float32Array(raw[k]); });
+}
+
+// ===== FIREBASE — CONFIG (full PUT, teacher-side only) =====
+async function saveConfig() {
+  const payload = JSON.stringify({ students, activityData, info: getInfoBar(), pin: classPin, fd: serializeFD() });
+  localStorage.setItem(LS_KEY, payload);
+  try {
+    const res = await fetch(DB_CONFIG_URL, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({p: payload}) });
+    if(res.ok) showStatus('☁️ บันทึกแล้ว');
+    else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
+  } catch(e) { showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
+}
+
+// ===== FIREBASE — MARKS (granular, concurrent-safe) =====
+async function saveMarkToFirebase(actId, studentIdx, newStatus) {
+  // เขียนเฉพาะช่องนี้ — แต่ละเครื่องเขียน path ต่างกัน ไม่ชนกัน
+  const url = `${DB_MARKS_BASE}/a${actId}/s${studentIdx}.json`;
+  // อัปเดต localStorage marks ด้วย
+  try {
+    const lsMarks = JSON.parse(localStorage.getItem(LS_MARKS_KEY) || '{}');
+    if(!lsMarks[`a${actId}`]) lsMarks[`a${actId}`] = {};
+    lsMarks[`a${actId}`][`s${studentIdx}`] = newStatus;
+    localStorage.setItem(LS_MARKS_KEY, JSON.stringify(lsMarks));
+  } catch(e) {}
+  try {
+    await fetch(url, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(newStatus) });
+  } catch(e) { showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
+}
+
+// ===== FIREBASE — LOAD =====
+async function loadFromFirebase() {
+  showStatus('⏳ กำลังโหลด...','#c9a84c');
+  let configLoaded = false;
+  try {
+    const res = await fetch(DB_CONFIG_URL);
+    const data = await res.json();
+    if(data && data.p) {
+      const parsed = JSON.parse(data.p);
+      if(parsed.pin) classPin = parsed.pin;
+      if(parsed.fd) deserializeFD(parsed.fd);
+      if(applyConfig(parsed)) { showStatus('✅ โหลดจาก Cloud'); configLoaded = true; }
+    }
+  } catch(e) {}
+
+  if(!configLoaded) {
+    const local = localStorage.getItem(LS_KEY);
+    if(local) {
+      try {
+        const lp = JSON.parse(local);
+        if(lp.pin) classPin = lp.pin;
+        if(lp.fd) deserializeFD(lp.fd);
+        if(applyConfig(lp)) { showStatus('📱 โหลดจาก Local','#e67e22'); configLoaded = true; }
+      } catch(e) {}
+    }
+  }
+
+  if(!configLoaded) {
+    students = [...DEFAULT_STUDENTS];
+    showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
+  }
+
+  // โหลด marks แยก (ถ้า cloud ตอบ → merge; ไม่งั้นใช้ local)
+  await loadMarks();
+}
+
+async function loadMarks() {
+  let marks = null;
+  try {
+    const res = await fetch(`${DB_MARKS_BASE}.json`);
+    marks = await res.json();
+    if(marks) localStorage.setItem(LS_MARKS_KEY, JSON.stringify(marks));
+  } catch(e) {
+    try { marks = JSON.parse(localStorage.getItem(LS_MARKS_KEY) || 'null'); } catch(e2) {}
+  }
+  if(!marks) return;
+  // Merge marks เข้า activityData
+  Object.keys(marks).forEach(aKey => {
+    const actId = parseInt(aKey.replace('a',''));
+    if(!activityData[actId]) return;
+    Object.keys(marks[aKey]).forEach(sKey => {
+      const sIdx = parseInt(sKey.replace('s',''));
+      if(!activityData[actId].attendance) activityData[actId].attendance = {};
+      activityData[actId].attendance[sIdx] = marks[aKey][sKey];
+    });
+  });
+}
+
+function applyConfig(parsed) {
+  if(!parsed || !parsed.students) return false;
+  students = parsed.students;
+  activityData = {};
+  const ad = parsed.activityData || {};
+  for(let a = 1; a <= TOTAL_ACTIVITIES; a++) {
+    const src = ad[a] || ad[String(a)] || {};
+    activityData[a] = { dates: src.dates || [], attendance: {} };
+    const att = src.attendance || {};
+    Object.keys(att).forEach(k => { activityData[a].attendance[Number(k)] = att[k]; });
+  }
+  applyInfoBar(parsed.info);
+  return true;
+}
+
+// ===== ENSURE ACTIVITY DATA =====
+function ensureActivity(a) {
+  if(!activityData[a]) activityData[a] = { dates: [], attendance: {} };
+}
+
+// ===== TABS =====
+function buildTabs() {
+  const wrap = document.getElementById('tabs-wrap');
+  wrap.innerHTML = '';
+  for(let a = 1; a <= TOTAL_ACTIVITIES; a++) {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (a === 1 ? ' active' : '');
+    btn.id = `tab-${a}`;
+    btn.textContent = `กิจกรรมที่ ${a}`;
+    btn.onclick = () => switchActivity(a);
+    wrap.appendChild(btn);
+  }
+  const sum = document.createElement('button');
+  sum.className = 'tab tab-summary';
+  sum.id = 'tab-summary';
+  sum.textContent = '📊 สรุปทั้งหมด';
+  sum.onclick = () => switchActivity(0);
+  wrap.appendChild(sum);
+}
+
+function switchActivity(a) {
+  currentActivity = a;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const el = document.getElementById(a === 0 ? 'tab-summary' : `tab-${a}`);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.week-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(a === 0 ? 'panel-summary' : `panel-${a}`);
+  if(panel) panel.classList.add('active');
+  if(a > 0) renderActivity(a);
+  else renderSummary();
+}
+
+// ===== PANELS =====
+function buildPanels() {
+  const wrap = document.getElementById('week-panels');
+  wrap.innerHTML = '';
+  for(let a = 1; a <= TOTAL_ACTIVITIES; a++) {
+    const div = document.createElement('div');
+    div.className = 'week-panel' + (a === 1 ? ' active' : '');
+    div.id = `panel-${a}`;
+    div.innerHTML = `
+      <div class="date-controls no-print">
+        <input id="inp-date-${a}" placeholder="เพิ่มวันที่ เช่น 19-พ.ค.-69" onkeydown="if(event.key==='Enter')addDate(${a})">
+        <button class="btn" onclick="addDate(${a})">+ เพิ่มวันที่</button>
+        <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${a})">📅 วางหลายวันที่เดียว</button>
+        <button class="btn" style="background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a55;" onclick="openFaceModal(${a})">📷 สแกนใบหน้า</button>
+        <button class="btn no-print" onclick="window.print()" style="margin-left:auto;">🖨 พิมพ์</button>
+      </div>
+      <div class="dept-filter no-print" id="filter-${a}"></div>
+      <div class="table-wrapper"><table id="tbl-${a}"><thead id="thead-${a}"></thead><tbody id="tbody-${a}"></tbody></table></div>
+    `;
+    wrap.appendChild(div);
+  }
+  const sumDiv = document.createElement('div');
+  sumDiv.className = 'week-panel';
+  sumDiv.id = 'panel-summary';
+  sumDiv.innerHTML = `<div class="summary-wrap" id="summary-content"></div>`;
+  wrap.appendChild(sumDiv);
+}
+
+// ===== DEPT FILTER =====
+function buildDeptFilter(a) {
+  const wrap = document.getElementById(`filter-${a}`);
+  if(!wrap) return;
+  wrap.innerHTML = '';
+
+  // ─── ปุ่มกรองปี ───
+  const yearGroup = document.createElement('div');
+  yearGroup.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;';
+  [['ทุกปี', 0, '#c9a84c'], ['ปวช.1', 1, '#4caf8a'], ['ปวช.2', 2, '#4a8abf']].forEach(([label, yr, color]) => {
+    const btn = document.createElement('button');
+    btn.className = 'dept-filter-btn' + (filterYear === yr ? ' active' : '');
+    btn.textContent = label;
+    btn.style.borderColor = color;
+    btn.style.color = color;
+    btn.style.fontWeight = '700';
+    btn.onclick = () => { filterYear = yr; filterDept = -1; buildDeptFilter(a); renderActivity(a); };
+    yearGroup.appendChild(btn);
+  });
+  wrap.appendChild(yearGroup);
+
+  // ─── ปุ่มกรองแผนก ───
+  const deptGroup = document.createElement('div');
+  deptGroup.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'dept-filter-btn' + (filterDept === -1 ? ' active' : '');
+  allBtn.textContent = 'ทุกแผนก';
+  allBtn.style.borderColor = '#c9a84c';
+  allBtn.style.color = '#c9a84c';
+  allBtn.onclick = () => { filterDept = -1; buildDeptFilter(a); renderActivity(a); };
+  deptGroup.appendChild(allBtn);
+  DEPT_NAMES.forEach((name, d) => {
+    const btn = document.createElement('button');
+    btn.className = 'dept-filter-btn' + (filterDept === d ? ' active' : '');
+    btn.textContent = name;
+    btn.style.borderColor = DEPT_COLORS[d];
+    btn.style.color = DEPT_COLORS[d];
+    btn.onclick = () => { filterDept = d; buildDeptFilter(a); renderActivity(a); };
+    deptGroup.appendChild(btn);
+  });
+  wrap.appendChild(deptGroup);
+}
+
+// ===== RENDER ACTIVITY =====
+function renderActivity(a) {
+  ensureActivity(a);
+  const ad = activityData[a];
+  const thead = document.getElementById(`thead-${a}`);
+  const tbody = document.getElementById(`tbody-${a}`);
+  if(!thead || !tbody) return;
+
+  buildDeptFilter(a);
+
+  // Ensure all students have attendance entries for all dates
+  students.forEach((_, i) => {
+    if(!ad.attendance[i] && ad.attendance[i] !== 0) ad.attendance[i] = 0;
+  });
+
+  // Header
+  thead.innerHTML = '';
+  const tr1 = document.createElement('tr');
+  tr1.innerHTML = `<th rowspan="2" style="width:36px">ลำดับ</th><th rowspan="2" style="min-width:160px">ชื่อ – สกุล</th>`;
+  if(ad.dates.length > 0) {
+    tr1.innerHTML += `<th colspan="${ad.dates.length}">กิจกรรมที่ ${a} &nbsp;|&nbsp; วัน/เดือน/ปี</th>`;
+  } else {
+    tr1.innerHTML += `<th>— ยังไม่มีวันที่ —</th>`;
+  }
+  tr1.innerHTML += `<th colspan="3">สรุป</th><th rowspan="2" class="no-print" style="width:40px"></th>`;
+  thead.appendChild(tr1);
+
+  const tr2 = document.createElement('tr');
+  if(ad.dates.length > 0) {
+    ad.dates.forEach(d => {
+      const th = document.createElement('th');
+      th.style.minWidth = '80px';
+      th.innerHTML = `${d}<button class="btn-del-date no-print" onclick="removeDate(${a},'${d}')" title="ลบ">✕</button>`;
+      tr2.appendChild(th);
+    });
+  } else {
+    const th = document.createElement('th'); th.textContent = ''; tr2.appendChild(th);
+  }
+  ['▶เข้า','✓✓ครบ','✗ขาด'].forEach(t => {
+    const th = document.createElement('th'); th.innerHTML = t; tr2.appendChild(th);
+  });
+  const thx = document.createElement('th'); thx.className = 'no-print'; tr2.appendChild(thx);
+  thead.appendChild(tr2);
+
+  // Body — grouped by year → dept
+  tbody.innerHTML = '';
+  let rowNum = 0;
+  const colSpan = 2 + (ad.dates.length || 1) + 3 + 1;
+  const years = filterYear > 0 ? [filterYear] : [1, 2];
+
+  years.forEach(yr => {
+    const yrStudents = students.map((s, i) => ({...s, idx: i})).filter(s => (s.year || 1) === yr);
+    if(yrStudents.length === 0) return;
+
+    // Year separator row
+    const yrColor = yr === 1 ? '#4caf8a' : '#4a8abf';
+    const yrRow = document.createElement('tr');
+    yrRow.innerHTML = `<td colspan="${colSpan}" style="background:${yrColor}18;border-top:3px solid ${yrColor};padding:6px 12px;font-weight:700;font-size:13px;color:${yrColor};letter-spacing:1px;">
+      ⚜️ ปวช.${yr}
+    </td>`;
+    tbody.appendChild(yrRow);
+
+    DEPT_NAMES.forEach((deptName, d) => {
+      if(filterDept !== -1 && filterDept !== d) return;
+      const deptStudents = yrStudents.filter(s => s.dept === d);
+      if(deptStudents.length === 0) return;
+
+      // Department header row
+      const deptIn = deptStudents.filter(s => ad.attendance[s.idx] === 1).length;
+      const deptFull = deptStudents.filter(s => ad.attendance[s.idx] === 2).length;
+      const deptAbsent = deptStudents.filter(s => ad.attendance[s.idx] === 3).length;
+      const dRow = document.createElement('tr');
+      dRow.className = 'dept-row';
+      dRow.style.background = DEPT_COLORS[d] + '18';
+      dRow.innerHTML = `<td colspan="${colSpan}" style="border-top:2px solid ${DEPT_COLORS[d]}55;border-bottom:1px solid ${DEPT_COLORS[d]}33;">
+        <span style="color:${DEPT_COLORS[d]}">◆ ${deptName}</span>
+        <span style="margin-left:12px;font-size:11px;color:#888;font-weight:400;">
+          ${deptStudents.length} คน &nbsp;|&nbsp;
+          <span style="color:#e67e22">▶ ${deptIn}</span> &nbsp;
+          <span style="color:#4caf8a">✓✓ ${deptFull}</span> &nbsp;
+          <span style="color:#e74c3c">✗ ${deptAbsent}</span>
+        </span>
+      </td>`;
+      tbody.appendChild(dRow);
+
+      // Student rows
+      deptStudents.forEach(s => {
+        rowNum++;
+        const st = ad.attendance[s.idx] || 0;
+        let inCount = 0, fullCount = 0, absentCount = 0;
+        if(st === 1) inCount = 1;
+        else if(st === 2) fullCount = 1;
+        else if(st === 3) absentCount = 1;
+
+        const tr = document.createElement('tr');
+        let cells = `<td class="num">${rowNum}</td>
+          <td class="name">
+            <span class="dept-badge" style="background:${DEPT_COLORS[d]}22;color:${DEPT_COLORS[d]};border:1px solid ${DEPT_COLORS[d]}44;">${DEPT_SHORT[d]}</span>
+            ${s.name}
+          </td>`;
+        if(ad.dates.length > 0) {
+          ad.dates.forEach(() => {
+            cells += `<td onclick="cycleStatus(${a},${s.idx})" style="cursor:pointer;min-width:80px;">${sym(st)}</td>`;
+          });
+        } else {
+          cells += `<td onclick="cycleStatus(${a},${s.idx})" style="cursor:pointer;">${sym(st)}</td>`;
+        }
+        cells += `<td><span style="color:#e67e22">${inCount || ''}</span></td>
+                 <td><span style="color:#4caf8a">${fullCount || ''}</span></td>
+                 <td><span style="color:#e74c3c">${absentCount || ''}</span></td>`;
+        cells += `<td class="no-print"><button class="btn-del-date" onclick="resetStatus(${a},${s.idx})" title="รีเซ็ต">↺</button></td>`;
+        tr.innerHTML = cells;
+        tbody.appendChild(tr);
+      });
+    });
+  });
+
+  // Update tab indicator
+  const tab = document.getElementById(`tab-${a}`);
+  if(tab) tab.classList.toggle('has-data', ad.dates.length > 0);
+}
+
+// ===== CYCLE STATUS (manual) =====
+function cycleStatus(a, idx) {
+  if(!requireUnlock()) return;
+  ensureActivity(a);
+  const cur = activityData[a].attendance[idx] || 0;
+  const next = (cur + 1) % 4; // 0→1→2→3→0
+  activityData[a].attendance[idx] = next;
+  renderActivity(a);
+  saveConfig();
+}
+
+function resetStatus(a, idx) {
+  if(!requireUnlock()) return;
+  ensureActivity(a);
+  activityData[a].attendance[idx] = 0;
+  renderActivity(a);
+  saveConfig();
+}
+
+// ===== DATE MANAGEMENT =====
+function addDate(a) {
+  if(!requireUnlock()) return;
+  ensureActivity(a);
+  const val = document.getElementById(`inp-date-${a}`).value.trim();
+  if(!val) return;
+  if(activityData[a].dates.includes(val)) { showStatus('⚠️ วันที่นี้มีแล้ว','#e67e22'); return; }
+  activityData[a].dates.push(val);
+  renderActivity(a);
+  saveConfig();
+  document.getElementById(`inp-date-${a}`).value = '';
+}
+
+function removeDate(a, d) {
+  if(!requireUnlock()) return;
+  if(!confirm('ลบวันที่ ' + d + ' ?')) return;
+  activityData[a].dates = activityData[a].dates.filter(x => x !== d);
+  renderActivity(a);
+  saveConfig();
+}
+
+function importDates(a) {
+  if(!requireUnlock()) return;
+  const raw = prompt('วางวันที่หลายวัน (แต่ละบรรทัดหรือคั่นด้วยจุลภาค)\nเช่น:\n19-พ.ค.-69\n26-พ.ค.-69\n2-มิ.ย.-69');
+  if(!raw) return;
+  ensureActivity(a);
+  const lines = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+  let added = 0;
+  lines.forEach(v => {
+    if(!activityData[a].dates.includes(v)) { activityData[a].dates.push(v); added++; }
+  });
+  renderActivity(a);
+  saveConfig();
+  showStatus(`✅ เพิ่ม ${added} วันที่แล้ว`);
+}
+
+// ===== SUMMARY =====
+function renderSummary() {
+  const wrap = document.getElementById('summary-content');
+
+  // นับจำนวนกิจกรรมที่มีวันที่แล้ว (ตัวส่วน)
+  let totalActs = 0;
+  for(let a = 1; a <= TOTAL_ACTIVITIES; a++) {
+    if(activityData[a] && activityData[a].dates.length > 0) totalActs++;
+  }
+
+  wrap.innerHTML = `
+    <div style="padding:14px 14px 8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <h3 style="color:#c9a84c;">📊 สรุปการเข้าร่วมกิจกรรมรายบุคคล</h3>
+      <span style="font-size:12px;color:#888;">กิจกรรมทั้งหมด ${totalActs} ครั้ง</span>
+    </div>`;
+
+  if(totalActs === 0) {
+    wrap.innerHTML += `<div style="text-align:center;padding:40px;color:#555;">ยังไม่มีกิจกรรม — กรุณาเพิ่มวันที่ในแต่ละกิจกรรมก่อน</div>`;
+    return;
+  }
+
+  [1, 2].forEach(yr => {
+    const yrStudents = students.filter(s => (s.year || 1) === yr);
+    if(!yrStudents.length) return;
+
+    // Year separator header
+    const yrHeader = document.createElement('div');
+    yrHeader.style.cssText = 'margin:16px 14px 4px;padding:8px 14px;background:#1a2a4a;border-left:4px solid #c9a84c;border-radius:4px;font-weight:700;color:#c9a84c;font-size:15px;';
+    yrHeader.textContent = `ปวช.${yr}`;
+    wrap.appendChild(yrHeader);
+
+    DEPT_NAMES.forEach((deptName, d) => {
+      const deptStudents = students.map((s, i) => ({...s, idx: i})).filter(s => s.dept === d && (s.year || 1) === yr);
+      if(!deptStudents.length) return;
+
+      // สร้าง section ต่อแผนก
+      const section = document.createElement('div');
+      section.style.cssText = 'margin:0 14px 20px;';
+
+      // Department header
+      section.innerHTML = `
+        <div style="background:${DEPT_COLORS[d]}18;border:1px solid ${DEPT_COLORS[d]}44;border-bottom:none;border-radius:8px 8px 0 0;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:${DEPT_COLORS[d]};font-weight:600;">◆ ${deptName}</span>
+          <span style="font-size:12px;color:#888;">${deptStudents.length} คน</span>
+        </div>`;
+
+      // Table
+      const tableWrap = document.createElement('div');
+      tableWrap.style.cssText = 'overflow-x:auto;border:1px solid ' + DEPT_COLORS[d] + '44;border-radius:0 0 8px 8px;';
+
+      let tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:#0d1a35;">
+            <th style="padding:8px 10px;border:1px solid #c9a84c22;color:#c9a84c;width:36px;">ลำดับ</th>
+            <th style="padding:8px 10px;border:1px solid #c9a84c22;color:#c9a84c;text-align:left;min-width:160px;">ชื่อ – สกุล</th>
+            <th style="padding:8px 10px;border:1px solid #c9a84c22;color:#e67e22;">▶ เข้า</th>
+            <th style="padding:8px 10px;border:1px solid #c9a84c22;color:#4caf8a;">✓✓ ครบ</th>
+            <th style="padding:8px 10px;border:1px solid #c9a84c22;color:#e74c3c;">✗ ขาด</th>
+            <th style="padding:8px 10px;border:1px solid #c9a84c22;color:#c9a84c;">% เข้าร่วม</th>
+          </tr>
+        </thead><tbody>`;
+
+      deptStudents.forEach((s, rowIdx) => {
+        let cntIn = 0, cntFull = 0, cntAbsent = 0;
+        for(let a = 1; a <= TOTAL_ACTIVITIES; a++) {
+          if(!activityData[a] || !activityData[a].dates.length) continue;
+          const st = activityData[a].attendance[s.idx] || 0;
+          if(st === 1) cntIn++;
+          else if(st === 2) cntFull++;
+          else if(st === 3) cntAbsent++;
+        }
+
+        const pct = totalActs > 0 ? Math.round((cntFull / totalActs) * 100) : null;
+        let pctHtml;
+        if(pct === null || (cntIn === 0 && cntFull === 0 && cntAbsent === 0)) {
+          pctHtml = `<span style="color:#555;">—</span>`;
+        } else {
+          const color = pct >= 80 ? '#4caf8a' : pct >= 60 ? '#e67e22' : '#e74c3c';
+          pctHtml = `<span style="color:${color};font-weight:700;">${pct}%</span>`;
+        }
+
+        const rowBg = rowIdx % 2 === 0 ? '' : 'background:#c9a84c05;';
+        tableHtml += `<tr style="${rowBg}">
+          <td style="padding:6px 10px;border:1px solid #c9a84c11;text-align:center;color:#888;">${rowIdx + 1}</td>
+          <td style="padding:6px 10px;border:1px solid #c9a84c11;text-align:left;">${s.name}</td>
+          <td style="padding:6px 10px;border:1px solid #c9a84c11;text-align:center;color:#e67e22;">${cntIn || '—'}</td>
+          <td style="padding:6px 10px;border:1px solid #c9a84c11;text-align:center;color:#4caf8a;font-weight:${cntFull?'600':'400'};">${cntFull || '—'}</td>
+          <td style="padding:6px 10px;border:1px solid #c9a84c11;text-align:center;color:#e74c3c;">${cntAbsent || '—'}</td>
+          <td style="padding:6px 10px;border:1px solid #c9a84c11;text-align:center;">${pctHtml}</td>
+        </tr>`;
+      });
+
+      tableHtml += '</tbody></table>';
+      tableWrap.innerHTML = tableHtml;
+      section.appendChild(tableWrap);
+      wrap.appendChild(section);
+    });
+  });
+}
+
+// ===== FACE RECOGNITION =====
+async function initFaceSystem() {
+  try {
+    if(!faceModelsLoaded) {
+      setFaceStatus('⏳ กำลังโหลด AI โมเดล...');
+      await faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL);
+      await faceapi.nets.faceLandmark68TinyNet.loadFromUri(FACE_MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODEL_URL);
+      faceModelsLoaded = true;
+    }
+    setFaceStatus('📷 กำลังเปิดกล้อง...');
+    faceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user', width:640, height:480 } });
+    const video = document.getElementById('face-video');
+    video.srcObject = faceStream;
+    await new Promise(r => video.onloadedmetadata = r);
+    const canvas = document.getElementById('face-canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    setFaceStatus('✅ พร้อมแล้ว — หันหน้าเข้ากล้อง');
+    runFaceLoop();
+  } catch(e) {
+    setFaceStatus('❌ เกิดข้อผิดพลาด: ' + e.message);
+  }
+}
+
+async function runFaceLoop() {
+  const video = document.getElementById('face-video');
+  const canvas = document.getElementById('face-canvas');
+  if(!video || !faceStream) return;
+
+  const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
+  const results = await faceapi.detectAllFaces(video, opts).withFaceLandmarks(true).withFaceDescriptors();
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const regCount = Object.keys(faceDescriptors).length;
+
+  if(results.length === 0) {
+    if(faceMode === 'attend') {
+      if(regCount === 0) {
+        setFaceStatus('⚠️ ยังไม่มีใบหน้าลงทะเบียน — ไปที่ "📋 ลงทะเบียนใบหน้า" ก่อน');
+      } else {
+        setFaceStatus('🔍 กำลังหาใบหน้า... (ลงทะเบียนแล้ว ' + regCount + ' คน)');
+      }
+    }
+  } else {
+    const mirrored = results.map(r => {
+      const box = r.detection.box;
+      return { ...r, mirroredBox: new faceapi.Box({ x: canvas.width - box.x - box.width, y: box.y, width: box.width, height: box.height }) };
+    });
+
+    mirrored.forEach(r => {
+      const box = r.mirroredBox;
+      ctx.strokeStyle = faceScanType === 'in' ? '#4caf8a' : '#e67e22';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+      if(faceMode === 'attend') {
+        const date = document.getElementById('sel-att-date').value;
+        if(!date) {
+          setFaceStatus('⚠️ ไม่พบวันที่ — ปิดแล้วเปิดใหม่เพื่อเลือกวันที่');
+          return;
+        }
+        if(regCount === 0) {
+          setFaceStatus('⚠️ ยังไม่มีใบหน้าลงทะเบียน');
+          return;
+        }
+        const match = findBestFaceMatch(r.descriptor);
+        if(match) {
+          const key = match.idx;
+          faceConfirmCount[key] = (faceConfirmCount[key] || 0) + 1;
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(box.x, box.y - 24, box.width, 24);
+          ctx.fillStyle = faceMarked[key] ? '#888' : (faceScanType === 'in' ? '#4caf8a' : '#e67e22');
+          ctx.font = '14px Sarabun';
+          ctx.fillText(match.name, box.x + 4, box.y - 6);
+          if(!faceMarked[key]) {
+            const frames = faceConfirmCount[key];
+            setFaceStatus('👤 ' + match.name + ' — รอ ' + Math.max(0, 2 - frames) + ' เฟรม (dist: ' + match.dist.toFixed(2) + ')');
+            if(frames >= 2) {
+              faceMarked[key] = true;
+              markFaceAttend(key, date);
+            }
+          }
+        } else {
+          // ไม่รู้จัก — แสดง dist ที่ใกล้ที่สุดเพื่อ debug
+          let nearestDist = 1, nearestName = '';
+          Object.keys(faceDescriptors).forEach(k => {
+            const d = faceapi.euclideanDistance(r.descriptor, faceDescriptors[k]);
+            if(d < nearestDist) { nearestDist = d; nearestName = students[Number(k)]?.name || '?'; }
+          });
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(box.x, box.y - 24, box.width, 24);
+          ctx.fillStyle = '#e74c3c';
+          ctx.font = '13px Sarabun';
+          ctx.fillText('ไม่รู้จัก', box.x + 4, box.y - 6);
+          if(nearestDist < 1) {
+            setFaceStatus('❓ ไม่รู้จัก — ใกล้กับ "' + nearestName + '" สุด (dist: ' + nearestDist.toFixed(2) + ')');
+            addFaceLog('❓ ไม่รู้จัก — ใกล้ที่สุด: ' + nearestName + ' (' + nearestDist.toFixed(2) + ')', 'log-dup');
+          } else {
+            setFaceStatus('❓ ไม่รู้จัก — ไม่มีข้อมูลใบหน้าใกล้เคียง');
+          }
+        }
+      } else if(faceMode === 'register') {
+        ctx.fillStyle = 'rgba(76,175,138,0.15)';
+        ctx.fillRect(box.x, box.y, box.width, box.height);
+        ctx.fillStyle = '#4caf8a';
+        ctx.font = '14px Sarabun';
+        ctx.fillText('พร้อมถ่าย', box.x + 4, box.y + box.height - 6);
+      }
+    });
+  }
+  faceDetectLoop = requestAnimationFrame(runFaceLoop);
+}
+
+// threshold 0.56 — กว้างขึ้นเล็กน้อยจาก 0.52 เพื่อรองรับแสงต่างกัน
+function findBestFaceMatch(descriptor) {
+  let best = null, bestDist = 0.56;
+  Object.keys(faceDescriptors).forEach(k => {
+    const dist = faceapi.euclideanDistance(descriptor, faceDescriptors[k]);
+    if(dist < bestDist) { bestDist = dist; best = { idx: Number(k), name: students[Number(k)]?.name || '?', dist }; }
+  });
+  return best;
+}
+
+async function markFaceAttend(idx, date) {
+  ensureActivity(faceActivity);
+  if(!activityData[faceActivity].dates.includes(date)) {
+    addFaceLog('⚠️ ไม่พบวันที่: ' + date, 'log-dup'); return;
+  }
+
+  const currentStatus = activityData[faceActivity].attendance[idx] || 0;
+  let newStatus;
+
+  if(faceScanType === 'in') {
+    if(currentStatus >= 1) { addFaceLog('⏭ ' + students[idx]?.name + ' เช็คอินแล้ว', 'log-dup'); return; }
+    newStatus = 1;
+  } else {
+    if(currentStatus === 0) { addFaceLog('⚠️ ' + students[idx]?.name + ' ยังไม่ได้เช็คอิน', 'log-dup'); return; }
+    if(currentStatus >= 2) { addFaceLog('⏭ ' + students[idx]?.name + ' ครบแล้ว', 'log-dup'); return; }
+    newStatus = 2;
+  }
+
+  activityData[faceActivity].attendance[idx] = newStatus;
+  renderActivity(faceActivity);
+
+  const label = faceScanType === 'in' ? '▶ เข้า' : '✓✓ ออก';
+  addFaceLog(label + ': ' + students[idx]?.name + ' (' + date + ')', 'log-ok');
+  setFaceStatus('⏳ กำลังบันทึก ' + students[idx]?.name + '...');
+  updateFaceCount();
+
+  // Granular write — concurrent-safe
+  await saveMarkToFirebase(faceActivity, idx, newStatus);
+  setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]?.name);
+}
+
+// ===== FACE MODAL =====
+async function openFaceModal(a) {
+  if(!requireUnlock()) return;
+  faceActivity = a;
+  faceMarked = {}; faceConfirmCount = {};
+  document.getElementById('face-overlay').classList.add('active');
+  // ขั้นตอนที่ 1: เลือกวันที่ + ประเภทสแกน
+  document.getElementById('face-step-date').style.display = 'block';
+  document.getElementById('face-step-scan').style.display = 'none';
+  document.getElementById('face-step-status').textContent = '';
+  populateDateSelect();
+  setScanType('in'); // default เริ่มที่สแกนเข้า
+}
+
+async function confirmFaceDate() {
+  const date = document.getElementById('sel-att-date').value;
+  if(!date) { document.getElementById('face-step-status').textContent = '⚠️ กรุณาเลือกหรือเพิ่มวันที่ก่อน'; return; }
+  document.getElementById('face-step-date').style.display = 'none';
+  document.getElementById('face-step-scan').style.display = 'block';
+  const typeLabel = faceScanType === 'in' ? '▶ สแกนเข้า' : '✓✓ สแกนออก';
+  document.getElementById('face-scan-header').textContent = `📅 ${date}  —  ${typeLabel}`;
+  faceMarked = {}; faceConfirmCount = {};
+  setFaceMode('attend');
+  await initFaceSystem();
+}
+
+async function startFaceRegister() {
+  document.getElementById('face-step-date').style.display = 'none';
+  document.getElementById('face-step-scan').style.display = 'block';
+  document.getElementById('face-scan-header').textContent = '📋 ลงทะเบียนใบหน้านักเรียน';
+  setFaceMode('register');
+  await initFaceSystem();
+}
+
+function closeFaceModal() {
+  document.getElementById('face-overlay').classList.remove('active');
+  if(faceDetectLoop) { cancelAnimationFrame(faceDetectLoop); faceDetectLoop = null; }
+  if(faceStream) { faceStream.getTracks().forEach(t => t.stop()); faceStream = null; }
+  document.getElementById('face-log').innerHTML = '';
+  if(faceActivity > 0) renderActivity(faceActivity);
+  document.getElementById('face-step-date').style.display = 'block';
+  document.getElementById('face-step-scan').style.display = 'none';
+}
+
+function setScanType(type) {
+  faceScanType = type;
+  document.getElementById('btn-scan-in').className = 'scan-type-btn in-btn' + (type === 'in' ? ' active' : '');
+  document.getElementById('btn-scan-out').className = 'scan-type-btn out-btn' + (type === 'out' ? ' active' : '');
+}
+
+function setFaceMode(mode) {
+  faceMode = mode;
+  document.getElementById('face-attend-ctrl').style.display = mode === 'attend' ? 'flex' : 'none';
+  document.getElementById('face-register-ctrl').style.display = mode === 'register' ? 'flex' : 'none';
+  document.getElementById('btn-mode-attend').style.opacity = mode === 'attend' ? '1' : '0.5';
+  document.getElementById('btn-mode-register').style.opacity = mode === 'register' ? '1' : '0.5';
+  if(mode === 'register') populateStudentSelect();
+  faceMarked = {}; faceConfirmCount = {};
+  updateFaceCount();
+}
+
+function populateDateSelect() {
+  const sel = document.getElementById('sel-att-date');
+  ensureActivity(faceActivity);
+  const dates = activityData[faceActivity].dates;
+  sel.innerHTML = dates.length
+    ? dates.map(d => `<option value="${d}">${d}</option>`).join('')
+    : '<option value="">— ยังไม่มีวันที่ในกิจกรรมนี้ —</option>';
+}
+
+function addFaceDate() {
+  const inp = document.getElementById('inp-face-date');
+  const statusEl = document.getElementById('face-step-status');
+  const val = inp.value.trim();
+  if(!val) { statusEl.textContent = '⚠️ กรุณากรอกวันที่ก่อน'; return; }
+  ensureActivity(faceActivity);
+  if(activityData[faceActivity].dates.includes(val)) {
+    document.getElementById('sel-att-date').value = val;
+    statusEl.textContent = '✅ เลือกวันที่ ' + val + ' แล้ว';
+    inp.value = ''; return;
+  }
+  activityData[faceActivity].dates.push(val);
+  renderActivity(faceActivity);
+  populateDateSelect();
+  document.getElementById('sel-att-date').value = val;
+  inp.value = '';
+  saveConfig();
+  statusEl.textContent = '✅ เพิ่มวันที่ ' + val + ' แล้ว — กดยืนยันเพื่อเปิดกล้อง';
+}
+
+function populateStudentSelect() {
+  const sel = document.getElementById('sel-reg-student');
+  sel.innerHTML = students.map((s, i) =>
+    `<option value="${i}">${i+1}. [ปี${s.year||1} ${DEPT_SHORT[s.dept]}] ${s.name}</option>`
+  ).join('');
+}
+
+function updateFaceCount() {
+  const total = students.filter((_, i) => faceDescriptors[i]).length;
+  const marked = Object.keys(faceMarked).length;
+  document.getElementById('face-count').textContent = marked + ' / ' + total + ' คน';
+}
+
+function setFaceStatus(msg) { document.getElementById('face-status-msg').textContent = msg; }
+function addFaceLog(msg, cls) {
+  const log = document.getElementById('face-log');
+  const d = document.createElement('div');
+  d.className = cls || '';
+  d.textContent = msg;
+  log.insertBefore(d, log.firstChild);
+}
+
+async function captureDescriptor() {
+  const idx = Number(document.getElementById('sel-reg-student').value);
+  const video = document.getElementById('face-video');
+  setFaceStatus('⏳ กำลังจับใบหน้า...');
+  const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
+  const result = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
+  if(!result) { setFaceStatus('❌ ไม่พบใบหน้า ลองใหม่'); return; }
+  faceDescriptors[idx] = result.descriptor;
+  saveConfig();
+  addFaceLog('บันทึกใบหน้า: ' + students[idx]?.name, 'log-ok');
+  setFaceStatus('✅ บันทึกใบหน้า ' + students[idx]?.name + ' แล้ว');
+  const sel = document.getElementById('sel-reg-student');
+  if(idx + 1 < students.length) sel.value = idx + 1;
+}
+
+// ===== STUDENT MANAGEMENT =====
+function openStudentModal() {
+  if(!requireUnlock()) return;
+  buildStudentModal();
+  document.getElementById('student-overlay').classList.add('active');
+}
+function closeStudentModal() {
+  document.getElementById('student-overlay').classList.remove('active');
+}
+
+function buildStudentModal() {
+  const wrap = document.getElementById('student-modal-content');
+  wrap.innerHTML = '';
+  [1, 2].forEach(yr => {
+    const yrColor = yr === 1 ? '#4caf8a' : '#4a8abf';
+    const yrHeader = document.createElement('div');
+    yrHeader.innerHTML = `<div style="background:${yrColor}18;border:1px solid ${yrColor}44;border-radius:6px;padding:8px 12px;margin-bottom:10px;color:${yrColor};font-weight:700;font-size:14px;">⚜️ ปวช.${yr}</div>`;
+    wrap.appendChild(yrHeader);
+
+    DEPT_NAMES.forEach((deptName, d) => {
+      const deptStudents = students.filter(s => s.dept === d && (s.year || 1) === yr);
+      const section = document.createElement('div');
+      section.style.marginBottom = '12px';
+      section.innerHTML = `
+        <div style="color:${DEPT_COLORS[d]};font-weight:600;margin-bottom:4px;font-size:13px;">◆ ${deptName} (${deptStudents.length} คน)</div>
+        <textarea id="dept-names-${yr}-${d}" rows="5" style="width:100%;background:#080f20;border:1px solid ${DEPT_COLORS[d]}44;color:#d4c4a0;padding:8px;border-radius:6px;font-family:Sarabun,sans-serif;font-size:12px;resize:vertical;"
+          placeholder="ชื่อนักเรียน 1 คนต่อบรรทัด&#10;นายกฤษฎา ...">${deptStudents.map(s => s.name).join('\n')}</textarea>
+      `;
+      wrap.appendChild(section);
+    });
+  });
+}
+
+function saveStudents() {
+  const newStudents = [];
+  [1, 2].forEach(yr => {
+    DEPT_NAMES.forEach((_, d) => {
+      const ta = document.getElementById(`dept-names-${yr}-${d}`);
+      if(!ta) return;
+      const lines = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+      lines.forEach(name => newStudents.push({ name, dept: d, year: yr }));
+    });
+  });
+  if(newStudents.length === 0) { alert('กรุณากรอกรายชื่ออย่างน้อย 1 คน'); return; }
+  students = newStudents;
+  if(confirm('บันทึกรายชื่อ ' + students.length + ' คน\n(หมายเหตุ: ต้องลงทะเบียนใบหน้าใหม่ถ้ามีการเปลี่ยนลำดับ)')) {
+    saveConfig();
+    closeStudentModal();
+    renderActivity(currentActivity);
+    showStatus('✅ บันทึกรายชื่อ ' + students.length + ' คน แล้ว');
+  }
+}
+
+// ===== INIT =====
+async function init() {
+  await loadFromFirebase();
+  buildTabs();
+  buildPanels();
+  renderActivity(currentActivity);
+  bindInfoBar();
+}
+init();
+</script>
+
+<!-- FACE MODAL -->
+<div id="face-overlay" class="face-overlay no-print">
+  <div class="face-box">
+    <div class="face-header">
+      <span>📷 เช็คชื่อด้วยใบหน้า</span>
+      <button onclick="closeFaceModal()">✕</button>
+    </div>
+
+    <!-- ขั้นตอนที่ 1: เลือกวันที่ + ประเภทสแกน -->
+    <div id="face-step-date">
+      <div style="text-align:center;padding:6px 0 12px;color:#c9a84c;font-size:15px;font-weight:600;">📅 เลือกวันที่และประเภทการสแกน</div>
+
+      <div class="scan-type-bar">
+        <button id="btn-scan-in" class="scan-type-btn in-btn active" onclick="setScanType('in')">▶ สแกนเข้า</button>
+        <button id="btn-scan-out" class="scan-type-btn out-btn" onclick="setScanType('out')">✓✓ สแกนออก</button>
+      </div>
+
+      <div class="face-ctrl" style="margin-bottom:8px;">
+        <select id="sel-att-date" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:8px 10px;border-radius:4px;font-family:Sarabun,sans-serif;font-size:14px;"><option value="">— เลือกวันที่ —</option></select>
+      </div>
+      <div class="face-ctrl" style="margin-bottom:14px;">
+        <input id="inp-face-date" placeholder="หรือพิมพ์วันที่ใหม่ เช่น 19-พ.ค.-69" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:8px 10px;border-radius:4px;font-family:Sarabun,sans-serif;font-size:13px;" onkeydown="if(event.key==='Enter')addFaceDate()">
+        <button class="btn" style="padding:8px 14px;" onclick="addFaceDate()">+ เพิ่ม</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:2;padding:12px;font-size:14px;background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a;" onclick="confirmFaceDate()">✅ ยืนยัน — เปิดกล้อง</button>
+        <button class="btn" style="flex:1;padding:12px;font-size:13px;" onclick="startFaceRegister()">📋 ลงทะเบียนใบหน้า</button>
+      </div>
+      <div id="face-step-status" style="text-align:center;padding:8px 0 0;font-size:13px;color:#c9a84c;min-height:28px;"></div>
+    </div>
+
+    <!-- ขั้นตอนที่ 2: กล้อง -->
+    <div id="face-step-scan" style="display:none">
+      <div id="face-scan-header" style="text-align:center;padding:4px 0 10px;color:#4caf8a;font-size:14px;font-weight:600;"></div>
+      <div class="face-mode-bar" style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="btn-mode-attend" class="btn" onclick="setFaceMode('attend')">🎯 เช็คชื่อ</button>
+        <button id="btn-mode-register" class="btn" onclick="setFaceMode('register')">📋 ลงทะเบียนใบหน้า</button>
+      </div>
+      <div id="face-attend-ctrl" class="face-ctrl">
+        <span class="face-count" id="face-count">0 / 0 คน</span>
+      </div>
+      <div id="face-register-ctrl" class="face-ctrl" style="display:none">
+        <select id="sel-reg-student"></select>
+        <button class="btn" onclick="captureDescriptor()">📸 ถ่ายใบหน้า</button>
+      </div>
+      <div style="position:relative;width:100%;border-radius:8px;overflow:hidden;background:#000;margin-bottom:10px;">
+        <video id="face-video" autoplay muted playsinline style="width:100%;display:block;transform:scaleX(-1);"></video>
+        <canvas id="face-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);"></canvas>
+      </div>
+      <div class="face-status" id="face-status-msg">กำลังเตรียมระบบ...</div>
+      <div class="face-log" id="face-log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT MODAL -->
+<div id="student-overlay" class="modal-overlay no-print">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="modal-title">👥 จัดการรายชื่อนักเรียน</div>
+      <button onclick="closeStudentModal()" style="background:none;border:1px solid #c9a84c55;color:#c9a84c;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:12px;">ใส่ชื่อนักเรียน 1 คนต่อบรรทัด สามารถวางจากไฟล์ Excel ได้เลย</div>
+    <div id="student-modal-content"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn" style="flex:1;padding:10px;background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a;" onclick="saveStudents()">✅ บันทึกรายชื่อทั้งหมด</button>
+      <button class="btn" onclick="closeStudentModal()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

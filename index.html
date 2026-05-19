@@ -533,6 +533,31 @@ function printWeek(w) {
   window.addEventListener('afterprint', cleanup);
 }
 
+// ===== SOUND =====
+function playPing() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // โน้ตแรก — ปิ้งสูง
+    const o1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    o1.connect(g1); g1.connect(ctx.destination);
+    o1.frequency.value = 1047; // C6
+    o1.type = 'sine';
+    g1.gain.setValueAtTime(0.4, ctx.currentTime);
+    g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    o1.start(ctx.currentTime); o1.stop(ctx.currentTime + 0.25);
+    // โน้ตสอง — ปิ้งสูงขึ้นอีก
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.frequency.value = 1319; // E6
+    o2.type = 'sine';
+    g2.gain.setValueAtTime(0.3, ctx.currentTime + 0.12);
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+    o2.start(ctx.currentTime + 0.12); o2.stop(ctx.currentTime + 0.45);
+  } catch(e) {}
+}
+
 // ===== PIN / LOCK =====
 let pinUnlocked = false;
 let classPin = '1234';
@@ -926,6 +951,7 @@ async function markFaceAttend(idx, date) {
   setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
   updateFaceCount();
   await saveToFirebase();
+  playPing();
   setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]);
 }
 
