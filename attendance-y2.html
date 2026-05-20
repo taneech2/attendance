@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แบบบันทึกการเข้าร่วมกิจกรรมหน้าเสาธง — วิทยาลัยการอาชีพบุรีรัมย์</title>
+<title>แบบบันทึกการเข้าร่วมกิจกรรมหน้าเสาธง — ชช.2 วิทยาลัยการอาชีพบุรีรัมย์</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -187,7 +187,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
     <div class="subtitle">
       แบบบันทึกผลการเข้าร่วมกิจกรรมหน้าเสาธงของนักเรียน นักศึกษา<br>
       ภาคเรียนที่ <span id="lbl-term">1</span> ปีการศึกษา <span id="lbl-year">2569</span> &nbsp;|&nbsp;
-      กลุ่มเรียน <span id="lbl-class">ชช.2 สาขาวิชาช่างเชื่อมโลหะ</span> &nbsp;|&nbsp;
+      กลุ่มเรียน <span id="lbl-class">ชช.1 สาขาวิชาช่างเชื่อมโลหะ</span> &nbsp;|&nbsp;
       ครูที่ปรึกษา <span id="lbl-teacher">นายธานี ชมสุข</span>
     </div>
   </div>
@@ -196,7 +196,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
   <div class="info-bar no-print">
     <input id="inp-term" placeholder="ภาคเรียนที่" value="1">
     <input id="inp-year" placeholder="ปีการศึกษา" value="2569">
-    <input id="inp-class" placeholder="กลุ่มเรียน" value="ชช.2 สาขาวิชาช่างเชื่อมโลหะ">
+    <input id="inp-class" placeholder="กลุ่มเรียน" value="ชช.1 สาขาวิชาช่างเชื่อมโลหะ">
     <input id="inp-teacher" placeholder="ครูที่ปรึกษา" value="นายธานี ชมสุข">
   </div>
 
@@ -265,16 +265,16 @@ const TOTAL_WEEKS = 18;
 
 // ===== CLASS DATA =====
 const CLASS_SUBJECTS = [
-  { id:'math2',     name:'คณิตอุตฯ',          full:'คณิตศาสตร์อุตสาหกรรม',                        day:'จันทร์',    teacher:'อ.พรรณทิพย์' },
-  { id:'english2',  name:'อังกฤษช่าง',        full:'ภาษาอังกฤษเพื่องานช่างอุตสาหกรรม',           day:'จันทร์',    teacher:'อ.พีรชาติ' },
-  { id:'sheet',     name:'โลหะแผ่น',          full:'ผลิตภัณฑ์โลหะแผ่น 1',                        day:'จันทร์',    teacher:'อ.จักรกฤษณ์' },
-  { id:'gmaw',      name:'เชื่อม GMAW',        full:'เชื่อมอาร์กโลหะแก๊สคลุม 1',                  day:'อังคาร',   teacher:'อ.จักรกฤษณ์' },
-  { id:'mathweld',  name:'คณิตช่างเชื่อม',    full:'คณิตศาสตร์ช่างเชื่อม',                        day:'อังคาร',   teacher:'อ.ธานี' },
-  { id:'design',    name:'ออกแบบผลิตภัณฑ์',   full:'งานออกแบบผลิตภัณฑ์',                          day:'พุธ',       teacher:'อ.ธานี' },
-  { id:'cadweld',   name:'เขียนแบบ CAD',       full:'เขียนแบบงานเชื่อมด้วยคอมพิวเตอร์',           day:'พุธ',       teacher:'อ.ธานี' },
-  { id:'machining', name:'เครื่องมือกล',       full:'งานเครื่องมือกลเบื้องต้น',                    day:'พฤหัสบดี', teacher:'อ.จักรกฤษณ์' },
-  { id:'activity',  name:'จิตอาสา',           full:'กิจกรรมเสริมสร้างสุจริต จิตอาสา',             day:'พฤหัสบดี', teacher:'อ.จักรกฤษณ์' },
-  { id:'electric',  name:'ไฟฟ้าเบื้องต้น',    full:'งานไฟฟ้าและอิเล็กทรอนิกส์เบื้องต้น',         day:'ศุกร์',     teacher:'อ.เสกสรรค์' },
+  { id:'math_ind',   name:'คณิตอุตฯ',       full:'คณิตศาสตร์อุตสาหกรรม',               day:'จันทร์',    teacher:'อ.พรรณทิพย์' },
+  { id:'eng_tech',   name:'อังกฤษช่าง',      full:'ภาษาอังกฤษเพื่องานช่าง',             day:'จันทร์',    teacher:'อ.พีรชาติ' },
+  { id:'sheet',      name:'โลหะแผ่น',        full:'งานโลหะแผ่น',                         day:'อังคาร',   teacher:'อ.จักรกฤษณ์' },
+  { id:'gmaw',       name:'GMAW',             full:'การเชื่อม GMAW/MIG',                  day:'อังคาร',   teacher:'อ.จักรกฤษณ์' },
+  { id:'weld_math',  name:'คณิตช่างเชื่อม', full:'คณิตศาสตร์ช่างเชื่อม',               day:'พุธ',       teacher:'อ.จักรกฤษณ์' },
+  { id:'design',     name:'ออกแบบผลิตภัณฑ์', full:'การออกแบบผลิตภัณฑ์เบื้องต้น',       day:'พุธ',       teacher:'อ.ธานี' },
+  { id:'cad',        name:'CAD',              full:'เขียนแบบด้วยคอมพิวเตอร์',            day:'พฤหัสบดี', teacher:'อ.ธานี' },
+  { id:'machine',    name:'เครื่องมือกล',    full:'งานเครื่องมือกลเบื้องต้น',            day:'พฤหัสบดี', teacher:'อ.สุรสิทธิ์' },
+  { id:'volunteer',  name:'จิตอาสา',         full:'กิจกรรมจิตอาสา',                     day:'ศุกร์',     teacher:'อ.ธานี' },
+  { id:'electric',   name:'ไฟฟ้าเบื้องต้น',  full:'ไฟฟ้าเบื้องต้นสำหรับงานช่าง',       day:'ศุกร์',     teacher:'อ.ชลธี' },
 ];
 let classData = {};
 CLASS_SUBJECTS.forEach(s => { classData[s.id] = { dates: [], attendance: {} }; });
@@ -487,6 +487,7 @@ function renderClass(sid) {
   html += '<div class="date-controls no-print">';
   html += '<input id="inp-cdate-' + sid + '" placeholder="เช่น 19-พ.ค.-69" onkeydown="if(event.key===\'Enter\')addClassDate(\'' + sid + '\')">';
   html += '<button class="btn" onclick="addClassDate(\'' + sid + '\')">+ เพิ่มวันที่</button>';
+  html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importClassDates(\'' + sid + '\')">📅 วางหลายวันที่เดียว</button>';
   html += '<button class="btn btn-green" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
   html += '</div>';
 
@@ -549,6 +550,26 @@ function addClassDate(sid) {
   buildClassTabs();
   renderClass(sid);
   saveToFirebase();
+}
+
+function importClassDates(sid) {
+  if(!requireUnlock()) return;
+  const raw = prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n19-พ.ค.-69\n26-พ.ค.-69\n2-มิ.ย.-69');
+  if(!raw) return;
+  const dates = raw.split('\n').map(d => d.trim()).filter(d => d.length > 0);
+  if(dates.length === 0) return;
+  let added = 0;
+  dates.forEach(d => {
+    if(classData[sid].dates.includes(d)) return;
+    classData[sid].dates.push(d);
+    students.forEach((_, i) => {
+      if(!classData[sid].attendance[i]) classData[sid].attendance[i] = {};
+      classData[sid].attendance[i][d] = 0;
+    });
+    added++;
+  });
+  if(added > 0) { buildClassTabs(); renderClass(sid); saveToFirebase(); showStatus('✅ เพิ่ม ' + added + ' วันแล้ว'); }
+  else showStatus('⚠️ วันที่ซ้ำทั้งหมด ไม่มีวันใหม่','#e67e22');
 }
 
 function removeClassDate(sid, date) {

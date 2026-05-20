@@ -495,6 +495,7 @@ function renderClass(sid) {
   html += '<div class="date-controls no-print">';
   html += '<input id="inp-cdate-' + sid + '" placeholder="เช่น 19-พ.ค.-69" onkeydown="if(event.key===\'Enter\')addClassDate(\'' + sid + '\')">';
   html += '<button class="btn" onclick="addClassDate(\'' + sid + '\')">+ เพิ่มวันที่</button>';
+  html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importClassDates(\'' + sid + '\')">📅 วางหลายวันที่เดียว</button>';
   html += '<button class="btn btn-green" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
   html += '</div>';
 
@@ -557,6 +558,26 @@ function addClassDate(sid) {
   buildClassTabs();
   renderClass(sid);
   saveToFirebase();
+}
+
+function importClassDates(sid) {
+  if(!requireUnlock()) return;
+  const raw = prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n19-พ.ค.-69\n26-พ.ค.-69\n2-มิ.ย.-69');
+  if(!raw) return;
+  const dates = raw.split('\n').map(d => d.trim()).filter(d => d.length > 0);
+  if(dates.length === 0) return;
+  let added = 0;
+  dates.forEach(d => {
+    if(classData[sid].dates.includes(d)) return;
+    classData[sid].dates.push(d);
+    students.forEach((_, i) => {
+      if(!classData[sid].attendance[i]) classData[sid].attendance[i] = {};
+      classData[sid].attendance[i][d] = 0;
+    });
+    added++;
+  });
+  if(added > 0) { buildClassTabs(); renderClass(sid); saveToFirebase(); showStatus('✅ เพิ่ม ' + added + ' วันแล้ว'); }
+  else showStatus('⚠️ วันที่ซ้ำทั้งหมด ไม่มีวันใหม่','#e67e22');
 }
 
 function removeClassDate(sid, date) {
