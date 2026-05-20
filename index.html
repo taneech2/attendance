@@ -129,6 +129,26 @@ td.num{color:#c9a84c;font-weight:600;}
 body.hide-names td.name{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 body.hide-names .student-chip span{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 
+/* ===== MODE SWITCHER ===== */
+.mode-switcher{display:flex;gap:6px;margin-bottom:16px;}
+.mode-btn{flex:1;padding:9px 12px;border-radius:6px;border:2px solid #c9a84c44;background:#0d1530;color:#a89060;font-family:Sarabun,sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;text-align:center;}
+.mode-btn:hover{border-color:#c9a84c;color:#c9a84c;}
+.mode-btn.active{background:linear-gradient(135deg,#1a2e50,#0d1e3a);border-color:#c9a84c;color:#c9a84c;box-shadow:0 0 10px rgba(201,168,76,.2);}
+
+/* ===== CLASS SECTION ===== */
+#class-section{display:none;}
+#class-section.active{display:block;}
+.class-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;}
+.class-tab{background:#0d1530;border:1px solid #4caf8a44;color:#6ab890;padding:5px 10px;border-radius:4px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:12px;transition:.2s;}
+.class-tab:hover{border-color:#4caf8a;color:#4caf8a;}
+.class-tab.active{background:linear-gradient(135deg,#4caf8a,#2d7a5a);color:#fff;font-weight:700;border-color:#4caf8a;}
+.class-tab.has-data{border-color:#4caf8a88;}
+.class-panel{display:none;}
+.class-panel.active{display:block;}
+.subject-header{background:rgba(76,175,138,.06);border:1px solid #4caf8a44;border-radius:6px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.subject-title{color:#4caf8a;font-size:15px;font-weight:700;}
+.subject-meta{color:#a89060;font-size:12px;}
+
 /* ===== FACE MODAL ===== */
 .face-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;display:none;align-items:center;justify-content:center;}
 .face-overlay.active{display:flex;}
@@ -191,11 +211,23 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
     </div>
   </div>
 
+  <!-- MODE SWITCHER -->
+  <div class="mode-switcher no-print">
+    <button class="mode-btn active" id="mode-btn-attend" onclick="switchMode('attend')">🚩 เสาธง</button>
+    <button class="mode-btn" id="mode-btn-class" onclick="switchMode('class')">📚 วิชาเรียน</button>
+  </div>
+
   <!-- WEEK TABS -->
   <div class="week-tabs no-print" id="week-tabs"></div>
 
   <!-- WEEK PANELS (1-18) -->
   <div id="week-panels"></div>
+
+  <!-- CLASS SECTION -->
+  <div id="class-section">
+    <div class="class-tabs no-print" id="class-tabs"></div>
+    <div id="class-panels"></div>
+  </div>
 
   <!-- SIGNATURES -->
   <div class="sig-row">
@@ -236,6 +268,27 @@ for(let w=1;w<=18;w++){
 }
 let currentWeek = 1;
 const TOTAL_WEEKS = 18;
+
+// ===== CLASS DATA =====
+const CLASS_SUBJECTS = [
+  { id:'welding1',  name:'งานเชื่อมฯ',       full:'งานเชื่อมและโลหะแผ่นเบื้องต้น',              day:'จันทร์',    teacher:'อ.ชลธี' },
+  { id:'ndt',       name:'NDT',               full:'ทดสอบแบบไม่ทำลายสภาพ',                        day:'จันทร์',    teacher:'อ.ชลธี' },
+  { id:'english',   name:'อังกฤษ',            full:'ภาษาอังกฤษเพื่อการสื่อสาร',                  day:'อังคาร',   teacher:'อ.พีรชาติ' },
+  { id:'thai',      name:'ภาษาไทย',           full:'ภาษาไทยเพื่อการสื่อสารในงานอาชีพ',           day:'อังคาร',   teacher:'อ.พรพรหม' },
+  { id:'science',   name:'วิทยาศาสตร์',       full:'วิทยาศาสตร์พื้นฐานอาชีพ',                    day:'อังคาร',   teacher:'อ.จิดาภา' },
+  { id:'math',      name:'คณิตศาสตร์',        full:'คณิตศาสตร์พื้นฐานอาชีพ',                     day:'พุธ',       teacher:'อ.พรรณทิพย์' },
+  { id:'weldstd',   name:'มาตรฐานเชื่อม',     full:'มาตรฐานการเชื่อมเบื้องต้น',                  day:'พุธ',       teacher:'อ.สุรสิทธิ์' },
+  { id:'weldproc',  name:'กระบวนการเชื่อม',   full:'กระบวนการเชื่อม',                             day:'พุธ',       teacher:'อ.สุรสิทธิ์' },
+  { id:'digital',   name:'ดิจิทัล',           full:'การใช้เทคโนโลยีดิจิทัลเพื่ออาชีพ',           day:'พฤหัสบดี', teacher:'อ.ธานี' },
+  { id:'scout',     name:'ลูกเสือ',           full:'กิจกรรมลูกเสือวิสามัญ 1',                    day:'พฤหัสบดี', teacher:'อ.ธานี' },
+  { id:'materials', name:'วัสดุช่าง',          full:'วัสดุงานช่างอุตสาหกรรม',                     day:'ศุกร์',     teacher:'อ.ธานี' },
+  { id:'practice',  name:'ฝึกฝีมือ',          full:'งานฝึกฝีมือ',                                 day:'ศุกร์',     teacher:'อ.ธานี' },
+];
+let classData = {};
+CLASS_SUBJECTS.forEach(s => { classData[s.id] = { dates: [], attendance: {} }; });
+let currentSubject = CLASS_SUBJECTS[0].id;
+let appMode = 'attend'; // 'attend' | 'class'
+let faceSubject = ''; // subject id เมื่อสแกนในโหมดวิชาเรียน
 
 // ===== INIT ===== (see async init() below)
 
@@ -380,6 +433,140 @@ function cycle(w,i,d){
   if(!wd.attendance[i]) wd.attendance[i]={};
   wd.attendance[i][d]=((wd.attendance[i][d]||0)+1)%3;
   renderWeek(w);
+  saveToFirebase();
+}
+
+// ===== MODE SWITCHER =====
+function switchMode(mode) {
+  appMode = mode;
+  const attendSection = document.getElementById('week-tabs').parentElement;
+  document.getElementById('mode-btn-attend').classList.toggle('active', mode==='attend');
+  document.getElementById('mode-btn-class').classList.toggle('active', mode==='class');
+  // เสาธง section
+  document.getElementById('week-tabs').style.display = mode==='attend' ? '' : 'none';
+  document.getElementById('week-panels').style.display = mode==='attend' ? '' : 'none';
+  // class section
+  document.getElementById('class-section').classList.toggle('active', mode==='class');
+}
+
+// ===== CLASS TABS & PANELS =====
+function buildClassTabs() {
+  const wrap = document.getElementById('class-tabs');
+  wrap.innerHTML = '';
+  CLASS_SUBJECTS.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'class-tab' + (s.id===currentSubject ? ' active' : '');
+    btn.id = 'ctab-' + s.id;
+    btn.textContent = s.name;
+    const cd = classData[s.id];
+    if(cd && cd.dates.length > 0) btn.classList.add('has-data');
+    btn.onclick = () => { currentSubject = s.id; buildClassTabs(); renderClass(s.id); };
+    wrap.appendChild(btn);
+  });
+}
+
+function buildClassPanels() {
+  const wrap = document.getElementById('class-panels');
+  wrap.innerHTML = '';
+  CLASS_SUBJECTS.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'class-panel' + (s.id===currentSubject ? ' active' : '');
+    div.id = 'cpanel-' + s.id;
+    wrap.appendChild(div);
+  });
+}
+
+function renderClass(sid) {
+  // อัปเดต tab
+  document.querySelectorAll('.class-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('cpanel-' + sid);
+  if(!panel) return;
+  panel.classList.add('active');
+  const subj = CLASS_SUBJECTS.find(s => s.id===sid);
+  const cd = classData[sid];
+  if(!cd) return;
+
+  let html = '<div class="subject-header">';
+  html += '<span class="subject-title">' + subj.full + '</span>';
+  html += '<span class="subject-meta">📅 ' + subj.day + ' &nbsp;|&nbsp; 👤 ' + subj.teacher + '</span>';
+  html += '</div>';
+
+  // date controls
+  html += '<div class="date-controls no-print">';
+  html += '<input id="inp-cdate-' + sid + '" placeholder="เช่น 19-พ.ค.-69" onkeydown="if(event.key===\'Enter\')addClassDate(\'' + sid + '\')">';
+  html += '<button class="btn" onclick="addClassDate(\'' + sid + '\')">+ เพิ่มวันที่</button>';
+  html += '<button class="btn btn-green" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
+  html += '</div>';
+
+  if(cd.dates.length === 0) {
+    html += '<div style="text-align:center;padding:24px;color:#a89060;">ยังไม่มีวันที่ — เพิ่มวันที่เพื่อเริ่มเช็คชื่อ</div>';
+  } else {
+    html += '<div class="table-wrapper"><table><thead><tr>';
+    html += '<th>ลำดับ</th><th class="name">ชื่อ – สกุล</th>';
+    cd.dates.forEach(d => {
+      html += '<th>' + d + '<button class="btn-del-date no-print" onclick="removeClassDate(\'' + sid + '\',\'' + d + '\')" title="ลบวันนี้">✕</button></th>';
+    });
+    html += '<th>มา</th><th>ขาด</th></tr></thead><tbody>';
+    students.forEach((name, idx) => {
+      const att = cd.attendance[idx] || {};
+      let ma = 0, noma = 0;
+      cd.dates.forEach(d => { if(att[d]===1) ma++; else if(att[d]===2) noma++; });
+      html += '<tr><td class="num">' + (idx+1) + '</td><td class="name">' + name + '</td>';
+      cd.dates.forEach(d => {
+        const s = att[d] || 0;
+        html += '<td onclick="cycleClass(\'' + sid + '\',' + idx + ',\'' + d + '\')" style="cursor:pointer">' + classSymbol(s) + '</td>';
+      });
+      html += '<td><span class="badge-ma">' + ma + '</span></td>';
+      html += '<td><span class="badge-noma">' + noma + '</span></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  panel.innerHTML = html;
+}
+
+function classSymbol(s) {
+  if(s===1) return '<span class="check">✓</span>';
+  if(s===2) return '<span class="cross">✗</span>';
+  return '<span class="slash">/</span>';
+}
+
+function cycleClass(sid, idx, date) {
+  if(!requireUnlock()) return;
+  if(!classData[sid].attendance[idx]) classData[sid].attendance[idx] = {};
+  const cur = classData[sid].attendance[idx][date] || 0;
+  classData[sid].attendance[idx][date] = (cur + 1) % 3;
+  renderClass(sid);
+  saveToFirebase();
+}
+
+function addClassDate(sid) {
+  if(!requireUnlock()) return;
+  const inp = document.getElementById('inp-cdate-' + sid);
+  const d = inp.value.trim();
+  if(!d) { alert('กรุณาใส่วันที่'); return; }
+  if(classData[sid].dates.includes(d)) {
+    showStatus('⚠️ มีวันที่นี้แล้ว','#e67e22'); return;
+  }
+  classData[sid].dates.push(d);
+  students.forEach((_, i) => {
+    if(!classData[sid].attendance[i]) classData[sid].attendance[i] = {};
+    classData[sid].attendance[i][d] = 0;
+  });
+  inp.value = '';
+  buildClassTabs();
+  renderClass(sid);
+  saveToFirebase();
+}
+
+function removeClassDate(sid, date) {
+  if(!requireUnlock()) return;
+  if(!confirm('ลบวันที่ "' + date + '" ออกจากวิชานี้?')) return;
+  classData[sid].dates = classData[sid].dates.filter(x => x !== date);
+  Object.keys(classData[sid].attendance).forEach(i => {
+    delete classData[sid].attendance[i][date];
+  });
+  renderClass(sid);
   saveToFirebase();
 }
 
@@ -666,12 +853,20 @@ function applyData(parsed){
     const ts = src.timestamps||{};
     Object.keys(ts).forEach(k=>{ weekData[w].timestamps[Number(k)] = ts[k]; });
   }
+  // restore classData
+  const cd = parsed.classData || {};
+  CLASS_SUBJECTS.forEach(s => {
+    const src = cd[s.id] || {};
+    classData[s.id] = { dates: src.dates || [], attendance: {} };
+    const att = src.attendance || {};
+    Object.keys(att).forEach(k => { classData[s.id].attendance[Number(k)] = att[k]; });
+  });
   applyInfoBar(parsed.infoBar);
   return true;
 }
 
 async function saveToFirebase(){
-  const payload = JSON.stringify({ students, weekData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD(), fp: facePhotos, savedAt: Date.now() });
+  const payload = JSON.stringify({ students, weekData, classData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD(), fp: facePhotos, savedAt: Date.now() });
   // บันทึก localStorage ก่อนเสมอ (ทันที ไม่รอเน็ต)
   localStorage.setItem(LS_KEY, payload);
   try{
@@ -770,6 +965,7 @@ function deserializeFP(raw) {
 
 async function openFaceModal(w) {
   if(!requireUnlock()) return;
+  faceSubject = ''; // เสาธง mode — reset subject
   faceWeek = w;
   faceMarked = {}; faceConfirmCount = {};
   document.getElementById('face-overlay').classList.add('active');
@@ -809,8 +1005,9 @@ function closeFaceModal() {
   if(faceDetectLoop) { cancelAnimationFrame(faceDetectLoop); faceDetectLoop = null; }
   if(faceStream) { faceStream.getTracks().forEach(t => t.stop()); faceStream = null; }
   document.getElementById('face-log').innerHTML = '';
-  // re-render ตารางหลังปิด modal
-  if(faceWeek > 0) renderWeek(faceWeek);
+  // re-render หลังปิด modal
+  if(faceSubject) { renderClass(faceSubject); faceSubject = ''; }
+  else if(faceWeek > 0) renderWeek(faceWeek);
   // reset กลับไปขั้นตอนที่ 1 สำหรับครั้งถัดไป
   document.getElementById('face-step-date').style.display = 'block';
   document.getElementById('face-step-scan').style.display = 'none';
@@ -1011,17 +1208,32 @@ function findBestFaceMatch(descriptor) {
 }
 
 async function markFaceAttend(idx, date) {
+  // โหมดวิชาเรียน
+  if(faceSubject) {
+    const cd = classData[faceSubject];
+    if(!cd || !cd.dates.includes(date)) { addFaceLog('⚠️ ไม่พบวันที่: ' + date, 'log-dup'); return; }
+    if(!cd.attendance[idx]) cd.attendance[idx] = {};
+    if(cd.attendance[idx][date] === 1) { addFaceLog('⏭ เช็คแล้ว: ' + students[idx], 'log-dup'); return; }
+    cd.attendance[idx][date] = 1;
+    renderClass(faceSubject);
+    addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
+    setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
+    updateFaceCount();
+    await saveToFirebase();
+    playPing();
+    setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]);
+    return;
+  }
+  // โหมดเสาธง (เดิม)
   if(!weekData[faceWeek] || !weekData[faceWeek].dates.includes(date)){
     addFaceLog('⚠️ ไม่พบวันที่: ' + date, 'log-dup'); return;
   }
   if(!weekData[faceWeek].attendance[idx]) weekData[faceWeek].attendance[idx] = {};
-  // ถ้าเช็คชื่อแล้ว — แจ้งเตือนและไม่เขียนทับเวลา
   if(weekData[faceWeek].attendance[idx][date] === 1) {
     const existTs = weekData[faceWeek].timestamps?.[idx]?.[date] || '';
     addFaceLog('⏭ เช็คแล้ว: ' + students[idx] + (existTs?' ('+existTs+')':''), 'log-dup'); return;
   }
-  weekData[faceWeek].attendance[idx][date] = 1; // ✓ มา
-  // บันทึกเวลาครั้งแรกเท่านั้น — ไม่เขียนทับถ้ามีอยู่แล้ว
+  weekData[faceWeek].attendance[idx][date] = 1;
   if(!weekData[faceWeek].timestamps) weekData[faceWeek].timestamps = {};
   if(!weekData[faceWeek].timestamps[idx]) weekData[faceWeek].timestamps[idx] = {};
   if(!weekData[faceWeek].timestamps[idx][date]) weekData[faceWeek].timestamps[idx][date] = nowHHMM();
@@ -1032,6 +1244,29 @@ async function markFaceAttend(idx, date) {
   await saveToFirebase();
   playPing();
   setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]);
+}
+
+async function openFaceModalClass(sid) {
+  if(!requireUnlock()) return;
+  faceSubject = sid;
+  faceWeek = 0; // ไม่ใช้ week mode
+  faceMarked = {}; faceConfirmCount = {};
+  document.getElementById('face-overlay').classList.add('active');
+  document.getElementById('face-step-date').style.display = 'block';
+  document.getElementById('face-step-scan').style.display = 'none';
+  document.getElementById('face-step-status').textContent = '';
+  // populate dates จาก classData
+  const sel = document.getElementById('sel-att-date');
+  const dates = classData[sid]?.dates || [];
+  if(!dates.length) {
+    sel.innerHTML = '<option value="">— ยังไม่มีวันที่ —</option>';
+  } else {
+    sel.innerHTML = dates.map(d => '<option value="' + d + '">' + d + '</option>').join('');
+    const today = todayThaiDate();
+    sel.value = dates.includes(today) ? today : dates[dates.length - 1];
+  }
+  const subj = CLASS_SUBJECTS.find(s => s.id===sid);
+  document.getElementById('face-scan-header').textContent = '📚 ' + subj.full;
 }
 
 async function captureDescriptor() {
@@ -1066,6 +1301,9 @@ async function init(){
   await loadFromFirebase();
   buildTabs();
   buildPanels();
+  buildClassTabs();
+  buildClassPanels();
+  renderClass(currentSubject);
   renderStudentChips();
   renderWeek(currentWeek);
   bindInfoBar();
