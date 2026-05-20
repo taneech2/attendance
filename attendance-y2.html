@@ -265,16 +265,16 @@ const TOTAL_WEEKS = 18;
 
 // ===== CLASS DATA =====
 const CLASS_SUBJECTS = [
-  { id:'math_ind',   name:'คณิตอุตฯ',       full:'คณิตศาสตร์อุตสาหกรรม',               day:'จันทร์',    teacher:'อ.พรรณทิพย์' },
-  { id:'eng_tech',   name:'อังกฤษช่าง',      full:'ภาษาอังกฤษเพื่องานช่าง',             day:'จันทร์',    teacher:'อ.พีรชาติ' },
-  { id:'sheet',      name:'โลหะแผ่น',        full:'งานโลหะแผ่น',                         day:'อังคาร',   teacher:'อ.จักรกฤษณ์' },
-  { id:'gmaw',       name:'GMAW',             full:'การเชื่อม GMAW/MIG',                  day:'อังคาร',   teacher:'อ.จักรกฤษณ์' },
-  { id:'weld_math',  name:'คณิตช่างเชื่อม', full:'คณิตศาสตร์ช่างเชื่อม',               day:'พุธ',       teacher:'อ.จักรกฤษณ์' },
-  { id:'design',     name:'ออกแบบผลิตภัณฑ์', full:'การออกแบบผลิตภัณฑ์เบื้องต้น',       day:'พุธ',       teacher:'อ.ธานี' },
-  { id:'cad',        name:'CAD',              full:'เขียนแบบด้วยคอมพิวเตอร์',            day:'พฤหัสบดี', teacher:'อ.ธานี' },
-  { id:'machine',    name:'เครื่องมือกล',    full:'งานเครื่องมือกลเบื้องต้น',            day:'พฤหัสบดี', teacher:'อ.สุรสิทธิ์' },
-  { id:'volunteer',  name:'จิตอาสา',         full:'กิจกรรมจิตอาสา',                     day:'ศุกร์',     teacher:'อ.ธานี' },
-  { id:'electric',   name:'ไฟฟ้าเบื้องต้น',  full:'ไฟฟ้าเบื้องต้นสำหรับงานช่าง',       day:'ศุกร์',     teacher:'อ.ชลธี' },
+  { id:'math_ind',   name:'คณิตอุตฯ',       full:'คณิตศาสตร์อุตสาหกรรม',                          day:'จันทร์',    teacher:'อ.พรรณทิพย์' },
+  { id:'eng_tech',   name:'อังกฤษช่าง',      full:'ภาษาอังกฤษเพื่องานช่างอุตสาหกรรม',             day:'จันทร์',    teacher:'อ.พีรชาติ' },
+  { id:'sheet',      name:'โลหะแผ่น',        full:'ผลิตภัณฑ์โลหะแผ่น 1',                           day:'จันทร์',    teacher:'อ.จักรกฤษณ์' },
+  { id:'gmaw',       name:'GMAW',             full:'เชื่อมอาร์กโลหะแก๊สคลุม 1',                    day:'อังคาร',   teacher:'อ.จักรกฤษณ์' },
+  { id:'weld_math',  name:'คณิตช่างเชื่อม', full:'คณิตศาสตร์ช่างเชื่อม',                          day:'อังคาร',   teacher:'อ.ธานี' },
+  { id:'design',     name:'ออกแบบผลิตภัณฑ์', full:'งานออกแบบผลิตภัณฑ์',                           day:'พุธ',       teacher:'อ.ธานี' },
+  { id:'cad',        name:'CAD',              full:'เขียนแบบงานเชื่อมด้วยคอมพิวเตอร์',             day:'พุธ',       teacher:'อ.ธานี' },
+  { id:'machine',    name:'เครื่องมือกล',    full:'งานเครื่องมือกลเบื้องต้น',                      day:'พฤหัสบดี', teacher:'อ.จักรกฤษณ์' },
+  { id:'volunteer',  name:'จิตอาสา',         full:'กิจกรรมเสริมสร้างสุจริต จิตอาสา',              day:'พฤหัสบดี', teacher:'อ.จักรกฤษณ์' },
+  { id:'electric',   name:'ไฟฟ้าเบื้องต้น',  full:'งานไฟฟ้าและอิเล็กทรอนิกส์เบื้องต้น',          day:'ศุกร์',     teacher:'อ.เสกสรรค์' },
 ];
 let classData = {};
 CLASS_SUBJECTS.forEach(s => { classData[s.id] = { dates: [], attendance: {} }; });
