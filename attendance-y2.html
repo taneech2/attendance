@@ -1049,6 +1049,13 @@ async function init(){
   renderStudentChips();
   renderWeek(currentWeek);
   bindInfoBar();
+  // Auto-refresh จาก Firebase ทุก 30 วินาที (ไม่ refresh ถ้า modal เปิดอยู่)
+  setInterval(async () => {
+    const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
+    if(modalOpen) return;
+    await loadFromFirebase();
+    renderWeek(currentWeek);
+  }, 30000);
 }
 
 init();

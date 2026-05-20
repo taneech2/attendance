@@ -1178,6 +1178,13 @@ async function init() {
   buildPanels();
   renderActivity(currentActivity);
   bindInfoBar();
+  // Auto-refresh จาก Firebase ทุก 30 วินาที (ไม่ refresh ถ้า modal เปิดอยู่)
+  setInterval(async () => {
+    const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
+    if(modalOpen) return;
+    await loadFromFirebase();
+    renderActivity(currentActivity);
+  }, 30000);
 }
 init();
 </script>
