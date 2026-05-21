@@ -1181,15 +1181,15 @@ async function runFaceLoop() {
           const key = match.idx;
           faceConfirmCount[key] = (faceConfirmCount[key] || 0) + 1;
           // แสดงชื่อ + progress bar ว่าเฟรมที่เท่าไรแล้ว
-          const prog = Math.min(faceConfirmCount[key], 5);
+          const prog = Math.min(faceConfirmCount[key], 2);
           ctx.fillStyle = 'rgba(0,0,0,0.6)';
           ctx.fillRect(box.x, box.y - 24, box.width, 24);
           ctx.fillStyle = faceMarked[key] ? '#e67e22' : '#4caf8a';
           ctx.font = '14px Sarabun';
-          const label = faceMarked[key] ? match.name : match.name + ' (' + prog + '/5)';
+          const label = faceMarked[key] ? match.name : match.name + ' (' + prog + '/2)';
           ctx.fillText(label, box.x + 4, box.y - 6);
-          // เช็คชื่อหลังเห็นหน้า 5 เฟรมติดต่อกัน (เดิม 2)
-          if(!faceMarked[key] && faceConfirmCount[key] >= 5) {
+          // เช็คชื่อหลังเห็นหน้า 2 เฟรมติดต่อกัน
+          if(!faceMarked[key] && faceConfirmCount[key] >= 2) {
             faceMarked[key] = true;
             markFaceAttend(key, date);
           }
@@ -1215,7 +1215,7 @@ async function runFaceLoop() {
 }
 
 function findBestFaceMatch(descriptor) {
-  let best = null, bestDist = 0.45; // threshold เข้มขึ้น (เดิม 0.52)
+  let best = null, bestDist = 0.52; // threshold เดิม — เร็วและแม่น
   Object.keys(faceDescriptors).forEach(k => {
     const dist = faceapi.euclideanDistance(descriptor, faceDescriptors[k]);
     if(dist < bestDist) { bestDist = dist; best = { idx: Number(k), name: students[Number(k)], dist }; }
