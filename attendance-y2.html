@@ -341,7 +341,7 @@ function buildPanels(){
   const sumDiv = document.createElement('div');
   sumDiv.className = 'week-panel';
   sumDiv.id = 'panel-summary';
-  sumDiv.innerHTML = `<div class="no-print" style="padding:10px 0 0;display:flex;justify-content:flex-end;gap:8px;"><button class="btn" style="background:linear-gradient(135deg,#1a5c2a,#0d3a18);border-color:#4caf8a55;" onclick="exportToExcel()">📊 Export ข้อมูลทั้งหมด (.xlsx)</button><button class="btn" onclick="printWeek(0)">🖨 พิมพ์สรุปทั้งหมด</button></div><div class="summary-wrap" id="summary-content"></div>`;
+  sumDiv.innerHTML = `<div class="no-print" style="padding:10px 0 0;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;"><button class="btn" style="background:linear-gradient(135deg,#1a5c2a,#0d3a18);border-color:#4caf8a55;" onclick="exportToExcel()">📊 Export ทุก Sheet (.xlsx)</button><button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="exportSingleSheet()">📋 Export แผ่นเดียว (NotebookLM)</button><button class="btn" onclick="printWeek(0)">🖨 พิมพ์สรุปทั้งหมด</button></div><div class="summary-wrap" id="summary-content"></div>`;
   wrap.appendChild(sumDiv);
 }
 
@@ -820,6 +820,79 @@ function exportToExcel() {
   const fname = `เช็คชื่อ_${infoBar.cls||'ชั้นเรียน'}_ภาค${infoBar.term}_${infoBar.year}.xlsx`;
   XLSX.writeFile(wb, fname);
   showStatus('📊 Export สำเร็จ: ' + fname);
+}
+
+function exportSingleSheet() {
+  if(!requireUnlock()) return;
+  const ib = {
+    term:    document.getElementById('inp-term')?.value    || '',
+    year:    document.getElementById('inp-year')?.value    || '',
+    cls:     document.getElementById('inp-class')?.value   || '',
+    teacher: document.getElementById('inp-teacher')?.value || '',
+  };
+
+  const rows = [];
+
+  // ── หัวข้อ ──
+  rows.push(['แบบบันทึกผลการเข้าร่วมกิจกรรมหน้าเสาธง/วิชาเรียน']);
+  rows.push([`กลุ่มเรียน: ${ib.cls}`, '', `ภาคเรียนที่: ${ib.term}`, '', `ปีการศึกษา: ${ib.year}`]);
+  rows.push([`ครูที่ปรึกษา: ${ib.teacher}`]);
+  rows.push([]); // เว้นบรรทัด
+
+  // ── หัวตาราง ──
+  rows.push([
+    'ลำดับ', 'ชื่อ – สกุล',
+    'เสาธง\nมา', 'เสาธง\nขาด', 'เสาธง\n%',
+    ...CLASS_SUBJECTS.flatMap(s => [s.name+'\nมา', s.name+'\nขาด', s.name+'\n%']),
+    'รวมมาทั้งหมด', 'รวมขาดทั้งหมด', 'เฉลี่ย%ทุกวิชา'
+  ]);
+
+  // ── ข้อมูลนักเรียนแต่ละคน ──
+  students.forEach((name, idx) => {
+    // เสาธง
+    let sMa=0, sNoma=0, sDays=0;
+    for(let w=1;w<=18;w++){
+      const wd=weekData[w]; if(!wd) continue;
+      wd.dates.forEach(d=>{
+        const v=wd.attendance[idx]?.[d]||0;
+        if(v===1){sMa++;sDays++;} else if(v===2){sNoma++;sDays++;}
+      });
+    }
+    const sPct = sDays>0 ? parseFloat((sMa/sDays*100).toFixed(1)) : '-';
+
+    // วิชาเรียน
+    let totalMa=sMa, totalNoma=sNoma, pctSum=0, pctCount=0;
+    const classVals = CLASS_SUBJECTS.flatMap(s=>{
+      const cd=classData[s.id]; let ma=0,noma=0,days=0;
+      cd.dates.forEach(d=>{
+        const v=cd.attendance[idx]?.[d]||0;
+        if(v===1){ma++;days++;} else if(v===2){noma++;days++;}
+      });
+      totalMa+=ma; totalNoma+=noma;
+      if(days>0){ pctSum+=ma/days*100; pctCount++; }
+      const pct=days>0?parseFloat((ma/days*100).toFixed(1)):'-';
+      return [ma, noma, pct];
+    });
+
+    const avgPct = pctCount>0 ? parseFloat((pctSum/pctCount).toFixed(1)) : '-';
+    rows.push([idx+1, name, sMa, sNoma, sPct, ...classVals, totalMa, totalNoma, avgPct]);
+  });
+
+  rows.push([]); // เว้นบรรทัด
+
+  // ── หมายเหตุ ──
+  rows.push(['หมายเหตุ: ✓ = มาเรียน  ✗ = ขาดเรียน  / = ยังไม่บันทึก']);
+  rows.push([`ส่งออกเมื่อ: ${new Date().toLocaleString('th-TH')}`]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const colWidths = [6, 28, 10, 10, 10, ...CLASS_SUBJECTS.flatMap(()=>[10,10,10]), 14, 14, 14];
+  ws['!cols'] = colWidths.map(w=>({wch:w}));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'สรุปทั้งหมด');
+  const fname = `สรุปเช็คชื่อ_${ib.cls||'ชั้นเรียน'}_ภาค${ib.term}_${ib.year}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  showStatus('📋 Export แผ่นเดียวสำเร็จ: ' + fname);
 }
 
 // ===== PRINT =====
