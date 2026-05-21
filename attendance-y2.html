@@ -250,6 +250,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // ===== DATA =====
 const DEFAULT_STUDENTS = [];
@@ -340,7 +341,7 @@ function buildPanels(){
   const sumDiv = document.createElement('div');
   sumDiv.className = 'week-panel';
   sumDiv.id = 'panel-summary';
-  sumDiv.innerHTML = `<div class="no-print" style="padding:10px 0 0;text-align:right;"><button class="btn" onclick="printWeek(0)">🖨 พิมพ์สรุปทั้งหมด</button></div><div class="summary-wrap" id="summary-content"></div>`;
+  sumDiv.innerHTML = `<div class="no-print" style="padding:10px 0 0;display:flex;justify-content:flex-end;gap:8px;"><button class="btn" style="background:linear-gradient(135deg,#1a5c2a,#0d3a18);border-color:#4caf8a55;" onclick="exportToExcel()">📊 Export ข้อมูลทั้งหมด (.xlsx)</button><button class="btn" onclick="printWeek(0)">🖨 พิมพ์สรุปทั้งหมด</button></div><div class="summary-wrap" id="summary-content"></div>`;
   wrap.appendChild(sumDiv);
 }
 
@@ -730,6 +731,95 @@ function renderSummary(){
   });
   html+=`</tbody></table>`;
   wrap.innerHTML=html;
+}
+
+// ===== EXPORT EXCEL =====
+function exportToExcel() {
+  if(!requireUnlock()) return;
+  const wb = XLSX.utils.book_new();
+  const infoBar = {
+    term:    document.getElementById('inp-term')?.value    || '',
+    year:    document.getElementById('inp-year')?.value    || '',
+    cls:     document.getElementById('inp-class')?.value   || '',
+    teacher: document.getElementById('inp-teacher')?.value || '',
+  };
+
+  const SYM = (s) => s===1?'✓' : s===2?'✗' : '/';
+
+  // ── Sheet 1: สรุปรวม ──
+  const sumHeader = ['ลำดับ','ชื่อ – สกุล',
+    'เสาธง (มา)','เสาธง (ขาด)','เสาธง (%)',
+    ...CLASS_SUBJECTS.flatMap(s=>[s.name+' (มา)',s.name+' (ขาด)',s.name+' (%)'])
+  ];
+  const sumRows = students.map((name, idx) => {
+    // เสาธง
+    let sMa=0, sNoma=0, sDays=0;
+    for(let w=1;w<=18;w++){
+      const wd=weekData[w]; if(!wd) continue;
+      wd.dates.forEach(d=>{
+        const v=wd.attendance[idx]?.[d]||0;
+        if(v===1){sMa++;sDays++;}
+        else if(v===2){sNoma++;sDays++;}
+      });
+    }
+    const sPct = sDays>0 ? (sMa/sDays*100).toFixed(1)+'%' : '-';
+    // วิชาเรียน
+    const classVals = CLASS_SUBJECTS.flatMap(s=>{
+      const cd=classData[s.id]; let ma=0,noma=0,days=0;
+      cd.dates.forEach(d=>{
+        const v=cd.attendance[idx]?.[d]||0;
+        if(v===1){ma++;days++;} else if(v===2){noma++;days++;}
+      });
+      const pct=days>0?(ma/days*100).toFixed(1)+'%':'-';
+      return [ma,noma,pct];
+    });
+    return [idx+1, name, sMa, sNoma, sPct, ...classVals];
+  });
+  const sumWs = XLSX.utils.aoa_to_sheet([sumHeader, ...sumRows]);
+  sumWs['!cols'] = [{wch:6},{wch:28},...Array(sumHeader.length-2).fill({wch:12})];
+  XLSX.utils.book_append_sheet(wb, sumWs, 'สรุปรวม');
+
+  // ── Sheet 2: เสาธง ──
+  const allDates = [];
+  for(let w=1;w<=18;w++){ if(weekData[w]) allDates.push(...weekData[w].dates); }
+  const atHeader = ['ลำดับ','ชื่อ – สกุล',...allDates,'รวมมา','รวมขาด'];
+  const atRows = students.map((name,idx)=>{
+    const cells = allDates.map(d=>{
+      for(let w=1;w<=18;w++){
+        if(weekData[w]?.dates.includes(d)) return SYM(weekData[w].attendance[idx]?.[d]||0);
+      }
+      return '/';
+    });
+    const ma=cells.filter(c=>c==='✓').length;
+    const noma=cells.filter(c=>c==='✗').length;
+    return [idx+1, name, ...cells, ma, noma];
+  });
+  const atWs = XLSX.utils.aoa_to_sheet([atHeader,...atRows]);
+  atWs['!cols']=[{wch:6},{wch:28},...allDates.map(()=>({wch:9})),{wch:8},{wch:8}];
+  XLSX.utils.book_append_sheet(wb, atWs, 'เสาธง');
+
+  // ── Sheet ต่อไป: แต่ละวิชา ──
+  CLASS_SUBJECTS.forEach(subj=>{
+    const cd=classData[subj.id];
+    const header=['ลำดับ','ชื่อ – สกุล',...cd.dates,'รวมมา','รวมขาด','% มาเรียน'];
+    const rows=students.map((name,idx)=>{
+      const cells=cd.dates.map(d=>SYM(cd.attendance[idx]?.[d]||0));
+      const ma=cells.filter(c=>c==='✓').length;
+      const noma=cells.filter(c=>c==='✗').length;
+      const pct=cd.dates.length>0?(ma/cd.dates.length*100).toFixed(1)+'%':'-';
+      return [idx+1,name,...cells,ma,noma,pct];
+    });
+    const ws=XLSX.utils.aoa_to_sheet([header,...rows]);
+    ws['!cols']=[{wch:6},{wch:28},...cd.dates.map(()=>({wch:9})),{wch:8},{wch:8},{wch:10}];
+    // ใส่ชื่อเต็มวิชา + ครูผู้สอนในแถวบนสุด
+    XLSX.utils.sheet_add_aoa(ws,[['วิชา: '+subj.full+'  |  ครูผู้สอน: '+subj.teacher]],{origin:'A1',sheetRows:0});
+    XLSX.utils.book_append_sheet(wb, ws, subj.name.substring(0,31));
+  });
+
+  // ── ตั้งชื่อไฟล์ตาม infoBar ──
+  const fname = `เช็คชื่อ_${infoBar.cls||'ชั้นเรียน'}_ภาค${infoBar.term}_${infoBar.year}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  showStatus('📊 Export สำเร็จ: ' + fname);
 }
 
 // ===== PRINT =====
