@@ -285,7 +285,7 @@ const CLASS_SUBJECTS = [
   { id:'practice',  name:'ฝึกฝีมือ',          full:'งานฝึกฝีมือ',                                 day:'ศุกร์',     teacher:'อ.ธานี' },
 ];
 let classData = {};
-CLASS_SUBJECTS.forEach(s => { classData[s.id] = { dates: [], attendance: {} }; });
+CLASS_SUBJECTS.forEach(s => { classData[s.id] = { dates: [], attendance: {}, timestamps: {} }; });
 let currentSubject = CLASS_SUBJECTS[0].id;
 let appMode = 'attend'; // 'attend' | 'class'
 let faceSubject = ''; // subject id เมื่อสแกนในโหมดวิชาเรียน
@@ -515,7 +515,8 @@ function renderClass(sid) {
       html += '<tr><td class="num">' + (idx+1) + '</td><td class="name">' + name + '</td>';
       cd.dates.forEach(d => {
         const s = att[d] || 0;
-        html += '<td onclick="cycleClass(\'' + sid + '\',' + idx + ',\'' + d + '\')" style="cursor:pointer">' + classSymbol(s) + '</td>';
+        const ts = cd.timestamps?.[idx]?.[d] || '';
+        html += '<td onclick="cycleClass(\'' + sid + '\',' + idx + ',\'' + d + '\')" style="cursor:pointer">' + classSymbol(s, ts) + '</td>';
       });
       html += '<td><span class="badge-ma">' + ma + '</span></td>';
       html += '<td><span class="badge-noma">' + noma + '</span></td>';
@@ -526,8 +527,8 @@ function renderClass(sid) {
   panel.innerHTML = html;
 }
 
-function classSymbol(s) {
-  if(s===1) return '<span class="check">✓</span>';
+function classSymbol(s, ts) {
+  if(s===1) return '<span class="check">✓</span>' + (ts?'<span class="ts-label">'+ts+'</span>':'');
   if(s===2) return '<span class="cross">✗</span>';
   return '<span class="slash">/</span>';
 }
@@ -878,9 +879,11 @@ function applyData(parsed){
   const cd = parsed.classData || {};
   CLASS_SUBJECTS.forEach(s => {
     const src = cd[s.id] || {};
-    classData[s.id] = { dates: src.dates || [], attendance: {} };
+    classData[s.id] = { dates: src.dates || [], attendance: {}, timestamps: {} };
     const att = src.attendance || {};
     Object.keys(att).forEach(k => { classData[s.id].attendance[Number(k)] = att[k]; });
+    const cts = src.timestamps || {};
+    Object.keys(cts).forEach(k => { classData[s.id].timestamps[Number(k)] = cts[k]; });
   });
   applyInfoBar(parsed.infoBar);
   return true;
@@ -1234,8 +1237,14 @@ async function markFaceAttend(idx, date) {
     const cd = classData[faceSubject];
     if(!cd || !cd.dates.includes(date)) { addFaceLog('⚠️ ไม่พบวันที่: ' + date, 'log-dup'); return; }
     if(!cd.attendance[idx]) cd.attendance[idx] = {};
-    if(cd.attendance[idx][date] === 1) { addFaceLog('⏭ เช็คแล้ว: ' + students[idx], 'log-dup'); return; }
+    if(cd.attendance[idx][date] === 1) {
+      const existTs = cd.timestamps?.[idx]?.[date] || '';
+      addFaceLog('⏭ เช็คแล้ว: ' + students[idx] + (existTs?' ('+existTs+')':''), 'log-dup'); return;
+    }
     cd.attendance[idx][date] = 1;
+    if(!cd.timestamps) cd.timestamps = {};
+    if(!cd.timestamps[idx]) cd.timestamps[idx] = {};
+    if(!cd.timestamps[idx][date]) cd.timestamps[idx][date] = nowHHMM();
     renderClass(faceSubject);
     addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
     setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
