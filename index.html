@@ -530,11 +530,15 @@ function renderClass(sid) {
     cd.dates.forEach(d => {
       html += '<th>' + d + '<button class="btn-del-date no-print" onclick="removeClassDate(\'' + sid + '\',\'' + d + '\')" title="ลบวันนี้">✕</button></th>';
     });
-    html += '<th>มา</th><th>ขาด</th></tr></thead><tbody>';
+    html += '<th>มา</th><th>ขาด</th><th>%</th></tr></thead><tbody>';
     students.forEach((name, idx) => {
       const att = cd.attendance[idx] || {};
       let ma = 0, noma = 0;
       cd.dates.forEach(d => { if(att[d]===1) ma++; else if(att[d]===2) noma++; });
+      const recorded = ma + noma;
+      const pct = recorded > 0 ? Math.round(ma / recorded * 100) : null;
+      const pctColor = pct === null ? '#a89060' : pct >= 80 ? '#4caf8a' : pct >= 60 ? '#e6a817' : '#e05555';
+      const pctText = pct === null ? '—' : pct + '%';
       html += '<tr><td class="num">' + (idx+1) + '</td><td class="name">' + name + '</td>';
       cd.dates.forEach(d => {
         const s = att[d] || 0;
@@ -543,6 +547,7 @@ function renderClass(sid) {
       });
       html += '<td><span class="badge-ma">' + ma + '</span></td>';
       html += '<td><span class="badge-noma">' + noma + '</span></td>';
+      html += '<td style="font-weight:700;color:' + pctColor + ';text-align:center;">' + pctText + '</td>';
       html += '</tr>';
     });
     html += '</tbody></table></div>';
