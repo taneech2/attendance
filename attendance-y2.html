@@ -56,6 +56,11 @@ body{font-family:'Sarabun',sans-serif;background:#0a0f1e;min-height:100vh;paddin
 .btn-red:hover{background:linear-gradient(135deg,#ff6666,#e05555);}
 .btn-green{background:linear-gradient(135deg,#4caf8a,#2d7a5a);color:#fff;}
 .btn-green:hover{background:linear-gradient(135deg,#5dcc9e,#4caf8a);}
+.btn-scan{background:linear-gradient(135deg,#00c96e,#009a50);color:#fff;border:none;padding:12px 28px;border-radius:10px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:700;font-size:17px;white-space:nowrap;box-shadow:0 0 18px rgba(0,201,110,.55),0 4px 12px rgba(0,0,0,.3);letter-spacing:.5px;transition:.2s;position:relative;}
+.btn-scan:hover{background:linear-gradient(135deg,#00e57a,#00c96e);box-shadow:0 0 28px rgba(0,229,122,.75),0 4px 16px rgba(0,0,0,.3);transform:translateY(-1px);}
+.btn-scan:active{transform:translateY(1px);box-shadow:0 0 10px rgba(0,201,110,.4);}
+@keyframes scan-pulse{0%,100%{box-shadow:0 0 18px rgba(0,201,110,.55),0 4px 12px rgba(0,0,0,.3);}50%{box-shadow:0 0 32px rgba(0,229,122,.9),0 4px 16px rgba(0,0,0,.3);}}
+.btn-scan{animation:scan-pulse 2.5s ease-in-out infinite;}
 
 /* TABLE */
 .table-wrapper{border:1px solid #c9a84c55;border-radius:6px;overflow-x:auto;margin-bottom:16px;}
@@ -331,7 +336,7 @@ function buildPanels(){
         <input id="inp-date-${w}" placeholder="เพิ่มวันที่ เช่น 15-พ.ค.-69" onkeydown="if(event.key==='Enter')addDate(${w})">
         <button class="btn" onclick="addDate(${w})">+ เพิ่มวันที่</button>
         <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
-        <button class="btn" style="background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a55;" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button><button class="btn" onclick="printWeek(${w})" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
+        <button class="btn-scan" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button><button class="btn" onclick="printWeek(${w})" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
       </div>
       <div class="table-wrapper"><table id="tbl-${w}"><thead id="thead-${w}"></thead><tbody id="tbody-${w}"></tbody></table></div>
     `;
@@ -489,7 +494,7 @@ function renderClass(sid) {
   html += '<input id="inp-cdate-' + sid + '" placeholder="เช่น 19-พ.ค.-69" onkeydown="if(event.key===\'Enter\')addClassDate(\'' + sid + '\')">';
   html += '<button class="btn" onclick="addClassDate(\'' + sid + '\')">+ เพิ่มวันที่</button>';
   html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importClassDates(\'' + sid + '\')">📅 วางหลายวันที่เดียว</button>';
-  html += '<button class="btn btn-green" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
+  html += '<button class="btn-scan" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
   html += '</div>';
 
   if(cd.dates.length === 0) {
