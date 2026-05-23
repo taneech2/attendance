@@ -155,10 +155,13 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
 .subject-meta{color:#a89060;font-size:12px;}
 
 /* ===== FACE MODAL ===== */
-.face-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;display:none;align-items:center;justify-content:center;}
+.face-overlay{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:3000;display:none;align-items:center;justify-content:center;}
 .face-overlay.active{display:flex;}
-.face-box{background:#0d1530;border:2px solid #c9a84c;border-radius:12px;padding:20px;width:min(560px,96vw);max-height:96vh;overflow-y:auto;}
-.face-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.face-box{background:linear-gradient(160deg,#0d1530,#0a0f1e);border:2px solid #c9a84c;border-radius:16px;padding:24px;width:min(620px,97vw);max-height:97vh;overflow-y:auto;box-shadow:0 0 60px rgba(0,0,0,.8);}
+.face-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;border-bottom:1px solid #c9a84c33;padding-bottom:14px;}
+.face-header-title{font-size:18px;font-weight:700;color:#c9a84c;letter-spacing:.5px;}
+.face-close-btn{background:rgba(255,255,255,.08);border:1px solid #ffffff33;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.face-close-btn:hover{background:rgba(224,85,85,.4);border-color:#e05555;}
 .face-header span{font-size:18px;font-weight:700;color:#c9a84c;}
 .face-header button{background:none;border:1px solid #c9a84c55;color:#c9a84c;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;}
 .face-mode-bar{display:flex;gap:8px;margin-bottom:12px;}
@@ -167,9 +170,23 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
 .face-video-wrap{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#000;margin-bottom:10px;}
 #face-video{width:100%;display:block;transform:scaleX(-1);}
 #face-canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
-.face-status{text-align:center;padding:8px;font-size:13px;color:#c9a84c;min-height:32px;}
-.face-log{max-height:100px;overflow-y:auto;font-size:12px;}
-.face-log div{padding:3px 6px;border-bottom:1px solid #c9a84c22;}
+.face-date-label{text-align:center;padding:8px 0 16px;color:#c9a84c;font-size:17px;font-weight:700;}
+.face-date-select{width:100%;background:#0d1530;border:2px solid #c9a84c66;color:#f0e0b0;padding:12px 14px;border-radius:8px;font-family:Sarabun,sans-serif;font-size:16px;margin-bottom:10px;}
+.face-date-select:focus{outline:none;border-color:#c9a84c;}
+.face-date-input{width:100%;background:#0d1530;border:1px solid #c9a84c44;color:#d4c4a0;padding:10px 14px;border-radius:8px;font-family:Sarabun,sans-serif;font-size:14px;margin-bottom:14px;}
+.face-date-input:focus{outline:none;border-color:#c9a84c;}
+.btn-confirm-scan{width:100%;background:linear-gradient(135deg,#00c96e,#009a50);color:#fff;border:none;padding:16px;border-radius:10px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:700;font-size:18px;box-shadow:0 0 20px rgba(0,201,110,.5);transition:.2s;margin-bottom:10px;}
+.btn-confirm-scan:hover{background:linear-gradient(135deg,#00e57a,#00c96e);box-shadow:0 0 32px rgba(0,229,122,.7);}
+.btn-register-secondary{width:100%;background:rgba(255,255,255,.05);color:#a89060;border:1px solid #c9a84c33;padding:11px;border-radius:8px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;transition:.2s;}
+.btn-register-secondary:hover{background:rgba(201,168,76,.1);color:#c9a84c;}
+.face-scan-header{text-align:center;padding:4px 0 12px;color:#4caf8a;font-size:15px;font-weight:600;}
+.face-count-big{text-align:center;font-size:36px;font-weight:700;color:#4caf8a;padding:10px 0 6px;text-shadow:0 0 20px rgba(76,175,138,.5);}
+.face-count-label{text-align:center;color:#a89060;font-size:13px;margin-bottom:10px;}
+.face-mode-bar{display:flex;gap:8px;margin-bottom:10px;}
+.face-mode-bar .btn{flex:1;padding:9px;font-size:14px;}
+.face-status{text-align:center;padding:10px 6px;font-size:14px;color:#c9a84c;min-height:36px;border-radius:6px;background:rgba(201,168,76,.06);margin:8px 0;}
+.face-log{max-height:120px;overflow-y:auto;font-size:13px;border-radius:6px;border:1px solid #c9a84c22;background:rgba(0,0,0,.2);}
+.face-log div{padding:5px 10px;border-bottom:1px solid #c9a84c11;display:flex;align-items:center;gap:6px;}
 .face-log .log-ok{color:#4caf8a;}
 .face-log .log-dup{color:#e67e22;}
 .face-count{color:#4caf8a;font-size:13px;font-weight:600;}
@@ -1264,7 +1281,7 @@ function populateStudentSelect() {
 function updateFaceCount() {
   const total = students.filter((_, i) => faceDescriptors[i]).length;
   const marked = Object.keys(faceMarked).length;
-  document.getElementById('face-count').textContent = marked + ' / ' + total + ' คน';
+  document.getElementById('face-count').textContent = marked + ' / ' + total;
 }
 
 function setFaceStatus(msg) {
@@ -1521,39 +1538,38 @@ init();
 <div id="face-overlay" class="face-overlay no-print">
   <div class="face-box">
     <div class="face-header">
-      <span>📷 เช็คชื่อด้วยใบหน้า</span>
-      <button onclick="closeFaceModal()">✕</button>
+      <span class="face-header-title">📷 เช็คชื่อด้วยใบหน้า</span>
+      <button class="face-close-btn" onclick="closeFaceModal()">✕</button>
     </div>
 
-    <!-- ขั้นตอนที่ 1: เลือกวันที่ก่อนเปิดกล้อง -->
+    <!-- ขั้นตอนที่ 1: เลือกวันที่ -->
     <div id="face-step-date">
-      <div style="text-align:center;padding:6px 0 14px;color:#c9a84c;font-size:15px;font-weight:600;">📅 เลือกวันที่เช็คชื่อ</div>
-      <div class="face-ctrl" style="margin-bottom:8px;">
-        <select id="sel-att-date" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:8px 10px;border-radius:4px;font-family:Sarabun,sans-serif;font-size:14px;"><option value="">— เลือกวันที่ —</option></select>
+      <div class="face-date-label">📅 เลือกวันที่เช็คชื่อ</div>
+      <select id="sel-att-date" class="face-date-select">
+        <option value="">— เลือกวันที่ —</option>
+      </select>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <input id="inp-face-date" class="face-date-input" style="margin:0;flex:1;" placeholder="หรือพิมพ์วันที่ใหม่ เช่น 19-พ.ค.-69" onkeydown="if(event.key==='Enter')addFaceDate()">
+        <button class="btn" style="padding:10px 16px;white-space:nowrap;" onclick="addFaceDate()">+ เพิ่ม</button>
       </div>
-      <div class="face-ctrl" style="margin-bottom:14px;">
-        <input id="inp-face-date" placeholder="หรือพิมพ์วันที่ใหม่ เช่น 19-พ.ค.-69" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:8px 10px;border-radius:4px;font-family:Sarabun,sans-serif;font-size:13px;" onkeydown="if(event.key==='Enter')addFaceDate()">
-        <button class="btn" style="padding:8px 14px;" onclick="addFaceDate()">+ เพิ่ม</button>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn" style="flex:2;padding:12px;font-size:14px;background:linear-gradient(135deg,#1a3a2c,#0d2218);border-color:#4caf8a;" onclick="confirmFaceDate()">✅ ยืนยัน — เปิดกล้องสแกน</button>
-        <button class="btn" style="flex:1;padding:12px;font-size:13px;" onclick="startFaceRegister()">📋 ลงทะเบียนใบหน้า</button>
-      </div>
-      <div id="face-step-status" style="text-align:center;padding:8px 0 0;font-size:13px;color:#c9a84c;min-height:28px;"></div>
+      <button class="btn-confirm-scan" onclick="confirmFaceDate()">📷 เปิดกล้องสแกนใบหน้า</button>
+      <button class="btn-register-secondary" onclick="startFaceRegister()">📋 ลงทะเบียนใบหน้านักเรียน</button>
+      <div id="face-step-status" style="text-align:center;padding:10px 0 0;font-size:13px;color:#e67e22;min-height:28px;"></div>
     </div>
 
-    <!-- ขั้นตอนที่ 2: เปิดกล้อง (ซ่อนก่อน) -->
+    <!-- ขั้นตอนที่ 2: สแกน -->
     <div id="face-step-scan" style="display:none">
-      <div id="face-scan-header" style="text-align:center;padding:4px 0 10px;color:#4caf8a;font-size:14px;font-weight:600;"></div>
+      <div id="face-scan-header" class="face-scan-header"></div>
       <div class="face-mode-bar">
         <button id="btn-mode-attend" class="btn" onclick="setFaceMode('attend')">🎯 เช็คชื่อ</button>
         <button id="btn-mode-register" class="btn" onclick="setFaceMode('register')">📋 ลงทะเบียนใบหน้า</button>
       </div>
       <div id="face-attend-ctrl" class="face-ctrl">
-        <span class="face-count" id="face-count">0 / 0 คน</span>
+        <div class="face-count-big" id="face-count">0 / 0</div>
+        <div class="face-count-label">คนที่เช็คชื่อแล้ว</div>
       </div>
       <div id="face-register-ctrl" class="face-ctrl" style="display:none">
-        <select id="sel-reg-student"></select>
+        <select id="sel-reg-student" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:9px 12px;border-radius:6px;font-family:Sarabun,sans-serif;font-size:14px;"></select>
         <button class="btn" onclick="captureDescriptor()">📸 ถ่ายใบหน้า</button>
       </div>
       <div class="face-video-wrap">
