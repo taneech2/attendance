@@ -1150,6 +1150,7 @@ let faceModelsLoaded = false;
 let faceStream = null;
 let faceDetectLoop = null;
 let faceMode = 'attend';
+let facingMode = 'user'; // 'user' = หน้า, 'environment' = หลัง
 let faceWeek = 1;
 let faceDescriptors = {}; // { studentIdx: Float32Array }
 let facePhotos = {};       // { studentIdx: base64 JPEG string }
@@ -1309,8 +1310,10 @@ async function initFaceSystem() {
       faceModelsLoaded = true;
     }
     setFaceStatus('📷 กำลังเปิดกล้อง...');
-    faceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+    faceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode, width: 640, height: 480 } });
     const video = document.getElementById('face-video');
+    // กล้องหน้า mirror, กล้องหลังไม่ mirror
+    video.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
     video.srcObject = faceStream;
     await new Promise(r => video.onloadedmetadata = r);
     const canvas = document.getElementById('face-canvas');
@@ -1337,13 +1340,12 @@ async function runFaceLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if(results.length > 0) {
-    // mirror ผล detection กลับ (วิดีโอถูก mirror ด้วย CSS)
+    // mirror좌표เฉพาะกล้องหน้า (กล้องหลังไม่ต้อง mirror)
     const mirrored = results.map(r => {
       const box = r.detection.box;
-      const mirroredBox = new faceapi.Box({
-        x: canvas.width - box.x - box.width,
-        y: box.y, width: box.width, height: box.height
-      });
+      const mirroredBox = facingMode === 'user'
+        ? new faceapi.Box({ x: canvas.width - box.x - box.width, y: box.y, width: box.width, height: box.height })
+        : new faceapi.Box({ x: box.x, y: box.y, width: box.width, height: box.height });
       return { ...r, mirroredBox };
     });
 
@@ -1414,6 +1416,18 @@ function findBestFaceMatch(descriptor) {
     if(dist < bestDist) { bestDist = dist; best = { idx: Number(k), name: students[Number(k)], dist }; }
   });
   return best;
+}
+
+// ===== SWITCH CAMERA =====
+async function switchCamera() {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  const btn = document.getElementById('btn-cam-switch');
+  btn.textContent = facingMode === 'user' ? '📷' : '🔄';
+  btn.title = facingMode === 'user' ? 'สลับกล้องหลัง' : 'สลับกล้องหน้า';
+  // หยุดกล้องเดิม แล้วเปิดใหม่
+  if(faceDetectLoop){ cancelAnimationFrame(faceDetectLoop); faceDetectLoop = null; }
+  if(faceStream){ faceStream.getTracks().forEach(t => t.stop()); faceStream = null; }
+  await initFaceSystem();
 }
 
 // ===== TEXT-TO-SPEECH =====
@@ -1561,6 +1575,7 @@ init();
     <div class="face-header">
       <span class="face-header-title">📷 เช็คชื่อด้วยใบหน้า</span>
       <div style="display:flex;gap:8px;align-items:center;">
+        <button id="btn-cam-switch" onclick="switchCamera()" title="สลับกล้องหลัง" style="background:rgba(255,255,255,.08);border:1px solid #ffffff33;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.2s;">📷</button>
         <button id="btn-tts" onclick="toggleTTS()" title="ปิดเสียงประกาศชื่อ" style="background:rgba(255,255,255,.08);border:1px solid #ffffff33;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.2s;">🔊</button>
         <button class="face-close-btn" onclick="closeFaceModal()">✕</button>
       </div>
