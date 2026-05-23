@@ -1408,6 +1408,25 @@ function findBestFaceMatch(descriptor) {
   return best;
 }
 
+// ===== TEXT-TO-SPEECH =====
+let ttsEnabled = true;
+function speakName(name) {
+  if(!ttsEnabled || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(name);
+  utter.lang = 'th-TH';
+  utter.rate = 0.95;
+  utter.pitch = 1.05;
+  window.speechSynthesis.speak(utter);
+}
+function toggleTTS() {
+  ttsEnabled = !ttsEnabled;
+  const btn = document.getElementById('btn-tts');
+  btn.textContent = ttsEnabled ? '🔊' : '🔇';
+  btn.title = ttsEnabled ? 'ปิดเสียงประกาศชื่อ' : 'เปิดเสียงประกาศชื่อ';
+  btn.style.opacity = ttsEnabled ? '1' : '0.45';
+}
+
 async function markFaceAttend(idx, date) {
   // โหมดวิชาเรียน
   if(faceSubject) {
@@ -1428,6 +1447,7 @@ async function markFaceAttend(idx, date) {
     updateFaceCount();
     await saveToFirebase();
     playPing();
+    speakName(students[idx]);
     setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]);
     return;
   }
@@ -1450,6 +1470,7 @@ async function markFaceAttend(idx, date) {
   updateFaceCount();
   await saveToFirebase();
   playPing();
+  speakName(students[idx]);
   setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]);
 }
 
@@ -1531,7 +1552,10 @@ init();
   <div class="face-box">
     <div class="face-header">
       <span class="face-header-title">📷 เช็คชื่อด้วยใบหน้า</span>
-      <button class="face-close-btn" onclick="closeFaceModal()">✕</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="btn-tts" onclick="toggleTTS()" title="ปิดเสียงประกาศชื่อ" style="background:rgba(255,255,255,.08);border:1px solid #ffffff33;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.2s;">🔊</button>
+        <button class="face-close-btn" onclick="closeFaceModal()">✕</button>
+      </div>
     </div>
 
     <!-- ขั้นตอนที่ 1: เลือกวันที่ -->
