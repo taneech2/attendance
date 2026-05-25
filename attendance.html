@@ -1663,21 +1663,17 @@ async function openFaceModalClass(sid) {
 
 async function captureDescriptor() {
   const idx = Number(document.getElementById('sel-reg-student').value);
-  // ตรวจว่ามีรูปครบ 3 แล้วหรือยัง
-  if((faceDescriptors[idx]?.length || 0) >= 3) {
-    setFaceStatus('⚠️ มีรูปครบ 3 รูปแล้ว กดปุ่ม "ลบรูปทั้งหมด" แล้วถ่ายใหม่');
-    return;
-  }
   const video = document.getElementById('face-video');
   setFaceStatus('⏳ กำลังจับใบหน้า...');
   const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
   const result = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
   if(!result) { setFaceStatus('❌ ไม่พบใบหน้า ลองใหม่อีกครั้ง'); return; }
-  // push ต่อท้าย array (ไม่ overwrite)
+  // push + sliding window: เก็บแค่ 3 รูปล่าสุดเสมอ
   if(!faceDescriptors[idx]) faceDescriptors[idx] = [];
   faceDescriptors[idx].push(result.descriptor);
+  if(faceDescriptors[idx].length > 3) faceDescriptors[idx].shift(); // ดันรูปแรกออก
   const count = faceDescriptors[idx].length;
-  // บันทึก snapshot รูปใบหน้า
+  // บันทึก snapshot รูปใบหน้า (sliding window เช่นกัน)
   try {
     const box = result.detection.box;
     const snapCanvas = document.createElement('canvas');
@@ -1686,18 +1682,20 @@ async function captureDescriptor() {
     snapCtx.drawImage(video, Math.max(0, box.x), Math.max(0, box.y), box.width, box.height, 0, 0, 80, 80);
     if(!facePhotos[idx]) facePhotos[idx] = [];
     facePhotos[idx].push(snapCanvas.toDataURL('image/jpeg', 0.7));
+    if(facePhotos[idx].length > 3) facePhotos[idx].shift();
     renderStudentChips();
   } catch(e) {}
-  const hint = count < 3 ? `ถ่ายเพิ่มได้อีก ${3-count} รูป (เอียง${count===1?'ซ้าย':'ขวา'}นิดนึง)` : '🎉 ครบ 3 รูป แม่นยำมากขึ้น!';
-  addFaceLog(`รูปที่ ${count}/3 — ${students[idx]}`, 'log-ok');
+  const total = faceDescriptors[idx].length;
+  const hint = total < 3 ? `ถ่ายเพิ่มได้อีก ${3-total} รูป (เอียง${total===1?'ซ้าย':'ขวา'}นิดนึง)` : '🔄 อัปเดต 3 รูปล่าสุดแล้ว';
+  addFaceLog(`อัปเดตรูป ${students[idx]} (${total}/3)`, 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก Cloud...');
   await saveToFirebase();
   playPing();
-  setFaceStatus(`✅ รูปที่ ${count}/3 ของ ${students[idx]} — ${hint}`);
+  setFaceStatus(`✅ ${students[idx]} — ${hint}`);
   populateStudentSelect();
-  // เลื่อนไปคนถัดไปอัตโนมัติเมื่อครบ 3 รูป
+  // เลื่อนไปคนถัดไปอัตโนมัติเมื่อครบ 3 รูปครั้งแรก
   const sel = document.getElementById('sel-reg-student');
-  if(count >= 3 && idx + 1 < students.length) { sel.value = idx + 1; updateRegPhotoPreview(); }
+  if(total >= 3 && idx + 1 < students.length) { sel.value = idx + 1; updateRegPhotoPreview(); }
 }
 
 async function init(){
