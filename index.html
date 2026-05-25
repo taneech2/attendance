@@ -88,7 +88,9 @@ td.num{color:#c9a84c;font-weight:600;}
 .btn-tiny{background:transparent;border:1px solid #c9a84c44;color:#c9a84c;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:14px;}
 .btn-tiny:hover{background:rgba(201,168,76,.15);}
 .btn-del-date{background:transparent;border:none;color:#e05555;cursor:pointer;font-size:10px;padding:0 2px;margin-left:3px;opacity:.7;}
-.ts-label{display:block;font-size:9px;color:#7ab;letter-spacing:.3px;line-height:1.2;margin-top:1px;}
+.ts-label{display:block;font-size:9px;letter-spacing:.3px;line-height:1.2;margin-top:1px;}
+.ts-face{color:#4caf8a;}
+.ts-manual{color:#89c4e1;}
 .btn-del-date:hover{opacity:1;}
 /* DATE COLUMN — vertical header */
 .th-date{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;width:28px;min-width:28px!important;max-width:36px;padding:10px 4px!important;text-align:left;vertical-align:bottom;font-size:11px;}
@@ -542,7 +544,14 @@ function renderWeek(w){
 }
 
 function sym(s, ts){
-  if(s===1) return `<span class="check" title="${ts||''}">✓</span>${ts?`<span class="ts-label" title="${ts}">${ts.slice(0,5)}</span>`:''}`;
+  if(s===1){
+    if(!ts) return `<span class="check">✓</span>`;
+    const isFace = ts[0]==='f';
+    const raw = (ts[0]==='f'||ts[0]==='m') ? ts.slice(1) : ts;
+    const cls = isFace ? 'ts-face' : 'ts-manual';
+    const tip = (isFace ? '🤖 สแกนหน้า ' : '✋ กดมือครู ') + raw;
+    return `<span class="check" title="${tip}">✓</span><span class="ts-label ${cls}" title="${tip}">${raw.slice(0,5)}</span>`;
+  }
   if(s===2) return `<span class="cross">✗</span>`;
   return `<span class="slash">/</span>`;
 }
@@ -558,7 +567,7 @@ function cycle(w,i,d){
   // บันทึกเวลา ณ ตอนนี้เมื่อกด ✓ (manual override)
   if(!wd.timestamps) wd.timestamps={};
   if(!wd.timestamps[i]) wd.timestamps[i]={};
-  if(newStatus===1) wd.timestamps[i][d] = nowHHMM(); // บันทึก HH:MM:SS
+  if(newStatus===1) wd.timestamps[i][d] = 'm'+nowHHMM(); // m=manual (ครูกดมือ)
   else delete wd.timestamps[i][d];                    // ล้างเมื่อเปลี่ยนเป็น ✗ หรือ /
   renderWeek(w);
   saveToFirebase();
@@ -662,7 +671,14 @@ function renderClass(sid) {
 }
 
 function classSymbol(s, ts) {
-  if(s===1) return '<span class="check">✓</span>' + (ts?'<span class="ts-label">'+ts+'</span>':'');
+  if(s===1){
+    if(!ts) return '<span class="check">✓</span>';
+    const isFace = ts[0]==='f';
+    const raw = (ts[0]==='f'||ts[0]==='m') ? ts.slice(1) : ts;
+    const cls = isFace ? 'ts-face' : 'ts-manual';
+    const tip = (isFace ? '🤖 สแกนหน้า ' : '✋ กดมือครู ') + raw;
+    return '<span class="check" title="'+tip+'">✓</span><span class="ts-label '+cls+'" title="'+tip+'">'+raw.slice(0,5)+'</span>';
+  }
   if(s===2) return '<span class="cross">✗</span>';
   return '<span class="slash">/</span>';
 }
@@ -1762,7 +1778,7 @@ async function markFaceAttend(idx, date) {
     cd.attendance[idx][date] = 1;
     if(!cd.timestamps) cd.timestamps = {};
     if(!cd.timestamps[idx]) cd.timestamps[idx] = {};
-    if(!cd.timestamps[idx][date]) cd.timestamps[idx][date] = nowHHMM();
+    if(!cd.timestamps[idx][date]) cd.timestamps[idx][date] = 'f'+nowHHMM(); // f=face scan
     renderClass(faceSubject);
     addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
     setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
@@ -1785,7 +1801,7 @@ async function markFaceAttend(idx, date) {
   weekData[faceWeek].attendance[idx][date] = 1;
   if(!weekData[faceWeek].timestamps) weekData[faceWeek].timestamps = {};
   if(!weekData[faceWeek].timestamps[idx]) weekData[faceWeek].timestamps[idx] = {};
-  if(!weekData[faceWeek].timestamps[idx][date]) weekData[faceWeek].timestamps[idx][date] = nowHHMM();
+  if(!weekData[faceWeek].timestamps[idx][date]) weekData[faceWeek].timestamps[idx][date] = 'f'+nowHHMM(); // f=face scan
   renderWeek(faceWeek);
   addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
