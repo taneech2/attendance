@@ -400,13 +400,13 @@ function renderWeek(w){
   // header row 1
   thead.innerHTML = '';
   const tr1 = document.createElement('tr');
-  tr1.innerHTML = `<th rowspan="2" style="width:36px">ลำดับ</th><th rowspan="2" style="min-width:160px">ชื่อ – สกุล</th><th rowspan="2" style="width:52px">%</th>`;
+  tr1.innerHTML = `<th rowspan="2" style="width:36px">ลำดับ</th><th rowspan="2" style="min-width:160px">ชื่อ – สกุล</th>`;
   if(wd.dates.length>0){
     tr1.innerHTML += `<th colspan="${wd.dates.length}">สัปดาห์ที่ ${w} &nbsp;|&nbsp; วัน/เดือน/ปี</th>`;
   } else {
     tr1.innerHTML += `<th>— ยังไม่มีวันที่ —</th>`;
   }
-  tr1.innerHTML += `<th colspan="2">สรุป</th><th rowspan="2" class="no-print" style="width:40px"></th>`;
+  tr1.innerHTML += `<th colspan="2">สรุป</th><th rowspan="2" style="width:52px">%</th><th rowspan="2" class="no-print" style="width:40px"></th>`;
   thead.appendChild(tr1);
 
   // header row 2
@@ -435,7 +435,6 @@ function renderWeek(w){
     const pct=recorded>0?Math.round(ma/recorded*100):null;
     const pctColor=pct===null?'#a89060':pct>=80?'#4caf8a':pct>=60?'#e8c84a':'#e05555';
     let cells = `<td class="num">${i+1}</td><td class="name">${name}</td>`;
-    cells+=`<td style="font-weight:800;color:${pctColor};font-size:14px;white-space:nowrap">${pct!==null?pct+'%':'—'}</td>`;
     if(wd.dates.length>0){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
@@ -446,6 +445,7 @@ function renderWeek(w){
       cells+=`<td style="color:#555">—</td>`;
     }
     cells+=`<td><span class="badge-ma">${ma}</span></td><td><span class="badge-noma">${noma}</span></td>`;
+    cells+=`<td style="font-weight:800;color:${pctColor};font-size:14px;white-space:nowrap">${pct!==null?pct+'%':'—'}</td>`;
     cells+=`<td class="no-print"></td>`;
     tr.innerHTML=cells;
     tbody.appendChild(tr);
