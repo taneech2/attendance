@@ -90,6 +90,10 @@ td.num{color:#c9a84c;font-weight:600;}
 .btn-del-date{background:transparent;border:none;color:#e05555;cursor:pointer;font-size:10px;padding:0 2px;margin-left:3px;opacity:.7;}
 .ts-label{display:block;font-size:9px;color:#7ab;letter-spacing:.3px;line-height:1.2;margin-top:1px;}
 .btn-del-date:hover{opacity:1;}
+/* DATE COLUMN — vertical header */
+.th-date{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;width:28px;min-width:28px!important;max-width:36px;padding:10px 4px!important;text-align:left;vertical-align:bottom;font-size:11px;}
+.th-date .btn-del-date{display:block;writing-mode:horizontal-tb;transform:none;margin:6px auto 0;}
+.td-date{width:28px;max-width:36px;padding:6px 2px!important;}
 
 /* STUDENT MANAGER */
 .student-manager{background:rgba(201,168,76,.04);border:1px solid #c9a84c44;border-radius:6px;padding:16px;margin-bottom:16px;}
@@ -435,7 +439,7 @@ function renderWeek(w){
   if(wd.dates.length>0){
     wd.dates.forEach(d=>{
       const th = document.createElement('th');
-      th.style.minWidth='70px';
+      th.className = 'th-date';
       th.innerHTML = `${d}<button class="btn-del-date no-print" onclick="removeDate(${w},'${d}')" title="ลบวันนี้">✕</button>`;
       tr2.appendChild(th);
     });
@@ -461,7 +465,7 @@ function renderWeek(w){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
         const ts=wd.timestamps&&wd.timestamps[i]&&wd.timestamps[i][d]||'';
-        cells+=`<td onclick="cycle(${w},${i},'${d}')" style="cursor:pointer">${sym(s,ts)}</td>`;
+        cells+=`<td class="td-date" onclick="cycle(${w},${i},'${d}')" style="cursor:pointer">${sym(s,ts)}</td>`;
       });
     } else {
       cells+=`<td style="color:#555">—</td>`;
@@ -615,7 +619,7 @@ function renderClass(sid) {
     html += '<div class="table-wrapper"><table><thead><tr>';
     html += '<th>ลำดับ</th><th class="name">ชื่อ – สกุล</th>';
     cd.dates.forEach(d => {
-      html += '<th>' + d + '<button class="btn-del-date no-print" onclick="removeClassDate(\'' + sid + '\',\'' + d + '\')" title="ลบวันนี้">✕</button></th>';
+      html += '<th class="th-date">' + d + '<button class="btn-del-date no-print" onclick="removeClassDate(\'' + sid + '\',\'' + d + '\')" title="ลบวันนี้">✕</button></th>';
     });
     html += '<th>มา</th><th>ขาด</th><th>%</th></tr></thead><tbody>';
     students.forEach((name, idx) => {
@@ -631,7 +635,7 @@ function renderClass(sid) {
       cd.dates.forEach(d => {
         const s = att[d] || 0;
         const ts = cd.timestamps?.[idx]?.[d] || '';
-        html += '<td onclick="cycleClass(\'' + sid + '\',' + idx + ',\'' + d + '\')" style="cursor:pointer">' + classSymbol(s, ts) + '</td>';
+        html += '<td class="td-date" onclick="cycleClass(\'' + sid + '\',' + idx + ',\'' + d + '\')" style="cursor:pointer">' + classSymbol(s, ts) + '</td>';
       });
       html += '<td><span class="badge-ma">' + ma + '</span></td>';
       html += '<td><span class="badge-noma">' + noma + '</span></td>';
