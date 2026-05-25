@@ -52,29 +52,53 @@ body{font-family:'Sarabun',sans-serif;background:#0a0f1e;min-height:100vh;paddin
 .tab-summary.active{background:linear-gradient(135deg,#4caf8a,#2d7a5a);color:#fff;}
 .tab-lb{background:#1a2540;border:1px solid #c9a84c99;color:#c9a84c;font-weight:700;}
 .tab-lb.active{background:linear-gradient(135deg,#c9a84c,#a07830);color:#0a0f1e;}
-/* LEADERBOARD */
-.lb-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:16px 4px 10px;}
-.lb-title{font-size:20px;font-weight:700;color:#c9a84c;letter-spacing:1px;}
-.lb-period{display:flex;gap:6px;}
-.lb-period button{background:#1a2540;border:1px solid #c9a84c44;color:#c9a84c;padding:5px 14px;border-radius:20px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;transition:.2s;}
-.lb-period button.active{background:#c9a84c;color:#0a0f1e;font-weight:700;}
-.lb-table{width:100%;border-collapse:collapse;font-size:14px;}
-.lb-table th{background:#0d1a30;color:#c9a84c;padding:9px 10px;text-align:center;border-bottom:2px solid #c9a84c55;font-size:12px;letter-spacing:.5px;}
-.lb-table th:nth-child(2){text-align:left;}
-.lb-table td{padding:8px 10px;text-align:center;border-bottom:1px solid #ffffff0a;transition:.15s;}
-.lb-table td:nth-child(2){text-align:left;font-weight:600;}
-.lb-table tr:hover td{background:rgba(201,168,76,.07);}
-.lb-rank{font-weight:700;font-size:15px;color:#666;width:36px;}
-.lb-gold{color:#ffd700;font-size:18px;}
-.lb-silver{color:#c0c0c0;font-size:18px;}
-.lb-bronze{color:#cd7f32;font-size:18px;}
-.lb-pts{font-weight:700;font-size:15px;color:#c9a84c;}
-.lb-form{display:flex;gap:3px;justify-content:center;}
-.lb-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
-.lb-dot-g{background:#4caf8a;}
+/* LEADERBOARD — Premier League Style */
+.lb-wrap{font-family:'Sarabun',sans-serif;}
+.lb-season-bar{background:linear-gradient(135deg,#1a0a2e,#2d1060);border-radius:10px 10px 0 0;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:3px solid #c9a84c;}
+.lb-season-left{display:flex;align-items:center;gap:12px;}
+.lb-trophy-icon{font-size:28px;line-height:1;}
+.lb-season-text{}
+.lb-season-title{font-size:18px;font-weight:900;color:#fff;letter-spacing:2px;text-transform:uppercase;}
+.lb-season-sub{font-size:12px;color:#c9a84ccc;letter-spacing:1px;margin-top:1px;}
+.lb-period{display:flex;gap:5px;}
+.lb-period button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#ccc;padding:5px 14px;border-radius:20px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;transition:.2s;letter-spacing:.5px;}
+.lb-period button:hover{background:rgba(201,168,76,.2);border-color:#c9a84c;color:#c9a84c;}
+.lb-period button.active{background:#c9a84c;border-color:#c9a84c;color:#0a0f1e;font-weight:900;}
+.lb-motto{background:#120822;padding:8px 18px;font-size:11px;color:#9988bb;letter-spacing:.5px;font-style:italic;border-bottom:1px solid #ffffff0a;}
+.lb-table{width:100%;border-collapse:collapse;font-size:13px;}
+.lb-table thead tr{background:#0d1a30;}
+.lb-table th{color:#aaa;padding:9px 8px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid #ffffff15;}
+.lb-table th.th-name{text-align:left;padding-left:14px;}
+.lb-table td{padding:9px 8px;text-align:center;border-bottom:1px solid #ffffff08;transition:.1s;}
+.lb-table td.td-name{text-align:left;padding-left:14px;font-weight:700;font-size:14px;}
+.lb-table tr:hover td{background:rgba(201,168,76,.06);}
+.lb-table tr.row-top1 td{background:rgba(255,215,0,.07);}
+.lb-table tr.row-top2 td{background:rgba(192,192,192,.05);}
+.lb-table tr.row-top3 td{background:rgba(205,127,50,.05);}
+.lb-table tr.row-top1:hover td{background:rgba(255,215,0,.12);}
+.lb-table tr.row-top2:hover td{background:rgba(192,192,192,.1);}
+.lb-table tr.row-top3:hover td{background:rgba(205,127,50,.1);}
+.lb-pos{width:32px;font-weight:900;font-size:14px;}
+.lb-pos-medal{font-size:20px;line-height:1;}
+.lb-pos-num{color:#aaa;}
+.lb-change{font-size:10px;width:16px;}
+.lb-change-up{color:#4caf8a;}
+.lb-change-dn{color:#e05555;}
+.lb-change-eq{color:#555;}
+.lb-avatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;margin-right:8px;flex-shrink:0;border:2px solid rgba(255,255,255,.15);}
+.lb-name-cell{display:flex;align-items:center;}
+.lb-pts-cell{font-weight:900;font-size:16px;color:#c9a84c;}
+.lb-avg{font-size:12px;color:#89c4e1;font-weight:700;}
+.lb-avg-na{color:#444;font-size:11px;}
+.lb-form{display:flex;gap:3px;justify-content:center;align-items:center;}
+.lb-dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.lb-dot-g{background:#4caf8a;box-shadow:0 0 4px #4caf8a88;}
+.lb-dot-y{background:#f0b429;}
 .lb-dot-r{background:#e05555;}
-.lb-dot-n{background:#444;}
-.lb-hidden-row td{opacity:.4;font-style:italic;}
+.lb-dot-n{background:#2a2a3a;}
+.lb-divider{height:2px;background:linear-gradient(90deg,transparent,#c9a84c44,transparent);margin:0;}
+.lb-footer{background:#0a0f1e;padding:10px 18px;font-size:11px;color:#555;display:flex;gap:16px;flex-wrap:wrap;border-radius:0 0 10px 10px;}
+.lb-legend{display:flex;align-items:center;gap:5px;}
 
 /* WEEK PANEL */
 .week-panel{display:none;}
@@ -1005,67 +1029,121 @@ function lbGetDates(){
   return allDates;
 }
 
+// คะแนนก่อนหน้า (สำหรับลูกศรขึ้น/ลง)
+let lbPrevRanks = {};
+
 function renderLeaderboard(){
   const el = document.getElementById('lb-content');
   if(!el) return;
 
-  // คำนวณคะแนนแต่ละคน
   const dates = lbGetDates();
+  const avatarColors = ['#7c3aed','#0369a1','#b45309','#15803d','#be185d','#0f766e','#c2410c','#4338ca','#6d28d9','#047857','#b91c1c','#1d4ed8','#d97706','#0891b2','#7e22ce'];
+
   const rows = students.map((name,i)=>{
     if(hiddenStudents.has(i)) return null;
-    let pts=0, ma=0, absent=0;
+    let pts=0, ma=0, absent=0, totalSec=0, scanCount=0;
     const form=[];
     dates.forEach(({w,d})=>{
       const att = weekData[w]?.attendance?.[i]?.[d]||0;
       const ts  = weekData[w]?.timestamps?.[i]?.[d]||'';
-      // ขาดวิชาใดวิชาหนึ่งในวันนั้น → คะแนนวันนั้น = 0
       const absentAnySubject = CLASS_SUBJECTS.some(s=>{
         const cd = classData[s.id];
         return cd?.dates?.includes(d) && cd?.attendance?.[i]?.[d]===2;
       });
       if(att===1){
         ma++;
-        pts += absentAnySubject ? 0 : calcScore(ts);
-        form.push(absentAnySubject ? 'r' : 'g');
+        const sc = absentAnySubject ? 0 : calcScore(ts);
+        pts += sc;
+        // คำนวณเวลาเฉลี่ย
+        if(ts){
+          const raw = (ts[0]==='f'||ts[0]==='m') ? ts.slice(1) : ts;
+          const [h,m,s2] = raw.split(':').map(Number);
+          totalSec += h*3600 + m*60 + (s2||0);
+          scanCount++;
+        }
+        // ฟอร์ม: g=ทันเวลา, y=สาย(07:50-07:59), r=ขาดวิชา/กากบาท
+        const score = calcScore(ts);
+        form.push(absentAnySubject?'r': score===1?'y':'g');
       } else if(att===2){ absent++; form.push('r'); }
       else form.push('n');
     });
-    return {i,name,pts,ma,absent,total:dates.length,form:form.slice(-5)};
+    // เวลาเฉลี่ย
+    let avgTime = null;
+    if(scanCount>0){
+      const avg = Math.round(totalSec/scanCount);
+      const ah = Math.floor(avg/3600), am = Math.floor((avg%3600)/60);
+      avgTime = `${String(ah).padStart(2,'0')}:${String(am).padStart(2,'0')}`;
+    }
+    return {i,name,pts,ma,absent,total:dates.length,form:form.slice(-5),avgTime,color:avatarColors[i%avatarColors.length]};
   }).filter(Boolean);
 
-  // เรียงตามคะแนน
   rows.sort((a,b)=>b.pts-a.pts||b.ma-a.ma);
 
-  const medals=['🥇','🥈','🥉'];
-  const periodLabel={'week':'สัปดาห์นี้','month':'เดือนนี้','term':'รายเทอม'};
+  // ลูกศรอันดับ
+  const newRanks = {};
+  rows.forEach((r,rank)=>{ newRanks[r.i]=rank; });
+  function changeArrow(i,rank){
+    const prev = lbPrevRanks[i];
+    if(prev===undefined||prev===rank) return `<span class="lb-change lb-change-eq">—</span>`;
+    if(prev>rank) return `<span class="lb-change lb-change-up">▲</span>`;
+    return `<span class="lb-change lb-change-dn">▼</span>`;
+  }
+  lbPrevRanks = newRanks;
 
-  el.innerHTML = `
-  <div class="lb-header">
-    <div class="lb-title">🏆 LEADERBOARD — ${document.getElementById('lbl-class')?.textContent||''}</div>
+  const medals=['🥇','🥈','🥉'];
+  const rowClass=['row-top1','row-top2','row-top3'];
+  const periodTH={'week':'สัปดาห์นี้','month':'เดือนนี้','term':'รายเทอม'};
+
+  el.innerHTML = `<div class="lb-wrap">
+  <div class="lb-season-bar">
+    <div class="lb-season-left">
+      <div class="lb-trophy-icon">🏆</div>
+      <div class="lb-season-text">
+        <div class="lb-season-title">LEADERBOARD 2568–69</div>
+        <div class="lb-season-sub">${document.getElementById('lbl-class')?.textContent||''} &nbsp;·&nbsp; ${periodTH[lbPeriod]}</div>
+      </div>
+    </div>
     <div class="lb-period">
       <button class="${lbPeriod==='week'?'active':''}" onclick="lbPeriod='week';renderLeaderboard()">สัปดาห์</button>
       <button class="${lbPeriod==='month'?'active':''}" onclick="lbPeriod='month';renderLeaderboard()">เดือน</button>
       <button class="${lbPeriod==='term'?'active':''}" onclick="lbPeriod='term';renderLeaderboard()">เทอม</button>
     </div>
   </div>
+  <div class="lb-motto">⏱ เราไม่ได้แข่งกับใคร — แต่แข่งกับเวลาของตัวเอง</div>
   <div class="table-wrapper">
   <table class="lb-table">
     <thead><tr>
-      <th>#</th><th>ชื่อ</th><th>วัน</th><th>มา</th><th>ขาด</th><th>แต้ม</th><th>ฟอร์ม 5 วัน</th>
+      <th colspan="2" class="th-name">ชื่อ</th>
+      <th title="จำนวนวันทั้งหมด">วัน</th>
+      <th title="วันที่มา" style="color:#4caf8a">มา</th>
+      <th title="วันที่ขาด" style="color:#e05555">ขาด</th>
+      <th title="เวลาเฉลี่ยที่สแกน" style="color:#89c4e1">เฉลี่ย</th>
+      <th title="คะแนนสะสม" style="color:#c9a84c">แต้ม</th>
+      <th title="ฟอร์ม 5 วันล่าสุด">ฟอร์ม</th>
     </tr></thead>
     <tbody>
-    ${rows.map((r,rank)=>`
-      <tr>
-        <td class="lb-rank">${rank<3?`<span class="lb-${['gold','silver','bronze'][rank]}">${medals[rank]}</span>`:rank+1}</td>
-        <td>${r.name}</td>
-        <td style="color:#888">${r.total}</td>
-        <td style="color:#4caf8a">${r.ma}</td>
-        <td style="color:#e05555">${r.absent}</td>
-        <td class="lb-pts">${r.pts}</td>
-        <td><div class="lb-form">${r.form.map(f=>`<span class="lb-dot lb-dot-${f}"></span>`).join('')}</div></td>
-      </tr>`).join('')}
+    ${rows.map((r,rank)=>{
+      const initial = r.name.trim()[0]||'?';
+      const dotHtml = r.form.map(f=>`<span class="lb-dot lb-dot-${f}"></span>`).join('');
+      return `<tr class="${rank<3?rowClass[rank]:''}">
+        <td class="lb-pos" style="width:28px">${rank<3?`<span class="lb-pos-medal">${medals[rank]}</span>`:`<span class="lb-pos-num">${rank+1}</span>`}</td>
+        <td class="td-name"><div class="lb-name-cell"><span class="lb-avatar" style="background:${r.color}">${initial}</span>${r.name}</div></td>
+        <td style="color:#666">${r.total}</td>
+        <td style="color:#4caf8a;font-weight:700">${r.ma}</td>
+        <td style="color:#e05555">${r.absent||'—'}</td>
+        <td>${r.avgTime?`<span class="lb-avg">${r.avgTime}</span>`:`<span class="lb-avg-na">—</span>`}</td>
+        <td class="lb-pts-cell">${r.pts}</td>
+        <td><div class="lb-form">${dotHtml}</div></td>
+      </tr>`;}).join('')}
     </tbody>
   </table>
+  </div>
+  <div class="lb-footer">
+    <span class="lb-legend"><span class="lb-dot lb-dot-g" style="width:10px;height:10px;display:inline-block;border-radius:50%"></span> ทันเวลา</span>
+    <span class="lb-legend"><span class="lb-dot lb-dot-y" style="width:10px;height:10px;display:inline-block;border-radius:50%"></span> สาย</span>
+    <span class="lb-legend"><span class="lb-dot lb-dot-r" style="width:10px;height:10px;display:inline-block;border-radius:50%"></span> ขาด</span>
+    <span class="lb-legend"><span class="lb-dot lb-dot-n" style="width:10px;height:10px;display:inline-block;border-radius:50%"></span> ยังไม่บันทึก</span>
+  </div>
   </div>`;
 }
 
