@@ -761,6 +761,18 @@ function removeDate(w,d){
 // ===== HIDDEN STUDENTS =====
 let hiddenStudents = new Set(); // Set ของ index นักเรียนที่ซ่อน
 
+function editStudent(i){
+  if(!requireUnlock()) return;
+  const old = students[i];
+  const neu = prompt(`แก้ชื่อนักเรียนลำดับที่ ${i+1}:`, old);
+  if(!neu || neu.trim() === old) return;
+  students[i] = neu.trim();
+  renderStudentChips();
+  renderWeek(currentWeek>0?currentWeek:1);
+  saveToFirebase();
+  showStatus(`✏️ แก้ชื่อเป็น "${neu.trim()}" แล้ว`, '#4caf8a');
+}
+
 function toggleHideStudent(i){
   if(!requireUnlock()) return;
   if(hiddenStudents.has(i)) hiddenStudents.delete(i);
@@ -794,7 +806,8 @@ function renderStudentChips(){
       ? `<span style="font-size:10px;color:${photoCount>=3?'#4caf8a':'#e8c84a'};background:${photoCount>=3?'#1a3a2a':'#2a2010'};border-radius:8px;padding:1px 5px;margin-right:2px">${photoCount}📸</span>`
       : '';
     const hideBtn = `<button class="btn-hide" onclick="toggleHideStudent(${i})" title="${isHidden?'แสดงกลับ':'ซ่อน (ไม่นับ%)'}">${isHidden?'👁':'🙈'}</button>`;
-    chip.innerHTML = `${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}${hideBtn}${!isHidden?`<button onclick="removeStudent(${i})" title="ลบ">✕</button>`:''}`;
+    const editBtn = `<button class="btn-hide" onclick="editStudent(${i})" title="แก้ชื่อ-นามสกุล">✏️</button>`;
+    chip.innerHTML = `${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}${editBtn}${hideBtn}${!isHidden?`<button onclick="removeStudent(${i})" title="ลบ">✕</button>`:''}`;
     wrap.appendChild(chip);
   };
 
