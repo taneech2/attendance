@@ -1009,22 +1009,25 @@ function lbGetDates(){
   }
   if(lbPeriod==='term') return allDates;
   if(lbPeriod==='week'){
-    // สัปดาห์ปฏิทินล่าสุดที่มีข้อมูล
-    const last = allDates[allDates.length-1];
-    if(!last) return [];
-    return allDates.filter(x=>x.w===last.w);
+    // หาสัปดาห์ล่าสุด (เลขสัปดาห์สูงสุด) ที่มีข้อมูล
+    for(let w=TOTAL_WEEKS;w>=1;w--){
+      const wDates = allDates.filter(x=>x.w===w);
+      if(wDates.length>0) return wDates;
+    }
+    return [];
   }
   if(lbPeriod==='month'){
-    const mon = now.getMonth(); const yr = now.getFullYear();
+    const mon = now.getMonth(); // 0=ม.ค. ... 11=ธ.ค.
+    const yr  = now.getFullYear(); // เช่น 2026
+    const thMonths={'ม.ค.':0,'ก.พ.':1,'มี.ค.':2,'เม.ย.':3,'พ.ค.':4,'มิ.ย.':5,
+                    'ก.ค.':6,'ส.ค.':7,'ก.ย.':8,'ต.ค.':9,'พ.ย.':10,'ธ.ค.':11};
     return allDates.filter(({d})=>{
-      const parts = d.split('-'); // เช่น "15-พ.ค.-69"
-      // ดึงปี/เดือนจาก date string (สนับสนุน format ไทย)
-      const thMonths={'ม.ค.':0,'ก.พ.':1,'มี.ค.':2,'เม.ย.':3,'พ.ค.':4,'มิ.ย.':5,'ก.ค.':6,'ส.ค.':7,'ก.ย.':8,'ต.ค.':9,'พ.ย.':10,'ธ.ค.':11};
-      const mName = parts[1]; const thYr = parseInt(parts[2]);
-      const ceYr = thYr > 100 ? thYr - 543 + 2500 - 2500 + 2000 : thYr + 2000 - 43;
-      return thMonths[mName]===mon && ceYr===yr%100+2000-2000+yr;
+      const parts = d.split('-'); // "15-พ.ค.-69"
+      const mName = parts[1];
+      const thYr  = parseInt(parts[2]); // 69
+      const ceYr  = thYr + 1957;        // พ.ศ. = 2500+69=2569, ค.ศ. = 2569-543=2026
+      return thMonths[mName]===mon && ceYr===yr;
     });
-    return allDates; // fallback
   }
   return allDates;
 }
