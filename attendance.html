@@ -735,10 +735,16 @@ function renderStudentChips(){
   students.forEach((name,i)=>{
     const chip=document.createElement('div');
     chip.className='student-chip';
-    const thumbHtml = facePhotos[i]
-      ? `<img class="face-thumb" src="${facePhotos[i]}" title="ใบหน้า: ${name}">`
+    const photos = facePhotos[i];
+    const firstPhoto = Array.isArray(photos) ? photos[0] : photos;
+    const photoCount = faceDescriptors[i]?.length || 0;
+    const thumbHtml = firstPhoto
+      ? `<img class="face-thumb" src="${firstPhoto}" title="ใบหน้า: ${name} (${photoCount} รูป)">`
       : `<div class="face-thumb-none" title="ยังไม่ได้ลงทะเบียนใบหน้า">👤</div>`;
-    chip.innerHTML=`${thumbHtml}<span>${i+1}. ${name}</span><button onclick="removeStudent(${i})" title="ลบ">✕</button>`;
+    const cntBadge = photoCount > 0
+      ? `<span style="font-size:10px;color:${photoCount>=3?'#4caf8a':'#e8c84a'};background:${photoCount>=3?'#1a3a2a':'#2a2010'};border-radius:8px;padding:1px 5px;margin-right:2px">${photoCount}📸</span>`
+      : '';
+    chip.innerHTML=`${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}<button onclick="removeStudent(${i})" title="ลบ">✕</button>`;
     wrap.appendChild(chip);
   });
 }
@@ -1248,18 +1254,33 @@ let faceConfirmCount = {}; // { studentIdx: count } — กี่เฟรมแ
 
 function serializeFD() {
   const out = {};
-  Object.keys(faceDescriptors).forEach(k => { out[k] = Array.from(faceDescriptors[k]); });
+  Object.keys(faceDescriptors).forEach(k => {
+    const v = faceDescriptors[k];
+    // v คือ Float32Array[] เสมอในรูปแบบใหม่
+    out[k] = Array.isArray(v) ? v.map(d => Array.from(d)) : [Array.from(v)];
+  });
   return out;
 }
 function deserializeFD(raw) {
   faceDescriptors = {};
   if(!raw) return;
-  Object.keys(raw).forEach(k => { faceDescriptors[Number(k)] = new Float32Array(raw[k]); });
+  Object.keys(raw).forEach(k => {
+    const v = raw[k];
+    // backward compat: รูปแบบเก่า = [number...], รูปแบบใหม่ = [[number...], ...]
+    if(Array.isArray(v[0])) {
+      faceDescriptors[Number(k)] = v.map(a => new Float32Array(a));
+    } else {
+      faceDescriptors[Number(k)] = [new Float32Array(v)]; // แปลงรูปเก่า → array
+    }
+  });
 }
 function deserializeFP(raw) {
   facePhotos = {};
   if(!raw) return;
-  Object.keys(raw).forEach(k => { facePhotos[Number(k)] = raw[k]; });
+  Object.keys(raw).forEach(k => {
+    const v = raw[k];
+    facePhotos[Number(k)] = Array.isArray(v) ? v : [v]; // backward compat
+  });
 }
 
 async function openFaceModal(w) {
@@ -1365,11 +1386,40 @@ function addFaceDate() {
 
 function populateStudentSelect() {
   const sel = document.getElementById('sel-reg-student');
-  sel.innerHTML = students.map((n, i) => '<option value="' + i + '">' + (i+1) + '. ' + n + '</option>').join('');
+  sel.innerHTML = students.map((n, i) => {
+    const cnt = faceDescriptors[i]?.length || 0;
+    const badge = cnt > 0 ? ` [${cnt}/3 📸]` : ' [ยังไม่มีรูป]';
+    return `<option value="${i}">${i+1}. ${n}${badge}</option>`;
+  }).join('');
+  updateRegPhotoPreview();
+}
+
+function updateRegPhotoPreview() {
+  const sel = document.getElementById('sel-reg-student');
+  if(!sel) return;
+  const idx = Number(sel.value);
+  const cnt = faceDescriptors[idx]?.length || 0;
+  const el = document.getElementById('reg-photo-count');
+  if(el) {
+    el.textContent = cnt === 0 ? '📷 ยังไม่มีรูป' : `📸 ${cnt}/3 รูป${cnt>=3?' — ครบแล้ว! ลบก่อนถ่ายใหม่':''}`;
+    el.style.color = cnt >= 3 ? '#4caf8a' : cnt > 0 ? '#e8c84a' : '#e05555';
+  }
+}
+
+function clearStudentFace() {
+  const sel = document.getElementById('sel-reg-student');
+  const idx = Number(sel.value);
+  if(!confirm(`ลบรูปใบหน้าทั้งหมด (${faceDescriptors[idx]?.length||0} รูป) ของ "${students[idx]}"?`)) return;
+  delete faceDescriptors[idx];
+  delete facePhotos[idx];
+  renderStudentChips();
+  populateStudentSelect();
+  saveToFirebase();
+  setFaceStatus(`🗑 ลบรูปใบหน้า ${students[idx]} แล้ว — ถ่ายใหม่ได้เลย`);
 }
 
 function updateFaceCount() {
-  const total = students.filter((_, i) => faceDescriptors[i]).length;
+  const total = students.filter((_, i) => faceDescriptors[i]?.length > 0).length;
   const marked = Object.keys(faceMarked).length;
   document.getElementById('face-count').textContent = marked + ' / ' + total;
 }
@@ -1499,10 +1549,13 @@ async function runFaceLoop() {
 }
 
 function findBestFaceMatch(descriptor) {
-  let best = null, bestDist = 0.52; // threshold เดิม — เร็วและแม่น
+  let best = null, bestDist = 0.45; // เข้มขึ้น 0.52→0.45 ลดสแกนผิดคน
   Object.keys(faceDescriptors).forEach(k => {
-    const dist = faceapi.euclideanDistance(descriptor, faceDescriptors[k]);
-    if(dist < bestDist) { bestDist = dist; best = { idx: Number(k), name: students[Number(k)], dist }; }
+    const descs = faceDescriptors[k];
+    if(!descs || !descs.length) return;
+    // เทียบกับทุกรูปที่ลงทะเบียน — ใช้ระยะที่ใกล้ที่สุด
+    const minDist = Math.min(...descs.map(d => faceapi.euclideanDistance(descriptor, d)));
+    if(minDist < bestDist) { bestDist = minDist; best = { idx: Number(k), name: students[Number(k)], dist: minDist }; }
   });
   return best;
 }
@@ -1610,30 +1663,41 @@ async function openFaceModalClass(sid) {
 
 async function captureDescriptor() {
   const idx = Number(document.getElementById('sel-reg-student').value);
+  // ตรวจว่ามีรูปครบ 3 แล้วหรือยัง
+  if((faceDescriptors[idx]?.length || 0) >= 3) {
+    setFaceStatus('⚠️ มีรูปครบ 3 รูปแล้ว กดปุ่ม "ลบรูปทั้งหมด" แล้วถ่ายใหม่');
+    return;
+  }
   const video = document.getElementById('face-video');
   setFaceStatus('⏳ กำลังจับใบหน้า...');
   const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
   const result = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
   if(!result) { setFaceStatus('❌ ไม่พบใบหน้า ลองใหม่อีกครั้ง'); return; }
-  faceDescriptors[idx] = result.descriptor;
-  // บันทึก snapshot รูปใบหน้า (80×80px crop จาก bounding box)
+  // push ต่อท้าย array (ไม่ overwrite)
+  if(!faceDescriptors[idx]) faceDescriptors[idx] = [];
+  faceDescriptors[idx].push(result.descriptor);
+  const count = faceDescriptors[idx].length;
+  // บันทึก snapshot รูปใบหน้า
   try {
     const box = result.detection.box;
     const snapCanvas = document.createElement('canvas');
     snapCanvas.width = 80; snapCanvas.height = 80;
     const snapCtx = snapCanvas.getContext('2d');
     snapCtx.drawImage(video, Math.max(0, box.x), Math.max(0, box.y), box.width, box.height, 0, 0, 80, 80);
-    facePhotos[idx] = snapCanvas.toDataURL('image/jpeg', 0.7);
+    if(!facePhotos[idx]) facePhotos[idx] = [];
+    facePhotos[idx].push(snapCanvas.toDataURL('image/jpeg', 0.7));
     renderStudentChips();
   } catch(e) {}
-  addFaceLog('บันทึกใบหน้า: ' + students[idx], 'log-ok');
+  const hint = count < 3 ? `ถ่ายเพิ่มได้อีก ${3-count} รูป (เอียง${count===1?'ซ้าย':'ขวา'}นิดนึง)` : '🎉 ครบ 3 รูป แม่นยำมากขึ้น!';
+  addFaceLog(`รูปที่ ${count}/3 — ${students[idx]}`, 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก Cloud...');
   await saveToFirebase();
   playPing();
-  setFaceStatus('✅ บันทึกใบหน้า ' + students[idx] + ' แล้ว (Cloud sync ✓)');
-  // เลื่อนไปนักเรียนคนถัดไปอัตโนมัติ
+  setFaceStatus(`✅ รูปที่ ${count}/3 ของ ${students[idx]} — ${hint}`);
+  populateStudentSelect();
+  // เลื่อนไปคนถัดไปอัตโนมัติเมื่อครบ 3 รูป
   const sel = document.getElementById('sel-reg-student');
-  if(idx + 1 < students.length) sel.value = idx + 1;
+  if(count >= 3 && idx + 1 < students.length) { sel.value = idx + 1; updateRegPhotoPreview(); }
 }
 
 async function init(){
@@ -1696,9 +1760,18 @@ init();
         <div class="face-count-big" id="face-count">0 / 0</div>
         <div class="face-count-label">คนที่เช็คชื่อแล้ว</div>
       </div>
-      <div id="face-register-ctrl" class="face-ctrl" style="display:none">
-        <select id="sel-reg-student" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:9px 12px;border-radius:6px;font-family:Sarabun,sans-serif;font-size:14px;"></select>
-        <button class="btn" onclick="captureDescriptor()">📸 ถ่ายใบหน้า</button>
+      <div id="face-register-ctrl" class="face-ctrl" style="display:none;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="sel-reg-student" onchange="updateRegPhotoPreview()" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:9px 12px;border-radius:6px;font-family:Sarabun,sans-serif;font-size:14px;"></select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span id="reg-photo-count" style="font-size:13px;font-weight:700;flex:1">📷 ยังไม่มีรูป</span>
+          <button class="btn" onclick="captureDescriptor()">📸 ถ่ายรูป</button>
+          <button class="btn btn-red" onclick="clearStudentFace()" title="ลบรูปทั้งหมดของคนนี้แล้วถ่ายใหม่">🗑 ลบรูป</button>
+        </div>
+        <div style="font-size:11px;color:#78909c;line-height:1.5">
+          💡 แนะนำ: ถ่าย 3 รูป — <b style="color:#c9a84c">ตรง / เอียงซ้ายนิด / เอียงขวานิด</b> เพิ่มความแม่นยำ 3 เท่า
+        </div>
       </div>
       <div class="face-video-wrap">
         <video id="face-video" autoplay muted playsinline></video>
