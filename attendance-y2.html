@@ -50,6 +50,31 @@ body{font-family:'Sarabun',sans-serif;background:#0a0f1e;min-height:100vh;paddin
 .tab.has-data{border-color:#c9a84c88;}
 .tab-summary{background:#1a2540;border:1px solid #4caf8a55;color:#4caf8a;}
 .tab-summary.active{background:linear-gradient(135deg,#4caf8a,#2d7a5a);color:#fff;}
+.tab-lb{background:#1a2540;border:1px solid #c9a84c99;color:#c9a84c;font-weight:700;}
+.tab-lb.active{background:linear-gradient(135deg,#c9a84c,#a07830);color:#0a0f1e;}
+/* LEADERBOARD */
+.lb-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:16px 4px 10px;}
+.lb-title{font-size:20px;font-weight:700;color:#c9a84c;letter-spacing:1px;}
+.lb-period{display:flex;gap:6px;}
+.lb-period button{background:#1a2540;border:1px solid #c9a84c44;color:#c9a84c;padding:5px 14px;border-radius:20px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;transition:.2s;}
+.lb-period button.active{background:#c9a84c;color:#0a0f1e;font-weight:700;}
+.lb-table{width:100%;border-collapse:collapse;font-size:14px;}
+.lb-table th{background:#0d1a30;color:#c9a84c;padding:9px 10px;text-align:center;border-bottom:2px solid #c9a84c55;font-size:12px;letter-spacing:.5px;}
+.lb-table th:nth-child(2){text-align:left;}
+.lb-table td{padding:8px 10px;text-align:center;border-bottom:1px solid #ffffff0a;transition:.15s;}
+.lb-table td:nth-child(2){text-align:left;font-weight:600;}
+.lb-table tr:hover td{background:rgba(201,168,76,.07);}
+.lb-rank{font-weight:700;font-size:15px;color:#666;width:36px;}
+.lb-gold{color:#ffd700;font-size:18px;}
+.lb-silver{color:#c0c0c0;font-size:18px;}
+.lb-bronze{color:#cd7f32;font-size:18px;}
+.lb-pts{font-weight:700;font-size:15px;color:#c9a84c;}
+.lb-form{display:flex;gap:3px;justify-content:center;}
+.lb-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.lb-dot-g{background:#4caf8a;}
+.lb-dot-r{background:#e05555;}
+.lb-dot-n{background:#444;}
+.lb-hidden-row td{opacity:.4;font-style:italic;}
 
 /* WEEK PANEL */
 .week-panel{display:none;}
@@ -326,7 +351,7 @@ let weekData = {};
 for(let w=1;w<=18;w++){
   weekData[w] = { dates: [], attendance: {} };
 }
-let currentWeek = 1;
+let currentWeek = -1; // -1 = Leaderboard (default)
 const TOTAL_WEEKS = 18;
 
 // ===== CLASS DATA =====
@@ -354,6 +379,14 @@ let faceSubject = ''; // subject id เมื่อสแกนในโหม�
 function buildTabs(){
   const wrap = document.getElementById('week-tabs');
   wrap.innerHTML = '';
+  // 🏆 Leaderboard tab — แรกสุด (default)
+  const lb = document.createElement('button');
+  lb.className = 'tab tab-lb' + (currentWeek===-1?' active':'');
+  lb.id = 'tab-lb';
+  lb.textContent = '🏆 Leaderboard';
+  lb.onclick = ()=>switchWeek(-1);
+  wrap.appendChild(lb);
+  // Week tabs
   for(let w=1;w<=TOTAL_WEEKS;w++){
     const btn = document.createElement('button');
     btn.className = 'tab' + (w===currentWeek?' active':'');
@@ -374,12 +407,15 @@ function buildTabs(){
 function switchWeek(w){
   currentWeek = w;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  const el = document.getElementById(w===0?'tab-summary':`tab-${w}`);
+  const elId = w===-1?'tab-lb':w===0?'tab-summary':`tab-${w}`;
+  const el = document.getElementById(elId);
   if(el) el.classList.add('active');
   document.querySelectorAll('.week-panel').forEach(p=>p.classList.remove('active'));
-  const panel = document.getElementById(w===0?'panel-summary':`panel-${w}`);
+  const panelId = w===-1?'panel-lb':w===0?'panel-summary':`panel-${w}`;
+  const panel = document.getElementById(panelId);
   if(panel) panel.classList.add('active');
-  if(w>0) renderWeek(w);
+  if(w===-1) renderLeaderboard();
+  else if(w>0) renderWeek(w);
   else renderSummary();
 }
 
@@ -387,9 +423,16 @@ function switchWeek(w){
 function buildPanels(){
   const wrap = document.getElementById('week-panels');
   wrap.innerHTML = '';
+  // 🏆 Leaderboard panel — แรกสุด (default active)
+  const lbDiv = document.createElement('div');
+  lbDiv.className = 'week-panel active';
+  lbDiv.id = 'panel-lb';
+  lbDiv.innerHTML = `<div id="lb-content"></div>`;
+  wrap.appendChild(lbDiv);
+  // Week panels
   for(let w=1;w<=TOTAL_WEEKS;w++){
     const div = document.createElement('div');
-    div.className = 'week-panel' + (w===1?' active':'');
+    div.className = 'week-panel';
     div.id = `panel-${w}`;
     div.innerHTML = `
       <div class="date-controls no-print">
@@ -909,6 +952,113 @@ function refreshAllTabPct(){
     tab.innerHTML=tPct!==null?`ส.${w}<br><span style="font-size:10px;color:${tColor};font-weight:800">${tPct}%</span>`:`ส.${w}`;
     tab.classList.toggle('has-data',wd.dates.length>0);
   }
+}
+
+// ===== LEADERBOARD =====
+let lbPeriod = 'term'; // 'week' | 'month' | 'term'
+
+function calcScore(ts){
+  // ts = "fHH:MM:SS" หรือ "mHH:MM:SS" หรือ "HH:MM:SS"
+  if(!ts) return 0;
+  const raw = (ts[0]==='f'||ts[0]==='m') ? ts.slice(1) : ts;
+  const [h,m,s] = raw.split(':').map(Number);
+  const t = h*60 + m + (s||0)/60; // นาทีตั้งแต่เที่ยงคืน
+  const LATE_END = 8*60;          // 08:00
+  const SCORE_END = 7*60+50;      // 07:50
+  const SCORE_START = 7*60+30;    // 07:30
+  if(t >= LATE_END) return 0;
+  if(t >= SCORE_END) return 1;    // 07:50-07:59 = 1 แต้ม (สาย)
+  const pts = SCORE_END - t;      // นาทีก่อน 07:50
+  return Math.min(Math.round(pts), 20); // cap 20 แต้ม
+}
+
+function getWeekRange(w){
+  // คืน array ของ date strings ในสัปดาห์ w
+  return (weekData[w]||{dates:[]}).dates;
+}
+
+function lbGetDates(){
+  const now = new Date();
+  const allDates = [];
+  for(let w=1;w<=TOTAL_WEEKS;w++){
+    (weekData[w]?.dates||[]).forEach(d=>allDates.push({w,d}));
+  }
+  if(lbPeriod==='term') return allDates;
+  if(lbPeriod==='week'){
+    // สัปดาห์ปฏิทินล่าสุดที่มีข้อมูล
+    const last = allDates[allDates.length-1];
+    if(!last) return [];
+    return allDates.filter(x=>x.w===last.w);
+  }
+  if(lbPeriod==='month'){
+    const mon = now.getMonth(); const yr = now.getFullYear();
+    return allDates.filter(({d})=>{
+      const parts = d.split('-'); // เช่น "15-พ.ค.-69"
+      // ดึงปี/เดือนจาก date string (สนับสนุน format ไทย)
+      const thMonths={'ม.ค.':0,'ก.พ.':1,'มี.ค.':2,'เม.ย.':3,'พ.ค.':4,'มิ.ย.':5,'ก.ค.':6,'ส.ค.':7,'ก.ย.':8,'ต.ค.':9,'พ.ย.':10,'ธ.ค.':11};
+      const mName = parts[1]; const thYr = parseInt(parts[2]);
+      const ceYr = thYr > 100 ? thYr - 543 + 2500 - 2500 + 2000 : thYr + 2000 - 43;
+      return thMonths[mName]===mon && ceYr===yr%100+2000-2000+yr;
+    });
+    return allDates; // fallback
+  }
+  return allDates;
+}
+
+function renderLeaderboard(){
+  const el = document.getElementById('lb-content');
+  if(!el) return;
+
+  // คำนวณคะแนนแต่ละคน
+  const dates = lbGetDates();
+  const rows = students.map((name,i)=>{
+    if(hiddenStudents.has(i)) return null;
+    let pts=0, ma=0, absent=0;
+    const form=[];
+    dates.forEach(({w,d})=>{
+      const att = weekData[w]?.attendance?.[i]?.[d]||0;
+      const ts  = weekData[w]?.timestamps?.[i]?.[d]||'';
+      if(att===1){ ma++; pts+=calcScore(ts); form.push('g'); }
+      else if(att===2){ absent++; form.push('r'); }
+      else form.push('n');
+    });
+    return {i,name,pts,ma,absent,total:dates.length,form:form.slice(-5)};
+  }).filter(Boolean);
+
+  // เรียงตามคะแนน
+  rows.sort((a,b)=>b.pts-a.pts||b.ma-a.ma);
+
+  const medals=['🥇','🥈','🥉'];
+  const periodLabel={'week':'สัปดาห์นี้','month':'เดือนนี้','term':'รายเทอม'};
+
+  el.innerHTML = `
+  <div class="lb-header">
+    <div class="lb-title">🏆 LEADERBOARD — ${document.getElementById('lbl-class')?.textContent||''}</div>
+    <div class="lb-period">
+      <button class="${lbPeriod==='week'?'active':''}" onclick="lbPeriod='week';renderLeaderboard()">สัปดาห์</button>
+      <button class="${lbPeriod==='month'?'active':''}" onclick="lbPeriod='month';renderLeaderboard()">เดือน</button>
+      <button class="${lbPeriod==='term'?'active':''}" onclick="lbPeriod='term';renderLeaderboard()">เทอม</button>
+    </div>
+  </div>
+  <div class="table-wrapper">
+  <table class="lb-table">
+    <thead><tr>
+      <th>#</th><th>ชื่อ</th><th>วัน</th><th>มา</th><th>ขาด</th><th>แต้ม</th><th>ฟอร์ม 5 วัน</th>
+    </tr></thead>
+    <tbody>
+    ${rows.map((r,rank)=>`
+      <tr>
+        <td class="lb-rank">${rank<3?`<span class="lb-${['gold','silver','bronze'][rank]}">${medals[rank]}</span>`:rank+1}</td>
+        <td>${r.name}</td>
+        <td style="color:#888">${r.total}</td>
+        <td style="color:#4caf8a">${r.ma}</td>
+        <td style="color:#e05555">${r.absent}</td>
+        <td class="lb-pts">${r.pts}</td>
+        <td><div class="lb-form">${r.form.map(f=>`<span class="lb-dot lb-dot-${f}"></span>`).join('')}</div></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
+  </div>`;
 }
 
 // ===== SUMMARY =====
@@ -1872,14 +2022,15 @@ async function init(){
   buildClassPanels();
   renderClass(currentSubject);
   renderStudentChips();
-  renderWeek(currentWeek);
+  renderLeaderboard(); // default หน้าแรก
   bindInfoBar();
   // Auto-refresh จาก Firebase ทุก 30 วินาที (ไม่ refresh ถ้า modal เปิดอยู่)
   setInterval(async () => {
     const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
     if(modalOpen) return;
     await loadFromFirebase();
-    renderWeek(currentWeek);
+    if(currentWeek===-1) renderLeaderboard();
+    else renderWeek(currentWeek);
   }, 30000);
 }
 
