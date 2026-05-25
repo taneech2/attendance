@@ -1358,7 +1358,15 @@ let faceDetectLoop = null;
 let faceMode = 'attend';
 let facingMode = 'user'; // 'user' = หน้า, 'environment' = หลัง
 let faceWeek = 1;
-let faceDescriptors = {}; // { studentIdx: Float32Array }
+const FACE_MAX = 5;
+const FACE_GUIDES = [
+  { label:'หน้าตรง',   emoji:'😐', hint:'มองตรงเข้ากล้อง' },
+  { label:'เอียงซ้าย', emoji:'↖️', hint:'เอียงหัวไปทางซ้ายนิดหน่อย' },
+  { label:'เอียงขวา',  emoji:'↗️', hint:'เอียงหัวไปทางขวานิดหน่อย' },
+  { label:'เงยหน้า',   emoji:'⬆️', hint:'เงยหน้าขึ้นเล็กน้อย' },
+  { label:'ก้มลง',     emoji:'⬇️', hint:'ก้มหน้าลงเล็กน้อย' },
+];
+let faceDescriptors = {}; // { studentIdx: Float32Array[] }
 let facePhotos = {};       // { studentIdx: base64 JPEG string }
 let faceMarked = {};       // { studentIdx: true } — เช็คแล้วในรอบนี้
 let faceConfirmCount = {}; // { studentIdx: count } — กี่เฟรมแล้วที่เห็นหน้านี้
@@ -1499,7 +1507,7 @@ function populateStudentSelect() {
   const sel = document.getElementById('sel-reg-student');
   sel.innerHTML = students.map((n, i) => {
     const cnt = faceDescriptors[i]?.length || 0;
-    const badge = cnt > 0 ? ` [${cnt}/3 📸]` : ' [ยังไม่มีรูป]';
+    const badge = cnt > 0 ? ` [${cnt}/${FACE_MAX} 📸]` : ' [ยังไม่มีรูป]';
     return `<option value="${i}">${i+1}. ${n}${badge}</option>`;
   }).join('');
   updateRegPhotoPreview();
@@ -1510,11 +1518,32 @@ function updateRegPhotoPreview() {
   if(!sel) return;
   const idx = Number(sel.value);
   const cnt = faceDescriptors[idx]?.length || 0;
+  const done = cnt >= FACE_MAX;
+
+  // progress dots
+  const dots = FACE_GUIDES.map((g,i) =>
+    `<span style="font-size:18px;opacity:${i<cnt?1:0.25}" title="${g.label}">${i<cnt?g.emoji:'⬜'}</span>`
+  ).join(' ');
+
+  // next guide
+  const nextGuide = !done ? FACE_GUIDES[cnt] : null;
+
   const el = document.getElementById('reg-photo-count');
   if(el) {
-    el.textContent = cnt === 0 ? '📷 ยังไม่มีรูป' : `📸 ${cnt}/3 รูป${cnt>=3?' — ครบแล้ว! ลบก่อนถ่ายใหม่':''}`;
-    el.style.color = cnt >= 3 ? '#4caf8a' : cnt > 0 ? '#e8c84a' : '#e05555';
+    el.innerHTML = done
+      ? `<span style="color:#4caf8a">✅ ครบ ${FACE_MAX} มุมแล้ว!</span> ${dots}`
+      : `<span style="color:${cnt>0?'#e8c84a':'#e05555'}">📸 ${cnt}/${FACE_MAX} รูป</span> ${dots}`;
   }
+  const hint = document.getElementById('face-guide-hint');
+  if(hint) {
+    hint.innerHTML = done
+      ? `<span style="color:#4caf8a">🎉 ลงทะเบียนครบทุกมุมแล้ว — สแกนแม่นขึ้นมาก!</span>`
+      : `<span style="color:#c9a84c;font-size:13px;font-weight:700">📍 รูปที่ ${cnt+1}: ${nextGuide.emoji} ${nextGuide.label}</span>
+         <span style="color:#78909c;font-size:12px"> — ${nextGuide.hint}</span>`;
+  }
+  // ซ่อนปุ่มถ่ายถ้าครบแล้ว
+  const capBtn = document.getElementById('btn-capture');
+  if(capBtn) capBtn.style.opacity = done ? '0.35' : '1';
 }
 
 function clearStudentFace() {
@@ -1779,12 +1808,12 @@ async function captureDescriptor() {
   const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
   const result = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
   if(!result) { setFaceStatus('❌ ไม่พบใบหน้า ลองใหม่อีกครั้ง'); return; }
-  // push + sliding window: เก็บแค่ 3 รูปล่าสุดเสมอ
+  // push descriptor — เก็บแค่ FACE_MAX รูปล่าสุดเสมอ
   if(!faceDescriptors[idx]) faceDescriptors[idx] = [];
   faceDescriptors[idx].push(result.descriptor);
-  if(faceDescriptors[idx].length > 3) faceDescriptors[idx].shift(); // ดันรูปแรกออก
+  if(faceDescriptors[idx].length > FACE_MAX) faceDescriptors[idx].shift();
   const count = faceDescriptors[idx].length;
-  // บันทึก snapshot รูปใบหน้า (sliding window เช่นกัน)
+  // บันทึก snapshot รูปใบหน้า (เก็บแค่ 1 รูปแรก = หน้าตรง เพื่อ thumbnail)
   try {
     const box = result.detection.box;
     const snapCanvas = document.createElement('canvas');
@@ -1792,21 +1821,21 @@ async function captureDescriptor() {
     const snapCtx = snapCanvas.getContext('2d');
     snapCtx.drawImage(video, Math.max(0, box.x), Math.max(0, box.y), box.width, box.height, 0, 0, 80, 80);
     if(!facePhotos[idx]) facePhotos[idx] = [];
-    facePhotos[idx].push(snapCanvas.toDataURL('image/jpeg', 0.7));
-    if(facePhotos[idx].length > 3) facePhotos[idx].shift();
+    if(facePhotos[idx].length < FACE_MAX) facePhotos[idx].push(snapCanvas.toDataURL('image/jpeg', 0.6));
     renderStudentChips();
   } catch(e) {}
   const total = faceDescriptors[idx].length;
-  const hint = total < 3 ? `ถ่ายเพิ่มได้อีก ${3-total} รูป (เอียง${total===1?'ซ้าย':'ขวา'}นิดนึง)` : '🔄 อัปเดต 3 รูปล่าสุดแล้ว';
-  addFaceLog(`อัปเดตรูป ${students[idx]} (${total}/3)`, 'log-ok');
+  const nextG = total < FACE_MAX ? FACE_GUIDES[total] : null;
+  const hint = nextG ? `รูปถัดไป: ${nextG.emoji} ${nextG.label} — ${nextG.hint}` : `✅ ครบ ${FACE_MAX} มุมแล้ว!`;
+  addFaceLog(`รูป ${students[idx]} (${total}/${FACE_MAX}) ${total<=FACE_MAX?FACE_GUIDES[total-1].emoji:''}`, 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก Cloud...');
   await saveToFirebase();
   playPing();
   setFaceStatus(`✅ ${students[idx]} — ${hint}`);
   populateStudentSelect();
-  // เลื่อนไปคนถัดไปอัตโนมัติเมื่อครบ 3 รูปครั้งแรก
+  // เลื่อนไปคนถัดไปอัตโนมัติเมื่อครบ FACE_MAX รูปครั้งแรก
   const sel = document.getElementById('sel-reg-student');
-  if(total >= 3 && idx + 1 < students.length) { sel.value = idx + 1; updateRegPhotoPreview(); }
+  if(total >= FACE_MAX && idx + 1 < students.length) { sel.value = idx + 1; updateRegPhotoPreview(); }
 }
 
 async function init(){
@@ -1875,11 +1904,11 @@ init();
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span id="reg-photo-count" style="font-size:13px;font-weight:700;flex:1">📷 ยังไม่มีรูป</span>
-          <button class="btn" onclick="captureDescriptor()">📸 ถ่ายรูป</button>
+          <button id="btn-capture" class="btn" onclick="captureDescriptor()">📸 ถ่ายรูป</button>
           <button class="btn btn-red" onclick="clearStudentFace()" title="ลบรูปทั้งหมดของคนนี้แล้วถ่ายใหม่">🗑 ลบรูป</button>
         </div>
-        <div style="font-size:11px;color:#78909c;line-height:1.5">
-          💡 แนะนำ: ถ่าย 3 รูป — <b style="color:#c9a84c">ตรง / เอียงซ้ายนิด / เอียงขวานิด</b> เพิ่มความแม่นยำ 3 เท่า
+        <div id="face-guide-hint" style="background:rgba(201,168,76,.07);border:1px solid #c9a84c33;border-radius:6px;padding:8px 12px;font-size:12px;line-height:1.6">
+          📍 รูปที่ 1: 😐 หน้าตรง — มองตรงเข้ากล้อง
         </div>
       </div>
       <div class="face-video-wrap">
