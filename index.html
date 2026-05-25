@@ -139,6 +139,13 @@ td.num{color:#c9a84c;font-weight:600;}
 .legend{display:flex;gap:16px;margin:4px 0 4px 16px;flex-wrap:wrap;}
 .legend span{color:#d4c4a0;font-size:12px;}
 
+/* HIDDEN STUDENT */
+.student-chip.chip-hidden{opacity:.45;border-color:#555;background:rgba(80,80,80,.08);}
+.student-chip.chip-hidden span{text-decoration:line-through;color:#777;}
+.hidden-section-label{width:100%;font-size:11px;color:#666;padding:6px 2px 2px;border-top:1px solid #c9a84c22;margin-top:4px;}
+.btn-hide{background:transparent;border:1px solid #c9a84c33;color:#8899bb;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:12px;}
+.btn-hide:hover{background:rgba(201,168,76,.1);color:#c9a84c;}
+
 /* UNDO BUTTON */
 .btn-undo{position:fixed;bottom:22px;right:22px;background:linear-gradient(135deg,#1a3a5c,#0d2240);border:2px solid #4a8abf77;color:#8bc4f0;padding:9px 18px;border-radius:50px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:999;transition:.2s;white-space:nowrap;}
 .btn-undo:hover:not(:disabled){background:linear-gradient(135deg,#2a5a8c,#1a3a6c);border-color:#4a8abf;color:#c0e0ff;transform:translateY(-2px);box-shadow:0 6px 24px rgba(74,138,191,.35);}
@@ -450,6 +457,7 @@ function renderWeek(w){
   // body
   tbody.innerHTML = '';
   students.forEach((name,i)=>{
+    if(hiddenStudents.has(i)) return; // ข้ามนักเรียนที่ซ่อน
     let ma=0,noma=0;
     wd.dates.forEach(d=>{ const s=wd.attendance[i]&&wd.attendance[i][d]||0; if(s===1)ma++; if(s===2)noma++; });
     const tr = document.createElement('tr');
@@ -479,7 +487,7 @@ function renderWeek(w){
     tab.classList.toggle('has-data', wd.dates.length>0);
     // คำนวณ % รวมสัปดาห์นี้เพื่อแสดงบน tab
     let tMa=0,tRec=0;
-    students.forEach((_,i)=>{ wd.dates.forEach(d=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)tMa++; if(s===1||s===2)tRec++; }); });
+    students.forEach((_,i)=>{ if(hiddenStudents.has(i)) return; wd.dates.forEach(d=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)tMa++; if(s===1||s===2)tRec++; }); });
     const tPct = tRec>0 ? Math.round(tMa/tRec*100) : null;
     const tColor = tPct===null?'':tPct>=80?'#4caf8a':tPct>=60?'#e8c84a':'#e05555';
     tab.innerHTML = tPct!==null
@@ -495,7 +503,7 @@ function renderWeek(w){
   // per-day stats
   const dayStats = wd.dates.map(d=>{
     let dMa=0, dNoma=0;
-    students.forEach((_,i)=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)dMa++; else if(s===2)dNoma++; });
+    students.forEach((_,i)=>{ if(hiddenStudents.has(i)) return; const s=wd.attendance[i]?.[d]||0; if(s===1)dMa++; else if(s===2)dNoma++; });
     return {d, ma:dMa, noma:dNoma, recorded:dMa+dNoma};
   });
   let totalMa=0, totalNoma=0, totalRec=0;
@@ -750,13 +758,32 @@ function removeDate(w,d){
   saveToFirebase();
 }
 
+// ===== HIDDEN STUDENTS =====
+let hiddenStudents = new Set(); // Set ของ index นักเรียนที่ซ่อน
+
+function toggleHideStudent(i){
+  if(!requireUnlock()) return;
+  if(hiddenStudents.has(i)) hiddenStudents.delete(i);
+  else hiddenStudents.add(i);
+  renderStudentChips();
+  renderWeek(currentWeek>0?currentWeek:1);
+  refreshAllTabPct();
+  saveToFirebase();
+  const name = students[i];
+  showStatus(hiddenStudents.has(i) ? `🙈 ซ่อน "${name}" แล้ว — ไม่นับในเปอร์เซ็นต์` : `👁 แสดง "${name}" แล้ว`, '#c9a84c');
+}
+
 // ===== STUDENT MANAGEMENT =====
 function renderStudentChips(){
   const wrap=document.getElementById('student-chips');
   wrap.innerHTML='';
-  students.forEach((name,i)=>{
-    const chip=document.createElement('div');
-    chip.className='student-chip';
+  const visible = [], hidden = [];
+  students.forEach((name,i) => (hiddenStudents.has(i) ? hidden : visible).push({name,i}));
+
+  const renderChip = ({name,i}) => {
+    const chip = document.createElement('div');
+    const isHidden = hiddenStudents.has(i);
+    chip.className = 'student-chip' + (isHidden ? ' chip-hidden' : '');
     const photos = facePhotos[i];
     const firstPhoto = Array.isArray(photos) ? photos[0] : photos;
     const photoCount = faceDescriptors[i]?.length || 0;
@@ -766,9 +793,19 @@ function renderStudentChips(){
     const cntBadge = photoCount > 0
       ? `<span style="font-size:10px;color:${photoCount>=3?'#4caf8a':'#e8c84a'};background:${photoCount>=3?'#1a3a2a':'#2a2010'};border-radius:8px;padding:1px 5px;margin-right:2px">${photoCount}📸</span>`
       : '';
-    chip.innerHTML=`${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}<button onclick="removeStudent(${i})" title="ลบ">✕</button>`;
+    const hideBtn = `<button class="btn-hide" onclick="toggleHideStudent(${i})" title="${isHidden?'แสดงกลับ':'ซ่อน (ไม่นับ%)'}">${isHidden?'👁':'🙈'}</button>`;
+    chip.innerHTML = `${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}${hideBtn}${!isHidden?`<button onclick="removeStudent(${i})" title="ลบ">✕</button>`:''}`;
     wrap.appendChild(chip);
-  });
+  };
+
+  visible.forEach(renderChip);
+  if(hidden.length > 0){
+    const lbl = document.createElement('div');
+    lbl.className = 'hidden-section-label';
+    lbl.textContent = `🙈 ซ่อนอยู่ ${hidden.length} คน (ไม่นับในเปอร์เซ็นต์)`;
+    wrap.appendChild(lbl);
+    hidden.forEach(renderChip);
+  }
 }
 
 function addStudent(){
@@ -834,7 +871,7 @@ function refreshAllTabPct(){
     const tab=document.getElementById(`tab-${w}`); if(!tab) continue;
     if(wd.dates.length===0){ tab.innerHTML=`ส.${w}`; continue; }
     let tMa=0,tRec=0;
-    students.forEach((_,i)=>{ wd.dates.forEach(d=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)tMa++; if(s===1||s===2)tRec++; }); });
+    students.forEach((_,i)=>{ if(hiddenStudents.has(i)) return; wd.dates.forEach(d=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)tMa++; if(s===1||s===2)tRec++; }); });
     const tPct=tRec>0?Math.round(tMa/tRec*100):null;
     const tColor=tPct===null?'':tPct>=80?'#4caf8a':tPct>=60?'#e8c84a':'#e05555';
     tab.innerHTML=tPct!==null?`ส.${w}<br><span style="font-size:10px;color:${tColor};font-weight:800">${tPct}%</span>`:`ส.${w}`;
@@ -855,6 +892,7 @@ function renderSummary(){
   html+=`<th>รวมมา</th><th>รวมไม่มา</th><th>%มา</th></tr></thead><tbody>`;
 
   students.forEach((name,i)=>{
+    if(hiddenStudents.has(i)) return; // ไม่แสดงในสรุป
     let totalMa=0,totalNoma=0,totalDays=0;
     let cells='';
     for(let w=1;w<=TOTAL_WEEKS;w++){
@@ -1230,13 +1268,14 @@ function applyData(parsed){
     const cts = src.timestamps || {};
     Object.keys(cts).forEach(k => { classData[s.id].timestamps[Number(k)] = cts[k]; });
   });
+  hiddenStudents = new Set(parsed.hiddenStudents || []);
   applyInfoBar(parsed.infoBar);
   refreshAllTabPct();
   return true;
 }
 
 async function saveToFirebase(){
-  const payload = JSON.stringify({ students, weekData, classData, infoBar: getInfoBar(), pin: classPin, fd: serializeFD(), fp: facePhotos, savedAt: Date.now() });
+  const payload = JSON.stringify({ students, weekData, classData, hiddenStudents: Array.from(hiddenStudents), infoBar: getInfoBar(), pin: classPin, fd: serializeFD(), fp: facePhotos, savedAt: Date.now() });
   // บันทึก localStorage ก่อนเสมอ (ทันที ไม่รอเน็ต)
   localStorage.setItem(LS_KEY, payload);
   try{
