@@ -139,6 +139,11 @@ td.num{color:#c9a84c;font-weight:600;}
 .legend{display:flex;gap:16px;margin:4px 0 4px 16px;flex-wrap:wrap;}
 .legend span{color:#d4c4a0;font-size:12px;}
 
+/* UNDO BUTTON */
+.btn-undo{position:fixed;bottom:22px;right:22px;background:linear-gradient(135deg,#1a3a5c,#0d2240);border:2px solid #4a8abf77;color:#8bc4f0;padding:9px 18px;border-radius:50px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:999;transition:.2s;white-space:nowrap;}
+.btn-undo:hover:not(:disabled){background:linear-gradient(135deg,#2a5a8c,#1a3a6c);border-color:#4a8abf;color:#c0e0ff;transform:translateY(-2px);box-shadow:0 6px 24px rgba(74,138,191,.35);}
+.btn-undo:disabled{opacity:.3;cursor:default;}
+
 @media print{
   body{background:#fff;padding:0;}
   .page{box-shadow:none;border:none;}
@@ -533,6 +538,7 @@ function nowHHMM(){ const n=new Date(); return String(n.getHours()).padStart(2,'
 
 function cycle(w,i,d){
   if(!requireUnlock())return;
+  pushUndo(students[i]);
   const wd=weekData[w];
   if(!wd.attendance[i]) wd.attendance[i]={};
   wd.attendance[i][d]=((wd.attendance[i][d]||0)+1)%3;
@@ -644,6 +650,7 @@ function classSymbol(s, ts) {
 
 function cycleClass(sid, idx, date) {
   if(!requireUnlock()) return;
+  pushUndo(students[idx]);
   if(!classData[sid].attendance[idx]) classData[sid].attendance[idx] = {};
   const cur = classData[sid].attendance[idx][date] || 0;
   classData[sid].attendance[idx][date] = (cur + 1) % 3;
@@ -692,7 +699,8 @@ function importClassDates(sid) {
 
 function removeClassDate(sid, date) {
   if(!requireUnlock()) return;
-  if(!confirm('ลบวันที่ "' + date + '" ออกจากวิชานี้?')) return;
+  if(!confirm('ลบวันที่ "' + date + '" ออกจากวิชานี้?\n\n(กด ↩️ ย้อนกลับ หรือ Ctrl+Z เพื่อเอากลับมา)')) return;
+  pushUndo(`ลบวันที่ ${date} (${sid})`);
   classData[sid].dates = classData[sid].dates.filter(x => x !== date);
   Object.keys(classData[sid].attendance).forEach(i => {
     delete classData[sid].attendance[i][date];
@@ -734,7 +742,8 @@ function importDates(w){
 
 function removeDate(w,d){
   if(!requireUnlock())return;
-  if(!confirm(`ลบวัน "${d}" ออกจากสัปดาห์ที่ ${w}?`))return;
+  if(!confirm(`ลบวัน "${d}" ออกจากสัปดาห์ที่ ${w}?\n\n(กด ↩️ ย้อนกลับ หรือ Ctrl+Z เพื่อเอากลับมา)`))return;
+  pushUndo(`ลบวันที่ ${d}`);
   weekData[w].dates=weekData[w].dates.filter(x=>x!==d);
   Object.keys(weekData[w].attendance).forEach(i=>delete weekData[w].attendance[i][d]);
   renderWeek(w);
@@ -1068,6 +1077,50 @@ function playPing() {
     o2.start(ctx.currentTime + 0.12); o2.stop(ctx.currentTime + 0.45);
   } catch(e) {}
 }
+
+// ===== UNDO =====
+const undoStack = [];
+const UNDO_LIMIT = 30;
+
+function pushUndo(desc = '') {
+  undoStack.push({
+    weekData:  JSON.parse(JSON.stringify(weekData)),
+    classData: JSON.parse(JSON.stringify(classData)),
+    desc
+  });
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+  updateUndoBtn();
+}
+
+function undo() {
+  if (!undoStack.length) { showStatus('⚠️ ไม่มีอะไรให้ย้อนกลับ', '#a89060'); return; }
+  const prev = undoStack.pop();
+  weekData   = prev.weekData;
+  classData  = prev.classData;
+  renderWeek(currentWeek);
+  saveToFirebase();
+  updateUndoBtn();
+  showStatus(`↩️ ย้อนกลับแล้ว${prev.desc ? ' — ' + prev.desc : ''}`, '#4caf8a');
+}
+
+function updateUndoBtn() {
+  const btn = document.getElementById('undo-btn');
+  if (!btn) return;
+  btn.disabled = undoStack.length === 0;
+  btn.textContent = undoStack.length > 0
+    ? `↩️ ย้อนกลับ (${undoStack.length})`
+    : '↩️ ย้อนกลับ';
+  btn.title = undoStack.length > 0
+    ? `ย้อนกลับ ${undoStack.length} ขั้นตอน (Ctrl+Z)`
+    : 'ยังไม่มีอะไรให้ย้อนกลับ';
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    e.preventDefault();
+    undo();
+  }
+});
 
 // ===== PIN / LOCK =====
 const MASTER_PIN = 'BRiC2569'; // ← Admin เปลี่ยนได้ ห้ามบอกครู
@@ -1794,5 +1847,8 @@ init();
 
   </div>
 </div>
+
+<button class="btn-undo no-print" id="undo-btn" onclick="undo()" disabled title="ยังไม่มีอะไรให้ย้อนกลับ">↩️ ย้อนกลับ</button>
+
 </body>
 </html>
