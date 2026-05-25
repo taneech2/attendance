@@ -534,7 +534,7 @@ function renderWeek(w){
 }
 
 function sym(s, ts){
-  if(s===1) return `<span class="check">✓</span>${ts?`<span class="ts-label">${ts}</span>`:''}`;
+  if(s===1) return `<span class="check" title="${ts||''}">✓</span>${ts?`<span class="ts-label" title="${ts}">${ts.slice(0,5)}</span>`:''}`;
   if(s===2) return `<span class="cross">✗</span>`;
   return `<span class="slash">/</span>`;
 }
