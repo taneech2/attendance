@@ -1018,8 +1018,16 @@ function renderLeaderboard(){
     dates.forEach(({w,d})=>{
       const att = weekData[w]?.attendance?.[i]?.[d]||0;
       const ts  = weekData[w]?.timestamps?.[i]?.[d]||'';
-      if(att===1){ ma++; pts+=calcScore(ts); form.push('g'); }
-      else if(att===2){ absent++; form.push('r'); }
+      // ขาดวิชาใดวิชาหนึ่งในวันนั้น → คะแนนวันนั้น = 0
+      const absentAnySubject = CLASS_SUBJECTS.some(s=>{
+        const cd = classData[s.id];
+        return cd?.dates?.includes(d) && cd?.attendance?.[i]?.[d]===2;
+      });
+      if(att===1){
+        ma++;
+        pts += absentAnySubject ? 0 : calcScore(ts);
+        form.push(absentAnySubject ? 'r' : 'g');
+      } else if(att===2){ absent++; form.push('r'); }
       else form.push('n');
     });
     return {i,name,pts,ma,absent,total:dates.length,form:form.slice(-5)};
