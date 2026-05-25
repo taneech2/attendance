@@ -35,7 +35,7 @@ body{font-family:'Sarabun',sans-serif;background:#0a0f1e;min-height:100vh;paddin
 
 /* TABS */
 .week-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px;}
-.tab{background:#0d1530;border:1px solid #c9a84c44;color:#a89060;padding:5px 10px;border-radius:4px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;transition:.2s;}
+.tab{background:#0d1530;border:1px solid #c9a84c44;color:#a89060;padding:5px 10px;border-radius:4px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;transition:.2s;line-height:1.3;text-align:center;}
 .tab:hover{border-color:#c9a84c;color:#c9a84c;}
 .tab.active{background:linear-gradient(135deg,#c9a84c,#a07830);color:#0a0f1e;font-weight:700;border-color:#c9a84c;}
 .tab.has-data{border-color:#c9a84c88;}
@@ -101,6 +101,21 @@ td.num{color:#c9a84c;font-weight:600;}
 .pct-high{color:#4caf8a;font-weight:700;}
 .pct-mid{color:#e8c84a;font-weight:700;}
 .pct-low{color:#e05555;font-weight:700;}
+
+/* WEEK STAT BAR */
+.week-stat-bar{background:rgba(201,168,76,.06);border:1px solid #c9a84c33;border-radius:8px;padding:12px 16px;margin-bottom:14px;}
+.week-stat-title{color:#c9a84c;font-weight:700;font-size:13px;margin-bottom:8px;}
+.week-stat-row{display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap;}
+.week-stat-pct{font-size:1.5rem;font-weight:800;line-height:1;}
+.week-stat-chips{display:flex;gap:8px;flex-wrap:wrap;}
+.stat-chip{font-size:12px;font-weight:600;background:#0d1530;border:1px solid #c9a84c22;padding:3px 10px;border-radius:12px;}
+.week-bar-bg{background:#0d1530;border-radius:4px;height:10px;margin-bottom:10px;overflow:hidden;border:1px solid #c9a84c22;}
+.week-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.week-day-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.day-chip{background:#0d1530;border:1px solid #c9a84c33;border-radius:6px;padding:5px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:72px;}
+.day-chip-date{color:#c9a84c;font-size:10px;font-weight:600;}
+.day-chip-pct{font-size:14px;font-weight:800;}
+.day-chip-detail{color:#8899bb;font-size:10px;}
 
 /* SIG */
 .sig-row{display:flex;justify-content:space-between;margin:20px 0 16px;gap:20px;}
@@ -364,6 +379,7 @@ function buildPanels(){
         <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
         <button class="btn-scan" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button><button class="btn" onclick="printWeek(${w})" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
       </div>
+      <div id="week-stat-${w}"></div>
       <div class="table-wrapper"><table id="tbl-${w}"><thead id="thead-${w}"></thead><tbody id="tbody-${w}"></tbody></table></div>
     `;
     wrap.appendChild(div);
@@ -392,7 +408,7 @@ function renderWeek(w){
   // header row 1
   thead.innerHTML = '';
   const tr1 = document.createElement('tr');
-  tr1.innerHTML = `<th rowspan="2" style="width:36px">ลำดับ</th><th rowspan="2" style="min-width:160px">ชื่อ – สกุล</th>`;
+  tr1.innerHTML = `<th rowspan="2" style="width:36px">ลำดับ</th><th rowspan="2" style="min-width:160px">ชื่อ – สกุล</th><th rowspan="2" style="width:52px">%</th>`;
   if(wd.dates.length>0){
     tr1.innerHTML += `<th colspan="${wd.dates.length}">สัปดาห์ที่ ${w} &nbsp;|&nbsp; วัน/เดือน/ปี</th>`;
   } else {
@@ -423,7 +439,11 @@ function renderWeek(w){
     let ma=0,noma=0;
     wd.dates.forEach(d=>{ const s=wd.attendance[i]&&wd.attendance[i][d]||0; if(s===1)ma++; if(s===2)noma++; });
     const tr = document.createElement('tr');
+    const recorded=ma+noma;
+    const pct=recorded>0?Math.round(ma/recorded*100):null;
+    const pctColor=pct===null?'#a89060':pct>=80?'#4caf8a':pct>=60?'#e8c84a':'#e05555';
     let cells = `<td class="num">${i+1}</td><td class="name">${name}</td>`;
+    cells+=`<td style="font-weight:800;color:${pctColor};font-size:14px;white-space:nowrap">${pct!==null?pct+'%':'—'}</td>`;
     if(wd.dates.length>0){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
@@ -439,9 +459,60 @@ function renderWeek(w){
     tbody.appendChild(tr);
   });
 
-  // update tab indicator
+  // update tab indicator + show % on tab
   const tab = document.getElementById(`tab-${w}`);
-  if(tab) tab.classList.toggle('has-data', wd.dates.length>0);
+  if(tab){
+    tab.classList.toggle('has-data', wd.dates.length>0);
+    // คำนวณ % รวมสัปดาห์นี้เพื่อแสดงบน tab
+    let tMa=0,tRec=0;
+    students.forEach((_,i)=>{ wd.dates.forEach(d=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)tMa++; if(s===1||s===2)tRec++; }); });
+    const tPct = tRec>0 ? Math.round(tMa/tRec*100) : null;
+    const tColor = tPct===null?'':tPct>=80?'#4caf8a':tPct>=60?'#e8c84a':'#e05555';
+    tab.innerHTML = tPct!==null
+      ? `ส.${w}<br><span style="font-size:10px;color:${tColor};font-weight:800">${tPct}%</span>`
+      : `ส.${w}`;
+  }
+
+  // ===== WEEK STAT BAR =====
+  const statDiv = document.getElementById(`week-stat-${w}`);
+  if(!statDiv) return;
+  if(wd.dates.length === 0){ statDiv.innerHTML=''; return; }
+
+  // per-day stats
+  const dayStats = wd.dates.map(d=>{
+    let dMa=0, dNoma=0;
+    students.forEach((_,i)=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)dMa++; else if(s===2)dNoma++; });
+    return {d, ma:dMa, noma:dNoma, recorded:dMa+dNoma};
+  });
+  let totalMa=0, totalNoma=0, totalRec=0;
+  dayStats.forEach(ds=>{ totalMa+=ds.ma; totalNoma+=ds.noma; totalRec+=ds.recorded; });
+  const pct = totalRec>0 ? Math.round(totalMa/totalRec*100) : null;
+  const pctColor = pct===null?'#a89060':pct>=80?'#4caf8a':pct>=60?'#e8c84a':'#e05555';
+
+  let dayHtml='';
+  dayStats.forEach(ds=>{
+    const dp = ds.recorded>0 ? Math.round(ds.ma/ds.recorded*100) : null;
+    const dc = dp===null?'#a89060':dp>=80?'#4caf8a':dp>=60?'#e8c84a':'#e05555';
+    dayHtml+=`<span class="day-chip">
+      <span class="day-chip-date">${ds.d}</span>
+      <span class="day-chip-pct" style="color:${dc}">${dp!==null?dp+'%':'—'}</span>
+      <span class="day-chip-detail"><span style="color:#4caf8a">✓${ds.ma}</span> <span style="color:#e05555">✗${ds.noma}</span></span>
+    </span>`;
+  });
+
+  statDiv.innerHTML=`<div class="week-stat-bar">
+    <div class="week-stat-title">📊 สรุปสัปดาห์ที่ ${w}</div>
+    <div class="week-stat-row">
+      <span class="week-stat-pct" style="color:${pctColor}">${pct!==null?pct+'%':'—'}</span>
+      <div class="week-stat-chips">
+        <span class="stat-chip" style="color:#4caf8a">✓ มา ${totalMa} ครั้ง</span>
+        <span class="stat-chip" style="color:#e05555">✗ ไม่มา ${totalNoma} ครั้ง</span>
+        <span class="stat-chip" style="color:#a89060">📅 ${wd.dates.length} วัน</span>
+      </div>
+    </div>
+    <div class="week-bar-bg"><div class="week-bar-fill" style="width:${pct||0}%;background:${pctColor}"></div></div>
+    <div class="week-day-chips">${dayHtml}</div>
+  </div>`;
 }
 
 function sym(s, ts){
@@ -668,10 +739,16 @@ function renderStudentChips(){
   students.forEach((name,i)=>{
     const chip=document.createElement('div');
     chip.className='student-chip';
-    const thumbHtml = facePhotos[i]
-      ? `<img class="face-thumb" src="${facePhotos[i]}" title="ใบหน้า: ${name}">`
+    const photos = facePhotos[i];
+    const firstPhoto = Array.isArray(photos) ? photos[0] : photos;
+    const photoCount = faceDescriptors[i]?.length || 0;
+    const thumbHtml = firstPhoto
+      ? `<img class="face-thumb" src="${firstPhoto}" title="ใบหน้า: ${name} (${photoCount} รูป)">`
       : `<div class="face-thumb-none" title="ยังไม่ได้ลงทะเบียนใบหน้า">👤</div>`;
-    chip.innerHTML=`${thumbHtml}<span>${i+1}. ${name}</span><button onclick="removeStudent(${i})" title="ลบ">✕</button>`;
+    const cntBadge = photoCount > 0
+      ? `<span style="font-size:10px;color:${photoCount>=3?'#4caf8a':'#e8c84a'};background:${photoCount>=3?'#1a3a2a':'#2a2010'};border-radius:8px;padding:1px 5px;margin-right:2px">${photoCount}📸</span>`
+      : '';
+    chip.innerHTML=`${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}<button onclick="removeStudent(${i})" title="ลบ">✕</button>`;
     wrap.appendChild(chip);
   });
 }
@@ -730,6 +807,21 @@ function importStudents(){
   renderStudentChips();
   renderWeek(currentWeek>0?currentWeek:1);
   saveToFirebase();
+}
+
+// อัปเดต % บน tab ทุกสัปดาห์ (เรียกหลัง load data)
+function refreshAllTabPct(){
+  for(let w=1;w<=TOTAL_WEEKS;w++){
+    const wd=weekData[w]; if(!wd) continue;
+    const tab=document.getElementById(`tab-${w}`); if(!tab) continue;
+    if(wd.dates.length===0){ tab.innerHTML=`ส.${w}`; continue; }
+    let tMa=0,tRec=0;
+    students.forEach((_,i)=>{ wd.dates.forEach(d=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)tMa++; if(s===1||s===2)tRec++; }); });
+    const tPct=tRec>0?Math.round(tMa/tRec*100):null;
+    const tColor=tPct===null?'':tPct>=80?'#4caf8a':tPct>=60?'#e8c84a':'#e05555';
+    tab.innerHTML=tPct!==null?`ส.${w}<br><span style="font-size:10px;color:${tColor};font-weight:800">${tPct}%</span>`:`ส.${w}`;
+    tab.classList.toggle('has-data',wd.dates.length>0);
+  }
 }
 
 // ===== SUMMARY =====
@@ -1077,6 +1169,7 @@ function applyData(parsed){
     Object.keys(cts).forEach(k => { classData[s.id].timestamps[Number(k)] = cts[k]; });
   });
   applyInfoBar(parsed.infoBar);
+  refreshAllTabPct();
   return true;
 }
 
@@ -1165,18 +1258,33 @@ let faceConfirmCount = {}; // { studentIdx: count } — กี่เฟรมแ
 
 function serializeFD() {
   const out = {};
-  Object.keys(faceDescriptors).forEach(k => { out[k] = Array.from(faceDescriptors[k]); });
+  Object.keys(faceDescriptors).forEach(k => {
+    const v = faceDescriptors[k];
+    // v คือ Float32Array[] เสมอในรูปแบบใหม่
+    out[k] = Array.isArray(v) ? v.map(d => Array.from(d)) : [Array.from(v)];
+  });
   return out;
 }
 function deserializeFD(raw) {
   faceDescriptors = {};
   if(!raw) return;
-  Object.keys(raw).forEach(k => { faceDescriptors[Number(k)] = new Float32Array(raw[k]); });
+  Object.keys(raw).forEach(k => {
+    const v = raw[k];
+    // backward compat: รูปแบบเก่า = [number...], รูปแบบใหม่ = [[number...], ...]
+    if(Array.isArray(v[0])) {
+      faceDescriptors[Number(k)] = v.map(a => new Float32Array(a));
+    } else {
+      faceDescriptors[Number(k)] = [new Float32Array(v)]; // แปลงรูปเก่า → array
+    }
+  });
 }
 function deserializeFP(raw) {
   facePhotos = {};
   if(!raw) return;
-  Object.keys(raw).forEach(k => { facePhotos[Number(k)] = raw[k]; });
+  Object.keys(raw).forEach(k => {
+    const v = raw[k];
+    facePhotos[Number(k)] = Array.isArray(v) ? v : [v]; // backward compat
+  });
 }
 
 async function openFaceModal(w) {
@@ -1282,11 +1390,40 @@ function addFaceDate() {
 
 function populateStudentSelect() {
   const sel = document.getElementById('sel-reg-student');
-  sel.innerHTML = students.map((n, i) => '<option value="' + i + '">' + (i+1) + '. ' + n + '</option>').join('');
+  sel.innerHTML = students.map((n, i) => {
+    const cnt = faceDescriptors[i]?.length || 0;
+    const badge = cnt > 0 ? ` [${cnt}/3 📸]` : ' [ยังไม่มีรูป]';
+    return `<option value="${i}">${i+1}. ${n}${badge}</option>`;
+  }).join('');
+  updateRegPhotoPreview();
+}
+
+function updateRegPhotoPreview() {
+  const sel = document.getElementById('sel-reg-student');
+  if(!sel) return;
+  const idx = Number(sel.value);
+  const cnt = faceDescriptors[idx]?.length || 0;
+  const el = document.getElementById('reg-photo-count');
+  if(el) {
+    el.textContent = cnt === 0 ? '📷 ยังไม่มีรูป' : `📸 ${cnt}/3 รูป${cnt>=3?' — ครบแล้ว! ลบก่อนถ่ายใหม่':''}`;
+    el.style.color = cnt >= 3 ? '#4caf8a' : cnt > 0 ? '#e8c84a' : '#e05555';
+  }
+}
+
+function clearStudentFace() {
+  const sel = document.getElementById('sel-reg-student');
+  const idx = Number(sel.value);
+  if(!confirm(`ลบรูปใบหน้าทั้งหมด (${faceDescriptors[idx]?.length||0} รูป) ของ "${students[idx]}"?`)) return;
+  delete faceDescriptors[idx];
+  delete facePhotos[idx];
+  renderStudentChips();
+  populateStudentSelect();
+  saveToFirebase();
+  setFaceStatus(`🗑 ลบรูปใบหน้า ${students[idx]} แล้ว — ถ่ายใหม่ได้เลย`);
 }
 
 function updateFaceCount() {
-  const total = students.filter((_, i) => faceDescriptors[i]).length;
+  const total = students.filter((_, i) => faceDescriptors[i]?.length > 0).length;
   const marked = Object.keys(faceMarked).length;
   document.getElementById('face-count').textContent = marked + ' / ' + total;
 }
@@ -1416,10 +1553,13 @@ async function runFaceLoop() {
 }
 
 function findBestFaceMatch(descriptor) {
-  let best = null, bestDist = 0.52; // threshold เดิม — เร็วและแม่น
+  let best = null, bestDist = 0.45; // เข้มขึ้น 0.52→0.45 ลดสแกนผิดคน
   Object.keys(faceDescriptors).forEach(k => {
-    const dist = faceapi.euclideanDistance(descriptor, faceDescriptors[k]);
-    if(dist < bestDist) { bestDist = dist; best = { idx: Number(k), name: students[Number(k)], dist }; }
+    const descs = faceDescriptors[k];
+    if(!descs || !descs.length) return;
+    // เทียบกับทุกรูปที่ลงทะเบียน — ใช้ระยะที่ใกล้ที่สุด
+    const minDist = Math.min(...descs.map(d => faceapi.euclideanDistance(descriptor, d)));
+    if(minDist < bestDist) { bestDist = minDist; best = { idx: Number(k), name: students[Number(k)], dist: minDist }; }
   });
   return best;
 }
@@ -1532,25 +1672,34 @@ async function captureDescriptor() {
   const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
   const result = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
   if(!result) { setFaceStatus('❌ ไม่พบใบหน้า ลองใหม่อีกครั้ง'); return; }
-  faceDescriptors[idx] = result.descriptor;
-  // บันทึก snapshot รูปใบหน้า (80×80px crop จาก bounding box)
+  // push + sliding window: เก็บแค่ 3 รูปล่าสุดเสมอ
+  if(!faceDescriptors[idx]) faceDescriptors[idx] = [];
+  faceDescriptors[idx].push(result.descriptor);
+  if(faceDescriptors[idx].length > 3) faceDescriptors[idx].shift(); // ดันรูปแรกออก
+  const count = faceDescriptors[idx].length;
+  // บันทึก snapshot รูปใบหน้า (sliding window เช่นกัน)
   try {
     const box = result.detection.box;
     const snapCanvas = document.createElement('canvas');
     snapCanvas.width = 80; snapCanvas.height = 80;
     const snapCtx = snapCanvas.getContext('2d');
     snapCtx.drawImage(video, Math.max(0, box.x), Math.max(0, box.y), box.width, box.height, 0, 0, 80, 80);
-    facePhotos[idx] = snapCanvas.toDataURL('image/jpeg', 0.7);
+    if(!facePhotos[idx]) facePhotos[idx] = [];
+    facePhotos[idx].push(snapCanvas.toDataURL('image/jpeg', 0.7));
+    if(facePhotos[idx].length > 3) facePhotos[idx].shift();
     renderStudentChips();
   } catch(e) {}
-  addFaceLog('บันทึกใบหน้า: ' + students[idx], 'log-ok');
+  const total = faceDescriptors[idx].length;
+  const hint = total < 3 ? `ถ่ายเพิ่มได้อีก ${3-total} รูป (เอียง${total===1?'ซ้าย':'ขวา'}นิดนึง)` : '🔄 อัปเดต 3 รูปล่าสุดแล้ว';
+  addFaceLog(`อัปเดตรูป ${students[idx]} (${total}/3)`, 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก Cloud...');
   await saveToFirebase();
   playPing();
-  setFaceStatus('✅ บันทึกใบหน้า ' + students[idx] + ' แล้ว (Cloud sync ✓)');
-  // เลื่อนไปนักเรียนคนถัดไปอัตโนมัติ
+  setFaceStatus(`✅ ${students[idx]} — ${hint}`);
+  populateStudentSelect();
+  // เลื่อนไปคนถัดไปอัตโนมัติเมื่อครบ 3 รูปครั้งแรก
   const sel = document.getElementById('sel-reg-student');
-  if(idx + 1 < students.length) sel.value = idx + 1;
+  if(total >= 3 && idx + 1 < students.length) { sel.value = idx + 1; updateRegPhotoPreview(); }
 }
 
 async function init(){
@@ -1613,9 +1762,18 @@ init();
         <div class="face-count-big" id="face-count">0 / 0</div>
         <div class="face-count-label">คนที่เช็คชื่อแล้ว</div>
       </div>
-      <div id="face-register-ctrl" class="face-ctrl" style="display:none">
-        <select id="sel-reg-student" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:9px 12px;border-radius:6px;font-family:Sarabun,sans-serif;font-size:14px;"></select>
-        <button class="btn" onclick="captureDescriptor()">📸 ถ่ายใบหน้า</button>
+      <div id="face-register-ctrl" class="face-ctrl" style="display:none;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="sel-reg-student" onchange="updateRegPhotoPreview()" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:9px 12px;border-radius:6px;font-family:Sarabun,sans-serif;font-size:14px;"></select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span id="reg-photo-count" style="font-size:13px;font-weight:700;flex:1">📷 ยังไม่มีรูป</span>
+          <button class="btn" onclick="captureDescriptor()">📸 ถ่ายรูป</button>
+          <button class="btn btn-red" onclick="clearStudentFace()" title="ลบรูปทั้งหมดของคนนี้แล้วถ่ายใหม่">🗑 ลบรูป</button>
+        </div>
+        <div style="font-size:11px;color:#78909c;line-height:1.5">
+          💡 แนะนำ: ถ่าย 3 รูป — <b style="color:#c9a84c">ตรง / เอียงซ้ายนิด / เอียงขวานิด</b> เพิ่มความแม่นยำ 3 เท่า
+        </div>
       </div>
       <div class="face-video-wrap">
         <video id="face-video" autoplay muted playsinline></video>
