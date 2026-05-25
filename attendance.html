@@ -102,6 +102,21 @@ td.num{color:#c9a84c;font-weight:600;}
 .pct-mid{color:#e8c84a;font-weight:700;}
 .pct-low{color:#e05555;font-weight:700;}
 
+/* WEEK STAT BAR */
+.week-stat-bar{background:rgba(201,168,76,.06);border:1px solid #c9a84c33;border-radius:8px;padding:12px 16px;margin-bottom:14px;}
+.week-stat-title{color:#c9a84c;font-weight:700;font-size:13px;margin-bottom:8px;}
+.week-stat-row{display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap;}
+.week-stat-pct{font-size:1.5rem;font-weight:800;line-height:1;}
+.week-stat-chips{display:flex;gap:8px;flex-wrap:wrap;}
+.stat-chip{font-size:12px;font-weight:600;background:#0d1530;border:1px solid #c9a84c22;padding:3px 10px;border-radius:12px;}
+.week-bar-bg{background:#0d1530;border-radius:4px;height:10px;margin-bottom:10px;overflow:hidden;border:1px solid #c9a84c22;}
+.week-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.week-day-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.day-chip{background:#0d1530;border:1px solid #c9a84c33;border-radius:6px;padding:5px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:72px;}
+.day-chip-date{color:#c9a84c;font-size:10px;font-weight:600;}
+.day-chip-pct{font-size:14px;font-weight:800;}
+.day-chip-detail{color:#8899bb;font-size:10px;}
+
 /* SIG */
 .sig-row{display:flex;justify-content:space-between;margin:20px 0 16px;gap:20px;}
 .sig-box{flex:1;text-align:center;}
@@ -364,6 +379,7 @@ function buildPanels(){
         <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
         <button class="btn-scan" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button><button class="btn" onclick="printWeek(${w})" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
       </div>
+      <div id="week-stat-${w}"></div>
       <div class="table-wrapper"><table id="tbl-${w}"><thead id="thead-${w}"></thead><tbody id="tbody-${w}"></tbody></table></div>
     `;
     wrap.appendChild(div);
@@ -442,6 +458,47 @@ function renderWeek(w){
   // update tab indicator
   const tab = document.getElementById(`tab-${w}`);
   if(tab) tab.classList.toggle('has-data', wd.dates.length>0);
+
+  // ===== WEEK STAT BAR =====
+  const statDiv = document.getElementById(`week-stat-${w}`);
+  if(!statDiv) return;
+  if(wd.dates.length === 0){ statDiv.innerHTML=''; return; }
+
+  // per-day stats
+  const dayStats = wd.dates.map(d=>{
+    let dMa=0, dNoma=0;
+    students.forEach((_,i)=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)dMa++; else if(s===2)dNoma++; });
+    return {d, ma:dMa, noma:dNoma, recorded:dMa+dNoma};
+  });
+  let totalMa=0, totalNoma=0, totalRec=0;
+  dayStats.forEach(ds=>{ totalMa+=ds.ma; totalNoma+=ds.noma; totalRec+=ds.recorded; });
+  const pct = totalRec>0 ? Math.round(totalMa/totalRec*100) : null;
+  const pctColor = pct===null?'#a89060':pct>=80?'#4caf8a':pct>=60?'#e8c84a':'#e05555';
+
+  let dayHtml='';
+  dayStats.forEach(ds=>{
+    const dp = ds.recorded>0 ? Math.round(ds.ma/ds.recorded*100) : null;
+    const dc = dp===null?'#a89060':dp>=80?'#4caf8a':dp>=60?'#e8c84a':'#e05555';
+    dayHtml+=`<span class="day-chip">
+      <span class="day-chip-date">${ds.d}</span>
+      <span class="day-chip-pct" style="color:${dc}">${dp!==null?dp+'%':'—'}</span>
+      <span class="day-chip-detail"><span style="color:#4caf8a">✓${ds.ma}</span> <span style="color:#e05555">✗${ds.noma}</span></span>
+    </span>`;
+  });
+
+  statDiv.innerHTML=`<div class="week-stat-bar">
+    <div class="week-stat-title">📊 สรุปสัปดาห์ที่ ${w}</div>
+    <div class="week-stat-row">
+      <span class="week-stat-pct" style="color:${pctColor}">${pct!==null?pct+'%':'—'}</span>
+      <div class="week-stat-chips">
+        <span class="stat-chip" style="color:#4caf8a">✓ มา ${totalMa} ครั้ง</span>
+        <span class="stat-chip" style="color:#e05555">✗ ไม่มา ${totalNoma} ครั้ง</span>
+        <span class="stat-chip" style="color:#a89060">📅 ${wd.dates.length} วัน</span>
+      </div>
+    </div>
+    <div class="week-bar-bg"><div class="week-bar-fill" style="width:${pct||0}%;background:${pctColor}"></div></div>
+    <div class="week-day-chips">${dayHtml}</div>
+  </div>`;
 }
 
 function sym(s, ts){
