@@ -627,6 +627,7 @@ function renderClass(sid) {
     });
     html += '<th>มา</th><th>ขาด</th><th>%</th></tr></thead><tbody>';
     students.forEach((name, idx) => {
+      if(hiddenStudents.has(idx)) return; // ข้ามนักเรียนที่ซ่อน
       const att = cd.attendance[idx] || {};
       let ma = 0, noma = 0;
       cd.dates.forEach(d => { if(att[d]===1) ma++; else if(att[d]===2) noma++; });
