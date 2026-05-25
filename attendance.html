@@ -35,7 +35,7 @@ body{font-family:'Sarabun',sans-serif;background:#0a0f1e;min-height:100vh;paddin
 
 /* TABS */
 .week-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px;}
-.tab{background:#0d1530;border:1px solid #c9a84c44;color:#a89060;padding:5px 10px;border-radius:4px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;transition:.2s;}
+.tab{background:#0d1530;border:1px solid #c9a84c44;color:#a89060;padding:5px 10px;border-radius:4px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;transition:.2s;line-height:1.3;text-align:center;}
 .tab:hover{border-color:#c9a84c;color:#c9a84c;}
 .tab.active{background:linear-gradient(135deg,#c9a84c,#a07830);color:#0a0f1e;font-weight:700;border-color:#c9a84c;}
 .tab.has-data{border-color:#c9a84c88;}
@@ -455,9 +455,19 @@ function renderWeek(w){
     tbody.appendChild(tr);
   });
 
-  // update tab indicator
+  // update tab indicator + show % on tab
   const tab = document.getElementById(`tab-${w}`);
-  if(tab) tab.classList.toggle('has-data', wd.dates.length>0);
+  if(tab){
+    tab.classList.toggle('has-data', wd.dates.length>0);
+    // คำนวณ % รวมสัปดาห์นี้เพื่อแสดงบน tab
+    let tMa=0,tRec=0;
+    students.forEach((_,i)=>{ wd.dates.forEach(d=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)tMa++; if(s===1||s===2)tRec++; }); });
+    const tPct = tRec>0 ? Math.round(tMa/tRec*100) : null;
+    const tColor = tPct===null?'':tPct>=80?'#4caf8a':tPct>=60?'#e8c84a':'#e05555';
+    tab.innerHTML = tPct!==null
+      ? `ส.${w}<br><span style="font-size:10px;color:${tColor};font-weight:800">${tPct}%</span>`
+      : `ส.${w}`;
+  }
 
   // ===== WEEK STAT BAR =====
   const statDiv = document.getElementById(`week-stat-${w}`);
@@ -787,6 +797,21 @@ function importStudents(){
   renderStudentChips();
   renderWeek(currentWeek>0?currentWeek:1);
   saveToFirebase();
+}
+
+// อัปเดต % บน tab ทุกสัปดาห์ (เรียกหลัง load data)
+function refreshAllTabPct(){
+  for(let w=1;w<=TOTAL_WEEKS;w++){
+    const wd=weekData[w]; if(!wd) continue;
+    const tab=document.getElementById(`tab-${w}`); if(!tab) continue;
+    if(wd.dates.length===0){ tab.innerHTML=`ส.${w}`; continue; }
+    let tMa=0,tRec=0;
+    students.forEach((_,i)=>{ wd.dates.forEach(d=>{ const s=wd.attendance[i]?.[d]||0; if(s===1)tMa++; if(s===1||s===2)tRec++; }); });
+    const tPct=tRec>0?Math.round(tMa/tRec*100):null;
+    const tColor=tPct===null?'':tPct>=80?'#4caf8a':tPct>=60?'#e8c84a':'#e05555';
+    tab.innerHTML=tPct!==null?`ส.${w}<br><span style="font-size:10px;color:${tColor};font-weight:800">${tPct}%</span>`:`ส.${w}`;
+    tab.classList.toggle('has-data',wd.dates.length>0);
+  }
 }
 
 // ===== SUMMARY =====
@@ -1134,6 +1159,7 @@ function applyData(parsed){
     Object.keys(cts).forEach(k => { classData[s.id].timestamps[Number(k)] = cts[k]; });
   });
   applyInfoBar(parsed.infoBar);
+  refreshAllTabPct();
   return true;
 }
 
