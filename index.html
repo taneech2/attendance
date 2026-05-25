@@ -546,14 +546,20 @@ function sym(s, ts){
   if(s===2) return `<span class="cross">✗</span>`;
   return `<span class="slash">/</span>`;
 }
-function nowHHMM(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
+function nowHHMM(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 
 function cycle(w,i,d){
   if(!requireUnlock())return;
   pushUndo(students[i]);
   const wd=weekData[w];
   if(!wd.attendance[i]) wd.attendance[i]={};
-  wd.attendance[i][d]=((wd.attendance[i][d]||0)+1)%3;
+  const newStatus = ((wd.attendance[i][d]||0)+1)%3;
+  wd.attendance[i][d] = newStatus;
+  // บันทึกเวลา ณ ตอนนี้เมื่อกด ✓ (manual override)
+  if(!wd.timestamps) wd.timestamps={};
+  if(!wd.timestamps[i]) wd.timestamps[i]={};
+  if(newStatus===1) wd.timestamps[i][d] = nowHHMM(); // บันทึก HH:MM:SS
+  else delete wd.timestamps[i][d];                    // ล้างเมื่อเปลี่ยนเป็น ✗ หรือ /
   renderWeek(w);
   saveToFirebase();
 }
