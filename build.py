@@ -118,6 +118,16 @@ def patch_y2(html):
         f'value="{p["lbl_class"]}"',
     )
 
+    # PWA manifest → ชี้ไปหน้า ชช.2
+    html = html.replace(
+        'href="manifest.json"',
+        'href="manifest-y2.json"',
+    )
+    html = html.replace(
+        'content="เช็คชื่อ"',
+        'content="เช็คชื่อ ชช.2"',
+    )
+
     return html
 
 
@@ -141,7 +151,7 @@ def build():
 def git_push():
     print("📦  Committing...")
     subprocess.run(
-        ["git", "add", "index.html", "attendance-y2.html"],
+        ["git", "add", "index.html", "attendance-y2.html", "manifest-y2.json"],
         cwd=ROOT, check=True,
     )
     result = subprocess.run(
