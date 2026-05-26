@@ -1040,6 +1040,7 @@ function navigateToPinned(){
   else if(type==='week') switchWeek(Number(val));
   else if(type==='class'){
     currentSubject = val;
+    switchMode('class');
     buildClassTabs();
     renderClass(val);
   }
