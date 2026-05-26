@@ -1840,13 +1840,12 @@ function addFaceDate() {
 
 function populateStudentSelect() {
   const sel = document.getElementById('sel-reg-student');
-  const saved = sel.value; // จำ selection เดิมไว้ก่อน
+  const cur = Number(sel.value) || 0; // จำ index ปัจจุบัน
   sel.innerHTML = students.map((n, i) => {
     const cnt = faceDescriptors[i]?.length || 0;
     const badge = cnt > 0 ? ` [${cnt}/${FACE_MAX} 📸]` : ' [ยังไม่มีรูป]';
-    return `<option value="${i}">${i+1}. ${n}${badge}</option>`;
+    return `<option value="${i}"${i===cur?' selected':''}>${i+1}. ${n}${badge}</option>`;
   }).join('');
-  sel.value = saved; // restore ชื่อเดิม
   updateRegPhotoPreview();
 }
 
