@@ -2160,9 +2160,9 @@ async function captureDescriptor() {
   playPing();
   setFaceStatus(`✅ ${students[idx]} — ${hint}`);
   populateStudentSelect();
-  // เลื่อนไปคนถัดไปอัตโนมัติเมื่อครบ FACE_MAX รูปครั้งแรก
-  const sel = document.getElementById('sel-reg-student');
-  if(total >= FACE_MAX && idx + 1 < students.length) { sel.value = idx + 1; updateRegPhotoPreview(); }
+  // คงชื่อเดิมไว้ — ครูเลือกคนถัดไปเอง
+  document.getElementById('sel-reg-student').value = idx;
+  updateRegPhotoPreview();
 }
 
 async function init(){
