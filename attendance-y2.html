@@ -1832,12 +1832,18 @@ function addFaceDate() {
 
 function populateStudentSelect() {
   const sel = document.getElementById('sel-reg-student');
-  const cur = Number(sel.value) || 0; // จำ index ปัจจุบัน
-  sel.innerHTML = students.map((n, i) => {
+  // สร้าง option ครั้งแรกเท่านั้น (ไม่ reset selection)
+  if(sel.options.length !== students.length) {
+    const cur = Number(sel.value) || 0;
+    sel.innerHTML = students.map((n,i) => `<option value="${i}"></option>`).join('');
+    sel.value = cur;
+  }
+  // อัปเดตแค่ข้อความ — ไม่แตะ selection เลย
+  students.forEach((n, i) => {
     const cnt = faceDescriptors[i]?.length || 0;
     const badge = cnt > 0 ? ` [${cnt}/${FACE_MAX} 📸]` : ' [ยังไม่มีรูป]';
-    return `<option value="${i}"${i===cur?' selected':''}>${i+1}. ${n}${badge}</option>`;
-  }).join('');
+    if(sel.options[i]) sel.options[i].textContent = `${i+1}. ${n}${badge}`;
+  });
   updateRegPhotoPreview();
 }
 
