@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เวอร์เนียร์คาลิเปอร์ — สื่อการสอน</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="vernier-manifest.json">
+<meta name="theme-color" content="#4fc3f7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vernier">
+<script>
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('./sw-vernier.js')
+        .then(()=>console.log('✅ SW registered — ใช้งาน offline ได้'))
+        .catch(e=>console.log('SW error:', e));
+    });
+  }
+</script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  min-height: 100vh; padding: 16px; color: #eee;
+}
+.container { max-width: 940px; margin: 0 auto; }
+h1 { text-align:center; font-size:1.9rem; color:#4fc3f7; padding:12px 0 4px; }
+.subtitle { text-align:center; color:#90a4ae; margin-bottom:14px; font-size:0.95rem; }
+
+/* ── mode selector ── */
+.mode-bar {
+  display:flex; flex-wrap:wrap; gap:8px;
+  justify-content:center; margin-bottom:14px;
+}
+.mode-group { display:flex; gap:6px; align-items:center; }
+.mode-group-label {
+  font-size:0.78rem; color:#78909c; padding:0 4px; white-space:nowrap;
+}
+.mode-btn {
+  padding:7px 14px; border:2px solid #455a64;
+  border-radius:20px; cursor:pointer; font-family:'Sarabun',sans-serif;
+  font-size:0.9rem; font-weight:600; background:transparent; color:#90a4ae;
+  transition:all .2s;
+}
+.mode-btn:hover  { border-color:#4fc3f7; color:#4fc3f7; }
+.mode-btn.active { border-color:#4fc3f7; background:#4fc3f7; color:#0d1b2a; }
+.mode-info {
+  text-align:center; font-size:0.82rem; color:#78909c;
+  margin-bottom:8px; min-height:18px; font-style:italic;
+}
+
+canvas {
+  display:block; margin:8px auto; border-radius:12px;
+  border:2px solid #37474f; cursor:ew-resize;
+  background:#1e2d3d; max-width:100%;
+}
+.slider-row { text-align:center; margin:10px 0; }
+.slider-row label { color:#90a4ae; font-size:0.9rem; }
+input[type=range] {
+  width:75%; max-width:580px; height:6px;
+  cursor:pointer; accent-color:#4fc3f7; margin-top:8px;
+}
+
+/* ── reading panel ── */
+.reading-panel {
+  background:rgba(0,0,0,0.35); border:1px solid #37474f;
+  border-radius:12px; padding:16px 20px; margin:10px 0;
+}
+.reading-panel h3 { color:#4fc3f7; margin-bottom:10px; font-size:1rem; }
+.steps {
+  display:grid; grid-template-columns:1fr 36px 1fr 36px 1fr;
+  gap:8px; align-items:center; text-align:center;
+}
+.step-box { background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 8px; }
+.step-val { font-size:1.6rem; font-weight:700; }
+.step-desc { font-size:0.75rem; color:#90a4ae; margin-top:4px; line-height:1.3; }
+.op { font-size:1.6rem; color:#546e7a; }
+
+/* ── howto ── */
+.howto {
+  background:rgba(255,183,77,0.08); border:1px solid #f9a825;
+  border-radius:10px; padding:12px 18px; margin:10px 0;
+  font-size:0.92rem; line-height:1.8;
+}
+.howto h4 { color:#ffcc02; margin-bottom:4px; }
+.howto ol { padding-left:18px; color:#ccc; }
+.howto li span { color:#ffb74d; font-weight:600; }
+
+/* ── practice ── */
+.practice-panel {
+  background:rgba(0,60,0,0.25); border:1px solid #2e7d32;
+  border-radius:12px; padding:16px 20px; margin:10px 0;
+}
+.practice-panel h3 { color:#81c784; margin-bottom:8px; }
+.input-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+.input-row input {
+  padding:9px 13px; border-radius:8px; border:1px solid #444;
+  background:#0d2a0d; color:#fff; font-size:1rem;
+  font-family:'Sarabun',sans-serif; width:170px;
+}
+.btn { padding:9px 18px; border:none; border-radius:8px; cursor:pointer;
+  font-family:'Sarabun',sans-serif; font-size:0.92rem; font-weight:600; transition:opacity .15s; }
+.btn:hover { opacity:.85; }
+.btn-check { background:#1565c0; color:#fff; }
+.btn-new   { background:#455a64; color:#fff; }
+#feedback { margin-top:10px; font-size:1rem; min-height:22px; }
+
+@media(max-width:600px){ .steps{grid-template-columns:1fr;} .op{display:none;} }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>🔧 เวอร์เนียร์คาลิเปอร์</h1>
+  <p class="subtitle">สื่อการสอน · ลากเมาส์บนภาพหรือเลื่อนแถบ · รองรับแบบมิลลิเมตรและนิ้ว</p>
+  <p style="text-align:center; color:#78909c; font-size:0.82rem; margin-top:-8px; margin-bottom:6px;">
+    พัฒนาโดย <strong style="color:#b0bec5;">ครูธานี ชมสุข</strong> · วิทยาลัยการอาชีพบุรีรัมย์
+  </p>
+
+  <!-- Mode selector -->
+  <div class="mode-bar">
+    <div class="mode-group">
+      <span class="mode-group-label">มิลลิเมตร :</span>
+      <button class="mode-btn" id="btn-mm05" onclick="setMode('mm05')">0.05 มม.</button>
+      <button class="mode-btn" id="btn-mm02" onclick="setMode('mm02')">0.02 มม.</button>
+    </div>
+    <div class="mode-group">
+      <span class="mode-group-label">นิ้ว (inch) :</span>
+      <button class="mode-btn" id="btn-in128" onclick="setMode('in128')">1/128"</button>
+      <button class="mode-btn" id="btn-in001" onclick="setMode('in001')">0.001"</button>
+    </div>
+  </div>
+  <div class="mode-info" id="modeInfo"></div>
+
+  <canvas id="cv" width="900" height="330"></canvas>
+
+  <div class="slider-row">
+    <label>ปรับค่า: <strong id="sliderLabel" style="color:#4fc3f7;"></strong></label><br>
+    <input type="range" id="slider">
+  </div>
+
+  <!-- Reading -->
+  <div class="reading-panel">
+    <h3>📐 การอ่านค่าทีละขั้นตอน</h3>
+    <div class="steps">
+      <div class="step-box">
+        <div class="step-val" id="sv1" style="color:#ffb74d;"></div>
+        <div class="step-desc" id="sd1">① มาตราส่วนหลัก<br>เลขก่อนเส้น 0 ของเวอร์เนียร์</div>
+      </div>
+      <div class="op">+</div>
+      <div class="step-box">
+        <div class="step-val" id="sv2" style="color:#81c784; font-size:1.2rem;"></div>
+        <div class="step-desc" id="sd2">② มาตราส่วนเวอร์เนียร์<br>เส้นที่ตรงกัน × ความละเอียด</div>
+      </div>
+      <div class="op">=</div>
+      <div class="step-box">
+        <div class="step-val" id="sv3" style="color:#4fc3f7;"></div>
+        <div class="step-desc">③ ผลรวม<br>คำตอบสุดท้าย</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How-to -->
+  <div class="howto" id="howto">
+    <h4 id="howtoTitle">💡 วิธีอ่านค่า</h4>
+    <ol id="howtoList"></ol>
+  </div>
+
+  <!-- Practice -->
+  <div class="practice-panel">
+    <h3>🎯 แบบฝึกหัด</h3>
+    <p style="color:#90a4ae;font-size:0.88rem;">กด "โจทย์ใหม่" → อ่านค่าจากมาตร → กรอกคำตอบ</p>
+    <div class="input-row">
+      <input type="number" id="answer" placeholder="กรอกค่าที่อ่านได้">
+      <button class="btn btn-check" onclick="checkAns()">✓ ตรวจ</button>
+      <button class="btn btn-new"   onclick="newQ()">🎲 โจทย์ใหม่</button>
+    </div>
+    <div id="feedback"></div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// MODE CONFIGURATIONS
+// ═══════════════════════════════════════════════════════════════════
+const MODES = {
+  mm05: {
+    id:'mm05', label:'0.05 มม.', unitSuffix:' มม.',
+    vernN:20, mainStep:1, halfStep:0.5,
+    bigAt:10, medAt:5,
+    LC:0.05, pxMm:14.5, viewBias:0.35, maxMm:120,
+    info:'20 ช่อง · เวอร์เนียร์ยาว 19 มม. · ความละเอียด 1/20 = 0.05 มม.',
+    fmtVal(mm){ return mm.toFixed(2)+' มม.'; },
+    fmtStep(mm){ return mm.toFixed(2); },
+    fmtMain(mm){ if(mm%10===0||mm%5===0) return String(mm); return null; },
+    howto(n,lc){ return [`ดูเส้น <span>0 ของเวอร์เนียร์</span> อยู่หลังตัวเลขใดของมาตราส่วนหลัก → ค่าหลัก (มม.)`,`หาเส้นเวอร์เนียร์ที่<span>ตรงพอดี</span>กับเส้นหลัก → เส้นที่ ${n}`,`เส้นที่ ${n} × <span>${lc} มม.</span> = ค่าทศนิยม`,`รวม: ค่าหลัก + ค่าทศนิยม = <span>ผลลัพธ์</span>`]; }
+  },
+  mm02: {
+    id:'mm02', label:'0.02 มม.', unitSuffix:' มม.',
+    vernN:50, mainStep:1, halfStep:0.5,
+    bigAt:10, medAt:5,
+    LC:0.02, pxMm:14.5, viewBias:0.06, maxMm:120,
+    info:'50 ช่อง · เวอร์เนียร์ยาว 49 มม. · ความละเอียด 1/50 = 0.02 มม.',
+    fmtVal(mm){ return mm.toFixed(2)+' มม.'; },
+    fmtStep(mm){ return mm.toFixed(2); },
+    fmtMain(mm){ if(mm%10===0||mm%5===0) return String(mm); return null; },
+    howto(n,lc){ return [`ดูเส้น <span>0 ของเวอร์เนียร์</span> อยู่หลังตัวเลขใดของมาตราส่วนหลัก → ค่าหลัก`,`หาเส้นเวอร์เนียร์ที่<span>ตรงพอดี</span>กับเส้นหลัก → เส้นที่ ${n}`,`เส้นที่ ${n} × <span>${lc} มม.</span> = ค่าทศนิยม`,`รวม: ค่าหลัก + ค่าทศนิยม = <span>ผลลัพธ์</span>`]; }
+  },
+  in128: {
+    id:'in128', label:'1/128"', unitSuffix:'"',
+    vernN:8, mainStep:25.4/16, halfStep:null,
+    bigAt:25.4, medAt:25.4/4,
+    LC:25.4/128, pxMm:9.5, viewBias:0.35, maxMm:152.4,
+    info:'8 ช่อง · เวอร์เนียร์ยาว 7/16" · ความละเอียด 1/128" ≈ 0.0078"',
+    fmtVal(mm){ const i=(mm/25.4).toFixed(4); return i+'"'; },
+    fmtStep(mm){ return (mm/25.4).toFixed(4); },
+    fmtMain(mm){
+      const inc=mm/25.4, ei=inc*8;
+      if(Math.abs(Math.round(inc)-inc)<0.002) return Math.round(inc)+'″';
+      if(Math.abs(Math.round(ei*2)/2-ei)<0.01){
+        const q=Math.round(ei*2)/2; const w=Math.floor(q/8); const r=Math.round((q%8)*2)/2;
+        if(r===4) return (w?w+' ':'')+' ½';
+        return null;
+      }
+      return null;
+    },
+    howto(n,lc){ return [`ดูเส้น <span>0 ของเวอร์เนียร์</span> อยู่หลังเส้นใดของมาตราส่วนหลัก → อ่านเป็น 1/16"`,`หาเส้นเวอร์เนียร์ที่<span>ตรงพอดี</span> → เส้นที่ ${n}`,`เส้นที่ ${n} × <span>1/128"</span> = ค่าเศษส่วน`,`รวม: ค่าหลัก + ค่าเศษส่วน = <span>ผลลัพธ์ (นิ้ว)</span>`]; }
+  },
+  in001: {
+    id:'in001', label:'0.001"', unitSuffix:'"',
+    vernN:25, mainStep:25.4*0.025, halfStep:null,
+    bigAt:25.4, medAt:25.4*0.1,
+    LC:25.4*0.001, pxMm:13.0, viewBias:0.18, maxMm:152.4,
+    info:'25 ช่อง · เวอร์เนียร์ยาว 0.600" · ความละเอียด 0.001 นิ้ว (1/1000")',
+    fmtVal(mm){ return (mm/25.4).toFixed(3)+'"'; },
+    fmtStep(mm){ return (mm/25.4).toFixed(3); },
+    fmtMain(mm){
+      const inc=mm/25.4;
+      if(Math.abs(Math.round(inc)-inc)<0.0015) return Math.round(inc).toString();
+      const t=inc*10; if(Math.abs(Math.round(t)-t)<0.015) return '.'+Math.round(t)%10;
+      return null;
+    },
+    howto(n,lc){ return [`ดูเส้น <span>0 ของเวอร์เนียร์</span> อยู่หลังตัวเลขใดของมาตราส่วนหลัก (0.025" ต่อช่อง)`,`หาเส้นเวอร์เนียร์ที่<span>ตรงพอดี</span> → เส้นที่ ${n}`,`เส้นที่ ${n} × <span>0.001"</span> = ค่าทศนิยม`,`รวม: ค่าหลัก + ค่าทศนิยม = <span>ผลลัพธ์ (นิ้ว)</span>`]; }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+let cfg = MODES.mm05;
+let measure = 25.35;
+let practiceMode = false;
+let practiceVal  = 0;
+
+const cv     = document.getElementById('cv');
+const ctx    = cv.getContext('2d');
+const slider = document.getElementById('slider');
+
+function snapTo(v){ return Math.round(v/cfg.LC)*cfg.LC; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+// ═══════════════════════════════════════════════════════════════════
+// DRAW
+// ═══════════════════════════════════════════════════════════════════
+function draw(m){
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#1e2d3d'; ctx.fillRect(0,0,W,H);
+  drawBody(m,W);
+  drawScales(m,W,H);
+}
+
+function drawBody(m,W){
+  const barY=58,barH=20,fixedX=50,jawW=52,jawH=78;
+  const pxPmm=(W-160)/cfg.maxMm;
+  const slideX=fixedX+jawW+m*pxPmm;
+  rr(ctx,fixedX,barY,slideX+jawW-fixedX,barH,5,'#607d8b','#455a64');
+  rr(ctx,fixedX,barY-jawH+barH,jawW,jawH,[7,7,0,0],'#78909c','#546e7a');
+  rr(ctx,slideX,barY-jawH+barH,jawW,jawH,[7,7,0,0],'#90a4ae','#607d8b');
+  ctx.fillStyle='#b0bec5';
+  ctx.fillRect(slideX+jawW-7,barY+barH,7,Math.min(40,m*0.3+5));
+
+  // ── jaw labels ──────────────────────────────────────────────────
+  const labelY = barY + barH + 22;
+  const tickY0 = barY + barH + 2, tickY1 = barY + barH + 14;
+  ctx.font = 'bold 12px Sarabun'; ctx.lineWidth = 1.5;
+
+  // สเกลหลัก (fixed jaw)
+  const fxCx = fixedX + jawW / 2;
+  ctx.strokeStyle = 'rgba(255,183,77,0.7)';
+  ctx.beginPath(); ctx.moveTo(fxCx, tickY0); ctx.lineTo(fxCx, tickY1); ctx.stroke();
+  ctx.fillStyle = '#ffb74d'; ctx.textAlign = 'center';
+  ctx.fillText('สเกลหลัก', fxCx, labelY);
+
+  // สเกลเลื่อน (sliding jaw)
+  const slCx = slideX + jawW / 2;
+  ctx.strokeStyle = 'rgba(100,200,255,0.7)';
+  ctx.beginPath(); ctx.moveTo(slCx, tickY0); ctx.lineTo(slCx, tickY1); ctx.stroke();
+  ctx.fillStyle = '#80d8ff'; ctx.textAlign = 'center';
+  ctx.fillText('สเกลเลื่อน', slCx, labelY);
+
+  if(m>3){
+    const lx1=fixedX+jawW,lx2=Math.min(slideX,W-120);
+    ctx.fillStyle='rgba(255,193,7,0.1)';
+    ctx.fillRect(lx1,barY-jawH+barH+10,lx2-lx1,jawH-16);
+    ctx.strokeStyle='rgba(255,193,7,0.35)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.strokeRect(lx1,barY-jawH+barH+10,lx2-lx1,jawH-16);ctx.setLineDash([]);
+    arrowH(lx1,barY-jawH+barH+4,'R'); arrowH(lx2,barY-jawH+barH+4,'L');
+    ctx.strokeStyle='#4fc3f7';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(lx1+9,barY-jawH+barH+4);ctx.lineTo(lx2-9,barY-jawH+barH+4);ctx.stroke();
+    ctx.fillStyle='#4fc3f7';ctx.font='bold 13px Sarabun';ctx.textAlign='center';
+    ctx.fillText(cfg.fmtVal(m),(lx1+lx2)/2,barY-jawH+barH-4);
+  }
+}
+
+function arrowH(x,y,dir){
+  const s=7; ctx.fillStyle='#4fc3f7'; ctx.beginPath();
+  if(dir==='R'){ctx.moveTo(x,y);ctx.lineTo(x-s,y-s/2);ctx.lineTo(x-s,y+s/2);}
+  else         {ctx.moveTo(x,y);ctx.lineTo(x+s,y-s/2);ctx.lineTo(x+s,y+s/2);}
+  ctx.closePath();ctx.fill();
+}
+
+function drawScales(m,W,H){
+  const TOP=148, BOT=H-12;
+  const MH=Math.round((BOT-TOP)*0.50);
+  const VH=BOT-TOP-MH;
+  const VY=TOP+MH;
+  const PX=cfg.pxMm;
+
+  const VIEW_MM=(W-60)/PX;
+  const viewStart=clamp(m-VIEW_MM*cfg.viewBias, 0, cfg.maxMm);
+  const mmToX=mm=>30+(mm-viewStart)*PX;
+
+  // backgrounds
+  rr(ctx,20,TOP,W-40,MH,[6,6,0,0],'#f5f0e8','#bdbdbd');
+
+  const v0x=mmToX(m);
+  const vernSpan=(cfg.vernN-1)*cfg.mainStep;
+  const vernW=vernSpan*PX;
+  rr(ctx,v0x-4,VY,vernW+8,VH,[0,0,6,6],'#e3f2fd','#90caf9');
+
+  // coinciding line
+  const mainVal = Math.floor(m/cfg.mainStep)*cfg.mainStep;
+  const dec = m - mainVal;
+  const coin = Math.round(dec/cfg.LC);
+  const vdiv = (cfg.vernN-1)/cfg.vernN*cfg.mainStep*PX; // px per vernier div
+
+  // alignment glow
+  if(coin>0){
+    const ax=v0x+coin*vdiv;
+    ctx.fillStyle='rgba(229,57,53,0.12)';ctx.fillRect(ax-9,TOP,18,BOT-TOP);
+    ctx.strokeStyle='rgba(229,57,53,0.45)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(ax,TOP);ctx.lineTo(ax,BOT);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // ── MAIN SCALE TICKS: root at VY, grow UPWARD ──────────────────
+  // ใช้ integer index แทน float accumulation เพื่อหลีกเลี่ยง floating-point error
+  const msStep  = cfg.mainStep;
+  const bigAtN  = Math.round(cfg.bigAt / msStep);  // กี่ step ต่อ 1 major interval
+  const medAtN  = Math.round(cfg.medAt / msStep);  // กี่ step ต่อ 1 medium interval
+  const firstIdx = Math.ceil(viewStart / msStep);
+  const lastIdx  = Math.ceil((viewStart + VIEW_MM + msStep) / msStep);
+  for(let idx = firstIdx; idx <= lastIdx; idx++){
+    const mm = idx * msStep;                        // คำนวณใหม่ทุกครั้ง ไม่สะสม error
+    const x  = mmToX(mm); if(x < 18 || x > W-18) continue;
+    const isBig = (idx % bigAtN === 0);             // เปรียบ integer เท่านั้น
+    const isMed = !isBig && (idx % medAtN === 0);
+    ctx.strokeStyle = isBig ? '#222' : '#444';
+    ctx.lineWidth   = isBig ? 1.5 : 1;
+    ctx.beginPath(); ctx.moveTo(x, VY);
+    if(isBig){
+      ctx.lineTo(x, TOP+MH*0.08); ctx.stroke();
+      const lbl = cfg.fmtMain(mm);
+      if(lbl){ ctx.fillStyle='#111'; ctx.font='bold 13px Arial'; ctx.textAlign='center'; ctx.fillText(lbl, x, TOP+13); }
+    } else if(isMed){
+      ctx.lineTo(x, TOP+MH*0.28); ctx.stroke();
+      const lbl = cfg.fmtMain(mm);
+      if(lbl){ ctx.fillStyle='#444'; ctx.font='11px Arial'; ctx.textAlign='center'; ctx.fillText(lbl, x, TOP+13); }
+    } else {
+      ctx.lineTo(x, TOP+MH*0.47); ctx.stroke();
+    }
+  }
+  // half-step marks (mm modes only)
+  if(cfg.halfStep){
+    for(let mm=Math.ceil(viewStart/cfg.halfStep)*cfg.halfStep; mm<=viewStart+VIEW_MM; mm+=cfg.halfStep){
+      if(Math.abs(mm%msStep)<0.001) continue;
+      const x=mmToX(mm); if(x<18||x>W-18) continue;
+      ctx.strokeStyle='#555';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x,VY);ctx.lineTo(x,TOP+MH*0.62);ctx.stroke();
+    }
+  }
+
+  // ── VERNIER TICKS: root at VY, grow DOWNWARD ───────────────────
+  for(let d=0;d<=cfg.vernN;d++){
+    const x=v0x+d*vdiv; if(x<18||x>W-18) continue;
+    const isCoin=(d===coin);
+    ctx.strokeStyle=isCoin?'#c62828':'#0d47a1';
+    ctx.lineWidth=isCoin?2.5:1;
+    const isBigV=(d===0||d===cfg.vernN||d%(cfg.vernN/2)===0||(cfg.vernN<=10&&d%2===0)||(cfg.vernN===25&&d%5===0));
+    const isMedV=(cfg.vernN>=20&&d%(cfg.vernN/10)===0);
+    ctx.beginPath();ctx.moveTo(x,VY);
+    if(d===0||d===cfg.vernN){
+      ctx.lineTo(x,VY+VH*0.82);ctx.stroke();
+      ctx.fillStyle=isCoin?'#c62828':'#0d47a1';
+      ctx.font='bold 11px Arial';ctx.textAlign='center';
+      ctx.fillText(d,x,BOT-4);
+    } else if(isBigV){
+      ctx.lineTo(x,VY+VH*0.78);ctx.stroke();
+      ctx.fillStyle=isCoin?'#c62828':'#0d47a1';
+      ctx.font=isCoin?'bold 12px Arial':'11px Arial';ctx.textAlign='center';
+      ctx.fillText(d,x,BOT-4);
+    } else if(isMedV){
+      ctx.lineTo(x,VY+VH*0.60);ctx.stroke();
+    } else {
+      ctx.lineTo(x,VY+VH*0.42);ctx.stroke();
+    }
+    // red triangle at interface for coinciding line
+    if(isCoin&&d>0&&d<cfg.vernN){
+      ctx.fillStyle='#e53935';ctx.beginPath();
+      ctx.moveTo(x,VY+3);ctx.lineTo(x-7,VY-9);ctx.lineTo(x+7,VY-9);
+      ctx.closePath();ctx.fill();
+    }
+  }
+
+  // interface line
+  ctx.strokeStyle='#546e7a';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(20,VY);ctx.lineTo(W-20,VY);ctx.stroke();
+
+  // labels
+  ctx.fillStyle='#ffb74d';ctx.font='bold 11px Sarabun';ctx.textAlign='left';
+  ctx.fillText('▲ มาตราส่วนหลัก (Main Scale)',28,VY-8);
+  ctx.fillStyle='#90caf9';ctx.font='bold 11px Sarabun';
+  ctx.fillText('▼ มาตราส่วนเวอร์เนียร์  ← เส้นที่ '+coin+' ตรงกัน',28,VY+16);
+
+  // border
+  ctx.strokeStyle='#37474f';ctx.lineWidth=2;
+  rr(ctx,20,TOP,W-40,BOT-TOP,6,null,'#37474f');
+
+  // unit label top-right
+  ctx.fillStyle='#78909c';ctx.font='11px Sarabun';ctx.textAlign='right';
+  ctx.fillText(cfg.id.startsWith('in')?'นิ้ว (inch)':'มิลลิเมตร',W-26,TOP+13);
+}
+
+// ── rounded rect ───────────────────────────────────────────────────
+function rr(ctx,x,y,w,h,r,fill,stroke){
+  const rv=typeof r==='number'?[r,r,r,r]:r;
+  ctx.beginPath();
+  ctx.moveTo(x+rv[0],y);
+  ctx.lineTo(x+w-rv[1],y);   ctx.arcTo(x+w,y,   x+w,y+h,rv[1]);
+  ctx.lineTo(x+w,y+h-rv[2]); ctx.arcTo(x+w,y+h, x,  y+h,rv[2]);
+  ctx.lineTo(x+rv[3],y+h);   ctx.arcTo(x,  y+h, x,  y,  rv[3]);
+  ctx.lineTo(x,y+rv[0]);     ctx.arcTo(x,  y,   x+w,y,  rv[0]);
+  ctx.closePath();
+  if(fill)  {ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UI UPDATE
+// ═══════════════════════════════════════════════════════════════════
+function updateUI(m){
+  const mainVal=Math.floor(m/cfg.mainStep)*cfg.mainStep;
+  const dec=m-mainVal;
+  const coin=Math.round(dec/cfg.LC);
+  document.getElementById('sliderLabel').textContent=cfg.fmtVal(m);
+  if(!practiceMode){
+    document.getElementById('sv1').textContent=cfg.fmtStep(mainVal);
+    document.getElementById('sv2').innerHTML=coin+' × '+cfg.LC.toFixed(cfg.id.startsWith('in')?4:2)+'<br>= '+cfg.fmtStep(coin*cfg.LC);
+    document.getElementById('sv3').textContent=cfg.fmtVal(m);
+  }
+  // howto
+  const lc=cfg.id.startsWith('in')?(cfg.LC/25.4).toFixed(4):cfg.LC.toFixed(2);
+  const steps=cfg.howto(coin,lc);
+  document.getElementById('howtoList').innerHTML=steps.map(s=>`<li>${s}</li>`).join('');
+  document.getElementById('howtoTitle').textContent='💡 วิธีอ่านค่า — '+cfg.label;
+}
+
+function setMeasure(v){
+  measure=snapTo(clamp(v,0,cfg.maxMm));
+  slider.value=measure;
+  draw(measure);
+  updateUI(measure);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODE SWITCHING
+// ═══════════════════════════════════════════════════════════════════
+function setMode(id){
+  cfg=MODES[id];
+  // update buttons
+  Object.keys(MODES).forEach(k=>{
+    const b=document.getElementById('btn-'+k);
+    if(b) b.classList.toggle('active',k===id);
+  });
+  document.getElementById('modeInfo').textContent=cfg.info;
+  // reset slider
+  slider.min=0; slider.max=cfg.maxMm; slider.step=cfg.LC;
+  // update answer placeholder
+  document.getElementById('answer').placeholder=cfg.id.startsWith('in')?'เช่น 2.3456':'เช่น 25.35';
+  // reset measure to something valid
+  measure=snapTo(clamp(measure,0,cfg.maxMm));
+  draw(measure);
+  updateUI(measure);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════════════════════════════
+slider.addEventListener('input',function(){
+  if(practiceMode)return;
+  setMeasure(parseFloat(this.value));
+});
+
+let dragging=false,lastPX=0;
+cv.addEventListener('mousedown', e=>{dragging=true;lastPX=e.clientX;});
+cv.addEventListener('mousemove', e=>{
+  if(!dragging||practiceMode)return;
+  const dx=e.clientX-lastPX;lastPX=e.clientX;
+  setMeasure(measure+dx/cfg.pxMm);
+});
+cv.addEventListener('mouseup',   ()=>{dragging=false;});
+cv.addEventListener('mouseleave',()=>{dragging=false;});
+cv.addEventListener('touchstart',e=>{dragging=true;lastPX=e.touches[0].clientX;e.preventDefault();},{passive:false});
+cv.addEventListener('touchmove', e=>{
+  if(!dragging||practiceMode)return;
+  const dx=e.touches[0].clientX-lastPX;lastPX=e.touches[0].clientX;
+  setMeasure(measure+dx/cfg.pxMm);e.preventDefault();
+},{passive:false});
+cv.addEventListener('touchend',()=>{dragging=false;});
+
+// ═══════════════════════════════════════════════════════════════════
+// PRACTICE
+// ═══════════════════════════════════════════════════════════════════
+function newQ(){
+  const steps=Math.floor(Math.random()*(cfg.maxMm*0.8/cfg.LC))+Math.ceil(5/cfg.LC);
+  practiceVal=snapTo(steps*cfg.LC);
+  practiceMode=true;
+  measure=practiceVal;
+  slider.value=practiceVal;
+  draw(measure);
+  document.getElementById('sv1').textContent='??';
+  document.getElementById('sv2').innerHTML='?? × ??<br>= ??';
+  document.getElementById('sv3').textContent='??';
+  document.getElementById('sliderLabel').textContent='?? '+cfg.unitSuffix;
+  document.getElementById('answer').value='';
+  document.getElementById('feedback').innerHTML='';
+}
+
+function checkAns(){
+  if(!practiceMode){
+    document.getElementById('feedback').innerHTML='<span style="color:#ff9800">กด "โจทย์ใหม่" ก่อนนะครับ 🙂</span>';return;
+  }
+  const raw=parseFloat(document.getElementById('answer').value);
+  if(isNaN(raw)){
+    document.getElementById('feedback').innerHTML='<span style="color:#ff9800">กรุณากรอกตัวเลข</span>';return;
+  }
+  // convert to mm for comparison
+  const answerMm=cfg.id.startsWith('in')?raw*25.4:raw;
+  if(Math.abs(answerMm-practiceVal)<cfg.LC*0.5){
+    document.getElementById('feedback').innerHTML=
+      `<span style="color:#81c784">✅ ถูกต้อง! คำตอบคือ <strong>${cfg.fmtVal(practiceVal)}</strong> ยอดเยี่ยม!</span>`;
+    practiceMode=false;
+    updateUI(practiceVal);
+    document.getElementById('sliderLabel').textContent=cfg.fmtVal(practiceVal);
+  } else {
+    document.getElementById('feedback').innerHTML=
+      `<span style="color:#ef5350">❌ ไม่ถูก — ลองอ่านเส้น 0 ของเวอร์เนียร์ใหม่ แล้วหาเส้นที่ตรงกันอีกครั้ง</span>`;
+  }
+}
+
+document.getElementById('answer').addEventListener('keydown',e=>{if(e.key==='Enter')checkAns();});
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+setMode('mm05');
+setMeasure(25.35);
+</script>
+</body>
+</html>
