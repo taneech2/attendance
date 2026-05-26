@@ -1889,6 +1889,8 @@ function clearStudentFace() {
   delete facePhotos[idx];
   renderStudentChips();
   populateStudentSelect();
+  sel.value = idx;
+  updateRegPhotoPreview();
   saveToFirebase();
   setFaceStatus(`🗑 ลบรูปใบหน้า ${students[idx]} แล้ว — ถ่ายใหม่ได้เลย`);
 }
