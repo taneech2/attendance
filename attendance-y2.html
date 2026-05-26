@@ -229,6 +229,7 @@ td.num{color:#c9a84c;font-weight:600;}
   body{background:#fff;padding:0;}
   .page{box-shadow:none;border:none;}
   .info-bar,.week-tabs,.date-controls,.student-manager,.no-print{display:none!important;}
+  .slash{visibility:hidden;}
   .week-panel{display:none!important;}
   .week-panel.print-active{display:block!important;}
 }
@@ -1281,7 +1282,7 @@ function exportToExcel() {
     teacher: document.getElementById('inp-teacher')?.value || '',
   };
 
-  const SYM = (s) => s===1?'✓' : s===2?'✗' : '/';
+  const SYM = (s) => s===1?'✓' : s===2?'✗' : '';
 
   // ── Sheet 1: สรุปรวม ──
   const sumHeader = ['ลำดับ','ชื่อ – สกุล',
