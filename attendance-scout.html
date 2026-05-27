@@ -818,9 +818,11 @@ function cycleClass(sid, idx, date) {
 async function saveClassCell(sid, idx, date, status){
   localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
   try{
-    const attPatch = {}; attPatch[date] = status !== 0 ? status : null;
+    // PUT ทั้ง record ของนักเรียนคนนี้ (PUT ไม่แปล key เป็น path → รองรับ "พ.ค." ✅)
+    const attFull = Object.assign({}, classData[sid]?.attendance?.[idx] || {});
+    if(status !== 0) attFull[date] = status; else delete attFull[date];
     const [r1] = await Promise.all([
-      fetch(`${DB_BASE}/classData/${sid}/attendance/${idx}.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(attPatch)}),
+      fetch(`${DB_BASE}/classData/${sid}/attendance/${idx}.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(attFull)}),
       fetch(DB_URL, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({savedAt:Date.now()})}),
     ]);
     if(r1.ok) showStatus('☁️ บันทึกแล้ว');
@@ -1740,19 +1742,23 @@ async function saveToFirebase(){
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
-// บันทึกเฉพาะ cell ที่เปลี่ยน — ไม่ทับข้อมูลเครื่องอื่น (multi-device safe ✅)
+// บันทึกเฉพาะ student ที่เปลี่ยน — ใช้ PUT (PATCH ไม่รองรับ key ที่มีจุด เช่น "พ.ค.")
 async function saveAttendanceCell(w, i, d, status, ts){
   localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
   try{
     const base = `${DB_BASE}/weekData/${w}`;
-    const attPatch={}; attPatch[d] = status!==0 ? status : null;
-    const tsPatch={};  tsPatch[d]  = ts || null;
-    await Promise.all([
-      fetch(`${base}/attendance/${i}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(attPatch)}),
-      fetch(`${base}/timestamps/${i}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(tsPatch)}),
+    // PUT ทั้ง record ของนักเรียนคนนี้ (PUT ไม่แปล key เป็น path → รองรับ "พ.ค." ✅)
+    const attFull = Object.assign({}, weekData[w]?.attendance?.[i] || {});
+    if(status !== 0) attFull[d] = status; else delete attFull[d];
+    const tsFull  = Object.assign({}, weekData[w]?.timestamps?.[i]  || {});
+    if(ts) tsFull[d] = ts; else delete tsFull[d];
+    const [r1] = await Promise.all([
+      fetch(`${base}/attendance/${i}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(attFull)}),
+      fetch(`${base}/timestamps/${i}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(tsFull)}),
       fetch(DB_URL,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({savedAt:Date.now()})}),
     ]);
-    showStatus('☁️ บันทึกแล้ว');
+    if(r1.ok) showStatus('☁️ บันทึกแล้ว');
+    else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
