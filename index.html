@@ -823,9 +823,22 @@ function cycleClass(sid, idx, date) {
   pushUndo(students[idx]);
   if(!classData[sid].attendance[idx]) classData[sid].attendance[idx] = {};
   const cur = classData[sid].attendance[idx][date] || 0;
-  classData[sid].attendance[idx][date] = (cur + 1) % 3;
+  const newVal = (cur + 1) % 3;
+  classData[sid].attendance[idx][date] = newVal;
   renderClass(sid);
-  saveToFirebase();
+  saveClassCell(sid, idx, date, newVal);
+}
+
+async function saveClassCell(sid, idx, date, status){
+  localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  try{
+    const attPatch = {}; attPatch[date] = status !== 0 ? status : null;
+    await Promise.all([
+      fetch(`${DB_BASE}/classData/${sid}/attendance/${idx}.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(attPatch)}),
+      fetch(DB_URL, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({savedAt:Date.now()})}),
+    ]);
+    showStatus('☁️ บันทึกแล้ว');
+  }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
 function addClassDate(sid) {
