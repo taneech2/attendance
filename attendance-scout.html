@@ -1757,6 +1757,8 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
       if(data.students !== undefined){ cloudParsed = data; }  // format ใหม่ ✅
       else if(data.p){
         cloudParsed = JSON.parse(data.p); needMigrate = true; // format เก่า
+        // ใช้ savedAt จาก root (อัปเดตโดย PATCH) แทน savedAt ใน data.p (เก่า)
+        if(data.savedAt) cloudParsed.savedAt = data.savedAt;
         // merge PATCH data (weekData ที่ถูก PATCH มาทับบน p เก่า)
         if(data.weekData){
           for(const w in data.weekData){
@@ -2325,7 +2327,7 @@ async function init(){
     const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
     if(modalOpen) return;
     try{
-      await loadFromFirebase(true, true); // forceCloud + skipMigrate
+      await loadFromFirebase(false, true); // ใช้ timestamp เปรียบ + skipMigrate
       updatePinButtons();
       if(appMode === 'class') renderClass(currentSubject);
       else if(currentWeek===-1) renderLeaderboard();
