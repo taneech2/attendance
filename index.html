@@ -1755,8 +1755,20 @@ async function loadFromFirebase(){
     const res = await fetch(DB_URL);
     const data = await res.json();
     if(data){
-      if(data.students !== undefined){ cloudParsed = data; }          // format ใหม่ ✅
-      else if(data.p){ cloudParsed = JSON.parse(data.p); needMigrate=true; } // format เก่า → migrate
+      if(data.students !== undefined){ cloudParsed = data; }  // format ใหม่ ✅
+      else if(data.p){
+        cloudParsed = JSON.parse(data.p); needMigrate = true; // format เก่า
+        // merge PATCH data (weekData ที่ถูก PATCH มาทับบน p เก่า)
+        if(data.weekData){
+          for(const w in data.weekData){
+            const src = data.weekData[w];
+            if(!cloudParsed.weekData) cloudParsed.weekData={};
+            if(!cloudParsed.weekData[w]) cloudParsed.weekData[w]={dates:[],attendance:{},timestamps:{}};
+            if(src.attendance) Object.assign(cloudParsed.weekData[w].attendance||{}, fixArr(src.attendance));
+            if(src.timestamps) Object.assign(cloudParsed.weekData[w].timestamps||{}, fixArr(src.timestamps));
+          }
+        }
+      }
     }
   }catch(e){}
   // โหลด localStorage

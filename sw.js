@@ -1,7 +1,8 @@
-const CACHE = 'attendance-v1';
+const CACHE = 'attendance-v3'; // ← bump version → ล้าง cache เก่าทุกเครื่องอัตโนมัติ
 const PRECACHE = [
   './index.html',
   './attendance-y2.html',
+  './attendance-scout.html',
 ];
 
 self.addEventListener('install', e => {
@@ -21,17 +22,35 @@ self.addEventListener('activate', e => {
 });
 
 // Network-First: โหลดจาก Server เสมอเมื่อออนไลน์ → อัปเดตอัตโนมัติ
-// ออฟไลน์ → ใช้ Cache สำรอง
-// ไม่ cache face-api.js / xlsx (ไฟล์ใหญ่เกินไป)
+// ออฟไลน์ → ใช้ Cache สำรอง (เฉพาะไฟล์ HTML เท่านั้น)
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  // ข้าม Firebase, face-api CDN, Google Fonts — ให้ไปตรงๆ
+
+  // ข้าม Firebase, CDN, Fonts — ให้ไปตรงๆ ไม่ cache
   if (url.hostname.includes('firebaseio.com') ||
       url.hostname.includes('justadudewhohacks') ||
       url.hostname.includes('fonts.googleapis.com') ||
       url.hostname.includes('fonts.gstatic.com')) {
     return;
   }
+
+  // Navigation requests (เปิดหน้าใหม่) — ใช้ URL ที่ขอจริงๆ เท่านั้น
+  // ไม่ fallback ข้ามไฟล์ (ป้องกัน ชช.1 ขึ้นแทน ชช.2)
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          if (res && res.status === 200) {
+            caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request, { ignoreSearch: true }))
+    );
+    return;
+  }
+
+  // Resources (JS, CSS, images) — Network-First
   e.respondWith(
     fetch(e.request)
       .then(res => {
