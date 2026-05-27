@@ -1757,7 +1757,7 @@ function applyParsed(parsed, source) {
   return applyData(parsed);
 }
 
-async function loadFromFirebase(){
+async function loadFromFirebase(forceCloud=false){
   showStatus('⏳ กำลังโหลด...','#c9a84c');
   let cloudParsed = null, localParsed = null, needMigrate = false;
   // โหลด Cloud
@@ -1788,7 +1788,7 @@ async function loadFromFirebase(){
   const cloudTs = cloudParsed?.savedAt || 0;
   const localTs = localParsed?.savedAt || 0;
 
-  if(cloudParsed && cloudTs >= localTs){
+  if(cloudParsed && (forceCloud || cloudTs >= localTs)){
     if(applyParsed(cloudParsed)){
       showStatus('✅ โหลดจาก Cloud');
       if(needMigrate){ saveToFirebase(); } // migrate format เก่า → ใหม่ทันที
@@ -2336,10 +2336,7 @@ async function init(){
     const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
     if(modalOpen) return;
     try{
-      const res = await fetch(DB_URL, {cache:'no-store'});
-      const data = await res.json();
-      if(!data || data.students === undefined) return;
-      applyParsed(data);
+      await loadFromFirebase(true); // force cloud — ข้าม timestamp comparison
       updatePinButtons();
       if(appMode === 'class') renderClass(currentSubject);
       else if(currentWeek===-1) renderLeaderboard();
