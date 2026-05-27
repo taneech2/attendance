@@ -1594,14 +1594,19 @@ function updateLockBtn(){
 
 // ===== PRIVACY TOGGLE =====
 let namesHidden = false;
-function togglePrivacy(){
-  if(!requireUnlock()) return;
-  namesHidden = !namesHidden;
+function applyPrivacy(hidden){
+  namesHidden = hidden;
   document.body.classList.toggle('hide-names', namesHidden);
   const btn = document.getElementById('privacy-btn');
+  if(!btn) return;
   btn.textContent = namesHidden ? '🙈' : '👁';
   btn.classList.toggle('hiding', namesHidden);
   btn.title = namesHidden ? 'กำลังซ่อนชื่อ — กดเพื่อแสดง' : 'กดเพื่อซ่อนชื่อ';
+}
+function togglePrivacy(){
+  if(!requireUnlock()) return;
+  applyPrivacy(!namesHidden);
+  sessionStorage.setItem('namesHidden', namesHidden ? '1' : '0');
 }
 
 function requireUnlock(){
@@ -2302,6 +2307,8 @@ async function init(){
   navigateToPinned(); // เปิดหน้าที่ปักหมุด (default = Leaderboard)
   updatePinButtons();
   bindInfoBar();
+  // คืนสถานะซ่อนชื่อ (ถ้าปิดตาไว้ก่อน refresh)
+  if(sessionStorage.getItem('namesHidden') === '1') applyPrivacy(true);
   // Auto-refresh จาก Firebase ทุก 30 วินาที (ไม่ refresh ถ้า modal เปิดอยู่)
   setInterval(async () => {
     const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
@@ -2310,7 +2317,7 @@ async function init(){
     updatePinButtons();
     if(currentWeek===-1) renderLeaderboard();
     else renderWeek(currentWeek);
-  }, 10000); // 10s — รองรับหลายเครื่องสแกนพร้อมกัน
+  }, 30000); // 30s — sync หลายเครื่อง
 }
 
 init();
