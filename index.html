@@ -2629,7 +2629,7 @@ async function captureDescriptor() {
 }
 
 async function init(){
-  await loadFromFirebase();
+  await loadFromFirebase(true);
   buildTabs();
   buildPanels();
   buildClassTabs();
@@ -2679,31 +2679,58 @@ async function init(){
 
       // merge เฉพาะ cell ที่มีค่า (≥1) — ไม่ทับ local ด้วย 0/null จาก cloud
       let changed = false;
+
+      // sync students
+      if(data.students && JSON.stringify(data.students) !== JSON.stringify(students)) {
+        students = data.students;
+        changed = true;
+      }
+
       if(cwd){ for(const w in cwd){
         const wn=Number(w), src=cwd[w];
         if(!weekData[wn]) weekData[wn]={dates:[],attendance:{},timestamps:{}};
+        
+        // sync dates
+        if(src.dates && Array.isArray(src.dates)) {
+          src.dates.forEach(d => {
+            if(!weekData[wn].dates.includes(d)){
+              weekData[wn].dates.push(d);
+              changed = true;
+            }
+          });
+        }
+
         const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
         for(const i in att){ const in_=Number(i);
           if(!weekData[wn].attendance[in_]) weekData[wn].attendance[in_]={};
-          for(const d in att[in_]){ const v=att[in_][d]; if(v && weekData[wn].attendance[in_][d]!==v){weekData[wn].attendance[in_][d]=v;changed=true;} }
+          for(const d in att[in_]){ const v=att[in_][d]; if(v !== undefined && v !== null && weekData[wn].attendance[in_][d]!==v){weekData[wn].attendance[in_][d]=v;changed=true;} }
         }
         for(const i in ts){ const in_=Number(i);
           if(!weekData[wn].timestamps[in_]) weekData[wn].timestamps[in_]={};
-          for(const d in ts[in_]){ const v=ts[in_][d]; if(v && weekData[wn].timestamps[in_][d]!==v){weekData[wn].timestamps[in_][d]=v;changed=true;} }
+          for(const d in ts[in_]){ const v=ts[in_][d]; if(v !== undefined && v !== null && weekData[wn].timestamps[in_][d]!==v){weekData[wn].timestamps[in_][d]=v;changed=true;} }
         }
       }}
       if(ccd){ for(const sid in ccd){
         const src=ccd[sid]; if(!classData[sid]) classData[sid]={dates:[],attendance:{},timestamps:{}};
+        
+        // sync class dates
+        if(src.dates && Array.isArray(src.dates)) {
+          src.dates.forEach(d => {
+            if(!classData[sid].dates.includes(d)){
+              classData[sid].dates.push(d);
+              changed = true;
+            }
+          });
+        }
+
         const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
-        // 🐛 DEBUG — ลบออกเมื่อหาปัญหาเจอ
-        console.log('🔄 poll ccd['+sid+'] att[0]:', JSON.stringify(att[0]), '| local[0]:', JSON.stringify(classData[sid]?.attendance?.[0]));
         for(const i in att){ const in_=Number(i);
           if(!classData[sid].attendance[in_]) classData[sid].attendance[in_]={};
-          for(const d in att[in_]){ const v=att[in_][d]; if(v && classData[sid].attendance[in_][d]!==v){classData[sid].attendance[in_][d]=v;changed=true;} }
+          for(const d in att[in_]){ const v=att[in_][d]; if(v !== undefined && v !== null && classData[sid].attendance[in_][d]!==v){classData[sid].attendance[in_][d]=v;changed=true;} }
         }
         for(const i in ts){ const in_=Number(i);
           if(!classData[sid].timestamps[in_]) classData[sid].timestamps[in_]={};
-          for(const d in ts[in_]){ const v=ts[in_][d]; if(v && classData[sid].timestamps[in_][d]!==v){classData[sid].timestamps[in_][d]=v;changed=true;} }
+          for(const d in ts[in_]){ const v=ts[in_][d]; if(v !== undefined && v !== null && classData[sid].timestamps[in_][d]!==v){classData[sid].timestamps[in_][d]=v;changed=true;} }
         }
       }}
 
