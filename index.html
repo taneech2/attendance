@@ -2331,15 +2331,19 @@ async function init(){
   bindInfoBar();
   // คืนสถานะซ่อนชื่อ (ถ้าปิดตาไว้ก่อน refresh)
   if(sessionStorage.getItem('namesHidden') === '1') applyPrivacy(true);
-  // Auto-refresh จาก Firebase ทุก 30 วินาที (ไม่ refresh ถ้า modal เปิดอยู่)
+  // Auto-refresh จาก Firebase ทุก 30 วินาที — sync ทุกเครื่อง
   setInterval(async () => {
     const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
     if(modalOpen) return;
     await loadFromFirebase();
     updatePinButtons();
-    if(currentWeek===-1) renderLeaderboard();
-    else renderWeek(currentWeek);
-  }, 30000); // 30s — sync หลายเครื่อง
+    if(appMode === 'class'){
+      renderClass(currentSubject);
+    } else {
+      if(currentWeek===-1) renderLeaderboard();
+      else renderWeek(currentWeek);
+    }
+  }, 30000); // 30s
 }
 
 init();
