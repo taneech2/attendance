@@ -2691,6 +2691,7 @@ async function init(){
   }
   
   for(const w in weekData) {
+    if(!weekData[w]) continue;
     if(weekData[w].dates) {
       const newDates = [];
       weekData[w].dates.forEach(d => {
@@ -2706,6 +2707,7 @@ async function init(){
   }
 
   for(const sid in classData) {
+    if(!classData[sid]) continue;
     if(classData[sid].dates) {
       const newDates = [];
       classData[sid].dates.forEach(d => {
