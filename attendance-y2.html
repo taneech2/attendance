@@ -1642,13 +1642,18 @@ function fixArr(src){
   return src;
 }
 
-function getPayload(){
+function getPayload(includeFacePhotos=true){
   return { students, weekData, classData,
     hiddenStudents: Array.from(hiddenStudents),
     infoBar: getInfoBar(), pin: classPin, pinnedView,
     namesHidden,
-    fd: serializeFD(), fp: facePhotos, savedAt: Date.now() };
+    fd: serializeFD(),
+    fp: includeFacePhotos ? facePhotos : undefined,
+    savedAt: Date.now() };
 }
+
+// payload เบา — ไม่มีรูปใบหน้า ใช้สำหรับ sync ข้อมูลการเช็คชื่อ
+function getLightPayload(){ return getPayload(false); }
 const LS_KEY = 'attendanceData_y2_v2';
 
 function showStatus(msg, color='#4caf8a'){
@@ -1714,12 +1719,13 @@ function applyData(parsed){
 }
 
 async function saveToFirebase(){
-  const payload = getPayload();
+  const payload = getPayload(); // เต็ม (มีรูป) → localStorage
   localStorage.setItem(LS_KEY, JSON.stringify(payload));
+  const light = getLightPayload(); // เบา (ไม่มีรูป) → Firebase
   try{
     const res = await fetch(DB_URL, {
       method:'PUT', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
+      body: JSON.stringify(light)
     });
     if(res.ok) showStatus('☁️ บันทึกแล้ว');
     else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
@@ -1749,7 +1755,7 @@ function applyParsed(parsed, source) {
   return applyData(parsed);
 }
 
-async function loadFromFirebase(forceCloud=false){
+async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   showStatus('⏳ กำลังโหลด...','#c9a84c');
   let cloudParsed = null, localParsed = null, needMigrate = false;
   // โหลด Cloud
@@ -1783,7 +1789,7 @@ async function loadFromFirebase(forceCloud=false){
   if(cloudParsed && (forceCloud || cloudTs >= localTs)){
     if(applyParsed(cloudParsed)){
       showStatus('✅ โหลดจาก Cloud');
-      if(needMigrate){ saveToFirebase(); } // migrate format เก่า → ใหม่ทันที
+      if(needMigrate && !skipMigrate){ saveToFirebase(); } // migrate format เก่า → ใหม่ทันที
       return;
     }
   }
@@ -2328,7 +2334,7 @@ async function init(){
     const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
     if(modalOpen) return;
     try{
-      await loadFromFirebase(true); // force cloud — ข้าม timestamp comparison
+      await loadFromFirebase(true, true); // forceCloud + skipMigrate
       updatePinButtons();
       if(appMode === 'class') renderClass(currentSubject);
       else if(currentWeek===-1) renderLeaderboard();
