@@ -2331,18 +2331,20 @@ async function init(){
   bindInfoBar();
   // คืนสถานะซ่อนชื่อ (ถ้าปิดตาไว้ก่อน refresh)
   if(sessionStorage.getItem('namesHidden') === '1') applyPrivacy(true);
-  // Auto-refresh จาก Firebase ทุก 30 วินาที — sync ทุกเครื่อง
+  // Auto-sync จาก Firebase ทุก 30 วินาที — ใช้ Cloud เสมอ ไม่เปรียบ timestamp
   setInterval(async () => {
     const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
     if(modalOpen) return;
-    await loadFromFirebase();
-    updatePinButtons();
-    if(appMode === 'class'){
-      renderClass(currentSubject);
-    } else {
-      if(currentWeek===-1) renderLeaderboard();
+    try{
+      const res = await fetch(DB_URL, {cache:'no-store'});
+      const data = await res.json();
+      if(!data || data.students === undefined) return;
+      applyParsed(data);
+      updatePinButtons();
+      if(appMode === 'class') renderClass(currentSubject);
+      else if(currentWeek===-1) renderLeaderboard();
       else renderWeek(currentWeek);
-    }
+    }catch(e){}
   }, 30000); // 30s
 }
 
