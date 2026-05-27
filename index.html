@@ -832,11 +832,12 @@ async function saveClassCell(sid, idx, date, status){
   localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
   try{
     const attPatch = {}; attPatch[date] = status !== 0 ? status : null;
-    await Promise.all([
+    const [r1] = await Promise.all([
       fetch(`${DB_BASE}/classData/${sid}/attendance/${idx}.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(attPatch)}),
       fetch(DB_URL, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({savedAt:Date.now()})}),
     ]);
-    showStatus('☁️ บันทึกแล้ว');
+    if(r1.ok) showStatus('☁️ บันทึกแล้ว');
+    else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
@@ -2387,7 +2388,7 @@ async function init(){
       // sync namesHidden ข้ามเครื่อง
       if(data.namesHidden !== undefined && data.namesHidden !== namesHidden) applyPrivacy(data.namesHidden);
 
-      // merge เฉพาะ cell attendance — ไม่แตะ dates / students / structure
+      // merge เฉพาะ cell ที่มีค่า (≥1) — ไม่ทับ local ด้วย 0/null จาก cloud
       let changed = false;
       if(cwd){ for(const w in cwd){
         const wn=Number(w), src=cwd[w];
@@ -2395,11 +2396,11 @@ async function init(){
         const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
         for(const i in att){ const in_=Number(i);
           if(!weekData[wn].attendance[in_]) weekData[wn].attendance[in_]={};
-          for(const d in att[in_]){ if(weekData[wn].attendance[in_][d]!==att[in_][d]){weekData[wn].attendance[in_][d]=att[in_][d];changed=true;} }
+          for(const d in att[in_]){ const v=att[in_][d]; if(v && weekData[wn].attendance[in_][d]!==v){weekData[wn].attendance[in_][d]=v;changed=true;} }
         }
         for(const i in ts){ const in_=Number(i);
           if(!weekData[wn].timestamps[in_]) weekData[wn].timestamps[in_]={};
-          for(const d in ts[in_]){ if(weekData[wn].timestamps[in_][d]!==ts[in_][d]){weekData[wn].timestamps[in_][d]=ts[in_][d];changed=true;} }
+          for(const d in ts[in_]){ const v=ts[in_][d]; if(v && weekData[wn].timestamps[in_][d]!==v){weekData[wn].timestamps[in_][d]=v;changed=true;} }
         }
       }}
       if(ccd){ for(const sid in ccd){
@@ -2407,11 +2408,11 @@ async function init(){
         const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
         for(const i in att){ const in_=Number(i);
           if(!classData[sid].attendance[in_]) classData[sid].attendance[in_]={};
-          for(const d in att[in_]){ if(classData[sid].attendance[in_][d]!==att[in_][d]){classData[sid].attendance[in_][d]=att[in_][d];changed=true;} }
+          for(const d in att[in_]){ const v=att[in_][d]; if(v && classData[sid].attendance[in_][d]!==v){classData[sid].attendance[in_][d]=v;changed=true;} }
         }
         for(const i in ts){ const in_=Number(i);
           if(!classData[sid].timestamps[in_]) classData[sid].timestamps[in_]={};
-          for(const d in ts[in_]){ if(classData[sid].timestamps[in_][d]!==ts[in_][d]){classData[sid].timestamps[in_][d]=ts[in_][d];changed=true;} }
+          for(const d in ts[in_]){ const v=ts[in_][d]; if(v && classData[sid].timestamps[in_][d]!==v){classData[sid].timestamps[in_][d]=v;changed=true;} }
         }
       }}
 
