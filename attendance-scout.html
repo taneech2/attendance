@@ -1830,12 +1830,14 @@ function migrateDotDates(parsed){
   function convObj(obj){ if(!obj||typeof obj!=='object') return obj; const r={}; for(const [k,v] of Object.entries(obj)) r[conv(k)]=v; return r; }
   if(parsed.weekData) for(const w of Object.keys(parsed.weekData)){
     const wd=parsed.weekData[w];
+    if(!wd) continue;
     if(wd.dates) wd.dates=wd.dates.map(conv);
     if(wd.attendance) for(const i of Object.keys(wd.attendance)) wd.attendance[i]=convObj(wd.attendance[i]);
     if(wd.timestamps) for(const i of Object.keys(wd.timestamps)) wd.timestamps[i]=convObj(wd.timestamps[i]);
   }
   if(parsed.classData) for(const sid of Object.keys(parsed.classData)){
     const cd=parsed.classData[sid];
+    if(!cd) continue;
     if(cd.dates) cd.dates=cd.dates.map(conv);
     if(cd.attendance) for(const i of Object.keys(cd.attendance)) cd.attendance[i]=convObj(cd.attendance[i]);
     if(cd.timestamps) for(const i of Object.keys(cd.timestamps)) cd.timestamps[i]=convObj(cd.timestamps[i]);
