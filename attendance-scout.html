@@ -321,7 +321,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
     <div class="subtitle">
       แบบบันทึกผลการเข้าร่วมกิจกรรมหน้าเสาธง/วิชาเรียน ของนักเรียน นักศึกษา<br>
       ภาคเรียนที่ <span id="lbl-term">1</span> ปีการศึกษา <span id="lbl-year">2569</span> &nbsp;|&nbsp;
-      กลุ่มเรียน <span id="lbl-class">ลูกเสือ วิทยาลัยการอาชีพบุรีรัมย์</span> &nbsp;|&nbsp;
+      กลุ่มเรียน <span id="lbl-class">ลูกเสือวิสามัญ ปวช.1 (รวมทุกแผนก)</span> &nbsp;|&nbsp;
       ครูที่ปรึกษา <span id="lbl-teacher">นายธานี ชมสุข</span>
     </div>
   </div>
@@ -336,7 +336,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
   <div class="info-bar no-print">
     <input id="inp-term" placeholder="ภาคเรียนที่" value="1">
     <input id="inp-year" placeholder="ปีการศึกษา" value="2569">
-    <input id="inp-class" placeholder="กลุ่มเรียน" value="ลูกเสือ วิทยาลัยการอาชีพบุรีรัมย์">
+    <input id="inp-class" placeholder="กลุ่มเรียน" value="ลูกเสือวิสามัญ ปวช.1 (รวมทุกแผนก)">
     <input id="inp-teacher" placeholder="ครูที่ปรึกษา" value="นายธานี ชมสุข">
   </div>
 
@@ -407,7 +407,7 @@ const TOTAL_WEEKS = 18;
 
 // ===== CLASS DATA =====
 const CLASS_SUBJECTS = [
-  { id:'scout_act', name:'กิจกรรมลูกเสือ', full:'กิจกรรมลูกเสือ/เนตรนารี', day:'', teacher:'อ.ธานี' },
+  { id:'scout', name:'ลูกเสือวิสามัญ', full:'ลูกเสือวิสามัญ (ช่างเชื่อม / ช่างยนต์ / ช่างกล / ช่างไฟฟ้า / คอมพิวเตอร์ / บัญชี)', day:'พฤหัสบดี', teacher:'อ.ธานี' },
 ];
 let classData = {};
 CLASS_SUBJECTS.forEach(s => { classData[s.id] = { dates: [], attendance: {}, timestamps: {} }; });
