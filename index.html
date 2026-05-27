@@ -687,7 +687,8 @@ function editTime(e, w, i, d){
   if(!wd.timestamps[i]) wd.timestamps[i]={};
   wd.attendance[i][d] = 1;
   wd.timestamps[i][d] = `m${h}:${m}:00`;
-  renderWeek(w); saveToFirebase();
+  renderWeek(w);
+  saveAttendanceCell(w, i, d, 1, `m${h}:${m}:00`); // PATCH เฉพาะ cell ✅
   showStatus(`✅ แก้เวลาเป็น ${h}:${m} ให้ ${students[i]} แล้ว`, '#4caf8a');
 }
 
@@ -698,13 +699,12 @@ function cycle(w,i,d){
   if(!wd.attendance[i]) wd.attendance[i]={};
   const newStatus = ((wd.attendance[i][d]||0)+1)%3;
   wd.attendance[i][d] = newStatus;
-  // บันทึกเวลา ณ ตอนนี้เมื่อกด ✓ (manual override)
   if(!wd.timestamps) wd.timestamps={};
   if(!wd.timestamps[i]) wd.timestamps[i]={};
-  if(newStatus===1) wd.timestamps[i][d] = 'm'+nowHHMM(); // m=manual (ครูกดมือ)
-  else delete wd.timestamps[i][d];                    // ล้างเมื่อเปลี่ยนเป็น ✗ หรือ /
+  const ts = newStatus===1 ? 'm'+nowHHMM() : null;
+  if(ts) wd.timestamps[i][d]=ts; else delete wd.timestamps[i][d];
   renderWeek(w);
-  saveToFirebase();
+  saveAttendanceCell(w, i, d, newStatus, ts); // PATCH เฉพาะ cell ✅
 }
 
 // ===== MODE SWITCHER =====
@@ -1630,7 +1630,26 @@ function requireUnlock(){
 }
 
 // ===== FIREBASE =====
-const DB_URL = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json';
+const DB_URL  = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json';
+const DB_BASE = DB_URL.slice(0,-5); // ใช้สำหรับ PATCH เฉพาะ cell (ตัด .json ออก)
+
+// แปลง Firebase array กลับเป็น object (Firebase แปลง numeric keys → array อัตโนมัติ)
+function fixArr(src){
+  if(!src) return {};
+  if(Array.isArray(src)){
+    const o={};
+    src.forEach((v,i)=>{ if(v!==null&&v!==undefined) o[i]=v; });
+    return o;
+  }
+  return src;
+}
+
+function getPayload(){
+  return { students, weekData, classData,
+    hiddenStudents: Array.from(hiddenStudents),
+    infoBar: getInfoBar(), pin: classPin, pinnedView,
+    fd: serializeFD(), fp: facePhotos, savedAt: Date.now() };
+}
 const LS_KEY = 'attendanceData_v2';
 
 function showStatus(msg, color='#4caf8a'){
@@ -1670,10 +1689,9 @@ function applyData(parsed){
   for(let w=1;w<=18;w++){
     const src = wd[w]||wd[String(w)]||{};
     weekData[w] = { dates: src.dates||[], attendance: {}, timestamps: {} };
-    // แปลง attendance keys กลับเป็น number-safe object
-    const att = src.attendance||{};
+    const att = fixArr(src.attendance);
     Object.keys(att).forEach(k=>{ weekData[w].attendance[Number(k)] = att[k]; });
-    const ts = src.timestamps||{};
+    const ts = fixArr(src.timestamps);
     Object.keys(ts).forEach(k=>{ weekData[w].timestamps[Number(k)] = ts[k]; });
   }
   // restore classData
@@ -1694,18 +1712,31 @@ function applyData(parsed){
 }
 
 async function saveToFirebase(){
-  const payload = JSON.stringify({ students, weekData, classData, hiddenStudents: Array.from(hiddenStudents), infoBar: getInfoBar(), pin: classPin, pinnedView, fd: serializeFD(), fp: facePhotos, savedAt: Date.now() });
-  // บันทึก localStorage ก่อนเสมอ (ทันที ไม่รอเน็ต)
-  localStorage.setItem(LS_KEY, payload);
+  const payload = getPayload();
+  localStorage.setItem(LS_KEY, JSON.stringify(payload));
   try{
     const res = await fetch(DB_URL, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      // ห่อเป็น {p:...} เพื่อป้องกัน Firebase แปลง key ตัวเลขเป็น Array
-      body: JSON.stringify({p: payload})
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
     });
     if(res.ok) showStatus('☁️ บันทึกแล้ว');
     else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
+  }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
+}
+
+// บันทึกเฉพาะ cell ที่เปลี่ยน — ไม่ทับข้อมูลเครื่องอื่น (multi-device safe ✅)
+async function saveAttendanceCell(w, i, d, status, ts){
+  localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  try{
+    const base = `${DB_BASE}/weekData/${w}`;
+    const attPatch={}; attPatch[d] = status!==0 ? status : null;
+    const tsPatch={};  tsPatch[d]  = ts || null;
+    await Promise.all([
+      fetch(`${base}/attendance/${i}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(attPatch)}),
+      fetch(`${base}/timestamps/${i}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(tsPatch)}),
+      fetch(DB_URL,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({savedAt:Date.now()})}),
+    ]);
+    showStatus('☁️ บันทึกแล้ว');
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
@@ -1718,23 +1749,29 @@ function applyParsed(parsed, source) {
 
 async function loadFromFirebase(){
   showStatus('⏳ กำลังโหลด...','#c9a84c');
-  let cloudParsed = null, localParsed = null;
+  let cloudParsed = null, localParsed = null, needMigrate = false;
   // โหลด Cloud
   try{
     const res = await fetch(DB_URL);
     const data = await res.json();
-    if(data && data.p) cloudParsed = JSON.parse(data.p);
+    if(data){
+      if(data.students !== undefined){ cloudParsed = data; }          // format ใหม่ ✅
+      else if(data.p){ cloudParsed = JSON.parse(data.p); needMigrate=true; } // format เก่า → migrate
+    }
   }catch(e){}
   // โหลด localStorage
   const local = localStorage.getItem(LS_KEY);
   if(local){ try{ localParsed = JSON.parse(local); }catch(e){} }
 
-  // เลือกอันที่ใหม่กว่า (savedAt timestamp)
   const cloudTs = cloudParsed?.savedAt || 0;
   const localTs = localParsed?.savedAt || 0;
 
   if(cloudParsed && cloudTs >= localTs){
-    if(applyParsed(cloudParsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+    if(applyParsed(cloudParsed)){
+      showStatus('✅ โหลดจาก Cloud');
+      if(needMigrate){ saveToFirebase(); } // migrate format เก่า → ใหม่ทันที
+      return;
+    }
   }
   if(localParsed){
     if(applyParsed(localParsed)){ showStatus('📱 โหลดจาก Local (ใหม่กว่า Cloud)','#e67e22'); return; }
@@ -1742,7 +1779,6 @@ async function loadFromFirebase(){
   if(cloudParsed){
     if(applyParsed(cloudParsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
   }
-  // fallback: รายชื่อเริ่มต้น
   students = [...DEFAULT_STUDENTS];
   showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
 }
@@ -2279,7 +2315,7 @@ async function init(){
     updatePinButtons();
     if(currentWeek===-1) renderLeaderboard();
     else renderWeek(currentWeek);
-  }, 30000);
+  }, 10000); // 10s — รองรับหลายเครื่องสแกนพร้อมกัน
 }
 
 init();
