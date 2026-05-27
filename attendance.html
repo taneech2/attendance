@@ -141,7 +141,7 @@ td.name{text-align:left;padding-left:12px;color:#e8dfc0;}
 td.num{color:#c9a84c;font-weight:600;}
 .check{color:#4caf8a;font-size:17px;font-weight:700;}
 .cross{color:#e05555;font-size:17px;font-weight:700;}
-.slash{color:#8899bb;font-size:15px;}
+.slash{color:#2a3550;font-size:12px;}
 .badge-ma{background:#1a3a2a;color:#4caf8a;padding:2px 7px;border-radius:10px;font-size:11px;}
 .badge-noma{background:#3a1a1a;color:#e05555;padding:2px 7px;border-radius:10px;font-size:11px;}
 .btn-tiny{background:transparent;border:1px solid #c9a84c44;color:#c9a84c;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:14px;}
@@ -155,6 +155,9 @@ td.num{color:#c9a84c;font-weight:600;}
 .th-date{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;width:28px;min-width:28px!important;max-width:36px;padding:10px 4px!important;text-align:left;vertical-align:bottom;font-size:11px;}
 .th-date .btn-del-date{display:block;writing-mode:horizontal-tb;transform:none;margin:6px auto 0;}
 .td-date{width:28px;max-width:36px;padding:6px 2px!important;}
+/* GROUP HEADER ROW */
+.dept-row-header td{font-weight:700;font-size:11px;padding:5px 10px;letter-spacing:.6px;text-align:left;border-left:none!important;border-right:none!important;}
+.chip-group-header{background:#1a2540;border:1px dashed #c9a84c44;color:#c9a84c;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
 
 /* STUDENT MANAGER */
 .student-manager{background:rgba(201,168,76,.04);border:1px solid #c9a84c44;border-radius:6px;padding:16px;margin-bottom:16px;}
@@ -224,6 +227,7 @@ td.num{color:#c9a84c;font-weight:600;}
   body{background:#fff;padding:0;}
   .page{box-shadow:none;border:none;}
   .info-bar,.week-tabs,.date-controls,.student-manager,.no-print{display:none!important;}
+  .slash{visibility:hidden;}
   .week-panel{display:none!important;}
   .week-panel.print-active{display:block!important;}
 }
@@ -236,6 +240,27 @@ td.num{color:#c9a84c;font-weight:600;}
 .privacy-btn{position:fixed;top:16px;right:74px;z-index:1000;background:#0d1530;border:2px solid #c9a84c55;color:#c9a84c99;font-size:18px;width:48px;height:48px;border-radius:50%;cursor:pointer;transition:.2s;}
 .privacy-btn:hover{background:#c9a84c22;}
 .privacy-btn.hiding{border-color:#e67e22;color:#e67e22;box-shadow:0 0 14px rgba(230,126,34,.35);}
+.tools-btn{position:fixed;top:16px;right:132px;z-index:1000;background:#0d1530;border:2px solid #4a8abf;color:#4a8abf;font-size:20px;width:48px;height:48px;border-radius:50%;cursor:pointer;transition:.2s;box-shadow:0 0 14px rgba(74,138,191,.25);}
+.tools-btn:hover{background:#4a8abf22;}
+.tools-overlay{position:fixed;inset:0;background:rgba(5,10,25,.85);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.tools-overlay.active{display:flex;}
+.tools-box{background:linear-gradient(160deg,#0d1530,#0a0f1e);border:2px solid #4a8abf66;border-radius:18px;width:min(560px,92vw);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 60px rgba(74,138,191,.35);}
+.tools-header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid #4a8abf33;background:#0a1228;color:#c9a84c;font-weight:700;font-size:17px;}
+.tools-close{background:none;border:none;color:#c9a84c99;font-size:22px;cursor:pointer;line-height:1;}
+.tools-close:hover{color:#e05555;}
+.tools-body{padding:20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.tools-act{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 18px;border-radius:12px;border:2px solid;background:#0a1228;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;text-align:center;}
+.tools-act:hover{filter:brightness(1.3);transform:translateY(-1px);}
+.tools-act-save    {border-color:#4caf8a;color:#4caf8a;}
+.tools-act-load    {border-color:#4a8abf;color:#4a8abf;}
+.tools-act-download{border-color:#c9a84c;color:#c9a84c;}
+.tools-act-upload  {border-color:#e67e22;color:#e67e22;}
+.tools-log{margin-top:8px;padding:14px;background:#05091a;border:1px dashed #4a8abf44;border-radius:10px;font-family:'Consolas','Courier New',monospace;font-size:13px;color:#a8c0e0;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;}
+.de-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.de-inp{flex:1;background:#0a1228;border:1px solid #4a8abf44;color:#d4c4a0;padding:7px 10px;border-radius:7px;font-size:13px;font-family:'Sarabun',sans-serif;transition:.2s;}
+.de-inp:focus{outline:none;border-color:#9b59b6;}
+.de-del{background:#c0392b22;border:1px solid #c0392b55;color:#e74c3c;padding:5px 10px;border-radius:7px;cursor:pointer;font-size:12px;font-family:'Sarabun',sans-serif;white-space:nowrap;transition:.2s;}
+.de-del:hover{filter:brightness(1.3);}
 body.hide-names td.name{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 body.hide-names .student-chip span{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 
@@ -300,6 +325,42 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
 <body>
 <button class="privacy-btn no-print" id="privacy-btn" onclick="togglePrivacy()" title="ซ่อน/แสดงชื่อ">👁</button>
 <button class="lock-btn no-print" id="lock-btn" onclick="toggleLock()" title="ล็อก/ปลดล็อก">🔒</button>
+<button class="tools-btn no-print" onclick="openTools()" title="กล่องเครื่องมือฉุกเฉิน">🧰</button>
+
+<!-- TOOLS MODAL -->
+<div id="tools-overlay" class="tools-overlay no-print" onclick="if(event.target===this)closeTools()">
+  <div class="tools-box">
+    <div class="tools-header">
+      <span>🧰 กล่องเครื่องมือฉุกเฉิน</span>
+      <button class="tools-close" onclick="closeTools()">✕</button>
+    </div>
+    <div class="tools-body">
+      <!-- Main buttons -->
+      <div id="tools-main-buttons" style="display:flex;flex-direction:column;gap:12px;">
+        <button class="tools-act tools-act-save"     onclick="forceSaveAll()">💾 บันทึกทุกอย่างไป Cloud (PUT)</button>
+        <button class="tools-act tools-act-load"     onclick="forceLoadCloud()">🔄 โหลดจาก Cloud มาทับ Local</button>
+        <button class="tools-act" style="background:#8e44ad" onclick="fixDotsInLocalStorage()">🛠️ ซ่อมแซมวันที่ (ลบจุดอัตโนมัติ)</button>
+        <button class="tools-act tools-act-download" onclick="downloadBackup()">📥 ดาวน์โหลดไฟล์ Backup (.json)</button>
+        <label class="tools-act tools-act-upload">
+          📤 อัพโหลด Backup (.json) มากู้คืน
+          <input type="file" accept=".json,application/json" style="display:none" onchange="uploadBackup(event)">
+        </label>
+        <button class="tools-act" style="border-color:#9b59b6;color:#9b59b6;" onclick="showDateEditorPanel()">✏️ แก้ไขวันที่ (สัปดาห์/วิชาที่เลือกอยู่)</button>
+      </div>
+      <!-- Date Editor Panel -->
+      <div id="date-editor-panel" style="display:none;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="hideDateEditorPanel()" style="background:#0a1228;border:1px solid #4a8abf55;color:#4a8abf;padding:5px 14px;border-radius:8px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;">← กลับ</button>
+          <span id="de-title" style="color:#c9a84c;font-size:14px;font-weight:700;flex:1;"></span>
+        </div>
+        <div style="color:#7a9abf;font-size:11px;">คลิก 🗑️ เพื่อลบ | แก้ข้อความตรงช่องแล้วกด "บันทึก"</div>
+        <div id="de-list" style="max-height:240px;overflow-y:auto;padding-right:4px;"></div>
+        <button onclick="saveDateEdits()" class="tools-act tools-act-save">💾 บันทึกการแก้ไข</button>
+      </div>
+      <div class="tools-log" id="tools-log">รอคำสั่ง... 🌟</div>
+    </div>
+  </div>
+</div>
 <div class="page">
   <div class="corner-tr"></div><div class="corner-bl"></div>
   <div style="position:absolute;bottom:14px;right:20px;font-size:11px;color:#c9a84c88;font-family:'Sarabun',sans-serif;letter-spacing:.3px;" class="no-print">พัฒนาระบบ โดย ครูธานี ชมสุข</div>
@@ -489,7 +550,7 @@ function buildPanels(){
     div.id = `panel-${w}`;
     div.innerHTML = `
       <div class="date-controls no-print">
-        <input id="inp-date-${w}" placeholder="เพิ่มวันที่ เช่น 15-พ.ค.-69" onkeydown="if(event.key==='Enter')addDate(${w})">
+        <input id="inp-date-${w}" placeholder="เพิ่มวันที่ เช่น 15-พค-69" onkeydown="if(event.key==='Enter')addDate(${w})">
         <button class="btn" onclick="addDate(${w})">+ เพิ่มวันที่</button>
         <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
         <button class="btn-scan" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button>
@@ -552,20 +613,34 @@ function renderWeek(w){
 
   // body
   tbody.innerHTML = '';
+  let studentSeq=0; // ลำดับเฉพาะนักเรียนจริง (ไม่นับ header)
   students.forEach((name,i)=>{
-    if(hiddenStudents.has(i)) return; // ข้ามนักเรียนที่ซ่อน
+    if(hiddenStudents.has(i)) return;
+
+    // ── GROUP HEADER ROW ──
+    if(isGroupHeader(name)){
+      const color = getGroupColor(i);
+      const colSpan = 3 + (wd.dates.length||1) + 2;
+      const tr = document.createElement('tr');
+      tr.className = 'dept-row-header no-print-subtle';
+      tr.innerHTML = `<td colspan="${colSpan}" style="background:${color}15;border-top:2px solid ${color}55;border-bottom:1px solid ${color}22;color:${color};">◆ ${groupLabel(name)}</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    studentSeq++;
     let ma=0,noma=0;
     wd.dates.forEach(d=>{ const s=wd.attendance[i]&&wd.attendance[i][d]||0; if(s===1)ma++; if(s===2)noma++; });
     const tr = document.createElement('tr');
     const recorded=ma+noma;
     const pct=recorded>0?Math.round(ma/recorded*100):null;
     const pctColor=pct===null?'#a89060':pct>=80?'#4caf8a':pct>=60?'#e8c84a':'#e05555';
-    let cells = `<td class="num">${i+1}</td><td class="name">${name}</td>`;
+    let cells = `<td class="num">${studentSeq}</td><td class="name">${name}</td>`;
     if(wd.dates.length>0){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
         const ts=wd.timestamps&&wd.timestamps[i]&&wd.timestamps[i][d]||'';
-        cells+=`<td class="td-date" onclick="cycle(${w},${i},'${d}')" style="cursor:pointer">${sym(s,ts)}</td>`;
+        cells+=`<td class="td-date" onclick="cycle(${w},${i},'${d}')" oncontextmenu="editTime(event,${w},${i},'${d}');return false;" style="cursor:pointer">${sym(s,ts)}</td>`;
       });
     } else {
       cells+=`<td style="color:#555">—</td>`;
@@ -647,6 +722,28 @@ function sym(s, ts){
 }
 function nowHHMM(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 
+function editTime(e, w, i, d){
+  e.preventDefault();
+  if(!requireUnlock()) return;
+  const ts = weekData[w]?.timestamps?.[i]?.[d] || '';
+  const cur = ts ? ((ts[0]==='f'||ts[0]==='m') ? ts.slice(1,6) : ts.slice(0,5)) : '07:50';
+  const val = prompt(`✏️ แก้เวลามา\n${students[i]}  •  ${d}\n\nใส่เวลา (HH:MM):`, cur);
+  if(!val) return;
+  const match = val.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if(!match){ showStatus('⚠️ รูปแบบผิด ใช้ HH:MM เช่น 07:50','#e67e22'); return; }
+  const h = match[1].padStart(2,'0'), m = match[2];
+  pushUndo(students[i]);
+  const wd = weekData[w];
+  if(!wd.attendance[i]) wd.attendance[i]={};
+  if(!wd.timestamps) wd.timestamps={};
+  if(!wd.timestamps[i]) wd.timestamps[i]={};
+  wd.attendance[i][d] = 1;
+  wd.timestamps[i][d] = `m${h}:${m}:00`;
+  renderWeek(w);
+  saveAttendanceCell(w, i, d, 1, `m${h}:${m}:00`); // PATCH เฉพาะ cell ✅
+  showStatus(`✅ แก้เวลาเป็น ${h}:${m} ให้ ${students[i]} แล้ว`, '#4caf8a');
+}
+
 function cycle(w,i,d){
   if(!requireUnlock())return;
   pushUndo(students[i]);
@@ -654,13 +751,12 @@ function cycle(w,i,d){
   if(!wd.attendance[i]) wd.attendance[i]={};
   const newStatus = ((wd.attendance[i][d]||0)+1)%3;
   wd.attendance[i][d] = newStatus;
-  // บันทึกเวลา ณ ตอนนี้เมื่อกด ✓ (manual override)
   if(!wd.timestamps) wd.timestamps={};
   if(!wd.timestamps[i]) wd.timestamps[i]={};
-  if(newStatus===1) wd.timestamps[i][d] = 'm'+nowHHMM(); // m=manual (ครูกดมือ)
-  else delete wd.timestamps[i][d];                    // ล้างเมื่อเปลี่ยนเป็น ✗ หรือ /
+  const ts = newStatus===1 ? 'm'+nowHHMM() : null;
+  if(ts) wd.timestamps[i][d]=ts; else delete wd.timestamps[i][d];
   renderWeek(w);
-  saveToFirebase();
+  saveAttendanceCell(w, i, d, newStatus, ts); // PATCH เฉพาะ cell ✅
 }
 
 // ===== MODE SWITCHER =====
@@ -704,6 +800,9 @@ function buildClassPanels() {
 }
 
 function renderClass(sid) {
+  // 🐛 DEBUG — ลบออกเมื่อหาปัญหาเจอ
+  const _att0 = classData[sid]?.attendance?.[0];
+  console.log('🎨 renderClass', sid, JSON.stringify(_att0), new Error().stack.split('\n')[1]?.trim());
   // อัปเดต tab
   document.querySelectorAll('.class-panel').forEach(p => p.classList.remove('active'));
   const panel = document.getElementById('cpanel-' + sid);
@@ -720,7 +819,7 @@ function renderClass(sid) {
 
   // date controls
   html += '<div class="date-controls no-print">';
-  html += '<input id="inp-cdate-' + sid + '" placeholder="เช่น 19-พ.ค.-69" onkeydown="if(event.key===\'Enter\')addClassDate(\'' + sid + '\')">';
+  html += '<input id="inp-cdate-' + sid + '" placeholder="เช่น 19-พค-69" onkeydown="if(event.key===\'Enter\')addClassDate(\'' + sid + '\')">';
   html += '<button class="btn" onclick="addClassDate(\'' + sid + '\')">+ เพิ่มวันที่</button>';
   html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importClassDates(\'' + sid + '\')">📅 วางหลายวันที่เดียว</button>';
   html += '<button class="btn-scan" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
@@ -776,19 +875,36 @@ function classSymbol(s, ts) {
 
 function cycleClass(sid, idx, date) {
   if(!requireUnlock()) return;
-  pushUndo(students[idx]);
   if(!classData[sid].attendance[idx]) classData[sid].attendance[idx] = {};
   const cur = classData[sid].attendance[idx][date] || 0;
-  classData[sid].attendance[idx][date] = (cur + 1) % 3;
+  const newVal = (cur + 1) % 3;
+  classData[sid].attendance[idx][date] = newVal;
+  console.log('✍️ cycleClass SET', sid, 'student['+idx+']', date, cur, '→', newVal);
   renderClass(sid);
-  saveToFirebase();
+  saveClassCell(sid, idx, date, newVal);
+}
+
+async function saveClassCell(sid, idx, date, status){
+  localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  try{
+    // PUT ทั้ง record ของนักเรียนคนนี้ (PUT ไม่แปล key เป็น path → รองรับ "พ.ค." ✅)
+    const attFull = Object.assign({}, classData[sid]?.attendance?.[idx] || {});
+    if(status !== 0) attFull[date] = status; else delete attFull[date];
+    const [r1] = await Promise.all([
+      fetch(`${DB_BASE}/classData/${sid}/attendance/${idx}.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(attFull)}),
+      fetch(DB_URL, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({savedAt:Date.now()})}),
+    ]);
+    if(r1.ok) showStatus('☁️ บันทึกแล้ว');
+    else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
+  }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
 function addClassDate(sid) {
   if(!requireUnlock()) return;
   const inp = document.getElementById('inp-cdate-' + sid);
-  const d = inp.value.trim();
+  let d = inp.value.trim();
   if(!d) { alert('กรุณาใส่วันที่'); return; }
+  d = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
   if(classData[sid].dates.includes(d)) {
     showStatus('⚠️ มีวันที่นี้แล้ว','#e67e22'); return;
   }
@@ -805,9 +921,9 @@ function addClassDate(sid) {
 
 function importClassDates(sid) {
   if(!requireUnlock()) return;
-  const raw = prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n19-พ.ค.-69\n26-พ.ค.-69\n2-มิ.ย.-69');
+  const raw = prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n19-พค-69\n26-พค-69\n2-มิย-69');
   if(!raw) return;
-  const dates = raw.split('\n').map(d => d.trim()).filter(d => d.length > 0);
+  const dates = raw.split('\n').map(d => d.trim().replace(/[\.#$\[\]]/g, '').replace(/\//g, '-')).filter(d => d.length > 0);
   if(dates.length === 0) return;
   let added = 0;
   dates.forEach(d => {
@@ -839,8 +955,9 @@ function removeClassDate(sid, date) {
 function addDate(w){
   if(!requireUnlock())return;
   const inp=document.getElementById(`inp-date-${w}`);
-  const d=inp.value.trim();
+  let d=inp.value.trim();
   if(!d){alert('กรุณาใส่วันที่');return;}
+  d = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
   if(weekData[w].dates.includes(d)){alert('มีวันนี้แล้ว');return;}
   weekData[w].dates.push(d);
   students.forEach((_,i)=>{ if(!weekData[w].attendance[i])weekData[w].attendance[i]={}; weekData[w].attendance[i][d]=0; });
@@ -851,9 +968,9 @@ function addDate(w){
 
 function importDates(w){
   if(!requireUnlock())return;
-  const raw=prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n15-พ.ค.-69\n19-พ.ค.-69\n22-พ.ค.-69');
+  const raw=prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n15-พค-69\n19-พค-69\n22-พค-69');
   if(!raw)return;
-  const dates=raw.split('\n').map(d=>d.trim()).filter(d=>d.length>0);
+  const dates=raw.split('\n').map(d=>d.trim().replace(/[\.#$\[\]]/g, '').replace(/\//g, '-')).filter(d=>d.length>0);
   if(dates.length===0)return;
   let added=0;
   dates.forEach(d=>{
@@ -912,6 +1029,16 @@ function renderStudentChips(){
 
   const renderChip = ({name,i}) => {
     const chip = document.createElement('div');
+    // GROUP HEADER chip
+    if(isGroupHeader(name)){
+      const color = getGroupColor(i);
+      chip.className = 'chip-group-header';
+      chip.style.borderColor = color+'66';
+      chip.style.color = color;
+      chip.innerHTML = `<span>◆ ${groupLabel(name)}</span><button onclick="removeStudent(${i})" title="ลบหัวข้อ" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:11px;padding:0 2px;">✕</button>`;
+      wrap.appendChild(chip);
+      return;
+    }
     const isHidden = hiddenStudents.has(i);
     chip.className = 'student-chip' + (isHidden ? ' chip-hidden' : '');
     const photos = facePhotos[i];
@@ -1071,13 +1198,20 @@ function calcScore(ts){
   const raw = (ts[0]==='f'||ts[0]==='m') ? ts.slice(1) : ts;
   const [h,m,s] = raw.split(':').map(Number);
   const t = h*60 + m + (s||0)/60; // นาทีตั้งแต่เที่ยงคืน
-  const LATE_END = 8*60;          // 08:00
-  const SCORE_END = 7*60+50;      // 07:50
-  const SCORE_START = 7*60+30;    // 07:30
-  if(t >= LATE_END) return 0;
-  if(t >= SCORE_END) return 1;    // 07:50-07:59 = 1 แต้ม (สาย)
-  const pts = SCORE_END - t;      // นาทีก่อน 07:50
-  return Math.min(Math.round(pts), 20); // cap 20 แต้ม
+  // 3 ระดับ: ≤07:50 = 20pt | 07:51-08:09 = 10pt | ≥08:10 = 0pt
+  if(t <= 7*60+50) return 20;     // มาก่อน/ตรงเพลงเรียก
+  if(t < 8*60+10) return 10;      // มาช่วงเข้าแถว
+  return 0;                        // สาย/หมดเวลา
+}
+
+// ===== GROUP HEADER HELPERS =====
+const GROUP_COLORS = ['#e67e22','#3498db','#9b59b6','#2ecc71','#1abc9c','#e74c3c','#c9a84c','#e91e63'];
+function isGroupHeader(name){ return typeof name==='string' && name.trimStart().startsWith('#'); }
+function groupLabel(name){ return name.replace(/^#\s*/,'').trim(); }
+function getGroupColor(upToIdx){
+  let count=0;
+  for(let i=0;i<=upToIdx;i++) if(isGroupHeader(students[i])) count++;
+  return GROUP_COLORS[(count-1+GROUP_COLORS.length)%GROUP_COLORS.length];
 }
 
 function getWeekRange(w){
@@ -1103,10 +1237,10 @@ function lbGetDates(){
   if(lbPeriod==='month'){
     const mon = now.getMonth(); // 0=ม.ค. ... 11=ธ.ค.
     const yr  = now.getFullYear(); // เช่น 2026
-    const thMonths={'ม.ค.':0,'ก.พ.':1,'มี.ค.':2,'เม.ย.':3,'พ.ค.':4,'มิ.ย.':5,
-                    'ก.ค.':6,'ส.ค.':7,'ก.ย.':8,'ต.ค.':9,'พ.ย.':10,'ธ.ค.':11};
+    const thMonths={'มค':0,'กพ':1,'มีค':2,'เมย':3,'พค':4,'มิย':5,
+                    'กค':6,'สค':7,'กย':8,'ตค':9,'พย':10,'ธค':11};
     return allDates.filter(({d})=>{
-      const parts = d.split('-'); // "15-พ.ค.-69"
+      const parts = d.split('-'); // "15-พค-69"
       const mName = parts[1];
       const thYr  = parseInt(parts[2]); // 69
       const ceYr  = thYr + 1957;        // พ.ศ. = 2500+69=2569, ค.ศ. = 2569-543=2026
@@ -1128,6 +1262,7 @@ function renderLeaderboard(){
 
   const rows = students.map((name,i)=>{
     if(hiddenStudents.has(i)) return null;
+    if(isGroupHeader(name)) return null; // ข้าม group header
     let pts=0, ma=0, absent=0, totalSec=0, scanCount=0;
     const form=[];
     dates.forEach(({w,d})=>{
@@ -1148,9 +1283,9 @@ function renderLeaderboard(){
           totalSec += h*3600 + m*60 + (s2||0);
           scanCount++;
         }
-        // ฟอร์ม: g=ทันเวลา, y=สาย(07:50-07:59), r=ขาดวิชา/กากบาท
+        // ฟอร์ม: g=ก่อนเพลง(20pt), y=เข้าแถวทัน(10pt), r=สาย/ขาด(0pt)
         const score = calcScore(ts);
-        form.push(absentAnySubject?'r': score===1?'y':'g');
+        form.push(absentAnySubject?'r': score===0?'r': score===10?'y':'g');
       } else if(att===2){ absent++; form.push('r'); }
       else form.push('n');
     });
@@ -1284,7 +1419,7 @@ function exportToExcel() {
     teacher: document.getElementById('inp-teacher')?.value || '',
   };
 
-  const SYM = (s) => s===1?'✓' : s===2?'✗' : '/';
+  const SYM = (s) => s===1?'✓' : s===2?'✗' : '';
 
   // ── Sheet 1: สรุปรวม ──
   const sumHeader = ['ลำดับ','ชื่อ – สกุล',
@@ -1549,14 +1684,20 @@ function updateLockBtn(){
 
 // ===== PRIVACY TOGGLE =====
 let namesHidden = false;
-function togglePrivacy(){
-  if(!requireUnlock()) return;
-  namesHidden = !namesHidden;
+function applyPrivacy(hidden){
+  namesHidden = hidden;
   document.body.classList.toggle('hide-names', namesHidden);
   const btn = document.getElementById('privacy-btn');
+  if(!btn) return;
   btn.textContent = namesHidden ? '🙈' : '👁';
   btn.classList.toggle('hiding', namesHidden);
   btn.title = namesHidden ? 'กำลังซ่อนชื่อ — กดเพื่อแสดง' : 'กดเพื่อซ่อนชื่อ';
+}
+function togglePrivacy(){
+  if(!requireUnlock()) return;
+  applyPrivacy(!namesHidden);
+  sessionStorage.setItem('namesHidden', namesHidden ? '1' : '0');
+  saveToFirebase(); // sync ไปทุกเครื่องผ่าน auto-poll
 }
 
 function requireUnlock(){
@@ -1568,7 +1709,32 @@ function requireUnlock(){
 }
 
 // ===== FIREBASE =====
-const DB_URL = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json';
+const DB_URL  = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json';
+const DB_BASE = DB_URL.slice(0,-5); // ใช้สำหรับ PATCH เฉพาะ cell (ตัด .json ออก)
+
+// แปลง Firebase array กลับเป็น object (Firebase แปลง numeric keys → array อัตโนมัติ)
+function fixArr(src){
+  if(!src) return {};
+  if(Array.isArray(src)){
+    const o={};
+    src.forEach((v,i)=>{ if(v!==null&&v!==undefined) o[i]=v; });
+    return o;
+  }
+  return src;
+}
+
+function getPayload(includeFacePhotos=true){
+  return { students, weekData, classData,
+    hiddenStudents: Array.from(hiddenStudents),
+    infoBar: getInfoBar(), pin: classPin, pinnedView,
+    namesHidden,
+    fd: serializeFD(),
+    fp: includeFacePhotos ? facePhotos : undefined,
+    savedAt: Date.now() };
+}
+
+// payload เบา — ไม่มีรูปใบหน้า ใช้สำหรับ sync ข้อมูลการเช็คชื่อ
+function getLightPayload(){ return getPayload(false); }
 const LS_KEY = 'attendanceData_v2';
 
 function showStatus(msg, color='#4caf8a'){
@@ -1608,10 +1774,9 @@ function applyData(parsed){
   for(let w=1;w<=18;w++){
     const src = wd[w]||wd[String(w)]||{};
     weekData[w] = { dates: src.dates||[], attendance: {}, timestamps: {} };
-    // แปลง attendance keys กลับเป็น number-safe object
-    const att = src.attendance||{};
+    const att = fixArr(src.attendance);
     Object.keys(att).forEach(k=>{ weekData[w].attendance[Number(k)] = att[k]; });
-    const ts = src.timestamps||{};
+    const ts = fixArr(src.timestamps);
     Object.keys(ts).forEach(k=>{ weekData[w].timestamps[Number(k)] = ts[k]; });
   }
   // restore classData
@@ -1627,52 +1792,116 @@ function applyData(parsed){
   hiddenStudents = new Set(parsed.hiddenStudents || []);
   pinnedView = parsed.pinnedView || null;
   applyInfoBar(parsed.infoBar);
+  // sync privacy state ข้ามเครื่อง
+  const cloudHidden = parsed.namesHidden === true;
+  if(cloudHidden !== namesHidden) applyPrivacy(cloudHidden);
   refreshAllTabPct();
   return true;
 }
 
 async function saveToFirebase(){
-  const payload = JSON.stringify({ students, weekData, classData, hiddenStudents: Array.from(hiddenStudents), infoBar: getInfoBar(), pin: classPin, pinnedView, fd: serializeFD(), fp: facePhotos, savedAt: Date.now() });
-  // บันทึก localStorage ก่อนเสมอ (ทันที ไม่รอเน็ต)
-  localStorage.setItem(LS_KEY, payload);
+  const payload = getPayload(); // เต็ม (มีรูป) → localStorage
+  localStorage.setItem(LS_KEY, JSON.stringify(payload));
+  const light = getLightPayload(); // เบา (ไม่มีรูป) → Firebase
   try{
     const res = await fetch(DB_URL, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      // ห่อเป็น {p:...} เพื่อป้องกัน Firebase แปลง key ตัวเลขเป็น Array
-      body: JSON.stringify({p: payload})
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(light)
     });
     if(res.ok) showStatus('☁️ บันทึกแล้ว');
     else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
+// บันทึกเฉพาะ student ที่เปลี่ยน — ใช้ PUT (PATCH ไม่รองรับ key ที่มีจุด เช่น "พ.ค.")
+async function saveAttendanceCell(w, i, d, status, ts){
+  localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  try{
+    const base = `${DB_BASE}/weekData/${w}`;
+    // PUT ทั้ง record ของนักเรียนคนนี้ (PUT ไม่แปล key เป็น path → รองรับ "พ.ค." ✅)
+    const attFull = Object.assign({}, weekData[w]?.attendance?.[i] || {});
+    if(status !== 0) attFull[d] = status; else delete attFull[d];
+    const tsFull  = Object.assign({}, weekData[w]?.timestamps?.[i]  || {});
+    if(ts) tsFull[d] = ts; else delete tsFull[d];
+    const [r1] = await Promise.all([
+      fetch(`${base}/attendance/${i}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(attFull)}),
+      fetch(`${base}/timestamps/${i}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(tsFull)}),
+      fetch(DB_URL,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({savedAt:Date.now()})}),
+    ]);
+    if(r1.ok) showStatus('☁️ บันทึกแล้ว');
+    else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
+  }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
+}
+
+// แปลงวันที่เก่า "19-พ.ค.-69" → "19-พค-69" (Firebase ห้ามใช้จุดใน key)
+function migrateDotDates(parsed){
+  const map={'ม.ค.':'มค','ก.พ.':'กพ','มี.ค.':'มีค','เม.ย.':'เมย',
+             'พ.ค.':'พค','มิ.ย.':'มิย','ก.ค.':'กค','ส.ค.':'สค',
+             'ก.ย.':'กย','ต.ค.':'ตค','พ.ย.':'พย','ธ.ค.':'ธค'};
+  function conv(k){ for(const [o,n] of Object.entries(map)) k=k.replace(o,n); return k; }
+  function convObj(obj){ if(!obj||typeof obj!=='object') return obj; const r={}; for(const [k,v] of Object.entries(obj)) r[conv(k)]=v; return r; }
+  if(parsed.weekData) for(const w of Object.keys(parsed.weekData)){
+    const wd=parsed.weekData[w];
+    if(wd.dates) wd.dates=wd.dates.map(conv);
+    if(wd.attendance) for(const i of Object.keys(wd.attendance)) wd.attendance[i]=convObj(wd.attendance[i]);
+    if(wd.timestamps) for(const i of Object.keys(wd.timestamps)) wd.timestamps[i]=convObj(wd.timestamps[i]);
+  }
+  if(parsed.classData) for(const sid of Object.keys(parsed.classData)){
+    const cd=parsed.classData[sid];
+    if(cd.dates) cd.dates=cd.dates.map(conv);
+    if(cd.attendance) for(const i of Object.keys(cd.attendance)) cd.attendance[i]=convObj(cd.attendance[i]);
+    if(cd.timestamps) for(const i of Object.keys(cd.timestamps)) cd.timestamps[i]=convObj(cd.timestamps[i]);
+  }
+  return parsed;
+}
+
 function applyParsed(parsed, source) {
   if(parsed.pin) classPin = parsed.pin;
   if(parsed.fd) deserializeFD(parsed.fd);
   if(parsed.fp) deserializeFP(parsed.fp);
+  migrateDotDates(parsed); // แปลงวันที่เก่าที่มีจุด → ไม่มีจุด อัตโนมัติ
   return applyData(parsed);
 }
 
-async function loadFromFirebase(){
+async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   showStatus('⏳ กำลังโหลด...','#c9a84c');
-  let cloudParsed = null, localParsed = null;
+  let cloudParsed = null, localParsed = null, needMigrate = false;
   // โหลด Cloud
   try{
     const res = await fetch(DB_URL);
     const data = await res.json();
-    if(data && data.p) cloudParsed = JSON.parse(data.p);
+    if(data){
+      if(data.students !== undefined){ cloudParsed = data; }  // format ใหม่ ✅
+      else if(data.p){
+        cloudParsed = JSON.parse(data.p); needMigrate = true; // format เก่า
+        // ใช้ savedAt จาก root (อัปเดตโดย PATCH) แทน savedAt ใน data.p (เก่า)
+        if(data.savedAt) cloudParsed.savedAt = data.savedAt;
+        // merge PATCH data (weekData ที่ถูก PATCH มาทับบน p เก่า)
+        if(data.weekData){
+          for(const w in data.weekData){
+            const src = data.weekData[w];
+            if(!cloudParsed.weekData) cloudParsed.weekData={};
+            if(!cloudParsed.weekData[w]) cloudParsed.weekData[w]={dates:[],attendance:{},timestamps:{}};
+            if(src.attendance) Object.assign(cloudParsed.weekData[w].attendance||{}, fixArr(src.attendance));
+            if(src.timestamps) Object.assign(cloudParsed.weekData[w].timestamps||{}, fixArr(src.timestamps));
+          }
+        }
+      }
+    }
   }catch(e){}
   // โหลด localStorage
   const local = localStorage.getItem(LS_KEY);
   if(local){ try{ localParsed = JSON.parse(local); }catch(e){} }
 
-  // เลือกอันที่ใหม่กว่า (savedAt timestamp)
   const cloudTs = cloudParsed?.savedAt || 0;
   const localTs = localParsed?.savedAt || 0;
 
-  if(cloudParsed && cloudTs >= localTs){
-    if(applyParsed(cloudParsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+  if(cloudParsed && (forceCloud || cloudTs >= localTs)){
+    if(applyParsed(cloudParsed)){
+      showStatus('✅ โหลดจาก Cloud');
+      if(needMigrate && !skipMigrate){ saveToFirebase(); } // migrate format เก่า → ใหม่ทันที
+      return;
+    }
   }
   if(localParsed){
     if(applyParsed(localParsed)){ showStatus('📱 โหลดจาก Local (ใหม่กว่า Cloud)','#e67e22'); return; }
@@ -1680,9 +1909,262 @@ async function loadFromFirebase(){
   if(cloudParsed){
     if(applyParsed(cloudParsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
   }
-  // fallback: รายชื่อเริ่มต้น
   students = [...DEFAULT_STUDENTS];
   showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
+}
+
+// ===== 🧰 TOOLBOX (กล่องเครื่องมือฉุกเฉิน) =====
+function openTools(){ document.getElementById('tools-overlay').classList.add('active'); toolsLog('รอคำสั่ง... 🌟'); }
+function closeTools(){ document.getElementById('tools-overlay').classList.remove('active'); }
+function toolsLog(msg, append=false){
+  const el = document.getElementById('tools-log');
+  if(!el) return;
+  const t = new Date().toLocaleTimeString('th');
+  el.textContent = append ? (el.textContent + '\n[' + t + '] ' + msg) : ('[' + t + '] ' + msg);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function forceSaveAll(){
+  if(!requireUnlock()) return;
+  toolsLog('💾 กำลังบันทึก...');
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+    toolsLog('✅ บันทึก Local แล้ว ('+ (JSON.stringify(getPayload()).length/1024).toFixed(1) +' KB)', true);
+    const light = getLightPayload();
+    const body = JSON.stringify(light);
+    toolsLog('📡 ส่ง PUT ไป Cloud ('+ (body.length/1024).toFixed(1) +' KB)...', true);
+    const res = await fetch(DB_URL, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
+    toolsLog('📡 Cloud ตอบ: HTTP ' + res.status + ' ' + res.statusText, true);
+    if(res.ok){
+      toolsLog('🎉 บันทึก Cloud สำเร็จ! ข้อมูลปลอดภัยทุกเครื่องแล้ว ✨', true);
+      showStatus('☁️ บันทึก Cloud สำเร็จ');
+    } else {
+      const txt = await res.text();
+      toolsLog('❌ Cloud ปฏิเสธ — รายละเอียด: ' + txt.substring(0,300), true);
+      toolsLog('💡 ข้อมูลยังอยู่ใน Local — กดดาวน์โหลด Backup ไว้ก่อนนะครับ', true);
+    }
+  }catch(e){ toolsLog('🔌 ออฟไลน์/เน็ตหลุด — ' + e.message, true); }
+}
+
+async function fixDotsInLocalStorage() {
+  if(!requireUnlock()) return;
+  toolsLog('🛠️ กำลังสแกนหาจุดในวันที่...');
+  let fixed = 0;
+  
+  function clean(d) { return d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); }
+  function processObj(obj) {
+    if(!obj) return;
+    Object.keys(obj).forEach(k => {
+      const cleaned = clean(k);
+      if(cleaned !== k) {
+        obj[cleaned] = obj[k];
+        delete obj[k];
+        fixed++;
+      }
+    });
+  }
+
+  // ซ่อม weekData
+  for(const w in weekData) {
+    if(weekData[w].dates) {
+      for(let i=0; i<weekData[w].dates.length; i++) {
+        const d = weekData[w].dates[i];
+        const cd = clean(d);
+        if(d !== cd) { weekData[w].dates[i] = cd; fixed++; }
+      }
+    }
+    if(weekData[w].attendance) Object.values(weekData[w].attendance).forEach(processObj);
+    if(weekData[w].timestamps) Object.values(weekData[w].timestamps).forEach(processObj);
+  }
+
+  // ซ่อม classData
+  for(const sid in classData) {
+    if(classData[sid].dates) {
+      for(let i=0; i<classData[sid].dates.length; i++) {
+        const d = classData[sid].dates[i];
+        const cd = clean(d);
+        if(d !== cd) { classData[sid].dates[i] = cd; fixed++; }
+      }
+    }
+    if(classData[sid].attendance) Object.values(classData[sid].attendance).forEach(processObj);
+    if(classData[sid].timestamps) Object.values(classData[sid].timestamps).forEach(processObj);
+  }
+
+  if(fixed > 0) {
+    toolsLog(`✅ ซ่อมแซมวันที่สำเร็จ (แก้ไป ${fixed} จุด)`, true);
+    buildClassTabs();
+    if(appMode === 'class') renderClass(currentSubject); else if(currentWeek > 0) renderWeek(currentWeek);
+    await forceSaveAll();
+  } else {
+    toolsLog('⭐ ไม่พบวันที่ที่มีจุด/สแลช ข้อมูลปกติครับ', true);
+  }
+}
+
+async function forceLoadCloud(){
+  if(!confirm('โหลดจาก Cloud จะทับข้อมูล Local ปัจจุบัน — แนะนำดาวน์โหลด Backup ก่อน\n\nยืนยัน?')) return;
+  toolsLog('🔄 กำลังโหลดจาก Cloud...');
+  try{
+    await loadFromFirebase(true, true); // forceCloud=true
+    toolsLog('✅ โหลดจาก Cloud สำเร็จ — กำลัง render ใหม่...', true);
+    refreshAllTabPct();
+    if(appMode==='class') renderClass(currentSubject);
+    else if(currentWeek===-1) renderLeaderboard();
+    else renderWeek(currentWeek);
+    toolsLog('🎉 เสร็จเรียบร้อย!', true);
+  }catch(e){ toolsLog('❌ โหลดไม่สำเร็จ: ' + e.message, true); }
+}
+
+function downloadBackup(){
+  try{
+    const payload = getPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g,'-').substring(0,19);
+    a.href = url;
+    a.download = 'attendance-backup-' + ts + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toolsLog('📥 ดาวน์โหลด backup สำเร็จ: ' + a.download + ' ('+ (blob.size/1024).toFixed(1) +' KB)');
+    toolsLog('💡 เก็บไฟล์นี้ไว้ดี ๆ — กู้คืนได้ทุกเมื่อ', true);
+  }catch(e){ toolsLog('❌ ดาวน์โหลดไม่สำเร็จ: ' + e.message); }
+}
+
+function uploadBackup(ev){
+  const file = ev.target.files?.[0];
+  if(!file) return;
+  if(!requireUnlock()) { ev.target.value=''; return; }
+  if(!confirm('อัพโหลด "' + file.name + '" จะทับข้อมูลปัจจุบันทั้งหมด\n\nยืนยัน?')) { ev.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!parsed.students){ toolsLog('❌ ไฟล์ไม่ถูกต้อง (ไม่พบ students)'); return; }
+      toolsLog('📤 อ่านไฟล์: ' + file.name + ' ('+ (file.size/1024).toFixed(1) +' KB)');
+      if(applyParsed(parsed)){
+        toolsLog('✅ กู้คืนข้อมูลใน Local แล้ว', true);
+        localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+        refreshAllTabPct();
+        if(appMode==='class') renderClass(currentSubject);
+        else if(currentWeek===-1) renderLeaderboard();
+        else renderWeek(currentWeek);
+        toolsLog('💡 ถ้าต้องการ sync ขึ้น Cloud → กด 💾 บันทึกทุกอย่างไป Cloud', true);
+      } else { toolsLog('❌ apply ไม่สำเร็จ'); }
+    }catch(e){ toolsLog('❌ JSON ผิดรูปแบบ: ' + e.message); }
+    ev.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ===== ✏️ DATE EDITOR =====
+let _deCtx = null; // context object
+
+function showDateEditorPanel(){
+  if(!requireUnlock()) return;
+  let dates, title;
+  if(appMode==='class'){
+    const sid = currentSubject;
+    const subj = CLASS_SUBJECTS.find(s=>s.id===sid);
+    dates = (classData[sid]?.dates||[]).slice();
+    title = '✏️ วิชา: ' + (subj?.name||sid);
+    _deCtx = {isClass:true, sid};
+  } else {
+    const w = currentWeek;
+    if(!w||w<1){ toolsLog('⚠️ เลือกสัปดาห์ก่อนแก้ไขวันที่ครับ'); return; }
+    dates = (weekData[w]?.dates||[]).slice();
+    title = '✏️ สัปดาห์ที่ ' + w;
+    _deCtx = {isClass:false, week:w};
+  }
+  const listEl = document.getElementById('de-list');
+  if(!listEl) return;
+  listEl.innerHTML = '';
+  if(dates.length===0){
+    listEl.innerHTML = '<div style="color:#888;font-size:13px;text-align:center;padding:14px;">ไม่มีวันที่ในส่วนนี้ครับ</div>';
+  } else {
+    dates.forEach((d,i)=>{
+      const row = document.createElement('div');
+      row.className = 'de-row'; row.id = 'de-row-'+i;
+      row.innerHTML =
+        `<span style="color:#666;font-size:11px;min-width:18px;text-align:right;">${i+1}.</span>`+
+        `<input id="de-inp-${i}" class="de-inp" value="${d}" data-original="${d}">`+
+        `<button class="de-del" id="de-del-${i}" onclick="deToggleDelete(${i})">🗑️ ลบ</button>`;
+      listEl.appendChild(row);
+    });
+  }
+  document.getElementById('de-title').textContent = title;
+  document.getElementById('tools-main-buttons').style.display = 'none';
+  document.getElementById('date-editor-panel').style.display = 'flex';
+  toolsLog('✏️ เปิดแก้ไขวันที่ — ' + dates.length + ' วัน | แก้แล้วกด "บันทึก"');
+}
+
+function deToggleDelete(i){
+  const row = document.getElementById('de-row-'+i);
+  const inp = document.getElementById('de-inp-'+i);
+  const btn = document.getElementById('de-del-'+i);
+  if(!row||!inp||!btn) return;
+  if(inp.dataset.deleted==='1'){
+    inp.dataset.deleted=''; row.style.opacity='1'; inp.disabled=false;
+    btn.textContent='🗑️ ลบ'; btn.style.color='#e74c3c';
+  } else {
+    inp.dataset.deleted='1'; row.style.opacity='0.4'; inp.disabled=true;
+    btn.textContent='↩️ เลิกลบ'; btn.style.color='#4caf8a';
+  }
+}
+
+function hideDateEditorPanel(){
+  document.getElementById('date-editor-panel').style.display = 'none';
+  document.getElementById('tools-main-buttons').style.display = 'flex';
+}
+
+function saveDateEdits(){
+  if(!_deCtx) return;
+  const inputs = document.getElementById('de-list').querySelectorAll('input[id^="de-inp-"]');
+  const renames={}, toDelete=new Set();
+  inputs.forEach(inp=>{
+    const orig=inp.dataset.original;
+    if(!orig) return;
+    if(inp.dataset.deleted==='1'){ toDelete.add(orig); }
+    else{ let nv=inp.value.trim(); if(nv){ nv=nv.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); if(nv!==orig) renames[orig]=nv; } }
+  });
+  const totalChanges = toDelete.size + Object.keys(renames).length;
+  if(!totalChanges){ toolsLog('ไม่มีการเปลี่ยนแปลงครับ', true); return; }
+
+  const {isClass,sid,week} = _deCtx;
+  function renameKey(obj, o, n){ if(obj&&obj[o]!==undefined){ obj[n]=obj[o]; delete obj[o]; } }
+
+  if(isClass){
+    const cd=classData[sid]; if(!cd) return;
+    toDelete.forEach(d=>{
+      cd.dates=cd.dates.filter(x=>x!==d);
+      Object.keys(cd.attendance||{}).forEach(i=>delete cd.attendance[i][d]);
+      Object.keys(cd.timestamps||{}).forEach(i=>delete (cd.timestamps[i]||{})[d]);
+    });
+    Object.entries(renames).forEach(([o,n])=>{
+      const idx=cd.dates.indexOf(o); if(idx!==-1) cd.dates[idx]=n;
+      Object.keys(cd.attendance||{}).forEach(i=>renameKey(cd.attendance[i],o,n));
+      Object.keys(cd.timestamps||{}).forEach(i=>renameKey(cd.timestamps[i],o,n));
+    });
+  } else {
+    const wd=weekData[week]; if(!wd) return;
+    toDelete.forEach(d=>{
+      wd.dates=wd.dates.filter(x=>x!==d);
+      Object.keys(wd.attendance||{}).forEach(i=>delete wd.attendance[i][d]);
+      Object.keys(wd.timestamps||{}).forEach(i=>delete (wd.timestamps[i]||{})[d]);
+    });
+    Object.entries(renames).forEach(([o,n])=>{
+      const idx=wd.dates.indexOf(o); if(idx!==-1) wd.dates[idx]=n;
+      Object.keys(wd.attendance||{}).forEach(i=>renameKey(wd.attendance[i],o,n));
+      Object.keys(wd.timestamps||{}).forEach(i=>renameKey(wd.timestamps[i]||{},o,n));
+    });
+  }
+
+  localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  if(isClass) renderClass(sid); else if(currentWeek>0) renderWeek(week);
+  const dels=toDelete.size, rens=Object.keys(renames).length;
+  toolsLog(`✅ บันทึกแล้ว${rens?' — เปลี่ยน '+rens+' วัน':''}${dels?' — ลบ '+dels+' วัน':''}`, true);
+  saveToFirebase().then(()=>toolsLog('☁️ Cloud อัปเดตแล้ว!', true)).catch(()=>toolsLog('📱 บันทึก Local เท่านั้น', true));
+  hideDateEditorPanel();
+  setTimeout(showDateEditorPanel, 150);
 }
 
 // ===== INFO BAR =====
@@ -1815,7 +2297,7 @@ function setFaceMode(mode) {
 }
 
 function todayThaiDate() {
-  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const months = ['มค','กพ','มีค','เมย','พค','มิย','กค','สค','กย','ตค','พย','ธค'];
   const n = new Date();
   return n.getDate() + '-' + months[n.getMonth()] + '-' + ((n.getFullYear() + 543) % 100);
 }
@@ -1836,8 +2318,9 @@ function populateDateSelect() {
 function addFaceDate() {
   const inp = document.getElementById('inp-face-date');
   const statusEl = document.getElementById('face-step-status');
-  const val = inp.value.trim();
+  let val = inp.value.trim();
   if(!val) { statusEl.textContent = '⚠️ กรุณากรอกวันที่ก่อน'; return; }
+  val = val.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
   if(!weekData[faceWeek]) return;
   if(weekData[faceWeek].dates.includes(val)) {
     document.getElementById('sel-att-date').value = val;
@@ -1857,16 +2340,16 @@ function addFaceDate() {
 function populateStudentSelect() {
   const sel = document.getElementById('sel-reg-student');
   // สร้าง option ครั้งแรกเท่านั้น (ไม่ reset selection)
-  if(sel.options.length !== students.length) {
+  const nonHeaders = students.map((n,i)=>({n,i})).filter(({n})=>!isGroupHeader(n));
+  if(sel.options.length !== nonHeaders.length) {
     const cur = Number(sel.value) || 0;
-    sel.innerHTML = students.map((n,i) => `<option value="${i}"></option>`).join('');
+    sel.innerHTML = nonHeaders.map(({n,i}) => `<option value="${i}"></option>`).join('');
     sel.value = cur;
   }
-  // อัปเดตแค่ข้อความ — ไม่แตะ selection เลย
-  students.forEach((n, i) => {
+  nonHeaders.forEach(({n,i}, idx) => {
     const cnt = faceDescriptors[i]?.length || 0;
     const badge = cnt > 0 ? ` [${cnt}/${FACE_MAX} 📸]` : ' [ยังไม่มีรูป]';
-    if(sel.options[i]) sel.options[i].textContent = `${i+1}. ${n}${badge}`;
+    if(sel.options[idx]) sel.options[idx].textContent = `${i+1}. ${n}${badge}`;
   });
   updateRegPhotoPreview();
 }
@@ -2199,7 +2682,54 @@ async function captureDescriptor() {
 }
 
 async function init(){
-  await loadFromFirebase();
+  await loadFromFirebase(true);
+  // กวาดล้างจุดและวันที่ซ้ำซ้อนในเครื่องอัตโนมัติทุกครั้งที่เปิดเว็บ
+  let needsSave = false;
+  function nukeDots(obj) {
+    if(!obj) return;
+    Object.keys(obj).forEach(k => {
+      const cd = k.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+      if(cd !== k) { obj[cd] = obj[k]; delete obj[k]; needsSave = true; }
+    });
+  }
+  
+  for(const w in weekData) {
+    if(!weekData[w]) continue;
+    if(weekData[w].dates) {
+      const newDates = [];
+      weekData[w].dates.forEach(d => {
+        const cd = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+        if(!newDates.includes(cd)) newDates.push(cd);
+        if(d !== cd) needsSave = true;
+      });
+      if(weekData[w].dates.length !== newDates.length) needsSave = true;
+      weekData[w].dates = newDates;
+    }
+    if(weekData[w].attendance) Object.values(weekData[w].attendance).forEach(nukeDots);
+    if(weekData[w].timestamps) Object.values(weekData[w].timestamps).forEach(nukeDots);
+  }
+
+  for(const sid in classData) {
+    if(!classData[sid]) continue;
+    if(classData[sid].dates) {
+      const newDates = [];
+      classData[sid].dates.forEach(d => {
+        const cd = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+        if(!newDates.includes(cd)) newDates.push(cd);
+        if(d !== cd) needsSave = true;
+      });
+      if(classData[sid].dates.length !== newDates.length) needsSave = true;
+      classData[sid].dates = newDates;
+    }
+    if(classData[sid].attendance) Object.values(classData[sid].attendance).forEach(nukeDots);
+    if(classData[sid].timestamps) Object.values(classData[sid].timestamps).forEach(nukeDots);
+  }
+
+  if(needsSave) {
+    localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+    saveToFirebase(); // ดันขึ้น Cloud อัตโนมัติหลังทำความสะอาด
+  }
+
   buildTabs();
   buildPanels();
   buildClassTabs();
@@ -2209,15 +2739,112 @@ async function init(){
   navigateToPinned(); // เปิดหน้าที่ปักหมุด (default = Leaderboard)
   updatePinButtons();
   bindInfoBar();
-  // Auto-refresh จาก Firebase ทุก 30 วินาที (ไม่ refresh ถ้า modal เปิดอยู่)
+  // คืนสถานะซ่อนชื่อ (ถ้าปิดตาไว้ก่อน refresh)
+  if(sessionStorage.getItem('namesHidden') === '1') applyPrivacy(true);
+  // Auto-sync จาก Firebase ทุก 30 วินาที — merge เฉพาะ cell ไม่แทนทับ local
   setInterval(async () => {
-    const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
-    if(modalOpen) return;
-    await loadFromFirebase();
-    updatePinButtons();
-    if(currentWeek===-1) renderLeaderboard();
-    else renderWeek(currentWeek);
-  }, 30000);
+    if(document.getElementById('face-overlay')?.classList.contains('active')) return;
+    try{
+      const res = await fetch(DB_URL, {cache:'no-store'});
+      const data = await res.json();
+      if(!data) return;
+
+      // แกะข้อมูล weekData + classData จาก cloud (รองรับทั้ง format ใหม่และเก่า)
+      let cwd = null, ccd = null;
+      if(data.students !== undefined){ cwd = data.weekData; ccd = data.classData; }
+      else if(data.p){
+        const p = JSON.parse(data.p); cwd = p.weekData; ccd = p.classData;
+        if(data.weekData){ // merge weekData PATCH ทับ data.p
+          for(const w in data.weekData){
+            if(!cwd) cwd={};
+            if(!cwd[w]) cwd[w]={dates:[],attendance:{},timestamps:{}};
+            const s=data.weekData[w];
+            if(s.attendance) Object.assign(cwd[w].attendance||{}, fixArr(s.attendance));
+            if(s.timestamps)  Object.assign(cwd[w].timestamps||{},  fixArr(s.timestamps));
+          }
+        }
+        if(data.classData){ // merge classData PATCH ทับ data.p ด้วย!
+          for(const sid in data.classData){
+            if(!ccd) ccd={};
+            if(!ccd[sid]) ccd[sid]={dates:[],attendance:{},timestamps:{}};
+            const s=data.classData[sid];
+            if(s.attendance) Object.assign(ccd[sid].attendance||{}, fixArr(s.attendance));
+            if(s.timestamps)  Object.assign(ccd[sid].timestamps||{},  fixArr(s.timestamps));
+          }
+        }
+      }
+
+      // sync namesHidden ข้ามเครื่อง
+      if(data.namesHidden !== undefined && data.namesHidden !== namesHidden) applyPrivacy(data.namesHidden);
+
+      // merge เฉพาะ cell ที่มีค่า (≥1) — ไม่ทับ local ด้วย 0/null จาก cloud
+      let changed = false;
+
+      // sync students
+      if(data.students && JSON.stringify(data.students) !== JSON.stringify(students)) {
+        students = data.students;
+        changed = true;
+      }
+
+      if(cwd){ for(const w in cwd){
+        const wn=Number(w), src=cwd[w];
+        if(!weekData[wn]) weekData[wn]={dates:[],attendance:{},timestamps:{}};
+        
+        // sync dates
+        if(src.dates && Array.isArray(src.dates)) {
+          src.dates.forEach(d => {
+            const cd = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+            if(!weekData[wn].dates.includes(cd)){
+              weekData[wn].dates.push(cd);
+              changed = true;
+            }
+          });
+        }
+
+        const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
+        for(const i in att){ const in_=Number(i);
+          if(!weekData[wn].attendance[in_]) weekData[wn].attendance[in_]={};
+          for(const d in att[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=att[in_][d]; if(v !== undefined && v !== null && weekData[wn].attendance[in_][cd]!==v){weekData[wn].attendance[in_][cd]=v;changed=true;} }
+        }
+        for(const i in ts){ const in_=Number(i);
+          if(!weekData[wn].timestamps[in_]) weekData[wn].timestamps[in_]={};
+          for(const d in ts[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=ts[in_][d]; if(v !== undefined && v !== null && weekData[wn].timestamps[in_][cd]!==v){weekData[wn].timestamps[in_][cd]=v;changed=true;} }
+        }
+      }}
+      if(ccd){ for(const sid in ccd){
+        const src=ccd[sid]; if(!classData[sid]) classData[sid]={dates:[],attendance:{},timestamps:{}};
+        
+        // sync class dates
+        if(src.dates && Array.isArray(src.dates)) {
+          src.dates.forEach(d => {
+            const cd = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+            if(!classData[sid].dates.includes(cd)){
+              classData[sid].dates.push(cd);
+              changed = true;
+            }
+          });
+        }
+
+        const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
+        for(const i in att){ const in_=Number(i);
+          if(!classData[sid].attendance[in_]) classData[sid].attendance[in_]={};
+          for(const d in att[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=att[in_][d]; if(v !== undefined && v !== null && classData[sid].attendance[in_][cd]!==v){classData[sid].attendance[in_][cd]=v;changed=true;} }
+        }
+        for(const i in ts){ const in_=Number(i);
+          if(!classData[sid].timestamps[in_]) classData[sid].timestamps[in_]={};
+          for(const d in ts[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=ts[in_][d]; if(v !== undefined && v !== null && classData[sid].timestamps[in_][cd]!==v){classData[sid].timestamps[in_][cd]=v;changed=true;} }
+        }
+      }}
+
+      if(changed){
+        updatePinButtons();
+        if(appMode==='class') renderClass(currentSubject);
+        else if(currentWeek===-1) renderLeaderboard();
+        else renderWeek(currentWeek);
+      }
+      console.log('🔄 sync', changed?'(updated)':'(no change)', new Date().toLocaleTimeString('th'));
+    }catch(e){ console.error('❌ poll error:', e); }
+  }, 30000); // 30s
 }
 
 init();
@@ -2242,7 +2869,7 @@ init();
         <option value="">— เลือกวันที่ —</option>
       </select>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
-        <input id="inp-face-date" class="face-date-input" style="margin:0;flex:1;" placeholder="หรือพิมพ์วันที่ใหม่ เช่น 19-พ.ค.-69" onkeydown="if(event.key==='Enter')addFaceDate()">
+        <input id="inp-face-date" class="face-date-input" style="margin:0;flex:1;" placeholder="หรือพิมพ์วันที่ใหม่ เช่น 19-พค-69" onkeydown="if(event.key==='Enter')addFaceDate()">
         <button class="btn" style="padding:10px 16px;white-space:nowrap;" onclick="addFaceDate()">+ เพิ่ม</button>
       </div>
       <button class="btn-confirm-scan" onclick="confirmFaceDate()">📷 เปิดกล้องสแกนใบหน้า</button>
@@ -2286,6 +2913,7 @@ init();
 </div>
 
 <button class="btn-undo no-print" id="undo-btn" onclick="undo()" disabled title="ยังไม่มีอะไรให้ย้อนกลับ">↩️ ย้อนกลับ</button>
+
 
 </body>
 </html>
