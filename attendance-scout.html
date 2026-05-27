@@ -2734,8 +2734,9 @@ async function init(){
         // sync dates
         if(src.dates && Array.isArray(src.dates)) {
           src.dates.forEach(d => {
-            if(!weekData[wn].dates.includes(d)){
-              weekData[wn].dates.push(d);
+            const cd = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+            if(!weekData[wn].dates.includes(cd)){
+              weekData[wn].dates.push(cd);
               changed = true;
             }
           });
@@ -2744,11 +2745,11 @@ async function init(){
         const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
         for(const i in att){ const in_=Number(i);
           if(!weekData[wn].attendance[in_]) weekData[wn].attendance[in_]={};
-          for(const d in att[in_]){ const v=att[in_][d]; if(v !== undefined && v !== null && weekData[wn].attendance[in_][d]!==v){weekData[wn].attendance[in_][d]=v;changed=true;} }
+          for(const d in att[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=att[in_][d]; if(v !== undefined && v !== null && weekData[wn].attendance[in_][cd]!==v){weekData[wn].attendance[in_][cd]=v;changed=true;} }
         }
         for(const i in ts){ const in_=Number(i);
           if(!weekData[wn].timestamps[in_]) weekData[wn].timestamps[in_]={};
-          for(const d in ts[in_]){ const v=ts[in_][d]; if(v !== undefined && v !== null && weekData[wn].timestamps[in_][d]!==v){weekData[wn].timestamps[in_][d]=v;changed=true;} }
+          for(const d in ts[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=ts[in_][d]; if(v !== undefined && v !== null && weekData[wn].timestamps[in_][cd]!==v){weekData[wn].timestamps[in_][cd]=v;changed=true;} }
         }
       }}
       if(ccd){ for(const sid in ccd){
@@ -2757,8 +2758,9 @@ async function init(){
         // sync class dates
         if(src.dates && Array.isArray(src.dates)) {
           src.dates.forEach(d => {
-            if(!classData[sid].dates.includes(d)){
-              classData[sid].dates.push(d);
+            const cd = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+            if(!classData[sid].dates.includes(cd)){
+              classData[sid].dates.push(cd);
               changed = true;
             }
           });
@@ -2767,11 +2769,11 @@ async function init(){
         const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
         for(const i in att){ const in_=Number(i);
           if(!classData[sid].attendance[in_]) classData[sid].attendance[in_]={};
-          for(const d in att[in_]){ const v=att[in_][d]; if(v !== undefined && v !== null && classData[sid].attendance[in_][d]!==v){classData[sid].attendance[in_][d]=v;changed=true;} }
+          for(const d in att[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=att[in_][d]; if(v !== undefined && v !== null && classData[sid].attendance[in_][cd]!==v){classData[sid].attendance[in_][cd]=v;changed=true;} }
         }
         for(const i in ts){ const in_=Number(i);
           if(!classData[sid].timestamps[in_]) classData[sid].timestamps[in_]={};
-          for(const d in ts[in_]){ const v=ts[in_][d]; if(v !== undefined && v !== null && classData[sid].timestamps[in_][d]!==v){classData[sid].timestamps[in_][d]=v;changed=true;} }
+          for(const d in ts[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=ts[in_][d]; if(v !== undefined && v !== null && classData[sid].timestamps[in_][cd]!==v){classData[sid].timestamps[in_][cd]=v;changed=true;} }
         }
       }}
 
