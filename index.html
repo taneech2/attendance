@@ -748,6 +748,9 @@ function buildClassPanels() {
 }
 
 function renderClass(sid) {
+  // 🐛 DEBUG — ลบออกเมื่อหาปัญหาเจอ
+  const _att0 = classData[sid]?.attendance?.[0];
+  console.log('🎨 renderClass', sid, JSON.stringify(_att0), new Error().stack.split('\n')[1]?.trim());
   // อัปเดต tab
   document.querySelectorAll('.class-panel').forEach(p => p.classList.remove('active'));
   const panel = document.getElementById('cpanel-' + sid);
@@ -824,6 +827,7 @@ function cycleClass(sid, idx, date) {
   const cur = classData[sid].attendance[idx][date] || 0;
   const newVal = (cur + 1) % 3;
   classData[sid].attendance[idx][date] = newVal;
+  console.log('✍️ cycleClass SET', sid, 'student['+idx+']', date, cur, '→', newVal);
   renderClass(sid);
   saveClassCell(sid, idx, date, newVal);
 }
@@ -2406,6 +2410,8 @@ async function init(){
       if(ccd){ for(const sid in ccd){
         const src=ccd[sid]; if(!classData[sid]) classData[sid]={dates:[],attendance:{},timestamps:{}};
         const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
+        // 🐛 DEBUG — ลบออกเมื่อหาปัญหาเจอ
+        console.log('🔄 poll ccd['+sid+'] att[0]:', JSON.stringify(att[0]), '| local[0]:', JSON.stringify(classData[sid]?.attendance?.[0]));
         for(const i in att){ const in_=Number(i);
           if(!classData[sid].attendance[in_]) classData[sid].attendance[in_]={};
           for(const d in att[in_]){ const v=att[in_][d]; if(v && classData[sid].attendance[in_][d]!==v){classData[sid].attendance[in_][d]=v;changed=true;} }
