@@ -1624,6 +1624,7 @@ function togglePrivacy(){
   if(!requireUnlock()) return;
   applyPrivacy(!namesHidden);
   sessionStorage.setItem('namesHidden', namesHidden ? '1' : '0');
+  saveToFirebase(); // sync ไปทุกเครื่องผ่าน auto-poll
 }
 
 function requireUnlock(){
@@ -1653,6 +1654,7 @@ function getPayload(){
   return { students, weekData, classData,
     hiddenStudents: Array.from(hiddenStudents),
     infoBar: getInfoBar(), pin: classPin, pinnedView,
+    namesHidden,
     fd: serializeFD(), fp: facePhotos, savedAt: Date.now() };
 }
 const LS_KEY = 'attendanceData_v2';
@@ -1712,6 +1714,9 @@ function applyData(parsed){
   hiddenStudents = new Set(parsed.hiddenStudents || []);
   pinnedView = parsed.pinnedView || null;
   applyInfoBar(parsed.infoBar);
+  // sync privacy state ข้ามเครื่อง
+  const cloudHidden = parsed.namesHidden === true;
+  if(cloudHidden !== namesHidden) applyPrivacy(cloudHidden);
   refreshAllTabPct();
   return true;
 }
