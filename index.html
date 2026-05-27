@@ -159,7 +159,23 @@ td.num{color:#c9a84c;font-weight:600;}
 /* DATE COLUMN — vertical header */
 .th-date{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;width:28px;min-width:28px!important;max-width:36px;padding:10px 4px!important;text-align:left;vertical-align:bottom;font-size:11px;}
 .th-date .btn-del-date{display:block;writing-mode:horizontal-tb;transform:none;margin:6px auto 0;}
-.td-date{width:28px;max-width:36px;padding:6px 2px!important;}
+.td-date{width:28px;max-width:36px;padding:6px 2px!important;position:relative;}
+.td-date:hover .btn-edit-time{opacity:1;}
+.btn-edit-time{position:absolute;top:2px;right:1px;background:rgba(201,168,76,.18);border:none;color:#c9a84c;font-size:8px;padding:1px 3px;border-radius:3px;cursor:pointer;opacity:0;transition:opacity .15s;line-height:1.4;z-index:2;}
+.btn-edit-time:hover{background:rgba(201,168,76,.4)!important;opacity:1!important;}
+/* Modal แก้เวลา */
+#time-edit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;align-items:center;justify-content:center;}
+#time-edit-overlay.active{display:flex;}
+#time-edit-box{background:#1a2540;border:1px solid #c9a84c66;border-radius:10px;padding:24px 28px;min-width:280px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.5);}
+#time-edit-box h3{color:#c9a84c;margin:0 0 6px;font-size:16px;}
+#time-edit-box .te-sub{color:#a89060;font-size:12px;margin-bottom:16px;}
+#time-edit-box input[type=time]{background:#0d1830;border:1px solid #c9a84c55;color:#e8dfc0;font-size:22px;padding:8px 16px;border-radius:6px;width:100%;text-align:center;margin-bottom:16px;font-family:monospace;}
+.te-btns{display:flex;gap:10px;justify-content:center;}
+.te-btns button{padding:8px 22px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-family:Sarabun,sans-serif;}
+.te-btn-ok{background:#c9a84c;color:#0d1830;font-weight:700;}
+.te-btn-ok:hover{background:#e0c060;}
+.te-btn-cancel{background:#2a3550;color:#a0b0c0;border:1px solid #3a4560;}
+.te-btn-cancel:hover{background:#3a4560;}
 
 /* STUDENT MANAGER */
 .student-manager{background:rgba(201,168,76,.04);border:1px solid #c9a84c44;border-radius:6px;padding:16px;margin-bottom:16px;}
@@ -571,7 +587,7 @@ function renderWeek(w){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
         const ts=wd.timestamps&&wd.timestamps[i]&&wd.timestamps[i][d]||'';
-        cells+=`<td class="td-date" onclick="cycle(${w},${i},'${d}')" style="cursor:pointer">${sym(s,ts)}</td>`;
+        cells+=`<td class="td-date" onclick="cycle(${w},${i},'${d}')" style="cursor:pointer">${sym(s,ts,${w},${i},'${d}')}</td>`;
       });
     } else {
       cells+=`<td style="color:#555">—</td>`;
@@ -639,17 +655,64 @@ function renderWeek(w){
   </div>`;
 }
 
-function sym(s, ts){
+function sym(s, ts, w, i, d){
+  // ปุ่ม ✏️ แก้เวลา — แสดงทุก td-date (hover เห็น) เพื่อให้ครูกรอกเวลาได้
+  const editBtn = (w!==undefined)
+    ? `<button class="btn-edit-time no-print" onclick="event.stopPropagation();openTimeEdit(${w},${i},'${d}')" title="แก้เวลามา">✏️</button>`
+    : '';
   if(s===1){
-    if(!ts) return `<span class="check">✓</span>`;
+    if(!ts) return `<span class="check">✓</span>${editBtn}`;
     const isFace = ts[0]==='f';
     const raw = (ts[0]==='f'||ts[0]==='m') ? ts.slice(1) : ts;
     const cls = isFace ? 'ts-face' : 'ts-manual';
     const tip = (isFace ? '🤖 สแกนหน้า ' : '✋ กดมือครู ') + raw;
-    return `<span class="check" title="${tip}">✓</span><span class="ts-label ${cls}" title="${tip}">${raw.slice(0,5)}</span>`;
+    return `<span class="check" title="${tip}">✓</span><span class="ts-label ${cls}" title="${tip}">${raw.slice(0,5)}</span>${editBtn}`;
   }
-  if(s===2) return `<span class="cross">✗</span>`;
-  return `<span class="slash">/</span>`;
+  if(s===2) return `<span class="cross">✗</span>${editBtn}`;
+  return `<span class="slash">/</span>${editBtn}`;
+}
+
+// ===== EDIT TIME MODAL =====
+let _teW, _teI, _teD; // context ชั่วคราว
+function openTimeEdit(w, i, d){
+  if(!requireUnlock()) return;
+  _teW=w; _teI=i; _teD=d;
+  const name = students[i] || `นักเรียน ${i+1}`;
+  document.getElementById('te-sub-label').textContent = `${name} • ${d}`;
+  // prefill ด้วยเวลาที่มีอยู่ หรือเวลาปัจจุบัน
+  const ts = weekData[w]?.timestamps?.[i]?.[d] || '';
+  let prefill = '';
+  if(ts){
+    const raw = (ts[0]==='f'||ts[0]==='m') ? ts.slice(1) : ts;
+    prefill = raw.slice(0,5); // HH:MM
+  } else {
+    const n = new Date();
+    prefill = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  }
+  document.getElementById('te-time-input').value = prefill;
+  document.getElementById('time-edit-overlay').classList.add('active');
+  setTimeout(()=>document.getElementById('te-time-input').focus(), 100);
+}
+function closeTimeEdit(){
+  document.getElementById('time-edit-overlay').classList.remove('active');
+}
+function confirmTimeEdit(){
+  const val = document.getElementById('te-time-input').value; // "HH:MM"
+  if(!val){ showStatus('⚠️ ยังไม่ได้ใส่เวลา','#e67e22'); return; }
+  const [h,m] = val.split(':');
+  const newTs = `m${h}:${m}:00`; // manual timestamp
+  const w=_teW, i=_teI, d=_teD;
+  pushUndo(students[i]);
+  const wd = weekData[w];
+  if(!wd.attendance[i]) wd.attendance[i]={};
+  if(!wd.timestamps) wd.timestamps={};
+  if(!wd.timestamps[i]) wd.timestamps[i]={};
+  wd.attendance[i][d] = 1;        // mark มา ถ้ายังไม่ได้ mark
+  wd.timestamps[i][d] = newTs;
+  renderWeek(w);
+  saveToFirebase();
+  showStatus(`✅ บันทึกเวลา ${val} ให้ ${students[i]} แล้ว`, '#4caf8a');
+  closeTimeEdit();
 }
 function nowHHMM(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 
@@ -2289,6 +2352,19 @@ init();
 </div>
 
 <button class="btn-undo no-print" id="undo-btn" onclick="undo()" disabled title="ยังไม่มีอะไรให้ย้อนกลับ">↩️ ย้อนกลับ</button>
+
+<!-- ===== MODAL แก้เวลา ===== -->
+<div id="time-edit-overlay" onclick="if(event.target===this)closeTimeEdit()">
+  <div id="time-edit-box">
+    <h3>⏱ แก้เวลามา</h3>
+    <div class="te-sub" id="te-sub-label">นักเรียน • วันที่</div>
+    <input type="time" id="te-time-input" step="60">
+    <div class="te-btns">
+      <button class="te-btn-ok" onclick="confirmTimeEdit()">✅ บันทึก</button>
+      <button class="te-btn-cancel" onclick="closeTimeEdit()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
