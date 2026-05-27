@@ -898,8 +898,9 @@ async function saveClassCell(sid, idx, date, status){
 function addClassDate(sid) {
   if(!requireUnlock()) return;
   const inp = document.getElementById('inp-cdate-' + sid);
-  const d = inp.value.trim();
+  let d = inp.value.trim();
   if(!d) { alert('กรุณาใส่วันที่'); return; }
+  d = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
   if(classData[sid].dates.includes(d)) {
     showStatus('⚠️ มีวันที่นี้แล้ว','#e67e22'); return;
   }
@@ -918,7 +919,7 @@ function importClassDates(sid) {
   if(!requireUnlock()) return;
   const raw = prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n19-พค-69\n26-พค-69\n2-มิย-69');
   if(!raw) return;
-  const dates = raw.split('\n').map(d => d.trim()).filter(d => d.length > 0);
+  const dates = raw.split('\n').map(d => d.trim().replace(/[\.#$\[\]]/g, '').replace(/\//g, '-')).filter(d => d.length > 0);
   if(dates.length === 0) return;
   let added = 0;
   dates.forEach(d => {
@@ -950,8 +951,9 @@ function removeClassDate(sid, date) {
 function addDate(w){
   if(!requireUnlock())return;
   const inp=document.getElementById(`inp-date-${w}`);
-  const d=inp.value.trim();
+  let d=inp.value.trim();
   if(!d){alert('กรุณาใส่วันที่');return;}
+  d = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
   if(weekData[w].dates.includes(d)){alert('มีวันนี้แล้ว');return;}
   weekData[w].dates.push(d);
   students.forEach((_,i)=>{ if(!weekData[w].attendance[i])weekData[w].attendance[i]={}; weekData[w].attendance[i][d]=0; });
@@ -964,7 +966,7 @@ function importDates(w){
   if(!requireUnlock())return;
   const raw=prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n15-พค-69\n19-พค-69\n22-พค-69');
   if(!raw)return;
-  const dates=raw.split('\n').map(d=>d.trim()).filter(d=>d.length>0);
+  const dates=raw.split('\n').map(d=>d.trim().replace(/[\.#$\[\]]/g, '').replace(/\//g, '-')).filter(d=>d.length>0);
   if(dates.length===0)return;
   let added=0;
   dates.forEach(d=>{
@@ -2064,7 +2066,7 @@ function saveDateEdits(){
     const orig=inp.dataset.original;
     if(!orig) return;
     if(inp.dataset.deleted==='1'){ toDelete.add(orig); }
-    else{ const nv=inp.value.trim(); if(nv&&nv!==orig) renames[orig]=nv; }
+    else{ let nv=inp.value.trim(); if(nv){ nv=nv.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); if(nv!==orig) renames[orig]=nv; } }
   });
   const totalChanges = toDelete.size + Object.keys(renames).length;
   if(!totalChanges){ toolsLog('ไม่มีการเปลี่ยนแปลงครับ', true); return; }
@@ -2258,8 +2260,9 @@ function populateDateSelect() {
 function addFaceDate() {
   const inp = document.getElementById('inp-face-date');
   const statusEl = document.getElementById('face-step-status');
-  const val = inp.value.trim();
+  let val = inp.value.trim();
   if(!val) { statusEl.textContent = '⚠️ กรุณากรอกวันที่ก่อน'; return; }
+  val = val.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
   if(!weekData[faceWeek]) return;
   if(weekData[faceWeek].dates.includes(val)) {
     document.getElementById('sel-att-date').value = val;
