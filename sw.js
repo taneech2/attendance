@@ -1,4 +1,4 @@
-const CACHE = 'attendance-v3'; // ← bump version → ล้าง cache เก่าทุกเครื่องอัตโนมัติ
+const CACHE = 'attendance-v4'; // ← bump version → ล้าง cache เก่าทุกเครื่องอัตโนมัติ
 const PRECACHE = [
   './index.html',
   './attendance-y2.html',
@@ -29,6 +29,7 @@ self.addEventListener('fetch', e => {
   // ข้าม Firebase, CDN, Fonts — ให้ไปตรงๆ ไม่ cache
   if (url.hostname.includes('firebaseio.com') ||
       url.hostname.includes('justadudewhohacks') ||
+      url.hostname.includes('jsdelivr.net') ||
       url.hostname.includes('fonts.googleapis.com') ||
       url.hostname.includes('fonts.gstatic.com')) {
     return;
@@ -41,7 +42,8 @@ self.addEventListener('fetch', e => {
       fetch(e.request)
         .then(res => {
           if (res && res.status === 200) {
-            caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+            const cloned = res.clone(); // clone ทันที ก่อน async
+            caches.open(CACHE).then(c => c.put(e.request, cloned));
           }
           return res;
         })
@@ -55,7 +57,8 @@ self.addEventListener('fetch', e => {
     fetch(e.request)
       .then(res => {
         if (res && res.status === 200 && res.type !== 'opaque') {
-          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          const cloned = res.clone(); // clone ทันที ก่อน async
+          caches.open(CACHE).then(c => c.put(e.request, cloned));
         }
         return res;
       })

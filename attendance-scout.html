@@ -2327,7 +2327,8 @@ async function init(){
       if(appMode === 'class') renderClass(currentSubject);
       else if(currentWeek===-1) renderLeaderboard();
       else renderWeek(currentWeek);
-    }catch(e){}
+      console.log('🔄 sync', new Date().toLocaleTimeString('th'));
+    }catch(e){ console.error('❌ poll error:', e); }
   }, 30000); // 30s
 }
 
