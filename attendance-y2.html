@@ -1898,6 +1898,11 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   if(cloudParsed && (forceCloud || cloudTs >= localTs)){
     if(applyParsed(cloudParsed)){
       showStatus('✅ โหลดจาก Cloud');
+      // รูปภาพไม่ได้เก็บใน Firebase → ดึงจาก Local มาเสริมเสมอ
+      if(localParsed){
+        if(localParsed.fd) deserializeFD(localParsed.fd);
+        if(localParsed.fp) deserializeFP(localParsed.fp);
+      }
       if(needMigrate && !skipMigrate){ saveToFirebase(); } // migrate format เก่า → ใหม่ทันที
       return;
     }
