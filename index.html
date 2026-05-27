@@ -535,7 +535,7 @@ function buildPanels(){
     div.id = `panel-${w}`;
     div.innerHTML = `
       <div class="date-controls no-print">
-        <input id="inp-date-${w}" placeholder="เพิ่มวันที่ เช่น 15-พ.ค.-69" onkeydown="if(event.key==='Enter')addDate(${w})">
+        <input id="inp-date-${w}" placeholder="เพิ่มวันที่ เช่น 15-พค-69" onkeydown="if(event.key==='Enter')addDate(${w})">
         <button class="btn" onclick="addDate(${w})">+ เพิ่มวันที่</button>
         <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
         <button class="btn-scan" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button>
@@ -804,7 +804,7 @@ function renderClass(sid) {
 
   // date controls
   html += '<div class="date-controls no-print">';
-  html += '<input id="inp-cdate-' + sid + '" placeholder="เช่น 19-พ.ค.-69" onkeydown="if(event.key===\'Enter\')addClassDate(\'' + sid + '\')">';
+  html += '<input id="inp-cdate-' + sid + '" placeholder="เช่น 19-พค-69" onkeydown="if(event.key===\'Enter\')addClassDate(\'' + sid + '\')">';
   html += '<button class="btn" onclick="addClassDate(\'' + sid + '\')">+ เพิ่มวันที่</button>';
   html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importClassDates(\'' + sid + '\')">📅 วางหลายวันที่เดียว</button>';
   html += '<button class="btn-scan" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
@@ -905,7 +905,7 @@ function addClassDate(sid) {
 
 function importClassDates(sid) {
   if(!requireUnlock()) return;
-  const raw = prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n19-พ.ค.-69\n26-พ.ค.-69\n2-มิ.ย.-69');
+  const raw = prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n19-พค-69\n26-พค-69\n2-มิย-69');
   if(!raw) return;
   const dates = raw.split('\n').map(d => d.trim()).filter(d => d.length > 0);
   if(dates.length === 0) return;
@@ -951,7 +951,7 @@ function addDate(w){
 
 function importDates(w){
   if(!requireUnlock())return;
-  const raw=prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n15-พ.ค.-69\n19-พ.ค.-69\n22-พ.ค.-69');
+  const raw=prompt('วางวันที่ทีเดียว (แต่ละวันขึ้นบรรทัดใหม่)\nเช่น:\n15-พค-69\n19-พค-69\n22-พค-69');
   if(!raw)return;
   const dates=raw.split('\n').map(d=>d.trim()).filter(d=>d.length>0);
   if(dates.length===0)return;
@@ -1220,10 +1220,10 @@ function lbGetDates(){
   if(lbPeriod==='month'){
     const mon = now.getMonth(); // 0=ม.ค. ... 11=ธ.ค.
     const yr  = now.getFullYear(); // เช่น 2026
-    const thMonths={'ม.ค.':0,'ก.พ.':1,'มี.ค.':2,'เม.ย.':3,'พ.ค.':4,'มิ.ย.':5,
-                    'ก.ค.':6,'ส.ค.':7,'ก.ย.':8,'ต.ค.':9,'พ.ย.':10,'ธ.ค.':11};
+    const thMonths={'มค':0,'กพ':1,'มีค':2,'เมย':3,'พค':4,'มิย':5,
+                    'กค':6,'สค':7,'กย':8,'ตค':9,'พย':10,'ธค':11};
     return allDates.filter(({d})=>{
-      const parts = d.split('-'); // "15-พ.ค.-69"
+      const parts = d.split('-'); // "15-พค-69"
       const mName = parts[1];
       const thYr  = parseInt(parts[2]); // 69
       const ceYr  = thYr + 1957;        // พ.ศ. = 2500+69=2569, ค.ศ. = 2569-543=2026
@@ -1816,10 +1816,33 @@ async function saveAttendanceCell(w, i, d, status, ts){
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
+// แปลงวันที่เก่า "19-พ.ค.-69" → "19-พค-69" (Firebase ห้ามใช้จุดใน key)
+function migrateDotDates(parsed){
+  const map={'ม.ค.':'มค','ก.พ.':'กพ','มี.ค.':'มีค','เม.ย.':'เมย',
+             'พ.ค.':'พค','มิ.ย.':'มิย','ก.ค.':'กค','ส.ค.':'สค',
+             'ก.ย.':'กย','ต.ค.':'ตค','พ.ย.':'พย','ธ.ค.':'ธค'};
+  function conv(k){ for(const [o,n] of Object.entries(map)) k=k.replace(o,n); return k; }
+  function convObj(obj){ if(!obj||typeof obj!=='object') return obj; const r={}; for(const [k,v] of Object.entries(obj)) r[conv(k)]=v; return r; }
+  if(parsed.weekData) for(const w of Object.keys(parsed.weekData)){
+    const wd=parsed.weekData[w];
+    if(wd.dates) wd.dates=wd.dates.map(conv);
+    if(wd.attendance) for(const i of Object.keys(wd.attendance)) wd.attendance[i]=convObj(wd.attendance[i]);
+    if(wd.timestamps) for(const i of Object.keys(wd.timestamps)) wd.timestamps[i]=convObj(wd.timestamps[i]);
+  }
+  if(parsed.classData) for(const sid of Object.keys(parsed.classData)){
+    const cd=parsed.classData[sid];
+    if(cd.dates) cd.dates=cd.dates.map(conv);
+    if(cd.attendance) for(const i of Object.keys(cd.attendance)) cd.attendance[i]=convObj(cd.attendance[i]);
+    if(cd.timestamps) for(const i of Object.keys(cd.timestamps)) cd.timestamps[i]=convObj(cd.timestamps[i]);
+  }
+  return parsed;
+}
+
 function applyParsed(parsed, source) {
   if(parsed.pin) classPin = parsed.pin;
   if(parsed.fd) deserializeFD(parsed.fd);
   if(parsed.fp) deserializeFP(parsed.fp);
+  migrateDotDates(parsed); // แปลงวันที่เก่าที่มีจุด → ไม่มีจุด อัตโนมัติ
   return applyData(parsed);
 }
 
@@ -2092,7 +2115,7 @@ function setFaceMode(mode) {
 }
 
 function todayThaiDate() {
-  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const months = ['มค','กพ','มีค','เมย','พค','มิย','กค','สค','กย','ตค','พย','ธค'];
   const n = new Date();
   return n.getDate() + '-' + months[n.getMonth()] + '-' + ((n.getFullYear() + 543) % 100);
 }
@@ -2587,7 +2610,7 @@ init();
         <option value="">— เลือกวันที่ —</option>
       </select>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
-        <input id="inp-face-date" class="face-date-input" style="margin:0;flex:1;" placeholder="หรือพิมพ์วันที่ใหม่ เช่น 19-พ.ค.-69" onkeydown="if(event.key==='Enter')addFaceDate()">
+        <input id="inp-face-date" class="face-date-input" style="margin:0;flex:1;" placeholder="หรือพิมพ์วันที่ใหม่ เช่น 19-พค-69" onkeydown="if(event.key==='Enter')addFaceDate()">
         <button class="btn" style="padding:10px 16px;white-space:nowrap;" onclick="addFaceDate()">+ เพิ่ม</button>
       </div>
       <button class="btn-confirm-scan" onclick="confirmFaceDate()">📷 เปิดกล้องสแกนใบหน้า</button>
