@@ -344,6 +344,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
       <div id="tools-main-buttons" style="display:flex;flex-direction:column;gap:12px;">
         <button class="tools-act tools-act-save"     onclick="forceSaveAll()">💾 บันทึกทุกอย่างไป Cloud (PUT)</button>
         <button class="tools-act tools-act-load"     onclick="forceLoadCloud()">🔄 โหลดจาก Cloud มาทับ Local</button>
+        <button class="tools-act" style="background:#8e44ad" onclick="fixDotsInLocalStorage()">🛠️ ซ่อมแซมวันที่ (ลบจุดอัตโนมัติ)</button>
         <button class="tools-act tools-act-download" onclick="downloadBackup()">📥 ดาวน์โหลดไฟล์ Backup (.json)</button>
         <label class="tools-act tools-act-upload">
           📤 อัพโหลด Backup (.json) มากู้คืน
@@ -1940,6 +1941,60 @@ async function forceSaveAll(){
       toolsLog('💡 ข้อมูลยังอยู่ใน Local — กดดาวน์โหลด Backup ไว้ก่อนนะครับ', true);
     }
   }catch(e){ toolsLog('🔌 ออฟไลน์/เน็ตหลุด — ' + e.message, true); }
+}
+
+async function fixDotsInLocalStorage() {
+  if(!requireUnlock()) return;
+  toolsLog('🛠️ กำลังสแกนหาจุดในวันที่...');
+  let fixed = 0;
+  
+  function clean(d) { return d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); }
+  function processObj(obj) {
+    if(!obj) return;
+    Object.keys(obj).forEach(k => {
+      const cleaned = clean(k);
+      if(cleaned !== k) {
+        obj[cleaned] = obj[k];
+        delete obj[k];
+        fixed++;
+      }
+    });
+  }
+
+  // ซ่อม weekData
+  for(const w in weekData) {
+    if(weekData[w].dates) {
+      for(let i=0; i<weekData[w].dates.length; i++) {
+        const d = weekData[w].dates[i];
+        const cd = clean(d);
+        if(d !== cd) { weekData[w].dates[i] = cd; fixed++; }
+      }
+    }
+    if(weekData[w].attendance) Object.values(weekData[w].attendance).forEach(processObj);
+    if(weekData[w].timestamps) Object.values(weekData[w].timestamps).forEach(processObj);
+  }
+
+  // ซ่อม classData
+  for(const sid in classData) {
+    if(classData[sid].dates) {
+      for(let i=0; i<classData[sid].dates.length; i++) {
+        const d = classData[sid].dates[i];
+        const cd = clean(d);
+        if(d !== cd) { classData[sid].dates[i] = cd; fixed++; }
+      }
+    }
+    if(classData[sid].attendance) Object.values(classData[sid].attendance).forEach(processObj);
+    if(classData[sid].timestamps) Object.values(classData[sid].timestamps).forEach(processObj);
+  }
+
+  if(fixed > 0) {
+    toolsLog(`✅ ซ่อมแซมวันที่สำเร็จ (แก้ไป ${fixed} จุด)`, true);
+    buildClassTabs();
+    if(appMode === 'class') renderClass(currentSubject); else if(currentWeek > 0) renderWeek(currentWeek);
+    await forceSaveAll();
+  } else {
+    toolsLog('⭐ ไม่พบวันที่ที่มีจุด/สแลช ข้อมูลปกติครับ', true);
+  }
 }
 
 async function forceLoadCloud(){
