@@ -1921,7 +1921,7 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
 }
 
 // ===== 🧰 TOOLBOX (กล่องเครื่องมือฉุกเฉิน) =====
-function openTools(){ document.getElementById('tools-overlay').classList.add('active'); toolsLog('รอคำสั่ง... 🌟'); }
+function openTools(){ if(!requireUnlock()) return; document.getElementById('tools-overlay').classList.add('active'); toolsLog('รอคำสั่ง... 🌟'); }
 function closeTools(){ document.getElementById('tools-overlay').classList.remove('active'); }
 function toolsLog(msg, append=false){
   const el = document.getElementById('tools-log');
