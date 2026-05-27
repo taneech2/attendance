@@ -803,7 +803,6 @@ function classSymbol(s, ts) {
 
 function cycleClass(sid, idx, date) {
   if(!requireUnlock()) return;
-  pushUndo(students[idx]);
   if(!classData[sid].attendance[idx]) classData[sid].attendance[idx] = {};
   const cur = classData[sid].attendance[idx][date] || 0;
   const newVal = (cur + 1) % 3;
@@ -2348,13 +2347,22 @@ async function init(){
       if(data.students !== undefined){ cwd = data.weekData; ccd = data.classData; }
       else if(data.p){
         const p = JSON.parse(data.p); cwd = p.weekData; ccd = p.classData;
-        if(data.weekData){ // merge PATCH ทับ data.p
+        if(data.weekData){ // merge weekData PATCH ทับ data.p
           for(const w in data.weekData){
             if(!cwd) cwd={};
             if(!cwd[w]) cwd[w]={dates:[],attendance:{},timestamps:{}};
             const s=data.weekData[w];
             if(s.attendance) Object.assign(cwd[w].attendance||{}, fixArr(s.attendance));
             if(s.timestamps)  Object.assign(cwd[w].timestamps||{},  fixArr(s.timestamps));
+          }
+        }
+        if(data.classData){ // merge classData PATCH ทับ data.p ด้วย!
+          for(const sid in data.classData){
+            if(!ccd) ccd={};
+            if(!ccd[sid]) ccd[sid]={dates:[],attendance:{},timestamps:{}};
+            const s=data.classData[sid];
+            if(s.attendance) Object.assign(ccd[sid].attendance||{}, fixArr(s.attendance));
+            if(s.timestamps)  Object.assign(ccd[sid].timestamps||{},  fixArr(s.timestamps));
           }
         }
       }
