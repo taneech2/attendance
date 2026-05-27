@@ -245,6 +245,22 @@ td.num{color:#c9a84c;font-weight:600;}
 .privacy-btn{position:fixed;top:16px;right:74px;z-index:1000;background:#0d1530;border:2px solid #c9a84c55;color:#c9a84c99;font-size:18px;width:48px;height:48px;border-radius:50%;cursor:pointer;transition:.2s;}
 .privacy-btn:hover{background:#c9a84c22;}
 .privacy-btn.hiding{border-color:#e67e22;color:#e67e22;box-shadow:0 0 14px rgba(230,126,34,.35);}
+.tools-btn{position:fixed;top:16px;right:132px;z-index:1000;background:#0d1530;border:2px solid #4a8abf;color:#4a8abf;font-size:20px;width:48px;height:48px;border-radius:50%;cursor:pointer;transition:.2s;box-shadow:0 0 14px rgba(74,138,191,.25);}
+.tools-btn:hover{background:#4a8abf22;}
+.tools-overlay{position:fixed;inset:0;background:rgba(5,10,25,.85);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.tools-overlay.active{display:flex;}
+.tools-box{background:linear-gradient(160deg,#0d1530,#0a0f1e);border:2px solid #4a8abf66;border-radius:18px;width:min(560px,92vw);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 60px rgba(74,138,191,.35);}
+.tools-header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid #4a8abf33;background:#0a1228;color:#c9a84c;font-weight:700;font-size:17px;}
+.tools-close{background:none;border:none;color:#c9a84c99;font-size:22px;cursor:pointer;line-height:1;}
+.tools-close:hover{color:#e05555;}
+.tools-body{padding:20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.tools-act{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 18px;border-radius:12px;border:2px solid;background:#0a1228;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;text-align:center;}
+.tools-act:hover{filter:brightness(1.3);transform:translateY(-1px);}
+.tools-act-save    {border-color:#4caf8a;color:#4caf8a;}
+.tools-act-load    {border-color:#4a8abf;color:#4a8abf;}
+.tools-act-download{border-color:#c9a84c;color:#c9a84c;}
+.tools-act-upload  {border-color:#e67e22;color:#e67e22;}
+.tools-log{margin-top:8px;padding:14px;background:#05091a;border:1px dashed #4a8abf44;border-radius:10px;font-family:'Consolas','Courier New',monospace;font-size:13px;color:#a8c0e0;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;}
 body.hide-names td.name{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 body.hide-names .student-chip span{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 
@@ -309,6 +325,27 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
 <body>
 <button class="privacy-btn no-print" id="privacy-btn" onclick="togglePrivacy()" title="ซ่อน/แสดงชื่อ">👁</button>
 <button class="lock-btn no-print" id="lock-btn" onclick="toggleLock()" title="ล็อก/ปลดล็อก">🔒</button>
+<button class="tools-btn no-print" onclick="openTools()" title="กล่องเครื่องมือฉุกเฉิน">🧰</button>
+
+<!-- TOOLS MODAL -->
+<div id="tools-overlay" class="tools-overlay no-print" onclick="if(event.target===this)closeTools()">
+  <div class="tools-box">
+    <div class="tools-header">
+      <span>🧰 กล่องเครื่องมือฉุกเฉิน</span>
+      <button class="tools-close" onclick="closeTools()">✕</button>
+    </div>
+    <div class="tools-body">
+      <button class="tools-act tools-act-save"     onclick="forceSaveAll()">💾 บันทึกทุกอย่างไป Cloud (PUT)</button>
+      <button class="tools-act tools-act-load"     onclick="forceLoadCloud()">🔄 โหลดจาก Cloud มาทับ Local</button>
+      <button class="tools-act tools-act-download" onclick="downloadBackup()">📥 ดาวน์โหลดไฟล์ Backup (.json)</button>
+      <label class="tools-act tools-act-upload">
+        📤 อัพโหลด Backup (.json) มากู้คืน
+        <input type="file" accept=".json,application/json" style="display:none" onchange="uploadBackup(event)">
+      </label>
+      <div class="tools-log" id="tools-log">รอคำสั่ง... 🌟</div>
+    </div>
+  </div>
+</div>
 <div class="page">
   <div class="corner-tr"></div><div class="corner-bl"></div>
   <div style="position:absolute;bottom:14px;right:20px;font-size:11px;color:#c9a84c88;font-family:'Sarabun',sans-serif;letter-spacing:.3px;" class="no-print">พัฒนาระบบ โดย ครูธานี ชมสุข</div>
@@ -1826,6 +1863,95 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   }
   students = [...DEFAULT_STUDENTS];
   showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');
+}
+
+// ===== 🧰 TOOLBOX (กล่องเครื่องมือฉุกเฉิน) =====
+function openTools(){ document.getElementById('tools-overlay').classList.add('active'); toolsLog('รอคำสั่ง... 🌟'); }
+function closeTools(){ document.getElementById('tools-overlay').classList.remove('active'); }
+function toolsLog(msg, append=false){
+  const el = document.getElementById('tools-log');
+  if(!el) return;
+  const t = new Date().toLocaleTimeString('th');
+  el.textContent = append ? (el.textContent + '\n[' + t + '] ' + msg) : ('[' + t + '] ' + msg);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function forceSaveAll(){
+  if(!requireUnlock()) return;
+  toolsLog('💾 กำลังบันทึก...');
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+    toolsLog('✅ บันทึก Local แล้ว ('+ (JSON.stringify(getPayload()).length/1024).toFixed(1) +' KB)', true);
+    const light = getLightPayload();
+    const body = JSON.stringify(light);
+    toolsLog('📡 ส่ง PUT ไป Cloud ('+ (body.length/1024).toFixed(1) +' KB)...', true);
+    const res = await fetch(DB_URL, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
+    toolsLog('📡 Cloud ตอบ: HTTP ' + res.status + ' ' + res.statusText, true);
+    if(res.ok){
+      toolsLog('🎉 บันทึก Cloud สำเร็จ! ข้อมูลปลอดภัยทุกเครื่องแล้ว ✨', true);
+      showStatus('☁️ บันทึก Cloud สำเร็จ');
+    } else {
+      const txt = await res.text();
+      toolsLog('❌ Cloud ปฏิเสธ — รายละเอียด: ' + txt.substring(0,300), true);
+      toolsLog('💡 ข้อมูลยังอยู่ใน Local — กดดาวน์โหลด Backup ไว้ก่อนนะครับ', true);
+    }
+  }catch(e){ toolsLog('🔌 ออฟไลน์/เน็ตหลุด — ' + e.message, true); }
+}
+
+async function forceLoadCloud(){
+  if(!confirm('โหลดจาก Cloud จะทับข้อมูล Local ปัจจุบัน — แนะนำดาวน์โหลด Backup ก่อน\n\nยืนยัน?')) return;
+  toolsLog('🔄 กำลังโหลดจาก Cloud...');
+  try{
+    await loadFromFirebase(true, true); // forceCloud=true
+    toolsLog('✅ โหลดจาก Cloud สำเร็จ — กำลัง render ใหม่...', true);
+    refreshAllTabPct();
+    if(appMode==='class') renderClass(currentSubject);
+    else if(currentWeek===-1) renderLeaderboard();
+    else renderWeek(currentWeek);
+    toolsLog('🎉 เสร็จเรียบร้อย!', true);
+  }catch(e){ toolsLog('❌ โหลดไม่สำเร็จ: ' + e.message, true); }
+}
+
+function downloadBackup(){
+  try{
+    const payload = getPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g,'-').substring(0,19);
+    a.href = url;
+    a.download = 'attendance-backup-' + ts + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toolsLog('📥 ดาวน์โหลด backup สำเร็จ: ' + a.download + ' ('+ (blob.size/1024).toFixed(1) +' KB)');
+    toolsLog('💡 เก็บไฟล์นี้ไว้ดี ๆ — กู้คืนได้ทุกเมื่อ', true);
+  }catch(e){ toolsLog('❌ ดาวน์โหลดไม่สำเร็จ: ' + e.message); }
+}
+
+function uploadBackup(ev){
+  const file = ev.target.files?.[0];
+  if(!file) return;
+  if(!requireUnlock()) { ev.target.value=''; return; }
+  if(!confirm('อัพโหลด "' + file.name + '" จะทับข้อมูลปัจจุบันทั้งหมด\n\nยืนยัน?')) { ev.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!parsed.students){ toolsLog('❌ ไฟล์ไม่ถูกต้อง (ไม่พบ students)'); return; }
+      toolsLog('📤 อ่านไฟล์: ' + file.name + ' ('+ (file.size/1024).toFixed(1) +' KB)');
+      if(applyParsed(parsed)){
+        toolsLog('✅ กู้คืนข้อมูลใน Local แล้ว', true);
+        localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+        refreshAllTabPct();
+        if(appMode==='class') renderClass(currentSubject);
+        else if(currentWeek===-1) renderLeaderboard();
+        else renderWeek(currentWeek);
+        toolsLog('💡 ถ้าต้องการ sync ขึ้น Cloud → กด 💾 บันทึกทุกอย่างไป Cloud', true);
+      } else { toolsLog('❌ apply ไม่สำเร็จ'); }
+    }catch(e){ toolsLog('❌ JSON ผิดรูปแบบ: ' + e.message); }
+    ev.target.value='';
+  };
+  reader.readAsText(file);
 }
 
 // ===== INFO BAR =====
