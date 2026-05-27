@@ -1069,13 +1069,10 @@ function calcScore(ts){
   const raw = (ts[0]==='f'||ts[0]==='m') ? ts.slice(1) : ts;
   const [h,m,s] = raw.split(':').map(Number);
   const t = h*60 + m + (s||0)/60; // นาทีตั้งแต่เที่ยงคืน
-  const LATE_END = 8*60;          // 08:00
-  const SCORE_END = 7*60+50;      // 07:50
-  const SCORE_START = 7*60+30;    // 07:30
-  if(t >= LATE_END) return 0;
-  if(t >= SCORE_END) return 1;    // 07:50-07:59 = 1 แต้ม (สาย)
-  const pts = SCORE_END - t;      // นาทีก่อน 07:50
-  return Math.min(Math.round(pts), 20); // cap 20 แต้ม
+  // 3 ระดับ: ≤07:50 = 20pt | 07:51-08:09 = 10pt | ≥08:10 = 0pt
+  if(t <= 7*60+50) return 20;     // มาก่อน/ตรงเพลงเรียก
+  if(t < 8*60+10) return 10;      // มาช่วงเข้าแถว
+  return 0;                        // สาย/หมดเวลา
 }
 
 function getWeekRange(w){
@@ -1146,9 +1143,9 @@ function renderLeaderboard(){
           totalSec += h*3600 + m*60 + (s2||0);
           scanCount++;
         }
-        // ฟอร์ม: g=ทันเวลา, y=สาย(07:50-07:59), r=ขาดวิชา/กากบาท
+        // ฟอร์ม: g=ก่อนเพลง(20pt), y=เข้าแถวทัน(10pt), r=สาย/ขาด(0pt)
         const score = calcScore(ts);
-        form.push(absentAnySubject?'r': score===1?'y':'g');
+        form.push(absentAnySubject?'r': score===0?'r': score===10?'y':'g');
       } else if(att===2){ absent++; form.push('r'); }
       else form.push('n');
     });
