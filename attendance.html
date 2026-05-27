@@ -2225,6 +2225,7 @@ function deserializeFD(raw) {
   if(!raw) return;
   Object.keys(raw).forEach(k => {
     const v = raw[k];
+    if(!v) return; // Firebase อาจส่ง null มา — ข้ามได้เลย
     // backward compat: รูปแบบเก่า = [number...], รูปแบบใหม่ = [[number...], ...]
     if(Array.isArray(v[0])) {
       faceDescriptors[Number(k)] = v.map(a => new Float32Array(a));
@@ -2238,6 +2239,7 @@ function deserializeFP(raw) {
   if(!raw) return;
   Object.keys(raw).forEach(k => {
     const v = raw[k];
+    if(!v) return; // ข้าม null
     facePhotos[Number(k)] = Array.isArray(v) ? v : [v]; // backward compat
   });
 }
