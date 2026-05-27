@@ -563,7 +563,7 @@ function renderWeek(w){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
         const ts=wd.timestamps&&wd.timestamps[i]&&wd.timestamps[i][d]||'';
-        cells+=`<td class="td-date" onclick="cycle(${w},${i},'${d}')" oncontextmenu="editTime(event,${w},${i},'${d}')" style="cursor:pointer">${sym(s,ts)}</td>`;
+        cells+=`<td class="td-date" onclick="cycle(${w},${i},'${d}')" oncontextmenu="editTime(event,${w},${i},'${d}');return false;" style="cursor:pointer">${sym(s,ts)}</td>`;
       });
     } else {
       cells+=`<td style="color:#555">—</td>`;
