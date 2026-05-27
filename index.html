@@ -160,6 +160,9 @@ td.num{color:#c9a84c;font-weight:600;}
 .th-date{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;width:28px;min-width:28px!important;max-width:36px;padding:10px 4px!important;text-align:left;vertical-align:bottom;font-size:11px;}
 .th-date .btn-del-date{display:block;writing-mode:horizontal-tb;transform:none;margin:6px auto 0;}
 .td-date{width:28px;max-width:36px;padding:6px 2px!important;}
+/* GROUP HEADER ROW */
+.dept-row-header td{font-weight:700;font-size:11px;padding:5px 10px;letter-spacing:.6px;text-align:left;border-left:none!important;border-right:none!important;}
+.chip-group-header{background:#1a2540;border:1px dashed #c9a84c44;color:#c9a84c;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
 
 /* STUDENT MANAGER */
 .student-manager{background:rgba(201,168,76,.04);border:1px solid #c9a84c44;border-radius:6px;padding:16px;margin-bottom:16px;}
@@ -558,15 +561,29 @@ function renderWeek(w){
 
   // body
   tbody.innerHTML = '';
+  let studentSeq=0; // ลำดับเฉพาะนักเรียนจริง (ไม่นับ header)
   students.forEach((name,i)=>{
-    if(hiddenStudents.has(i)) return; // ข้ามนักเรียนที่ซ่อน
+    if(hiddenStudents.has(i)) return;
+
+    // ── GROUP HEADER ROW ──
+    if(isGroupHeader(name)){
+      const color = getGroupColor(i);
+      const colSpan = 3 + (wd.dates.length||1) + 2;
+      const tr = document.createElement('tr');
+      tr.className = 'dept-row-header no-print-subtle';
+      tr.innerHTML = `<td colspan="${colSpan}" style="background:${color}15;border-top:2px solid ${color}55;border-bottom:1px solid ${color}22;color:${color};">◆ ${groupLabel(name)}</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    studentSeq++;
     let ma=0,noma=0;
     wd.dates.forEach(d=>{ const s=wd.attendance[i]&&wd.attendance[i][d]||0; if(s===1)ma++; if(s===2)noma++; });
     const tr = document.createElement('tr');
     const recorded=ma+noma;
     const pct=recorded>0?Math.round(ma/recorded*100):null;
     const pctColor=pct===null?'#a89060':pct>=80?'#4caf8a':pct>=60?'#e8c84a':'#e05555';
-    let cells = `<td class="num">${i+1}</td><td class="name">${name}</td>`;
+    let cells = `<td class="num">${studentSeq}</td><td class="name">${name}</td>`;
     if(wd.dates.length>0){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
@@ -939,6 +956,16 @@ function renderStudentChips(){
 
   const renderChip = ({name,i}) => {
     const chip = document.createElement('div');
+    // GROUP HEADER chip
+    if(isGroupHeader(name)){
+      const color = getGroupColor(i);
+      chip.className = 'chip-group-header';
+      chip.style.borderColor = color+'66';
+      chip.style.color = color;
+      chip.innerHTML = `<span>◆ ${groupLabel(name)}</span><button onclick="removeStudent(${i})" title="ลบหัวข้อ" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:11px;padding:0 2px;">✕</button>`;
+      wrap.appendChild(chip);
+      return;
+    }
     const isHidden = hiddenStudents.has(i);
     chip.className = 'student-chip' + (isHidden ? ' chip-hidden' : '');
     const photos = facePhotos[i];
@@ -1104,6 +1131,16 @@ function calcScore(ts){
   return 0;                        // สาย/หมดเวลา
 }
 
+// ===== GROUP HEADER HELPERS =====
+const GROUP_COLORS = ['#e67e22','#3498db','#9b59b6','#2ecc71','#1abc9c','#e74c3c','#c9a84c','#e91e63'];
+function isGroupHeader(name){ return typeof name==='string' && name.trimStart().startsWith('#'); }
+function groupLabel(name){ return name.replace(/^#\s*/,'').trim(); }
+function getGroupColor(upToIdx){
+  let count=0;
+  for(let i=0;i<=upToIdx;i++) if(isGroupHeader(students[i])) count++;
+  return GROUP_COLORS[(count-1+GROUP_COLORS.length)%GROUP_COLORS.length];
+}
+
 function getWeekRange(w){
   // คืน array ของ date strings ในสัปดาห์ w
   return (weekData[w]||{dates:[]}).dates;
@@ -1152,6 +1189,7 @@ function renderLeaderboard(){
 
   const rows = students.map((name,i)=>{
     if(hiddenStudents.has(i)) return null;
+    if(isGroupHeader(name)) return null; // ข้าม group header
     let pts=0, ma=0, absent=0, totalSec=0, scanCount=0;
     const form=[];
     dates.forEach(({w,d})=>{
@@ -1881,16 +1919,16 @@ function addFaceDate() {
 function populateStudentSelect() {
   const sel = document.getElementById('sel-reg-student');
   // สร้าง option ครั้งแรกเท่านั้น (ไม่ reset selection)
-  if(sel.options.length !== students.length) {
+  const nonHeaders = students.map((n,i)=>({n,i})).filter(({n})=>!isGroupHeader(n));
+  if(sel.options.length !== nonHeaders.length) {
     const cur = Number(sel.value) || 0;
-    sel.innerHTML = students.map((n,i) => `<option value="${i}"></option>`).join('');
+    sel.innerHTML = nonHeaders.map(({n,i}) => `<option value="${i}"></option>`).join('');
     sel.value = cur;
   }
-  // อัปเดตแค่ข้อความ — ไม่แตะ selection เลย
-  students.forEach((n, i) => {
+  nonHeaders.forEach(({n,i}, idx) => {
     const cnt = faceDescriptors[i]?.length || 0;
     const badge = cnt > 0 ? ` [${cnt}/${FACE_MAX} 📸]` : ' [ยังไม่มีรูป]';
-    if(sel.options[i]) sel.options[i].textContent = `${i+1}. ${n}${badge}`;
+    if(sel.options[idx]) sel.options[idx].textContent = `${i+1}. ${n}${badge}`;
   });
   updateRegPhotoPreview();
 }
