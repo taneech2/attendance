@@ -2331,17 +2331,68 @@ async function init(){
   bindInfoBar();
   // คืนสถานะซ่อนชื่อ (ถ้าปิดตาไว้ก่อน refresh)
   if(sessionStorage.getItem('namesHidden') === '1') applyPrivacy(true);
-  // Auto-sync จาก Firebase ทุก 30 วินาที — ใช้ Cloud เสมอ ไม่เปรียบ timestamp
+  // Auto-sync จาก Firebase ทุก 30 วินาที — merge เฉพาะ cell ไม่แทนทับ local
   setInterval(async () => {
-    const modalOpen = document.getElementById('face-overlay')?.classList.contains('active');
-    if(modalOpen) return;
+    if(document.getElementById('face-overlay')?.classList.contains('active')) return;
     try{
-      await loadFromFirebase(false, true); // ใช้ timestamp เปรียบ + skipMigrate
-      updatePinButtons();
-      if(appMode === 'class') renderClass(currentSubject);
-      else if(currentWeek===-1) renderLeaderboard();
-      else renderWeek(currentWeek);
-      console.log('🔄 sync', new Date().toLocaleTimeString('th'));
+      const res = await fetch(DB_URL, {cache:'no-store'});
+      const data = await res.json();
+      if(!data) return;
+
+      // แกะข้อมูล weekData + classData จาก cloud (รองรับทั้ง format ใหม่และเก่า)
+      let cwd = null, ccd = null;
+      if(data.students !== undefined){ cwd = data.weekData; ccd = data.classData; }
+      else if(data.p){
+        const p = JSON.parse(data.p); cwd = p.weekData; ccd = p.classData;
+        if(data.weekData){ // merge PATCH ทับ data.p
+          for(const w in data.weekData){
+            if(!cwd) cwd={};
+            if(!cwd[w]) cwd[w]={dates:[],attendance:{},timestamps:{}};
+            const s=data.weekData[w];
+            if(s.attendance) Object.assign(cwd[w].attendance||{}, fixArr(s.attendance));
+            if(s.timestamps)  Object.assign(cwd[w].timestamps||{},  fixArr(s.timestamps));
+          }
+        }
+      }
+
+      // sync namesHidden ข้ามเครื่อง
+      if(data.namesHidden !== undefined && data.namesHidden !== namesHidden) applyPrivacy(data.namesHidden);
+
+      // merge เฉพาะ cell attendance — ไม่แตะ dates / students / structure
+      let changed = false;
+      if(cwd){ for(const w in cwd){
+        const wn=Number(w), src=cwd[w];
+        if(!weekData[wn]) weekData[wn]={dates:[],attendance:{},timestamps:{}};
+        const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
+        for(const i in att){ const in_=Number(i);
+          if(!weekData[wn].attendance[in_]) weekData[wn].attendance[in_]={};
+          for(const d in att[in_]){ if(weekData[wn].attendance[in_][d]!==att[in_][d]){weekData[wn].attendance[in_][d]=att[in_][d];changed=true;} }
+        }
+        for(const i in ts){ const in_=Number(i);
+          if(!weekData[wn].timestamps[in_]) weekData[wn].timestamps[in_]={};
+          for(const d in ts[in_]){ if(weekData[wn].timestamps[in_][d]!==ts[in_][d]){weekData[wn].timestamps[in_][d]=ts[in_][d];changed=true;} }
+        }
+      }}
+      if(ccd){ for(const sid in ccd){
+        const src=ccd[sid]; if(!classData[sid]) classData[sid]={dates:[],attendance:{},timestamps:{}};
+        const att=fixArr(src.attendance||{}), ts=fixArr(src.timestamps||{});
+        for(const i in att){ const in_=Number(i);
+          if(!classData[sid].attendance[in_]) classData[sid].attendance[in_]={};
+          for(const d in att[in_]){ if(classData[sid].attendance[in_][d]!==att[in_][d]){classData[sid].attendance[in_][d]=att[in_][d];changed=true;} }
+        }
+        for(const i in ts){ const in_=Number(i);
+          if(!classData[sid].timestamps[in_]) classData[sid].timestamps[in_]={};
+          for(const d in ts[in_]){ if(classData[sid].timestamps[in_][d]!==ts[in_][d]){classData[sid].timestamps[in_][d]=ts[in_][d];changed=true;} }
+        }
+      }}
+
+      if(changed){
+        updatePinButtons();
+        if(appMode==='class') renderClass(currentSubject);
+        else if(currentWeek===-1) renderLeaderboard();
+        else renderWeek(currentWeek);
+      }
+      console.log('🔄 sync', changed?'(updated)':'(no change)', new Date().toLocaleTimeString('th'));
     }catch(e){ console.error('❌ poll error:', e); }
   }, 30000); // 30s
 }
