@@ -800,9 +800,6 @@ function buildClassPanels() {
 }
 
 function renderClass(sid) {
-  // 🐛 DEBUG — ลบออกเมื่อหาปัญหาเจอ
-  const _att0 = classData[sid]?.attendance?.[0];
-  console.log('🎨 renderClass', sid, JSON.stringify(_att0), new Error().stack.split('\n')[1]?.trim());
   // อัปเดต tab
   document.querySelectorAll('.class-panel').forEach(p => p.classList.remove('active'));
   const panel = document.getElementById('cpanel-' + sid);
@@ -879,7 +876,6 @@ function cycleClass(sid, idx, date) {
   const cur = classData[sid].attendance[idx][date] || 0;
   const newVal = (cur + 1) % 3;
   classData[sid].attendance[idx][date] = newVal;
-  console.log('✍️ cycleClass SET', sid, 'student['+idx+']', date, cur, '→', newVal);
   renderClass(sid);
   saveClassCell(sid, idx, date, newVal);
 }
@@ -887,7 +883,7 @@ function cycleClass(sid, idx, date) {
 async function saveClassCell(sid, idx, date, status){
   localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
   try{
-    // PUT ทั้ง record ของนักเรียนคนนี้ (PUT ไม่แปล key เป็น path → รองรับ "พ.ค." ✅)
+    // PUT ทั้ง record ของนักเรียนคนนี้ (key ไม่มีจุด → Firebase รับได้ ✅)
     const attFull = Object.assign({}, classData[sid]?.attendance?.[idx] || {});
     if(status !== 0) attFull[date] = status; else delete attFull[date];
     const [r1] = await Promise.all([
@@ -1775,9 +1771,9 @@ function applyData(parsed){
     const src = wd[w]||wd[String(w)]||{};
     weekData[w] = { dates: src.dates||[], attendance: {}, timestamps: {} };
     const att = fixArr(src.attendance);
-    Object.keys(att).forEach(k=>{ weekData[w].attendance[Number(k)] = att[k]; });
+    Object.keys(att).forEach(k=>{ if(att[k]) weekData[w].attendance[Number(k)] = att[k]; });
     const ts = fixArr(src.timestamps);
-    Object.keys(ts).forEach(k=>{ weekData[w].timestamps[Number(k)] = ts[k]; });
+    Object.keys(ts).forEach(k=>{ if(ts[k]) weekData[w].timestamps[Number(k)] = ts[k]; });
   }
   // restore classData
   const cd = parsed.classData || {};
@@ -1785,9 +1781,9 @@ function applyData(parsed){
     const src = cd[s.id] || {};
     classData[s.id] = { dates: src.dates || [], attendance: {}, timestamps: {} };
     const att = src.attendance || {};
-    Object.keys(att).forEach(k => { classData[s.id].attendance[Number(k)] = att[k]; });
+    Object.keys(att).forEach(k => { if(att[k]) classData[s.id].attendance[Number(k)] = att[k]; });
     const cts = src.timestamps || {};
-    Object.keys(cts).forEach(k => { classData[s.id].timestamps[Number(k)] = cts[k]; });
+    Object.keys(cts).forEach(k => { if(cts[k]) classData[s.id].timestamps[Number(k)] = cts[k]; });
   });
   hiddenStudents = new Set(parsed.hiddenStudents || []);
   pinnedView = parsed.pinnedView || null;
@@ -1813,12 +1809,12 @@ async function saveToFirebase(){
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
-// บันทึกเฉพาะ student ที่เปลี่ยน — ใช้ PUT (PATCH ไม่รองรับ key ที่มีจุด เช่น "พ.ค.")
+// บันทึกเฉพาะ student ที่เปลี่ยน — ใช้ PUT (cell-level save)
 async function saveAttendanceCell(w, i, d, status, ts){
   localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
   try{
     const base = `${DB_BASE}/weekData/${w}`;
-    // PUT ทั้ง record ของนักเรียนคนนี้ (PUT ไม่แปล key เป็น path → รองรับ "พ.ค." ✅)
+    // PUT ทั้ง record ของนักเรียนคนนี้ (key ไม่มีจุด → Firebase รับได้ ✅)
     const attFull = Object.assign({}, weekData[w]?.attendance?.[i] || {});
     if(status !== 0) attFull[d] = status; else delete attFull[d];
     const tsFull  = Object.assign({}, weekData[w]?.timestamps?.[i]  || {});
@@ -2797,8 +2793,9 @@ async function init(){
 
       if(cwd){ for(const w in cwd){
         const wn=Number(w), src=cwd[w];
+        if(!src) continue; // Firebase อาจส่ง null มา
         if(!weekData[wn]) weekData[wn]={dates:[],attendance:{},timestamps:{}};
-        
+
         // sync dates
         if(src.dates && Array.isArray(src.dates)) {
           src.dates.forEach(d => {
@@ -2821,7 +2818,9 @@ async function init(){
         }
       }}
       if(ccd){ for(const sid in ccd){
-        const src=ccd[sid]; if(!classData[sid]) classData[sid]={dates:[],attendance:{},timestamps:{}};
+        const src=ccd[sid];
+        if(!src) continue; // Firebase อาจส่ง null มา
+        if(!classData[sid]) classData[sid]={dates:[],attendance:{},timestamps:{}};
         
         // sync class dates
         if(src.dates && Array.isArray(src.dates)) {
@@ -2851,7 +2850,6 @@ async function init(){
         else if(currentWeek===-1) renderLeaderboard();
         else renderWeek(currentWeek);
       }
-      console.log('🔄 sync', changed?'(updated)':'(no change)', new Date().toLocaleTimeString('th'));
     }catch(e){ console.error('❌ poll error:', e); }
   }, 30000); // 30s
 }
