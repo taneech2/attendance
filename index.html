@@ -2688,6 +2688,51 @@ async function captureDescriptor() {
 
 async function init(){
   await loadFromFirebase(true);
+  // กวาดล้างจุดและวันที่ซ้ำซ้อนในเครื่องอัตโนมัติทุกครั้งที่เปิดเว็บ
+  let needsSave = false;
+  function nukeDots(obj) {
+    if(!obj) return;
+    Object.keys(obj).forEach(k => {
+      const cd = k.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+      if(cd !== k) { obj[cd] = obj[k]; delete obj[k]; needsSave = true; }
+    });
+  }
+  
+  for(const w in weekData) {
+    if(weekData[w].dates) {
+      const newDates = [];
+      weekData[w].dates.forEach(d => {
+        const cd = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+        if(!newDates.includes(cd)) newDates.push(cd);
+        if(d !== cd) needsSave = true;
+      });
+      if(weekData[w].dates.length !== newDates.length) needsSave = true;
+      weekData[w].dates = newDates;
+    }
+    if(weekData[w].attendance) Object.values(weekData[w].attendance).forEach(nukeDots);
+    if(weekData[w].timestamps) Object.values(weekData[w].timestamps).forEach(nukeDots);
+  }
+
+  for(const sid in classData) {
+    if(classData[sid].dates) {
+      const newDates = [];
+      classData[sid].dates.forEach(d => {
+        const cd = d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-');
+        if(!newDates.includes(cd)) newDates.push(cd);
+        if(d !== cd) needsSave = true;
+      });
+      if(classData[sid].dates.length !== newDates.length) needsSave = true;
+      classData[sid].dates = newDates;
+    }
+    if(classData[sid].attendance) Object.values(classData[sid].attendance).forEach(nukeDots);
+    if(classData[sid].timestamps) Object.values(classData[sid].timestamps).forEach(nukeDots);
+  }
+
+  if(needsSave) {
+    localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+    saveToFirebase(); // ดันขึ้น Cloud อัตโนมัติหลังทำความสะอาด
+  }
+
   buildTabs();
   buildPanels();
   buildClassTabs();
