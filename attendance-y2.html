@@ -261,6 +261,11 @@ td.num{color:#c9a84c;font-weight:600;}
 .tools-act-download{border-color:#c9a84c;color:#c9a84c;}
 .tools-act-upload  {border-color:#e67e22;color:#e67e22;}
 .tools-log{margin-top:8px;padding:14px;background:#05091a;border:1px dashed #4a8abf44;border-radius:10px;font-family:'Consolas','Courier New',monospace;font-size:13px;color:#a8c0e0;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;}
+.de-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.de-inp{flex:1;background:#0a1228;border:1px solid #4a8abf44;color:#d4c4a0;padding:7px 10px;border-radius:7px;font-size:13px;font-family:'Sarabun',sans-serif;transition:.2s;}
+.de-inp:focus{outline:none;border-color:#9b59b6;}
+.de-del{background:#c0392b22;border:1px solid #c0392b55;color:#e74c3c;padding:5px 10px;border-radius:7px;cursor:pointer;font-size:12px;font-family:'Sarabun',sans-serif;white-space:nowrap;transition:.2s;}
+.de-del:hover{filter:brightness(1.3);}
 body.hide-names td.name{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 body.hide-names .student-chip span{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 
@@ -335,13 +340,27 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
       <button class="tools-close" onclick="closeTools()">✕</button>
     </div>
     <div class="tools-body">
-      <button class="tools-act tools-act-save"     onclick="forceSaveAll()">💾 บันทึกทุกอย่างไป Cloud (PUT)</button>
-      <button class="tools-act tools-act-load"     onclick="forceLoadCloud()">🔄 โหลดจาก Cloud มาทับ Local</button>
-      <button class="tools-act tools-act-download" onclick="downloadBackup()">📥 ดาวน์โหลดไฟล์ Backup (.json)</button>
-      <label class="tools-act tools-act-upload">
-        📤 อัพโหลด Backup (.json) มากู้คืน
-        <input type="file" accept=".json,application/json" style="display:none" onchange="uploadBackup(event)">
-      </label>
+      <!-- Main buttons -->
+      <div id="tools-main-buttons" style="display:flex;flex-direction:column;gap:12px;">
+        <button class="tools-act tools-act-save"     onclick="forceSaveAll()">💾 บันทึกทุกอย่างไป Cloud (PUT)</button>
+        <button class="tools-act tools-act-load"     onclick="forceLoadCloud()">🔄 โหลดจาก Cloud มาทับ Local</button>
+        <button class="tools-act tools-act-download" onclick="downloadBackup()">📥 ดาวน์โหลดไฟล์ Backup (.json)</button>
+        <label class="tools-act tools-act-upload">
+          📤 อัพโหลด Backup (.json) มากู้คืน
+          <input type="file" accept=".json,application/json" style="display:none" onchange="uploadBackup(event)">
+        </label>
+        <button class="tools-act" style="border-color:#9b59b6;color:#9b59b6;" onclick="showDateEditorPanel()">✏️ แก้ไขวันที่ (สัปดาห์/วิชาที่เลือกอยู่)</button>
+      </div>
+      <!-- Date Editor Panel -->
+      <div id="date-editor-panel" style="display:none;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="hideDateEditorPanel()" style="background:#0a1228;border:1px solid #4a8abf55;color:#4a8abf;padding:5px 14px;border-radius:8px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;">← กลับ</button>
+          <span id="de-title" style="color:#c9a84c;font-size:14px;font-weight:700;flex:1;"></span>
+        </div>
+        <div style="color:#7a9abf;font-size:11px;">คลิก 🗑️ เพื่อลบ | แก้ข้อความตรงช่องแล้วกด "บันทึก"</div>
+        <div id="de-list" style="max-height:240px;overflow-y:auto;padding-right:4px;"></div>
+        <button onclick="saveDateEdits()" class="tools-act tools-act-save">💾 บันทึกการแก้ไข</button>
+      </div>
       <div class="tools-log" id="tools-log">รอคำสั่ง... 🌟</div>
     </div>
   </div>
@@ -1975,6 +1994,117 @@ function uploadBackup(ev){
     ev.target.value='';
   };
   reader.readAsText(file);
+}
+
+// ===== ✏️ DATE EDITOR =====
+let _deCtx = null; // context object
+
+function showDateEditorPanel(){
+  if(!requireUnlock()) return;
+  let dates, title;
+  if(appMode==='class'){
+    const sid = currentSubject;
+    const subj = CLASS_SUBJECTS.find(s=>s.id===sid);
+    dates = (classData[sid]?.dates||[]).slice();
+    title = '✏️ วิชา: ' + (subj?.name||sid);
+    _deCtx = {isClass:true, sid};
+  } else {
+    const w = currentWeek;
+    if(!w||w<1){ toolsLog('⚠️ เลือกสัปดาห์ก่อนแก้ไขวันที่ครับ'); return; }
+    dates = (weekData[w]?.dates||[]).slice();
+    title = '✏️ สัปดาห์ที่ ' + w;
+    _deCtx = {isClass:false, week:w};
+  }
+  const listEl = document.getElementById('de-list');
+  if(!listEl) return;
+  listEl.innerHTML = '';
+  if(dates.length===0){
+    listEl.innerHTML = '<div style="color:#888;font-size:13px;text-align:center;padding:14px;">ไม่มีวันที่ในส่วนนี้ครับ</div>';
+  } else {
+    dates.forEach((d,i)=>{
+      const row = document.createElement('div');
+      row.className = 'de-row'; row.id = 'de-row-'+i;
+      row.innerHTML =
+        `<span style="color:#666;font-size:11px;min-width:18px;text-align:right;">${i+1}.</span>`+
+        `<input id="de-inp-${i}" class="de-inp" value="${d}" data-original="${d}">`+
+        `<button class="de-del" id="de-del-${i}" onclick="deToggleDelete(${i})">🗑️ ลบ</button>`;
+      listEl.appendChild(row);
+    });
+  }
+  document.getElementById('de-title').textContent = title;
+  document.getElementById('tools-main-buttons').style.display = 'none';
+  document.getElementById('date-editor-panel').style.display = 'flex';
+  toolsLog('✏️ เปิดแก้ไขวันที่ — ' + dates.length + ' วัน | แก้แล้วกด "บันทึก"');
+}
+
+function deToggleDelete(i){
+  const row = document.getElementById('de-row-'+i);
+  const inp = document.getElementById('de-inp-'+i);
+  const btn = document.getElementById('de-del-'+i);
+  if(!row||!inp||!btn) return;
+  if(inp.dataset.deleted==='1'){
+    inp.dataset.deleted=''; row.style.opacity='1'; inp.disabled=false;
+    btn.textContent='🗑️ ลบ'; btn.style.color='#e74c3c';
+  } else {
+    inp.dataset.deleted='1'; row.style.opacity='0.4'; inp.disabled=true;
+    btn.textContent='↩️ เลิกลบ'; btn.style.color='#4caf8a';
+  }
+}
+
+function hideDateEditorPanel(){
+  document.getElementById('date-editor-panel').style.display = 'none';
+  document.getElementById('tools-main-buttons').style.display = 'flex';
+}
+
+function saveDateEdits(){
+  if(!_deCtx) return;
+  const inputs = document.getElementById('de-list').querySelectorAll('input[id^="de-inp-"]');
+  const renames={}, toDelete=new Set();
+  inputs.forEach(inp=>{
+    const orig=inp.dataset.original;
+    if(!orig) return;
+    if(inp.dataset.deleted==='1'){ toDelete.add(orig); }
+    else{ const nv=inp.value.trim(); if(nv&&nv!==orig) renames[orig]=nv; }
+  });
+  const totalChanges = toDelete.size + Object.keys(renames).length;
+  if(!totalChanges){ toolsLog('ไม่มีการเปลี่ยนแปลงครับ', true); return; }
+
+  const {isClass,sid,week} = _deCtx;
+  function renameKey(obj, o, n){ if(obj&&obj[o]!==undefined){ obj[n]=obj[o]; delete obj[o]; } }
+
+  if(isClass){
+    const cd=classData[sid]; if(!cd) return;
+    toDelete.forEach(d=>{
+      cd.dates=cd.dates.filter(x=>x!==d);
+      Object.keys(cd.attendance||{}).forEach(i=>delete cd.attendance[i][d]);
+      Object.keys(cd.timestamps||{}).forEach(i=>delete (cd.timestamps[i]||{})[d]);
+    });
+    Object.entries(renames).forEach(([o,n])=>{
+      const idx=cd.dates.indexOf(o); if(idx!==-1) cd.dates[idx]=n;
+      Object.keys(cd.attendance||{}).forEach(i=>renameKey(cd.attendance[i],o,n));
+      Object.keys(cd.timestamps||{}).forEach(i=>renameKey(cd.timestamps[i],o,n));
+    });
+  } else {
+    const wd=weekData[week]; if(!wd) return;
+    toDelete.forEach(d=>{
+      wd.dates=wd.dates.filter(x=>x!==d);
+      Object.keys(wd.attendance||{}).forEach(i=>delete wd.attendance[i][d]);
+      Object.keys(wd.timestamps||{}).forEach(i=>delete (wd.timestamps[i]||{})[d]);
+    });
+    Object.entries(renames).forEach(([o,n])=>{
+      const idx=wd.dates.indexOf(o); if(idx!==-1) wd.dates[idx]=n;
+      Object.keys(wd.attendance||{}).forEach(i=>renameKey(wd.attendance[i],o,n));
+      Object.keys(wd.timestamps||{}).forEach(i=>renameKey(wd.timestamps[i]||{},o,n));
+    });
+  }
+
+  localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  if(isClass) renderClass(sid); else if(currentWeek>0) renderWeek(week);
+  const dels=toDelete.size, rens=Object.keys(renames).length;
+  toolsLog(`✅ บันทึกแล้ว${rens?' — เปลี่ยน '+rens+' วัน':''}${dels?' — ลบ '+dels+' วัน':''}`, true);
+  saveToFirebase().then(()=>toolsLog('☁️ Cloud อัปเดตแล้ว!', true)).catch(()=>toolsLog('📱 บันทึก Local เท่านั้น', true));
+  hideDateEditorPanel();
+  setTimeout(showDateEditorPanel, 150);
 }
 
 // ===== INFO BAR =====
