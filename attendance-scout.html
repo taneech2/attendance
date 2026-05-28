@@ -2281,6 +2281,48 @@ function deserializeFP(raw) {
   });
 }
 
+// ย่อรูปใบหน้าให้เหลือ size×size px — คืน dataURL (JPEG quality 0.7)
+function resizeToThumb(dataURL, size=64) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      c.getContext('2d').drawImage(img, 0, 0, size, size);
+      resolve(c.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = () => resolve(dataURL); // ถ้าโหลดไม่ได้ คืนต้นฉบับ
+    img.src = dataURL;
+  });
+}
+
+// แปลงรูปเก่าทั้งหมดใน facePhotos → thumbnail 64×64
+// เรียกครั้งเดียวตอน init — ถ้ารูปไหนใหญ่กว่า ~8 KB แปลงทันที
+async function migrateFacePhotos() {
+  const THUMB_MAX = 8000; // bytes ≈ characters ใน base64 string
+  let changed = false;
+  for(const k in facePhotos) {
+    const arr = facePhotos[k];
+    if(!Array.isArray(arr)) continue;
+    const newArr = [];
+    for(const p of arr) {
+      if(!p) { newArr.push(p); continue; }
+      if(p.length > THUMB_MAX) {
+        newArr.push(await resizeToThumb(p, 64));
+        changed = true;
+      } else {
+        newArr.push(p);
+      }
+    }
+    facePhotos[k] = newArr;
+  }
+  if(changed) {
+    // บันทึก thumbnail ใหม่ลง localStorage ทันที (ไม่ต้องรอ save cycle)
+    localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  }
+  return changed;
+}
+
 async function openFaceModal(w) {
   if(!requireUnlock()) return;
   faceSubject = ''; // เสาธง mode — reset subject
@@ -2702,15 +2744,15 @@ async function captureDescriptor() {
   faceDescriptors[idx].push(result.descriptor);
   if(faceDescriptors[idx].length > FACE_MAX) faceDescriptors[idx].shift();
   const count = faceDescriptors[idx].length;
-  // บันทึก snapshot รูปใบหน้า (เก็บแค่ 1 รูปแรก = หน้าตรง เพื่อ thumbnail)
+  // บันทึก snapshot รูปใบหน้า → ย่อเป็น thumbnail 64×64 ทันที (ประหยัด ~50×)
   try {
     const box = result.detection.box;
     const snapCanvas = document.createElement('canvas');
-    snapCanvas.width = 80; snapCanvas.height = 80;
-    const snapCtx = snapCanvas.getContext('2d');
-    snapCtx.drawImage(video, Math.max(0, box.x), Math.max(0, box.y), box.width, box.height, 0, 0, 80, 80);
+    snapCanvas.width = box.width; snapCanvas.height = box.height;
+    snapCanvas.getContext('2d').drawImage(video, Math.max(0, box.x), Math.max(0, box.y), box.width, box.height, 0, 0, box.width, box.height);
+    const thumb = await resizeToThumb(snapCanvas.toDataURL('image/jpeg', 0.9), 64);
     if(!facePhotos[idx]) facePhotos[idx] = [];
-    if(facePhotos[idx].length < FACE_MAX) facePhotos[idx].push(snapCanvas.toDataURL('image/jpeg', 0.6));
+    if(facePhotos[idx].length < FACE_MAX) facePhotos[idx].push(thumb);
     renderStudentChips();
   } catch(e) {}
   const total = faceDescriptors[idx].length;
@@ -2775,6 +2817,9 @@ async function init(){
     localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
     saveToFirebase(); // ดันขึ้น Cloud อัตโนมัติหลังทำความสะอาด
   }
+
+  // แปลงรูปเก่าทั้งหมด → thumbnail 64×64 (ทำครั้งเดียว ถ้ายังไม่ได้แปลง)
+  migrateFacePhotos();
 
   buildTabs();
   buildPanels();
