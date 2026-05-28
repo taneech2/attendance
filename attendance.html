@@ -481,8 +481,10 @@ const CLASS_SUBJECTS = [
   { id:'materials', name:'วัสดุช่าง',          full:'วัสดุงานช่างอุตสาหกรรม',                     day:'ศุกร์',     teacher:'อ.ธานี' },
   { id:'practice',  name:'ฝึกฝีมือ',          full:'งานฝึกฝีมือ',                                 day:'ศุกร์',     teacher:'อ.ธานี' },
 ];
+let extraSubjects = []; // ห้องเรียนที่เพิ่มแบบ dynamic
+function getAllSubjects(){ return [...CLASS_SUBJECTS, ...extraSubjects]; }
 let classData = {};
-CLASS_SUBJECTS.forEach(s => { classData[s.id] = { dates: [], attendance: {}, timestamps: {} }; });
+getAllSubjects().forEach(s => { classData[s.id] = { dates: [], attendance: {}, timestamps: {} }; });
 let currentSubject = CLASS_SUBJECTS[0].id;
 let appMode = 'attend'; // 'attend' | 'class'
 let faceSubject = ''; // subject id เมื่อสแกนในโหมดวิชาเรียน
@@ -776,22 +778,71 @@ function switchMode(mode) {
 function buildClassTabs() {
   const wrap = document.getElementById('class-tabs');
   wrap.innerHTML = '';
-  CLASS_SUBJECTS.forEach((s, i) => {
+  getAllSubjects().forEach((s, i) => {
+    const isExtra = extraSubjects.some(e => e.id === s.id);
     const btn = document.createElement('button');
     btn.className = 'class-tab' + (s.id===currentSubject ? ' active' : '');
     btn.id = 'ctab-' + s.id;
-    btn.textContent = s.name;
+    btn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = s.name;
+    btn.appendChild(nameSpan);
+    btn.onclick = (e) => { if(e.target.classList.contains('btn-del-room')) return; currentSubject = s.id; buildClassTabs(); renderClass(s.id); };
     const cd = classData[s.id];
     if(cd && cd.dates.length > 0) btn.classList.add('has-data');
-    btn.onclick = () => { currentSubject = s.id; buildClassTabs(); renderClass(s.id); };
+    if(isExtra) {
+      const del = document.createElement('span');
+      del.className = 'btn-del-room';
+      del.textContent = '✕';
+      del.title = 'ลบห้องนี้';
+      del.style.cssText = 'font-size:10px;color:#e05555;margin-left:2px;cursor:pointer;padding:0 2px;line-height:1;';
+      del.onclick = (e) => { e.stopPropagation(); deleteRoom(s.id); };
+      btn.appendChild(del);
+    }
     wrap.appendChild(btn);
   });
+  // ปุ่ม + เพิ่มห้องเรียน
+  const addBtn = document.createElement('button');
+  addBtn.className = 'class-tab';
+  addBtn.style.cssText = 'border-color:#c9a84c88;color:#c9a84c;font-weight:700;';
+  addBtn.textContent = '+ ห้องเรียน';
+  addBtn.onclick = addRoom;
+  wrap.appendChild(addBtn);
+}
+
+function addRoom() {
+  const name = prompt('ชื่อห้องเรียน (เช่น ช่างยนต์หนึ่ง ก.)');
+  if(!name || !name.trim()) return;
+  const n = name.trim();
+  const id = 'room_' + n.replace(/[^a-zA-Z0-9ก-๙]/g,'_') + '_' + Date.now().toString(36);
+  extraSubjects.push({ id, name: n, full: n, day: '', teacher: '' });
+  if(!classData[id]) classData[id] = { dates: [], attendance: {}, timestamps: {} };
+  currentSubject = id;
+  buildClassTabs();
+  buildClassPanels();
+  renderClass(id);
+  saveData();
+  showStatus('✅ เพิ่มห้อง "' + n + '" แล้ว', '#c9a84c');
+}
+
+function deleteRoom(sid) {
+  const subj = extraSubjects.find(s => s.id === sid);
+  if(!subj) return;
+  if(!confirm('ลบห้อง "' + subj.name + '"?\nข้อมูลการเช็คชื่อในห้องนี้จะหายทั้งหมด')) return;
+  extraSubjects = extraSubjects.filter(s => s.id !== sid);
+  delete classData[sid];
+  currentSubject = getAllSubjects()[0]?.id || '';
+  buildClassTabs();
+  buildClassPanels();
+  if(currentSubject) renderClass(currentSubject);
+  saveData();
+  showStatus('🗑️ ลบห้อง "' + subj.name + '" แล้ว', '#e05555');
 }
 
 function buildClassPanels() {
   const wrap = document.getElementById('class-panels');
   wrap.innerHTML = '';
-  CLASS_SUBJECTS.forEach(s => {
+  getAllSubjects().forEach(s => {
     const div = document.createElement('div');
     div.className = 'class-panel' + (s.id===currentSubject ? ' active' : '');
     div.id = 'cpanel-' + s.id;
@@ -805,7 +856,7 @@ function renderClass(sid) {
   const panel = document.getElementById('cpanel-' + sid);
   if(!panel) return;
   panel.classList.add('active');
-  const subj = CLASS_SUBJECTS.find(s => s.id===sid);
+  const subj = getAllSubjects().find(s => s.id===sid);
   const cd = classData[sid];
   if(!cd) return;
 
@@ -1264,7 +1315,7 @@ function renderLeaderboard(){
     dates.forEach(({w,d})=>{
       const att = weekData[w]?.attendance?.[i]?.[d]||0;
       const ts  = weekData[w]?.timestamps?.[i]?.[d]||'';
-      const absentAnySubject = CLASS_SUBJECTS.some(s=>{
+      const absentAnySubject = getAllSubjects().some(s=>{
         const cd = classData[s.id];
         return cd?.dates?.includes(d) && cd?.attendance?.[i]?.[d]===2;
       });
@@ -1420,7 +1471,7 @@ function exportToExcel() {
   // ── Sheet 1: สรุปรวม ──
   const sumHeader = ['ลำดับ','ชื่อ – สกุล',
     'เสาธง (มา)','เสาธง (ขาด)','เสาธง (%)',
-    ...CLASS_SUBJECTS.flatMap(s=>[s.name+' (มา)',s.name+' (ขาด)',s.name+' (%)'])
+    ...getAllSubjects().flatMap(s=>[s.name+' (มา)',s.name+' (ขาด)',s.name+' (%)'])
   ];
   const sumRows = students.map((name, idx) => {
     // เสาธง
@@ -1435,7 +1486,7 @@ function exportToExcel() {
     }
     const sPct = sDays>0 ? (sMa/sDays*100).toFixed(1)+'%' : '-';
     // วิชาเรียน
-    const classVals = CLASS_SUBJECTS.flatMap(s=>{
+    const classVals = getAllSubjects().flatMap(s=>{
       const cd=classData[s.id]; let ma=0,noma=0,days=0;
       cd.dates.forEach(d=>{
         const v=cd.attendance[idx]?.[d]||0;
@@ -1470,7 +1521,7 @@ function exportToExcel() {
   XLSX.utils.book_append_sheet(wb, atWs, 'เสาธง');
 
   // ── Sheet ต่อไป: แต่ละวิชา ──
-  CLASS_SUBJECTS.forEach(subj=>{
+  getAllSubjects().forEach(subj=>{
     const cd=classData[subj.id];
     const header=['ลำดับ','ชื่อ – สกุล',...cd.dates,'รวมมา','รวมขาด','% มาเรียน'];
     const rows=students.map((name,idx)=>{
@@ -1514,7 +1565,7 @@ function exportSingleSheet() {
   rows.push([
     'ลำดับ', 'ชื่อ – สกุล',
     'เสาธง\nมา', 'เสาธง\nขาด', 'เสาธง\n%',
-    ...CLASS_SUBJECTS.flatMap(s => [s.name+'\nมา', s.name+'\nขาด', s.name+'\n%']),
+    ...getAllSubjects().flatMap(s => [s.name+'\nมา', s.name+'\nขาด', s.name+'\n%']),
     'รวมมาทั้งหมด', 'รวมขาดทั้งหมด', 'เฉลี่ย%ทุกวิชา'
   ]);
 
@@ -1533,7 +1584,7 @@ function exportSingleSheet() {
 
     // วิชาเรียน
     let totalMa=sMa, totalNoma=sNoma, pctSum=0, pctCount=0;
-    const classVals = CLASS_SUBJECTS.flatMap(s=>{
+    const classVals = getAllSubjects().flatMap(s=>{
       const cd=classData[s.id]; let ma=0,noma=0,days=0;
       cd.dates.forEach(d=>{
         const v=cd.attendance[idx]?.[d]||0;
@@ -1556,7 +1607,7 @@ function exportSingleSheet() {
   rows.push([`ส่งออกเมื่อ: ${new Date().toLocaleString('th-TH')}`]);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  const colWidths = [6, 28, 10, 10, 10, ...CLASS_SUBJECTS.flatMap(()=>[10,10,10]), 14, 14, 14];
+  const colWidths = [6, 28, 10, 10, 10, ...getAllSubjects().flatMap(()=>[10,10,10]), 14, 14, 14];
   ws['!cols'] = colWidths.map(w=>({wch:w}));
 
   const wb = XLSX.utils.book_new();
@@ -1721,6 +1772,7 @@ function fixArr(src){
 
 function getPayload(includeFacePhotos=true){
   return { students, weekData, classData,
+    extraSubjects,
     hiddenStudents: Array.from(hiddenStudents),
     infoBar: getInfoBar(), pin: classPin, pinnedView,
     namesHidden,
@@ -1775,9 +1827,10 @@ function applyData(parsed){
     const ts = fixArr(src.timestamps);
     Object.keys(ts).forEach(k=>{ if(ts[k]) weekData[w].timestamps[Number(k)] = ts[k]; });
   }
-  // restore classData
+  // restore extraSubjects ก่อน แล้วค่อย restore classData
+  extraSubjects = (parsed.extraSubjects || []).filter(s => s.id && s.name);
   const cd = parsed.classData || {};
-  CLASS_SUBJECTS.forEach(s => {
+  getAllSubjects().forEach(s => {
     const src = cd[s.id] || {};
     classData[s.id] = { dates: src.dates || [], attendance: {}, timestamps: {} };
     const att = src.attendance || {};
@@ -2067,7 +2120,7 @@ function showDateEditorPanel(){
   let dates, title;
   if(appMode==='class'){
     const sid = currentSubject;
-    const subj = CLASS_SUBJECTS.find(s=>s.id===sid);
+    const subj = getAllSubjects().find(s=>s.id===sid);
     dates = (classData[sid]?.dates||[]).slice();
     title = '✏️ วิชา: ' + (subj?.name||sid);
     _deCtx = {isClass:true, sid};
@@ -2645,7 +2698,7 @@ async function openFaceModalClass(sid) {
     const today = todayThaiDate();
     sel.value = dates.includes(today) ? today : dates[dates.length - 1];
   }
-  const subj = CLASS_SUBJECTS.find(s => s.id===sid);
+  const subj = getAllSubjects().find(s => s.id===sid);
   document.getElementById('face-scan-header').textContent = '📚 ' + subj.full;
 }
 
@@ -2756,9 +2809,10 @@ async function init(){
 
       // แกะข้อมูล weekData + classData จาก cloud (รองรับทั้ง format ใหม่และเก่า)
       let cwd = null, ccd = null;
-      if(data.students !== undefined){ cwd = data.weekData; ccd = data.classData; }
+      let cex = null; // extraSubjects จาก cloud
+      if(data.students !== undefined){ cwd = data.weekData; ccd = data.classData; cex = data.extraSubjects; }
       else if(data.p){
-        const p = JSON.parse(data.p); cwd = p.weekData; ccd = p.classData;
+        const p = JSON.parse(data.p); cwd = p.weekData; ccd = p.classData; cex = p.extraSubjects;
         if(data.weekData){ // merge weekData PATCH ทับ data.p
           for(const w in data.weekData){
             if(!cwd) cwd={};
@@ -2843,6 +2897,18 @@ async function init(){
           for(const d in ts[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=ts[in_][d]; if(v !== undefined && v !== null && classData[sid].timestamps[in_][cd]!==v){classData[sid].timestamps[in_][cd]=v;changed=true;} }
         }
       }}
+
+      // sync extraSubjects จาก cloud — เพิ่มห้องที่ยังไม่มีใน local
+      if(cex && Array.isArray(cex)){
+        cex.forEach(s => {
+          if(s.id && s.name && !extraSubjects.find(e=>e.id===s.id)){
+            extraSubjects.push(s);
+            if(!classData[s.id]) classData[s.id]={dates:[],attendance:{},timestamps:{}};
+            changed = true;
+          }
+        });
+        if(changed) buildClassTabs(); buildClassPanels();
+      }
 
       if(changed){
         updatePinButtons();
