@@ -9,7 +9,7 @@ build.py — ระบบป้องกันแก้ผิดไฟล์
 ห้ามแก้ index.html / attendance-ch1.html / attendance-y2.html โดยตรง!
 """
 
-import re, subprocess, sys, io
+import re, subprocess, sys, io, json
 from pathlib import Path
 
 # รองรับ Windows terminal ที่ใช้ CP874
@@ -78,6 +78,125 @@ TARGETS = [
   { id:'volunteer',  name:'จิตอาสา',          full:'กิจกรรมจิตอาสา',                     day:'ศุกร์',     teacher:'อ.ธานี' },
   { id:'electric',   name:'ไฟฟ้าเบื้องต้น',   full:'ไฟฟ้าเบื้องต้นสำหรับงานช่าง',       day:'ศุกร์',     teacher:'อ.ชลธี' },
 ]""",
+        },
+    },
+
+    # ── ชย.1ก ─────────────────────────────────────────────────
+    {
+        "out":      "attendance-me1a.html",
+        "label":    "attendance-me1a.html  (ชย.1ก)",
+        "banner":   "<!-- AUTO-GENERATED from attendance.html — python build.py -->",
+        "patches": {
+            "title_suffix":     "ชย.1ก วิทยาลัยการอาชีพบุรีรัมย์",
+            "db_path":          "attendance-me1a.json",
+            "ls_key":           "attendanceData_me1a_v2",
+            "lbl_class":        "ชย.1ก สาขาวิชาช่างยนต์",
+            "default_students": "[]",
+            "manifest":         "manifest-me1a.json",
+            "pwa_name":         "เช็คชื่อ ชย.1ก",
+            "class_subjects":   "[]",
+        },
+    },
+
+    # ── ชย.1ข ─────────────────────────────────────────────────
+    {
+        "out":      "attendance-me1b.html",
+        "label":    "attendance-me1b.html  (ชย.1ข)",
+        "banner":   "<!-- AUTO-GENERATED from attendance.html — python build.py -->",
+        "patches": {
+            "title_suffix":     "ชย.1ข วิทยาลัยการอาชีพบุรีรัมย์",
+            "db_path":          "attendance-me1b.json",
+            "ls_key":           "attendanceData_me1b_v2",
+            "lbl_class":        "ชย.1ข สาขาวิชาช่างยนต์",
+            "default_students": "[]",
+            "manifest":         "manifest-me1b.json",
+            "pwa_name":         "เช็คชื่อ ชย.1ข",
+            "class_subjects":   "[]",
+        },
+    },
+
+    # ── ชก.1ก ─────────────────────────────────────────────────
+    {
+        "out":      "attendance-ml1a.html",
+        "label":    "attendance-ml1a.html  (ชก.1ก)",
+        "banner":   "<!-- AUTO-GENERATED from attendance.html — python build.py -->",
+        "patches": {
+            "title_suffix":     "ชก.1ก วิทยาลัยการอาชีพบุรีรัมย์",
+            "db_path":          "attendance-ml1a.json",
+            "ls_key":           "attendanceData_ml1a_v2",
+            "lbl_class":        "ชก.1ก สาขาวิชาช่างกลโรงงาน",
+            "default_students": "[]",
+            "manifest":         "manifest-ml1a.json",
+            "pwa_name":         "เช็คชื่อ ชก.1ก",
+            "class_subjects":   "[]",
+        },
+    },
+
+    # ── ชก.1ข ─────────────────────────────────────────────────
+    {
+        "out":      "attendance-ml1b.html",
+        "label":    "attendance-ml1b.html  (ชก.1ข)",
+        "banner":   "<!-- AUTO-GENERATED from attendance.html — python build.py -->",
+        "patches": {
+            "title_suffix":     "ชก.1ข วิทยาลัยการอาชีพบุรีรัมย์",
+            "db_path":          "attendance-ml1b.json",
+            "ls_key":           "attendanceData_ml1b_v2",
+            "lbl_class":        "ชก.1ข สาขาวิชาช่างกลโรงงาน",
+            "default_students": "[]",
+            "manifest":         "manifest-ml1b.json",
+            "pwa_name":         "เช็คชื่อ ชก.1ข",
+            "class_subjects":   "[]",
+        },
+    },
+
+    # ── ชฟ.1 ──────────────────────────────────────────────────
+    {
+        "out":      "attendance-el1.html",
+        "label":    "attendance-el1.html   (ชฟ.1)",
+        "banner":   "<!-- AUTO-GENERATED from attendance.html — python build.py -->",
+        "patches": {
+            "title_suffix":     "ชฟ.1 วิทยาลัยการอาชีพบุรีรัมย์",
+            "db_path":          "attendance-el1.json",
+            "ls_key":           "attendanceData_el1_v2",
+            "lbl_class":        "ชฟ.1 สาขาวิชาช่างไฟฟ้ากำลัง",
+            "default_students": "[]",
+            "manifest":         "manifest-el1.json",
+            "pwa_name":         "เช็คชื่อ ชฟ.1",
+            "class_subjects":   "[]",
+        },
+    },
+
+    # ── คธ.1 ──────────────────────────────────────────────────
+    {
+        "out":      "attendance-ct1.html",
+        "label":    "attendance-ct1.html   (คธ.1)",
+        "banner":   "<!-- AUTO-GENERATED from attendance.html — python build.py -->",
+        "patches": {
+            "title_suffix":     "คธ.1 วิทยาลัยการอาชีพบุรีรัมย์",
+            "db_path":          "attendance-ct1.json",
+            "ls_key":           "attendanceData_ct1_v2",
+            "lbl_class":        "คธ.1 สาขาวิชาคอมพิวเตอร์ธุรกิจ",
+            "default_students": "[]",
+            "manifest":         "manifest-ct1.json",
+            "pwa_name":         "เช็คชื่อ คธ.1",
+            "class_subjects":   "[]",
+        },
+    },
+
+    # ── บช.1 ──────────────────────────────────────────────────
+    {
+        "out":      "attendance-ac1.html",
+        "label":    "attendance-ac1.html   (บช.1)",
+        "banner":   "<!-- AUTO-GENERATED from attendance.html — python build.py -->",
+        "patches": {
+            "title_suffix":     "บช.1 วิทยาลัยการอาชีพบุรีรัมย์",
+            "db_path":          "attendance-ac1.json",
+            "ls_key":           "attendanceData_ac1_v2",
+            "lbl_class":        "บช.1 สาขาวิชาการบัญชี",
+            "default_students": "[]",
+            "manifest":         "manifest-ac1.json",
+            "pwa_name":         "เช็คชื่อ บช.1",
+            "class_subjects":   "[]",
         },
     },
 
@@ -192,6 +311,25 @@ HOMEPAGE_BANNER = """\
 <!-- ║  HOME → https://taneech2.github.io/attendance/      ║ -->
 <!-- ╚══════════════════════════════════════════════════════╝ -->"""
 
+def make_manifest(name, short_name, start_url, icon_emoji="📋"):
+    """Generate PWA manifest dict."""
+    svg = f"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%230a0f1e' rx='24'/><text x='96' y='140' font-size='110' text-anchor='middle'>{icon_emoji}</text></svg>"
+    return {
+        "name": name,
+        "short_name": short_name,
+        "start_url": start_url,
+        "display": "standalone",
+        "orientation": "portrait",
+        "background_color": "#0a0f1e",
+        "theme_color": "#c9a84c",
+        "icons": [{"src": svg, "sizes": "192x192", "type": "image/svg+xml"}],
+    }
+
+def write_json(path, data, label):
+    content = json.dumps(data, ensure_ascii=False, indent=2)
+    path.write_text(content, encoding="utf-8")
+    print(f"  ✅  {label:40s} ({len(content)//1024 or 1} KB)")
+
 def build():
     if not TEMPLATE.exists():
         print("❌  ไม่พบ attendance.html!"); sys.exit(1)
@@ -202,6 +340,19 @@ def build():
     home_src = read(HOMEPAGE)
     print(f"📄  Template: {HOMEPAGE.name} ({len(home_src)//1024} KB)\n")
     write(ROOT / "index.html", add_banner(home_src, HOMEPAGE_BANNER), "index.html  (Homepage)")
+
+    # ── Auto-generate manifests for targets ──────────────────
+    print()
+    for t in TARGETS:
+        p = t.get("patches") or {}
+        mf = p.get("manifest")
+        if not mf: continue
+        mf_path = ROOT / mf
+        if mf_path.exists(): continue  # ถ้ามีอยู่แล้วไม่เขียนทับ
+        pwa_name = p.get("pwa_name", "เช็คชื่อ")
+        short    = pwa_name.replace("เช็คชื่อ ", "")
+        url      = "./" + t["out"]
+        write_json(mf_path, make_manifest(pwa_name, short, url), mf)
 
     # ── Attendance targets ────────────────────────────────────
     src = read(TEMPLATE)
@@ -218,8 +369,10 @@ def build():
 
 def git_push():
     out_files = [t["out"] for t in TARGETS]
-    extra = ["manifest-y2.json", "manifest-scout.json", "manifest-ch1.json", "manifest-home.json",
-             "index.html", "homepage.html"]
+    # รวม manifests ทุกตัว + homepage
+    manifest_files = [t["patches"]["manifest"] for t in TARGETS if t.get("patches") and t["patches"].get("manifest")]
+    manifest_files += ["manifest-home.json"]
+    extra = list(set(manifest_files)) + ["index.html", "homepage.html"]
     all_files = out_files + extra
 
     print("📦  Committing...")
