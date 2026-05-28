@@ -1702,7 +1702,9 @@ document.addEventListener('keydown', e => {
   const faceOpen = document.getElementById('face-overlay')?.classList.contains('active');
   const regVisible = document.getElementById('face-register-ctrl')?.style.display !== 'none';
   if(faceOpen && regVisible) {
-    if(e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'AudioVolumeUp') {
+    if(e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight' ||
+       e.key === 'AudioVolumeUp' || e.key === 'AudioVolumeDown' ||
+       e.key === 'MediaPlayPause') {
       e.preventDefault();
       const btn = document.getElementById('btn-capture');
       if(btn && !btn.disabled) captureDescriptor();
