@@ -2904,10 +2904,19 @@ init();
         <div style="display:flex;gap:8px;align-items:center">
           <select id="sel-reg-student" onchange="updateRegPhotoPreview()" style="flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:9px 12px;border-radius:6px;font-family:Sarabun,sans-serif;font-size:14px;"></select>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span id="reg-photo-count" style="font-size:13px;font-weight:700;flex:1">📷 ยังไม่มีรูป</span>
-          <button id="btn-capture" class="btn" onclick="captureDescriptor()">📸 ถ่ายรูป</button>
-          <button class="btn btn-red" onclick="clearStudentFace()" title="ลบรูปทั้งหมดของคนนี้แล้วถ่ายใหม่">🗑 ลบรูป</button>
+        <button id="btn-capture" onclick="captureDescriptor()"
+          style="width:100%;background:linear-gradient(135deg,#00c96e,#009a50);color:#fff;border:none;
+                 padding:20px;border-radius:12px;cursor:pointer;font-family:'Sarabun',sans-serif;
+                 font-weight:700;font-size:22px;box-shadow:0 0 24px rgba(0,201,110,.5);
+                 transition:.2s;letter-spacing:1px;">
+          📸 ถ่ายรูป
+        </button>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <span id="reg-photo-count" style="font-size:13px;font-weight:700;flex:1;color:#a89060;">📷 ยังไม่มีรูป</span>
+          <button class="btn btn-red" onclick="clearStudentFace()" title="ลบรูปทั้งหมดของคนนี้แล้วถ่ายใหม่"
+            style="padding:4px 10px;font-size:11px;border-radius:6px;opacity:0.75;">
+            🗑 ลบ
+          </button>
         </div>
         <div id="face-guide-hint" style="background:rgba(201,168,76,.07);border:1px solid #c9a84c33;border-radius:6px;padding:8px 12px;font-size:12px;line-height:1.6">
           📍 รูปที่ 1: 😐 หน้าตรง — มองตรงเข้ากล้อง
