@@ -1,6 +1,7 @@
-const CACHE = 'attendance-v17'; // ← bump version → ล้าง cache เก่าทุกเครื่องอัตโนมัติ
+const CACHE = 'attendance-v18'; // ← bump version → ล้าง cache เก่าทุกเครื่องอัตโนมัติ
 const PRECACHE = [
   './index.html',
+  './home.html',
   './attendance-ch1.html',
   './attendance-y2.html',
   './attendance-scout.html',

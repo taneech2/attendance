@@ -50,7 +50,8 @@ Cindy (COO) — รับงาน, กระจายให้ทีม
 |------|--------|-----|
 | `homepage.html` | ✅ **แก้ที่นี่** (homepage template) | — |
 | `attendance.html` | ✅ **แก้ที่นี่** (attendance template) | — |
-| `index.html` | ⛔ auto-generated — ห้ามแก้มือ | https://taneech2.github.io/attendance/ |
+| `index.html` | ⛔ auto-generated — ห้ามแก้มือ | https://taneech2.github.io/attendance/ (redirect → ชช.1) |
+| `home.html` | ⛔ auto-generated — ห้ามแก้มือ | https://taneech2.github.io/attendance/home.html |
 | `attendance-ch1.html` | ⛔ auto-generated — ห้ามแก้มือ | …/attendance-ch1.html |
 | `attendance-y2.html` | ⛔ auto-generated — ห้ามแก้มือ | …/attendance-y2.html |
 | `attendance-scout.html` | ⛔ auto-generated — ห้ามแก้มือ | …/attendance-scout.html |
