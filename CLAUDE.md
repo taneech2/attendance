@@ -48,18 +48,23 @@ Cindy (COO) — รับงาน, กระจายให้ทีม
 ### 🚨 กฎเหล็ก — ห้ามแก้ผิดไฟล์
 | ไฟล์ | สถานะ | URL |
 |------|--------|-----|
-| `attendance.html` | ✅ **แก้ที่นี่เท่านั้น** (source template) | — |
+| `homepage.html` | ✅ **แก้ที่นี่** (homepage template) | — |
+| `attendance.html` | ✅ **แก้ที่นี่** (attendance template) | — |
 | `index.html` | ⛔ auto-generated — ห้ามแก้มือ | https://taneech2.github.io/attendance/ |
-| `attendance-y2.html` | ⛔ auto-generated — ห้ามแก้มือ | https://taneech2.github.io/attendance/attendance-y2.html |
+| `attendance-ch1.html` | ⛔ auto-generated — ห้ามแก้มือ | …/attendance-ch1.html |
+| `attendance-y2.html` | ⛔ auto-generated — ห้ามแก้มือ | …/attendance-y2.html |
+| `attendance-scout.html` | ⛔ auto-generated — ห้ามแก้มือ | …/attendance-scout.html |
 
 ### Workflow แก้ไขทุกครั้ง
 ```
-1. แก้ code ที่ attendance.html
+1. แก้ code ที่ attendance.html (หรือ homepage.html)
 2. python build.py --push
-   → สร้าง index.html + attendance-y2.html อัตโนมัติ
+   → สร้าง index.html + attendance-ch1.html + attendance-y2.html + attendance-scout.html
    → commit + push GitHub Pages
 ```
 
 ### ข้อมูลเฉพาะแต่ละห้อง (อยู่ใน build.py)
-- **ชช.1** (index.html): DB=attendance.json, LS=attendanceData_v2, นักเรียน 15 คน
+- **Homepage** (index.html): หน้าหลักลิงก์ทุกห้อง
+- **ชช.1** (attendance-ch1.html): DB=attendance.json, LS=attendanceData_v2, นักเรียน 15 คน
 - **ชช.2** (attendance-y2.html): DB=attendance-y2.json, LS=attendanceData_y2_v2, นักเรียน=[] (กรอกเอง)
+- **ลูกเสือ** (attendance-scout.html): DB=attendance-scout.json, LS=attendanceData_scout_v2

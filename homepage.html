@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<!-- ╔══════════════════════════════════════════════════════╗ -->
+<!-- ║  ✏️  SOURCE TEMPLATE — แก้ที่นี่เท่านั้น            ║ -->
+<!-- ║  หลังแก้เสร็จ รัน: python build.py --push           ║ -->
+<!-- ╚══════════════════════════════════════════════════════╝ -->
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบเช็คชื่อ — วิทยาลัยการอาชีพบุรีรัมย์</title>
+<link rel="manifest" href="manifest-home.json">
+<meta name="theme-color" content="#c9a84c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="เช็คชื่อ วอศ.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sarabun',sans-serif;background:#0a0f1e;min-height:100vh;padding:24px 16px 48px;}
+
+/* PAGE WRAPPER */
+.page{max-width:900px;margin:0 auto;}
+
+/* HEADER */
+.header{text-align:center;padding:32px 20px 24px;position:relative;}
+.logo-circle{
+  width:88px;height:88px;border-radius:50%;border:3px solid #c9a84c;
+  margin:0 auto 14px;
+  background:radial-gradient(circle,#1a2540,#0d1530);
+  display:flex;align-items:center;justify-content:center;
+  font-size:38px;
+  box-shadow:0 0 28px rgba(201,168,76,.4);
+}
+.school-name{
+  font-size:26px;font-weight:800;
+  background:linear-gradient(135deg,#f0d060,#c9a84c,#e8c84a);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;line-height:1.3;
+}
+.school-sub{color:#a89060;font-size:13px;letter-spacing:.5px;}
+
+.divider{display:flex;align-items:center;gap:10px;margin:20px 0 8px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,#c9a84c55,transparent);}
+.divider span{color:#c9a84c88;font-size:9px;letter-spacing:2px;}
+
+/* SECTION */
+.section{margin-bottom:28px;}
+.section-title{
+  display:flex;align-items:center;gap:10px;
+  color:#c9a84c;font-size:15px;font-weight:700;
+  margin-bottom:14px;letter-spacing:.5px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(to right,#c9a84c44,transparent);}
+
+/* GRID */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;}
+
+/* CARD */
+.card{
+  position:relative;
+  background:linear-gradient(160deg,#0d1a35,#0a1428);
+  border:1px solid #c9a84c55;
+  border-radius:12px;
+  padding:20px 16px 16px;
+  text-decoration:none;
+  transition:all .2s;
+  cursor:pointer;
+  display:flex;flex-direction:column;gap:6px;
+}
+.card:hover{
+  border-color:#c9a84c;
+  background:linear-gradient(160deg,#122040,#0d1a35);
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(201,168,76,.2);
+}
+.card-abbr{
+  font-size:28px;font-weight:800;
+  background:linear-gradient(135deg,#f0d060,#c9a84c);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;margin-bottom:2px;
+}
+.card-name{color:#d4c4a0;font-size:14px;font-weight:600;line-height:1.4;}
+.card-desc{color:#6a7fa0;font-size:11px;line-height:1.5;margin-top:2px;}
+.card-arrow{
+  color:#c9a84c66;font-size:11px;margin-top:auto;padding-top:10px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-arrow .arrow{font-size:14px;color:#c9a84c;}
+
+/* COMING SOON CARD */
+.card-soon{
+  background:linear-gradient(160deg,#0a0f1e,#080d1a);
+  border:1px solid #ffffff0d;
+  cursor:default;
+  pointer-events:none;
+  opacity:.55;
+}
+.card-soon:hover{transform:none;box-shadow:none;border-color:#ffffff0d;}
+.card-soon .card-abbr{
+  background:linear-gradient(135deg,#6a7a90,#4a5a70);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.badge-soon{
+  position:absolute;top:10px;right:10px;
+  background:#1a2a3a;border:1px solid #2a3a4a;
+  color:#5a7090;font-size:9px;font-weight:700;
+  padding:2px 7px;border-radius:10px;letter-spacing:.5px;
+}
+
+/* SCOUT special card */
+.card-scout{border-color:#4caf8a55;}
+.card-scout:hover{border-color:#4caf8a;box-shadow:0 8px 24px rgba(76,175,138,.2);}
+.card-scout .card-abbr{
+  background:linear-gradient(135deg,#6de8b0,#4caf8a);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.card-scout .card-arrow .arrow{color:#4caf8a;}
+
+/* FOOTER */
+.footer{text-align:center;color:#2a3a50;font-size:11px;margin-top:32px;padding-top:16px;
+  border-top:1px solid #ffffff08;letter-spacing:.5px;}
+
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-circle">🏫</div>
+    <div class="school-name">วิทยาลัยการอาชีพบุรีรัมย์</div>
+    <div class="school-sub">ระบบเช็คชื่อ ปีการศึกษา 2568</div>
+  </div>
+
+  <div class="divider"><span>◆ เลือกห้องเรียน ◆</span></div>
+
+  <!-- SECTION 1: ช่างเชื่อม -->
+  <div class="section">
+    <div class="section-title">⚙️ สาขาวิชาช่างเชื่อมโลหะ</div>
+    <div class="card-grid">
+
+      <a class="card" href="attendance-ch1.html">
+        <div class="card-abbr">ชช.1</div>
+        <div class="card-name">ช่างเชื่อมโลหะ ปีที่ 1</div>
+        <div class="card-desc">ปวช.1 สาขาวิชาช่างเชื่อมโลหะ</div>
+        <div class="card-arrow"><span>เช็คชื่อ</span><span class="arrow">→</span></div>
+      </a>
+
+      <a class="card" href="attendance-y2.html">
+        <div class="card-abbr">ชช.2</div>
+        <div class="card-name">ช่างเชื่อมโลหะ ปีที่ 2</div>
+        <div class="card-desc">ปวช.2 สาขาวิชาช่างเชื่อมโลหะ</div>
+        <div class="card-arrow"><span>เช็คชื่อ</span><span class="arrow">→</span></div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- SECTION 2: ปวช.1 ทุกแผนก -->
+  <div class="section">
+    <div class="section-title">🔧 ปวช.ปีที่ 1 ทุกสาขาวิชา</div>
+    <div class="card-grid">
+
+      <a class="card card-soon" href="#">
+        <div class="badge-soon">เร็วๆ นี้</div>
+        <div class="card-abbr">ชย.1ก</div>
+        <div class="card-name">ช่างยนต์ ปีที่ 1 ห้อง ก</div>
+        <div class="card-desc">ปวช.1 สาขาวิชาช่างยนต์</div>
+        <div class="card-arrow"><span>เร็วๆ นี้</span></div>
+      </a>
+
+      <a class="card card-soon" href="#">
+        <div class="badge-soon">เร็วๆ นี้</div>
+        <div class="card-abbr">ชย.1ข</div>
+        <div class="card-name">ช่างยนต์ ปีที่ 1 ห้อง ข</div>
+        <div class="card-desc">ปวช.1 สาขาวิชาช่างยนต์</div>
+        <div class="card-arrow"><span>เร็วๆ นี้</span></div>
+      </a>
+
+      <a class="card card-soon" href="#">
+        <div class="badge-soon">เร็วๆ นี้</div>
+        <div class="card-abbr">ชก.1ก</div>
+        <div class="card-name">ช่างกลโรงงาน ปีที่ 1 ห้อง ก</div>
+        <div class="card-desc">ปวช.1 สาขาวิชาช่างกลโรงงาน</div>
+        <div class="card-arrow"><span>เร็วๆ นี้</span></div>
+      </a>
+
+      <a class="card card-soon" href="#">
+        <div class="badge-soon">เร็วๆ นี้</div>
+        <div class="card-abbr">ชก.1ข</div>
+        <div class="card-name">ช่างกลโรงงาน ปีที่ 1 ห้อง ข</div>
+        <div class="card-desc">ปวช.1 สาขาวิชาช่างกลโรงงาน</div>
+        <div class="card-arrow"><span>เร็วๆ นี้</span></div>
+      </a>
+
+      <a class="card card-soon" href="#">
+        <div class="badge-soon">เร็วๆ นี้</div>
+        <div class="card-abbr">ชฟ.1</div>
+        <div class="card-name">ช่างไฟฟ้ากำลัง ปีที่ 1</div>
+        <div class="card-desc">ปวช.1 สาขาวิชาช่างไฟฟ้ากำลัง</div>
+        <div class="card-arrow"><span>เร็วๆ นี้</span></div>
+      </a>
+
+      <a class="card card-soon" href="#">
+        <div class="badge-soon">เร็วๆ นี้</div>
+        <div class="card-abbr">คอม.1</div>
+        <div class="card-name">คอมพิวเตอร์ธุรกิจ ปีที่ 1</div>
+        <div class="card-desc">ปวช.1 สาขาวิชาคอมพิวเตอร์ธุรกิจ</div>
+        <div class="card-arrow"><span>เร็วๆ นี้</span></div>
+      </a>
+
+      <a class="card card-soon" href="#">
+        <div class="badge-soon">เร็วๆ นี้</div>
+        <div class="card-abbr">บช.1</div>
+        <div class="card-name">การบัญชี ปีที่ 1</div>
+        <div class="card-desc">ปวช.1 สาขาวิชาการบัญชี</div>
+        <div class="card-arrow"><span>เร็วๆ นี้</span></div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: กิจกรรม -->
+  <div class="section">
+    <div class="section-title">🏕️ กิจกรรม</div>
+    <div class="card-grid">
+
+      <a class="card card-scout" href="attendance-scout.html">
+        <div class="card-abbr">ลูกเสือ</div>
+        <div class="card-name">ลูกเสือวิสามัญ ปวช.1</div>
+        <div class="card-desc">รวมทุกสาขาวิชา</div>
+        <div class="card-arrow"><span>เช็คชื่อ</span><span class="arrow">→</span></div>
+      </a>
+
+    </div>
+  </div>
+
+  <div class="footer">วิทยาลัยการอาชีพบุรีรัมย์ · ระบบเช็คชื่ออัจฉริยะ · ปีการศึกษา 2568</div>
+
+</div>
+
+</body>
+</html>

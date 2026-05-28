@@ -1,0 +1,17 @@
+{
+  "name": "เช็คชื่อ ชช.1",
+  "short_name": "ชช.1",
+  "description": "แบบบันทึกการเข้าร่วมกิจกรรม ชช.1 วิทยาลัยการอาชีพบุรีรัมย์",
+  "start_url": "./attendance-ch1.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0f1e",
+  "theme_color": "#c9a84c",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%230a0f1e' rx='24'/><text x='96' y='140' font-size='110' text-anchor='middle'>📋</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
