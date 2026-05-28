@@ -1706,6 +1706,19 @@ function updateUndoBtn() {
 }
 
 document.addEventListener('keydown', e => {
+  // ── Bluetooth remote / keyboard shortcut → ถ่ายรูป ──────
+  // รองรับ: Space, Enter, ArrowRight, VolumeUp (Android)
+  const faceOpen = document.getElementById('face-overlay')?.classList.contains('active');
+  const regVisible = document.getElementById('face-register-ctrl')?.style.display !== 'none';
+  if(faceOpen && regVisible) {
+    if(e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'AudioVolumeUp') {
+      e.preventDefault();
+      const btn = document.getElementById('btn-capture');
+      if(btn && !btn.disabled) captureDescriptor();
+      return;
+    }
+  }
+
   if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
     e.preventDefault();
     undo();
