@@ -1837,13 +1837,12 @@ function applyData(parsed){
 }
 
 async function saveToFirebase(){
-  const payload = getPayload(); // เต็ม (มีรูป) → localStorage
+  const payload = getPayload(); // เต็ม (มีรูป thumbnail) → localStorage + Firebase
   localStorage.setItem(LS_KEY, JSON.stringify(payload));
-  const light = getLightPayload(); // เบา (ไม่มีรูป) → Firebase
   try{
     const res = await fetch(DB_URL, {
       method:'PUT', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(light)
+      body: JSON.stringify(payload)
     });
     if(res.ok) showStatus('☁️ บันทึกแล้ว');
     else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
@@ -1938,11 +1937,19 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   if(cloudParsed && (forceCloud || cloudTs >= localTs)){
     if(applyParsed(cloudParsed)){
       showStatus('✅ โหลดจาก Cloud');
-      // รูปภาพไม่ได้เก็บใน Firebase → ดึงจาก Local มาเสริมเสมอ
-      if(localParsed){
-        if(localParsed.fd) deserializeFD(localParsed.fd);
-        if(localParsed.fp) deserializeFP(localParsed.fp);
+      // รูปภาพ: cloud มีแล้ว (fp ส่งขึ้น Firebase ตั้งแต่เวอร์ชั่นนี้)
+      // backward compat: ถ้า cloud ยังไม่มีรูปของคนไหน → ดึง local มาเสริม
+      if(localParsed && localParsed.fp){
+        for(const k in localParsed.fp){
+          const n = Number(k), lv = localParsed.fp[k];
+          if(!lv) continue;
+          if(!facePhotos[n] || facePhotos[n].length === 0)
+            facePhotos[n] = Array.isArray(lv) ? lv : [lv];
+        }
       }
+      // fd: cloud มี fd แล้ว แต่ถ้าไม่มีให้เสริมจาก local (backward compat)
+      if(localParsed && localParsed.fd && !Object.keys(faceDescriptors).length)
+        deserializeFD(localParsed.fd);
       if(needMigrate && !skipMigrate){ saveToFirebase(); } // migrate format เก่า → ใหม่ทันที
       return;
     }
@@ -2930,6 +2937,20 @@ async function init(){
           for(const d in ts[in_]){ const cd=d.replace(/[\.#$\[\]]/g, '').replace(/\//g, '-'); const v=ts[in_][d]; if(v !== undefined && v !== null && classData[sid].timestamps[in_][cd]!==v){classData[sid].timestamps[in_][cd]=v;changed=true;} }
         }
       }}
+
+      // sync รูปใบหน้า (fp) จาก cloud — เพิ่มเฉพาะคนที่ยังไม่มีรูปใน local
+      const cfp = data.fp || (data.students !== undefined ? data.fp : null);
+      if(cfp){
+        for(const k in cfp){
+          const n=Number(k), cv=cfp[k];
+          if(!cv) continue;
+          if(!facePhotos[n] || facePhotos[n].length === 0){
+            facePhotos[n] = Array.isArray(cv) ? cv : [cv];
+            changed = true;
+          }
+        }
+        if(changed) renderStudentChips();
+      }
 
       // sync extraSubjects จาก cloud — เพิ่มห้องที่ยังไม่มีใน local
       if(cex && Array.isArray(cex)){
