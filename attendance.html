@@ -630,7 +630,7 @@ function renderWeek(w){
       const colSpan = 3 + (wd.dates.length||1) + 2;
       const tr = document.createElement('tr');
       tr.className = 'dept-row-header no-print-subtle';
-      tr.innerHTML = `<td colspan="${colSpan}" style="background:${color}15;border-top:2px solid ${color}55;border-bottom:1px solid ${color}22;color:${color};">◆ ${groupLabel(name)}</td>`;
+      tr.innerHTML = `<td colspan="${colSpan}" style="background:${color}28;border-top:3px solid ${color}cc;border-bottom:2px solid ${color}66;color:${color};font-size:13px;font-weight:800;padding:8px 14px;letter-spacing:.8px;">◆ ${groupLabel(name)}</td>`;
       tbody.appendChild(tr);
       return;
     }
@@ -1193,6 +1193,35 @@ async function mergeStudentsFromSources(silent=false){
     }
   });
   if(!merged.length){ if(!silent) showStatus('❌ ไม่พบรายชื่อ','#e05555'); return; }
+
+  // remap weekData + classData จาก index เดิม → index ใหม่ (ด้วยชื่อเป็นตัวเชื่อม)
+  if(students.length){
+    const oldIdxToName = {};
+    students.forEach((n,i)=>{ if(!isGroupHeader(n)) oldIdxToName[i]=n; });
+    const newNameToIdx = {};
+    merged.forEach((n,i)=>{ if(!isGroupHeader(n)) newNameToIdx[n]=i; });
+
+    function remapAtt(attObj){
+      const out={};
+      Object.keys(attObj||{}).forEach(k=>{
+        const name=oldIdxToName[Number(k)];
+        const ni=name!==undefined?newNameToIdx[name]:undefined;
+        if(ni!==undefined) out[ni]=attObj[k];
+      });
+      return out;
+    }
+    for(let w=1;w<=TOTAL_WEEKS;w++){
+      if(!weekData[w]) continue;
+      weekData[w].attendance = remapAtt(weekData[w].attendance);
+      weekData[w].timestamps = remapAtt(weekData[w].timestamps);
+    }
+    for(const sid in classData){
+      if(!classData[sid]) continue;
+      classData[sid].attendance = remapAtt(classData[sid].attendance);
+      classData[sid].timestamps = remapAtt(classData[sid].timestamps);
+    }
+  }
+
   students = merged;
   renderStudentChips();
   await syncAttendanceFromSources();
