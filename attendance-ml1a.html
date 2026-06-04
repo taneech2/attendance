@@ -157,7 +157,7 @@ td.num{color:#c9a84c;font-weight:600;}
 .th-date .btn-del-date{display:block;writing-mode:horizontal-tb;transform:none;margin:6px auto 0;}
 .td-date{width:28px;max-width:36px;padding:6px 2px!important;}
 /* GROUP HEADER ROW */
-.dept-row-header td{font-weight:700;font-size:11px;padding:5px 10px;letter-spacing:.6px;text-align:left;border-left:none!important;border-right:none!important;}
+.dept-row-header td{font-weight:800;font-size:13px;padding:8px 14px;letter-spacing:.8px;text-align:left;border-left:none!important;border-right:none!important;}
 .chip-group-header{background:#1a2540;border:1px dashed #c9a84c44;color:#c9a84c;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
 
 /* STUDENT MANAGER */
@@ -886,8 +886,17 @@ function renderClass(sid) {
       html += '<th class="th-date">' + d + '<button class="btn-del-date no-print" onclick="removeClassDate(\'' + sid + '\',\'' + d + '\')" title="ลบวันนี้">✕</button></th>';
     });
     html += '<th>มา</th><th>ขาด</th><th>%</th></tr></thead><tbody>';
+    let classSeq = 0;
     students.forEach((name, idx) => {
-      if(hiddenStudents.has(idx)) return; // ข้ามนักเรียนที่ซ่อน
+      if(hiddenStudents.has(idx)) return;
+      // ── GROUP HEADER ──
+      if(isGroupHeader(name)){
+        const color = getGroupColor(idx);
+        const colSpan = 3 + cd.dates.length + 3;
+        html += `<tr class="dept-row-header no-print-subtle"><td colspan="${colSpan}" style="background:${color}28;border-top:3px solid ${color}cc;border-bottom:2px solid ${color}66;color:${color};font-size:13px;font-weight:800;padding:8px 14px;letter-spacing:.8px;">◆ ${groupLabel(name)}</td></tr>`;
+        return;
+      }
+      classSeq++;
       const att = cd.attendance[idx] || {};
       let ma = 0, noma = 0;
       cd.dates.forEach(d => { if(att[d]===1) ma++; else if(att[d]===2) noma++; });
@@ -895,7 +904,7 @@ function renderClass(sid) {
       const pct = recorded > 0 ? Math.round(ma / recorded * 100) : null;
       const pctColor = pct === null ? '#a89060' : pct >= 80 ? '#4caf8a' : pct >= 60 ? '#e6a817' : '#e05555';
       const pctText = pct === null ? '—' : pct + '%';
-      html += '<tr><td class="num">' + (idx+1) + '</td><td class="name">' + name + '</td>';
+      html += '<tr><td class="num">' + classSeq + '</td><td class="name">' + name + '</td>';
       cd.dates.forEach(d => {
         const s = att[d] || 0;
         const ts = cd.timestamps?.[idx]?.[d] || '';
