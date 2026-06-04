@@ -1172,6 +1172,7 @@ function removeStudent(idx){
 
 async function mergeStudentsFromSources(){
   if(!MERGE_SOURCES.length) return;
+  if(!requireUnlock()) return;
   if(!confirm(`ดึงรายชื่อจาก ${MERGE_SOURCES.length} ห้องมารวมกัน?\n(รายชื่อเดิมจะถูกแทนที่ด้วยรายชื่อใหม่ที่รวมแล้ว)`)) return;
   showStatus('⏳ กำลังดึงรายชื่อ...','#c9a84c');
   const results = await Promise.allSettled(MERGE_SOURCES.map(s=>fetch(s.url,{cache:'no-store'}).then(r=>r.json())));
@@ -1247,6 +1248,29 @@ async function syncAttendanceFromSources(){
             weekData[w].attendance[mergedIdx][d]=v; changed=true;
           }
         });
+      }
+
+      // sync รูปภาพ (fp) — เอาจาก source ถ้ายังไม่มีใน merged
+      const srcFP = raw.fp||{};
+      const photos = srcFP[srcIdx];
+      if(photos && photos.length){
+        if(!facePhotos[mergedIdx]||facePhotos[mergedIdx].length===0){
+          facePhotos[mergedIdx] = Array.isArray(photos)?photos:[photos];
+          changed=true;
+        }
+      }
+
+      // sync face descriptors (fd) — เอาจาก source ถ้ายังไม่มีใน merged
+      if(raw.fd && raw.fd[srcIdx]){
+        if(!faceDescriptors[mergedIdx]||faceDescriptors[mergedIdx].length===0){
+          const v = raw.fd[srcIdx];
+          if(v){
+            faceDescriptors[mergedIdx] = Array.isArray(v[0])
+              ? v.map(a=>new Float32Array(a))
+              : [new Float32Array(v)];
+            changed=true;
+          }
+        }
       }
     });
   });
@@ -2067,7 +2091,10 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   const cloudTs = cloudParsed?.savedAt || 0;
   const localTs = localParsed?.savedAt || 0;
 
-  if(cloudParsed && (forceCloud || cloudTs >= localTs)){
+  // Bug fix: ถ้า cloud ว่างเปล่า (students=[]) แต่ local มีข้อมูลใหม่กว่า → ใช้ local
+  const cloudEmpty = !cloudParsed?.students?.length;
+  const localNewer = localParsed && localTs > cloudTs && localParsed.students?.length;
+  if(cloudParsed && (forceCloud || cloudTs >= localTs) && !(cloudEmpty && localNewer)){
     if(applyParsed(cloudParsed)){
       showStatus('✅ โหลดจาก Cloud');
       // รูปภาพ: cloud มีแล้ว (fp ส่งขึ้น Firebase ตั้งแต่เวอร์ชั่นนี้)
