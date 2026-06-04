@@ -1227,6 +1227,9 @@ async function mergeStudentsFromSources(silent=false){
     await saveToFirebase();
     const total = merged.filter(n=>!isGroupHeader(n)).length;
     showStatus(`✅ รวม ${total} คน จาก ${fetchedCount} ห้อง`,'#4caf8a');
+  } else {
+    // save full payload (background) เพื่อให้ Firebase มี students field เสมอ
+    saveToFirebase();
   }
 }
 
@@ -2106,7 +2109,10 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
     const data = await res.json();
     if(data){
       if(data.students !== undefined){ cloudParsed = data; }  // format ใหม่ ✅
-      else if(data.p){
+      else if(data.classData || data.weekData){
+        // PATCH-only data (saveClassCell ส่งแค่ classData/weekData ไม่มี students)
+        cloudParsed = { students: [], weekData: data.weekData||{}, classData: data.classData||{}, savedAt: data.savedAt||0 };
+      } else if(data.p){
         cloudParsed = JSON.parse(data.p); needMigrate = true; // format เก่า
         // ใช้ savedAt จาก root (อัปเดตโดย PATCH) แทน savedAt ใน data.p (เก่า)
         if(data.savedAt) cloudParsed.savedAt = data.savedAt;
