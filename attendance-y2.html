@@ -1189,10 +1189,65 @@ async function mergeStudentsFromSources(){
     Object.keys(weekData[w].attendance).forEach(k=>{ if(k>=merged.length) delete weekData[w].attendance[k]; });
   }
   renderStudentChips();
+  await syncAttendanceFromSources();
   renderAll();
   await saveToFirebase();
   const total = merged.filter(n=>!isGroupHeader(n)).length;
   showStatus(`✅ รวม ${total} คน จาก ${fetchedCount} ห้อง`,'#4caf8a');
+}
+
+// สร้าง map ชื่อนักเรียน → index ใน merged list (ใช้จับคู่กับ source pages)
+function buildNameIndexMap(){
+  const map={};
+  students.forEach((name,i)=>{ if(!isGroupHeader(name)) map[name]=i; });
+  return map;
+}
+
+// ดึง attendance จากทุก source แล้ว map เข้า weekData ของหน้ารวม
+async function syncAttendanceFromSources(){
+  if(!MERGE_SOURCES.length || !students.some(n=>isGroupHeader(n))) return false;
+  const nameMap = buildNameIndexMap();
+  const results = await Promise.allSettled(
+    MERGE_SOURCES.map(s=>fetch(s.url,{cache:'no-store'}).then(r=>r.json()))
+  );
+  let changed = false;
+  results.forEach((r,i)=>{
+    if(r.status!=='fulfilled'||!r.value) return;
+    const raw = r.value;
+    let srcStudents, srcWeekData;
+    if(raw.students!==undefined){
+      srcStudents=raw.students; srcWeekData=raw.weekData||{};
+    } else if(raw.p){
+      try{ const p=JSON.parse(raw.p); srcStudents=p.students; srcWeekData=p.weekData||{}; }catch(e){ return; }
+      if(raw.weekData){ for(const w in raw.weekData){
+        if(!srcWeekData[w]) srcWeekData[w]={dates:[],attendance:{},timestamps:{}};
+        const s=raw.weekData[w];
+        if(s.attendance) Object.assign(srcWeekData[w].attendance||{}, fixArr(s.attendance));
+      }}
+    }
+    if(!srcStudents||!srcWeekData) return;
+    srcStudents.forEach((name,srcIdx)=>{
+      if(isGroupHeader(name)) return;
+      const mergedIdx = nameMap[name];
+      if(mergedIdx===undefined) return;
+      for(let w=1;w<=TOTAL_WEEKS;w++){
+        const wd = srcWeekData[w]||srcWeekData[String(w)];
+        if(!wd) continue;
+        // sync dates
+        if(wd.dates) wd.dates.forEach(d=>{ if(!weekData[w].dates.includes(d)){weekData[w].dates.push(d);changed=true;} });
+        // sync attendance (เฉพาะค่าที่มี ≥1 ไม่ทับ 0)
+        const srcAtt = (fixArr(wd.attendance||{}))[srcIdx]||{};
+        if(!weekData[w].attendance[mergedIdx]) weekData[w].attendance[mergedIdx]={};
+        Object.keys(srcAtt).forEach(d=>{
+          const v=srcAtt[d];
+          if(v && weekData[w].attendance[mergedIdx][d]!==v){
+            weekData[w].attendance[mergedIdx][d]=v; changed=true;
+          }
+        });
+      }
+    });
+  });
+  return changed;
 }
 
 function importStudents(){
@@ -2910,6 +2965,8 @@ async function init(){
   if(MERGE_SOURCES.length){
     const mr = document.getElementById('merge-row');
     if(mr) mr.style.display = 'flex';
+    // ถ้ามี merged students อยู่แล้ว → sync attendance จาก source ทันที
+    if(students.some(n=>isGroupHeader(n))) await syncAttendanceFromSources();
   }
   buildTabs();
   buildPanels();
@@ -3049,6 +3106,12 @@ async function init(){
           }
         });
         if(changed) { buildClassTabs(); buildClassPanels(); }
+      }
+
+      // sync attendance จาก source pages (เฉพาะหน้ารวม)
+      if(MERGE_SOURCES.length){
+        const attChanged = await syncAttendanceFromSources();
+        if(attChanged) changed = true;
       }
 
       if(changed){
