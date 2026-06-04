@@ -1158,11 +1158,12 @@ function removeStudent(idx){
   saveToFirebase();
 }
 
-async function mergeStudentsFromSources(){
+// silent=true → ไม่ถาม PIN/confirm ใช้สำหรับ auto-load ตอน init
+async function mergeStudentsFromSources(silent=false){
   if(!MERGE_SOURCES.length) return;
-  if(!requireUnlock()) return;
-  if(!confirm(`ดึงรายชื่อจาก ${MERGE_SOURCES.length} ห้องมารวมกัน?\n(รายชื่อเดิมจะถูกแทนที่ด้วยรายชื่อใหม่ที่รวมแล้ว)`)) return;
-  showStatus('⏳ กำลังดึงรายชื่อ...','#c9a84c');
+  if(!silent && !requireUnlock()) return;
+  if(!silent && !confirm(`ดึงรายชื่อจาก ${MERGE_SOURCES.length} ห้องมารวมกัน?\n(รายชื่อเดิมจะถูกแทนที่ด้วยรายชื่อใหม่ที่รวมแล้ว)`)) return;
+  if(!silent) showStatus('⏳ กำลังดึงรายชื่อ...','#c9a84c');
   const results = await Promise.allSettled(MERGE_SOURCES.map(s=>fetch(s.url,{cache:'no-store'}).then(r=>r.json())));
   const merged = [];
   let fetchedCount = 0;
@@ -1175,17 +1176,16 @@ async function mergeStudentsFromSources(){
       fetchedCount++;
     }
   });
-  if(!merged.length){ showStatus('❌ ไม่พบรายชื่อ','#e05555'); return; }
+  if(!merged.length){ if(!silent) showStatus('❌ ไม่พบรายชื่อ','#e05555'); return; }
   students = merged;
-  for(let w=1;w<=TOTAL_WEEKS;w++){
-    Object.keys(weekData[w].attendance).forEach(k=>{ if(k>=merged.length) delete weekData[w].attendance[k]; });
-  }
   renderStudentChips();
   await syncAttendanceFromSources();
-  renderAll();
-  await saveToFirebase();
-  const total = merged.filter(n=>!isGroupHeader(n)).length;
-  showStatus(`✅ รวม ${total} คน จาก ${fetchedCount} ห้อง`,'#4caf8a');
+  if(!silent){
+    renderAll();
+    await saveToFirebase();
+    const total = merged.filter(n=>!isGroupHeader(n)).length;
+    showStatus(`✅ รวม ${total} คน จาก ${fetchedCount} ห้อง`,'#4caf8a');
+  }
 }
 
 // สร้าง map ชื่อนักเรียน → index ใน merged list (ใช้จับคู่กับ source pages)
@@ -2992,8 +2992,8 @@ async function init(){
   if(MERGE_SOURCES.length){
     const mr = document.getElementById('merge-row');
     if(mr) mr.style.display = 'flex';
-    // ถ้ามี merged students อยู่แล้ว → sync attendance จาก source ทันที
-    if(students.some(n=>isGroupHeader(n))) await syncAttendanceFromSources();
+    // ดึงรายชื่อจาก source ใหม่ทุกครั้งที่โหลด — ไม่พึ่ง Firebase เก็บ student list
+    await mergeStudentsFromSources(true);
   }
   buildTabs();
   buildPanels();
