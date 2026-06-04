@@ -225,7 +225,6 @@ TARGETS = [
             "merge_sources": """\
 [
   {label:'ชช.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json'},
-  {label:'ชช.2',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-y2.json'},
   {label:'ชย.1ก', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-me1a.json'},
   {label:'ชย.1ข', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-me1b.json'},
   {label:'ชก.1ก', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ml1a.json'},
