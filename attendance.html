@@ -892,6 +892,7 @@ function renderClass(sid) {
   html += '<button class="btn" onclick="addClassDate(\'' + sid + '\')">+ เพิ่มวันที่</button>';
   html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importClassDates(\'' + sid + '\')">📅 วางหลายวันที่เดียว</button>';
   html += '<button class="btn-scan" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
+  if(cd.dates.length > 1) html += '<button class="btn btn-red" onclick="clearAllClassDates(\'' + sid + '\')">🗑️ ลบวันที่ทั้งหมด (' + cd.dates.length + ')</button>';
   html += '<button class="btn-pin ' + (isPinned('class',sid)?'pinned':'') + '" data-pin-type="class" data-pin-val="' + sid + '" onclick="pinView(\'class\',\'' + sid + '\')"> ' + (isPinned('class',sid)?'📌 ปักหมุดอยู่':'📌 ปักหมุดหน้านี้') + '</button>';
   html += '</div>';
 
@@ -1014,6 +1015,18 @@ function importClassDates(sid) {
   });
   if(added > 0) { buildClassTabs(); renderClass(sid); saveToFirebase(); showStatus('✅ เพิ่ม ' + added + ' วันแล้ว'); }
   else showStatus('⚠️ วันที่ซ้ำทั้งหมด ไม่มีวันใหม่','#e67e22');
+}
+
+function clearAllClassDates(sid) {
+  if(!requireUnlock()) return;
+  const n = classData[sid].dates.length;
+  if(!confirm(`ลบวันที่ทั้งหมด ${n} วันออกจากวิชานี้?\n(ข้อมูลการเช็คชื่อทุกวันจะหายไปด้วย)`)) return;
+  pushUndo(`ลบวันที่ทั้งหมด (${sid})`);
+  classData[sid].dates = [];
+  classData[sid].attendance = {};
+  classData[sid].timestamps = {};
+  renderClass(sid);
+  saveToFirebase();
 }
 
 function removeClassDate(sid, date) {
