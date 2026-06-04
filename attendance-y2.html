@@ -1317,26 +1317,21 @@ async function syncAttendanceFromSources(){
     });
   });
 
-  // mirror weekData → classData.scout
-  // เสาธงจากทุกห้องที่ sync มาแล้ว ให้ปรากฏใน วิชาเรียน → ลูกเสือวิสามัญ ด้วย
-  if(classData.scout !== undefined){
-    for(let w=1;w<=TOTAL_WEEKS;w++){
-      if(!weekData[w]) continue;
-      weekData[w].dates.forEach(d=>{
-        if(!classData.scout.dates.includes(d)){ classData.scout.dates.push(d); changed=true; }
-      });
-      Object.keys(weekData[w].attendance||{}).forEach(k=>{
-        const n=Number(k);
-        if(isGroupHeader(students[n])) return;
+  // mirror weekData → classData.scout เฉพาะวันที่ครูเพิ่มเองแล้วเท่านั้น
+  // (ไม่ auto-add dates เพื่อกันวันทับซ้อนจากทุกห้อง)
+  if(classData.scout !== undefined && classData.scout.dates.length > 0){
+    classData.scout.dates.forEach(d=>{
+      students.forEach((name,n)=>{
+        if(isGroupHeader(name)) return;
         if(!classData.scout.attendance[n]) classData.scout.attendance[n]={};
-        Object.keys(weekData[w].attendance[n]||{}).forEach(d=>{
-          const v=weekData[w].attendance[n][d];
-          if(v && classData.scout.attendance[n][d]!==v){
-            classData.scout.attendance[n][d]=v; changed=true;
-          }
-        });
+        if(classData.scout.attendance[n][d]) return; // มีแล้ว ไม่ทับ
+        // หาค่าจาก weekData ทุกสัปดาห์
+        for(let w=1;w<=TOTAL_WEEKS;w++){
+          const v = weekData[w]?.attendance[n]?.[d];
+          if(v){ classData.scout.attendance[n][d]=v; changed=true; break; }
+        }
       });
-    }
+    });
   }
 
   return changed;
