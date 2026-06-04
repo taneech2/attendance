@@ -1305,6 +1305,22 @@ async function syncAttendanceFromSources(){
         });
       }
 
+      // sync classData.scout จาก source (วิชาลูกเสือวิสามัญในแต่ละห้อง)
+      if(raw.classData?.scout){
+        const srcCD = raw.classData.scout;
+        if(srcCD.dates) srcCD.dates.forEach(d=>{
+          if(!classData.scout.dates.includes(d)){ classData.scout.dates.push(d); changed=true; }
+        });
+        const srcAtt = (fixArr(srcCD.attendance||{}))[srcIdx]||{};
+        if(!classData.scout.attendance[mergedIdx]) classData.scout.attendance[mergedIdx]={};
+        Object.keys(srcAtt).forEach(d=>{
+          const v=srcAtt[d];
+          if(v && classData.scout.attendance[mergedIdx][d]!==v){
+            classData.scout.attendance[mergedIdx][d]=v; changed=true;
+          }
+        });
+      }
+
       // sync รูปภาพ (fp) — เอาจาก source ถ้ายังไม่มีใน merged
       const srcFP = raw.fp||{};
       const photos = srcFP[srcIdx];
