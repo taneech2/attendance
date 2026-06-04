@@ -222,6 +222,18 @@ TARGETS = [
 [
   { id:'scout', name:'ลูกเสือวิสามัญ', full:'ลูกเสือวิสามัญ (ช่างเชื่อม / ช่างยนต์ / ช่างกล / ช่างไฟฟ้า / คอมพิวเตอร์ / บัญชี)', day:'พฤหัสบดี', teacher:'อ.ธานี' },
 ]""",
+            "merge_sources": """\
+[
+  {label:'ชช.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json'},
+  {label:'ชช.2',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-y2.json'},
+  {label:'ชย.1ก', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-me1a.json'},
+  {label:'ชย.1ข', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-me1b.json'},
+  {label:'ชก.1ก', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ml1a.json'},
+  {label:'ชก.1ข', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ml1b.json'},
+  {label:'ชฟ.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-el1.json'},
+  {label:'คธ.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ct1.json'},
+  {label:'บช.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ac1.json'},
+]""",
         },
     },
 
@@ -461,6 +473,14 @@ def patch_html(html, p):
         html = html.replace(
             'value="ชช.1 สาขาวิชาช่างเชื่อมโลหะ"',
             f'value="{p["lbl_class"]}"',
+        )
+
+    # MERGE_SOURCES
+    if p.get('merge_sources') is not None:
+        html = re.sub(
+            r"const MERGE_SOURCES = \[[\s\S]*?\];",
+            f"const MERGE_SOURCES = {p['merge_sources']};",
+            html,
         )
 
     # PWA manifest

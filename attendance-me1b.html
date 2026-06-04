@@ -406,6 +406,10 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
       <button class="btn btn-green" onclick="addStudent()">+ เพิ่มนักเรียน</button>
       <button class="btn" onclick="importStudents()">📋 วางรายชื่อทีเดียว</button>
     </div>
+    <div id="merge-row" style="display:none;margin-top:10px;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-green" onclick="mergeStudentsFromSources()">🔄 ดึงรายชื่อจากทุกห้อง</button>
+      <span style="color:#4caf8a99;font-size:12px;">รวมรายชื่อนักเรียนจากทุกสาขาวิชาอัตโนมัติ</span>
+    </div>
   </div>
 
   <!-- MODE SWITCHER -->
@@ -1148,6 +1152,34 @@ function removeStudent(idx){
   saveToFirebase();
 }
 
+async function mergeStudentsFromSources(){
+  if(!MERGE_SOURCES.length) return;
+  if(!confirm(`ดึงรายชื่อจาก ${MERGE_SOURCES.length} ห้องมารวมกัน?\n(รายชื่อเดิมจะถูกแทนที่ด้วยรายชื่อใหม่ที่รวมแล้ว)`)) return;
+  showStatus('⏳ กำลังดึงรายชื่อ...','#c9a84c');
+  const results = await Promise.allSettled(MERGE_SOURCES.map(s=>fetch(s.url,{cache:'no-store'}).then(r=>r.json())));
+  const merged = [];
+  let fetchedCount = 0;
+  results.forEach((r,i)=>{
+    const src = r.value;
+    const srcStudents = src?.students ?? [];
+    if(r.status==='fulfilled' && srcStudents.length){
+      merged.push('#'+MERGE_SOURCES[i].label);
+      srcStudents.filter(n=>n&&!isGroupHeader(n)).forEach(n=>merged.push(n));
+      fetchedCount++;
+    }
+  });
+  if(!merged.length){ showStatus('❌ ไม่พบรายชื่อ','#e05555'); return; }
+  students = merged;
+  for(let w=1;w<=TOTAL_WEEKS;w++){
+    Object.keys(weekData[w].attendance).forEach(k=>{ if(k>=merged.length) delete weekData[w].attendance[k]; });
+  }
+  renderStudentChips();
+  renderAll();
+  saveToFirebase();
+  const total = merged.filter(n=>!isGroupHeader(n)).length;
+  showStatus(`✅ รวม ${total} คน จาก ${fetchedCount} ห้อง`,'#4caf8a');
+}
+
 function importStudents(){
   if(!requireUnlock())return;
   const raw=prompt('วางรายชื่อทีเดียว (แต่ละคนขึ้นบรรทัดใหม่):');
@@ -1798,6 +1830,8 @@ function getPayload(includeFacePhotos=true){
 // payload เบา — ไม่มีรูปใบหน้า ใช้สำหรับ sync ข้อมูลการเช็คชื่อ
 function getLightPayload(){ return getPayload(false); }
 const LS_KEY = 'attendanceData_me1b_v2';
+// รายชื่อ source สำหรับหน้า รวม (override ใน build.py สำหรับ scout-รวม)
+const MERGE_SOURCES = [];
 
 function showStatus(msg, color='#4caf8a'){
   let el = document.getElementById('fb-status');
@@ -2858,6 +2892,10 @@ async function init(){
   if(!currentSubject && getAllSubjects().length > 0)
     currentSubject = getAllSubjects()[0].id;
 
+  if(MERGE_SOURCES.length){
+    const mr = document.getElementById('merge-row');
+    if(mr) mr.style.display = 'flex';
+  }
   buildTabs();
   buildPanels();
   buildClassTabs();
