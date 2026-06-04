@@ -1175,7 +1175,7 @@ async function mergeStudentsFromSources(){
   }
   renderStudentChips();
   renderAll();
-  saveToFirebase();
+  await saveToFirebase();
   const total = merged.filter(n=>!isGroupHeader(n)).length;
   showStatus(`✅ รวม ${total} คน จาก ${fetchedCount} ห้อง`,'#4caf8a');
 }
@@ -2947,10 +2947,14 @@ async function init(){
       // merge เฉพาะ cell ที่มีค่า (≥1) — ไม่ทับ local ด้วย 0/null จาก cloud
       let changed = false;
 
-      // sync students
+      // sync students — ถ้า local เป็น merged list (มี group header) ให้รับ cloud เฉพาะตอน cloud ก็เป็น merged เหมือนกัน
       if(data.students && JSON.stringify(data.students) !== JSON.stringify(students)) {
-        students = data.students;
-        changed = true;
+        const localHasGroups = MERGE_SOURCES.length > 0 && students.some(n=>isGroupHeader(n));
+        const cloudHasGroups = data.students.some(n=>isGroupHeader(n));
+        if(!localHasGroups || cloudHasGroups) {
+          students = data.students;
+          changed = true;
+        }
       }
 
       if(cwd){ for(const w in cwd){
