@@ -1188,9 +1188,13 @@ async function mergeStudentsFromSources(silent=false){
     const src = r.value;
     const srcStudents = src?.students ?? [];
     if(r.status==='fulfilled' && srcStudents.length){
-      merged.push('#'+MERGE_SOURCES[i].label);
-      srcStudents.filter(n=>n&&!isGroupHeader(n)).forEach(n=>merged.push(n));
-      fetchedCount++;
+      const srcHidden = new Set(src?.hiddenStudents || []);
+      const visible = srcStudents.filter((n,idx)=>n&&!isGroupHeader(n)&&!srcHidden.has(idx));
+      if(visible.length){
+        merged.push('#'+MERGE_SOURCES[i].label);
+        visible.forEach(n=>merged.push(n));
+        fetchedCount++;
+      }
     }
   });
   if(!merged.length){ if(!silent) showStatus('❌ ไม่พบรายชื่อ','#e05555'); return; }
