@@ -53,9 +53,20 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;mi
 .hero-name{font-size:.75rem;font-weight:700;margin-top:4px}
 .hero-role-tag{font-size:.6rem;color:var(--dim);margin-top:2px}
 .tier-badge{position:absolute;top:4px;right:4px;font-size:.6rem;font-weight:900;padding:1px 5px;border-radius:4px}
+.tier-SSS{background:linear-gradient(135deg,#ff0040,#ff6b00);color:#fff;animation:pulse-sss 1.5s infinite}
+@keyframes pulse-sss{0%,100%{box-shadow:0 0 4px #ff004088}50%{box-shadow:0 0 10px #ff0040cc}}
+.tier-SS{background:linear-gradient(135deg,#e11d48,#9333ea);color:#fff}
 .tier-S{background:#f59e0b;color:#000}
 .tier-A{background:#3b82f6;color:#fff}
 .tier-B{background:#6b7280;color:#fff}
+.tier-F{background:#1f2937;color:#4b5563;border:1px solid #374151}
+/* position badge */
+.pos-badge{display:inline-block;padding:1px 5px;border-radius:4px;font-size:.58rem;font-weight:700;margin:1px}
+.pos-ds{background:#7c3aed22;color:#a78bfa}
+.pos-adc{background:#92400e22;color:#fbbf24}
+.pos-mid{background:#065f4622;color:#34d399}
+.pos-jg{background:#7f1d1d22;color:#f87171}
+.pos-roam{background:#1e3a5f22;color:#60a5fa}
 /* buff/nerf badges */
 .patch-buff{position:absolute;top:4px;left:4px;font-size:.7rem;background:#22c55e;color:#000;border-radius:4px;padding:1px 4px;font-weight:900;z-index:2}
 .patch-nerf{position:absolute;top:4px;left:4px;font-size:.7rem;background:#ef4444;color:#fff;border-radius:4px;padding:1px 4px;font-weight:900;z-index:2}
@@ -387,7 +398,7 @@ const HEROES = {
     technique:"Split Push ได้ดีด้วย Mobility สูง · วาง Trap ก่อน Engage ทุกครั้ง",
     items:["rankBreaker","omniArms","clavesSancti","azureKnife","boots","ultrabane"]},
 
-  wisp:{name:"Wisp",nameTH:"วิส",emoji:"✨",role:"marksman",tier:"S",
+  wisp:{name:"Wisp",nameTH:"วิส",emoji:"✨",role:"marksman",tier:"A",
     stats:{hp:2950,atk:180,armor:73,magRes:50,as:1.0,ms:355},
     power:{mobility:6,cc:3,burst:7,sustain:3,teamfight:7,split:4,early:5,late:9},
     dmgType:"physical",scaleStat:"atk",
@@ -429,7 +440,7 @@ const HEROES = {
     technique:"Wait ให้ Tank เปิด → เลือก Target ADC หรือ Mage → Execute ด้วย Ult",
     items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
 
-  nakroth:{name:"Nakroth",nameTH:"นาครอธ",emoji:"⚡",role:"assassin",tier:"A",
+  nakroth:{name:"Nakroth",nameTH:"นาครอธ",emoji:"⚡",role:"assassin",tier:"SS",
     stats:{hp:3100,atk:180,armor:80,magRes:52,as:1.15,ms:395},
     power:{mobility:10,cc:2,burst:8,sustain:2,teamfight:6,split:9,early:7,late:8},
     dmgType:"physical",scaleStat:"atk",
@@ -443,7 +454,7 @@ const HEROES = {
     technique:"เล่น Split Push และ Skirmish · เปิดไฟต์ด้วย Justice Blades → Combo · Farm Jungle ให้เร็ว",
     items:["rankBreaker","clawsOfTalons","omniArms","soulReaver","boots","atkItem"]},
 
-  murad:{name:"Murad",nameTH:"มูราด",emoji:"🌊",role:"assassin",tier:"S",
+  murad:{name:"Murad",nameTH:"มูราด",emoji:"🌊",role:"assassin",tier:"A",
     stats:{hp:3250,atk:182,armor:82,magRes:54,as:1.0,ms:380},
     power:{mobility:9,cc:4,burst:9,sustain:3,teamfight:6,split:10,early:6,late:9},
     dmgType:"physical",scaleStat:"atk",
@@ -471,7 +482,7 @@ const HEROES = {
     technique:"Stun ด้วย Shriek → Burst ทันที · Jungle Control สำคัญ · Venom ลด Armor ก่อน Combo",
     items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
 
-  hayate:{name:"Hayate",nameTH:"ฮายาเตะ",emoji:"🌪",role:"assassin",tier:"A",
+  hayate:{name:"Hayate",nameTH:"ฮายาเตะ",emoji:"🌪",role:"assassin",tier:"B",
     stats:{hp:3050,atk:178,armor:79,magRes:51,as:1.1,ms:400},
     power:{mobility:10,cc:1,burst:7,sustain:2,teamfight:5,split:9,early:6,late:7},
     dmgType:"physical",scaleStat:"atk",
@@ -485,7 +496,7 @@ const HEROES = {
     technique:"Harass ด้วย Shuriken · อย่า All-in ตัวเดียว · ใช้ Mobility หลบ Skill ศัตรู",
     items:["rankBreaker","soulReaver","omniArms","clawsOfTalons","boots","atkItem"]},
 
-  florentino:{name:"Florentino",nameTH:"ฟลอเรนติโน",emoji:"🌹",role:"warrior",tier:"S",
+  florentino:{name:"Florentino",nameTH:"ฟลอเรนติโน",emoji:"🌹",role:"warrior",tier:"SS",
     stats:{hp:3600,atk:192,armor:100,magRes:55,as:1.0,ms:375},
     power:{mobility:7,cc:4,burst:9,sustain:6,teamfight:9,split:8,early:8,late:10},
     dmgType:"physical",scaleStat:"atk",
@@ -555,7 +566,7 @@ const HEROES = {
     technique:"Engage ด้วย Fox Form + Pounce → Burst · เหมาะ Solo Lane และ Teamfight · Snowball เร็ว",
     items:["rankBreaker","soulReaver","omniArms","fenrirsTooh","atkItem","ultrabane"]},
 
-  ryoma:{name:"Ryoma",nameTH:"เรียวม่า",emoji:"🗡",role:"warrior",tier:"A",
+  ryoma:{name:"Ryoma",nameTH:"เรียวม่า",emoji:"🗡",role:"warrior",tier:"B",
     stats:{hp:3550,atk:184,armor:100,magRes:55,as:0.95,ms:375},
     power:{mobility:6,cc:4,burst:7,sustain:7,teamfight:7,split:7,early:7,late:7},
     dmgType:"physical",scaleStat:"atk",
@@ -583,7 +594,7 @@ const HEROES = {
     technique:"Ult เปิด Teamfight ด้วย Cyclone Staff · Clone ใช้หลอกเวลา HP ต่ำ",
     items:["rankBreaker","soulReaver","omniArms","fenrirsTooh","atkItem","ultrabane"]},
 
-  tulen:{name:"Tulen",nameTH:"ทูเลน",emoji:"🌩",role:"mage",tier:"A",
+  tulen:{name:"Tulen",nameTH:"ทูเลน",emoji:"🌩",role:"mage",tier:"S",
     stats:{hp:3050,atk:160,armor:75,magRes:52,as:0.85,ms:360},
     power:{mobility:8,cc:5,burst:10,sustain:2,teamfight:9,split:5,early:7,late:9},
     dmgType:"magic",scaleStat:"ap",
@@ -653,7 +664,7 @@ const HEROES = {
     technique:"Ice Wall แบ่งทีมศัตรู → Blizzard ถล่มคนที่ถูกแยก · Zoning ได้ดี",
     items:["staff","boomstick","apocalypse","magicBoots","violetHatchet","violetHatchet2"]},
 
-  grakk:{name:"Grakk",nameTH:"แกรก",emoji:"🦑",role:"tank",tier:"A",
+  grakk:{name:"Grakk",nameTH:"แกรก",emoji:"🦑",role:"tank",tier:"S",
     stats:{hp:4200,atk:150,armor:140,magRes:80,as:0.8,ms:365},
     power:{mobility:6,cc:9,burst:5,sustain:6,teamfight:10,split:4,early:8,late:9},
     dmgType:"physical",scaleStat:"hp",
@@ -667,7 +678,7 @@ const HEROES = {
     technique:"Hook ด้วย Tongue Lash → Maw Ult → ทีมโจมตี · Roam เปิดไฟต์ · Vision Control",
     items:["mail","spear","shield","trinketBoots","armor","hp"]},
 
-  baldum:{name:"Baldum",nameTH:"บัลดัม",emoji:"🐻",role:"tank",tier:"S",
+  baldum:{name:"Baldum",nameTH:"บัลดัม",emoji:"🐻",role:"tank",tier:"A",
     stats:{hp:4100,atk:148,armor:135,magRes:77,as:0.8,ms:370},
     power:{mobility:7,cc:8,burst:4,sustain:6,teamfight:9,split:4,early:7,late:8},
     dmgType:"physical",scaleStat:"hp",
@@ -723,7 +734,7 @@ const HEROES = {
     technique:"Tremor เปิด Teamfight · Spiked Armor ต้าน Assassin · เป็น Hard Engage Tank",
     items:["mail","spear","shield","trinketBoots","armor","hp"]},
 
-  lumburr:{name:"Lumburr",nameTH:"ลัมเบอร์",emoji:"🐺",role:"support",tier:"S",
+  lumburr:{name:"Lumburr",nameTH:"ลัมเบอร์",emoji:"🐺",role:"support",tier:"A",
     stats:{hp:3800,atk:142,armor:120,magRes:72,as:0.82,ms:365},
     power:{mobility:6,cc:9,burst:3,sustain:7,teamfight:9,split:3,early:7,late:8},
     dmgType:"physical",scaleStat:"hp",
@@ -766,7 +777,7 @@ const HEROES = {
     items:["mail","staff","shield","magicBoots","armor","hp"]},
 
   // ===== เพิ่มเติม =====
-  airi:{name:"Airi",nameTH:"ไออิริ",emoji:"⚔",role:"warrior",tier:"S",
+  airi:{name:"Airi",nameTH:"ไออิริ",emoji:"⚔",role:"warrior",tier:"SS",
     stats:{hp:3550,atk:192,armor:97,magRes:56,as:1.05,ms:390},
     power:{mobility:9,cc:5,burst:9,sustain:5,teamfight:8,split:9,early:8,late:9},
     dmgType:"physical",scaleStat:"atk",
@@ -948,7 +959,7 @@ const HEROES = {
     technique:"Oil Spill ก่อน → Fire Breath จุดไฟ → Inferno ปิด Combo · Zoning ด้วย Oil Spill",
     items:["staff","boomstick","apocalypse","violetHatchet","magicBoots","violetHatchet2"]},
 
-  laville:{name:"Laville",nameTH:"ลาวีล",emoji:"🔫",role:"marksman",tier:"A",
+  laville:{name:"Laville",nameTH:"ลาวีล",emoji:"🔫",role:"marksman",tier:"S",
     stats:{hp:2980,atk:176,armor:74,magRes:50,as:1.05,ms:365},
     power:{mobility:6,cc:2,burst:9,sustain:2,teamfight:7,split:5,early:7,late:9},
     dmgType:"physical",scaleStat:"atk",
@@ -975,6 +986,142 @@ const HEROES = {
     counteredBy:["omen","grakk","qi"],
     technique:"Dash Strike ลด Armor → Soul Drain → Hellfire ปิด · เหมาะ vs Squishy Team",
     items:["soulReaver","rankBreaker","omniArms","fenrirsTooh","atkItem","ultrabane"]},
+
+  // ===== Season 38 NEW HEROES =====
+  ybneth:{name:"Y'bneth",nameTH:"วายบ์เนธ",emoji:"🌳",role:"support",tier:"SSS",
+    pos:["roam"],banPriority:true,
+    stats:{hp:4500,atk:145,armor:148,magRes:85,as:0.78,ms:360},
+    power:{mobility:5,cc:10,burst:4,sustain:8,teamfight:10,split:3,early:8,late:10},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Root",desc:"ยึดรากใส่ศัตรู Immobilize ไม่ให้เคลื่อนที่ CC สูงสุด"},
+      {name:"Nature's Grasp",desc:"เถาวัลย์พันรอบ AOE Slow + ดาเมจต่อเนื่อง"},
+      {name:"Ancient Forest",desc:"ปลุก Forest ขนาดใหญ่ Knockup ศัตรูทั้งทีม + บล็อก Path"}
+    ],
+    counters:["butterfly","nakroth","hayate","zephys"],
+    counteredBy:["murad","keera"],
+    technique:"SSS Tier Roaming — Ancient Forest เปิด Teamfight ล็อคทั้งทีม · Root ทำ ADC ยืนยิงฟรี · Must Ban ทุก Match",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  rouie:{name:"Rouie",nameTH:"รูอี้",emoji:"🌙",role:"support",tier:"SSS",
+    pos:["roam"],banPriority:true,
+    stats:{hp:3800,atk:142,armor:120,magRes:75,as:0.82,ms:370},
+    power:{mobility:9,cc:8,burst:5,sustain:7,teamfight:10,split:3,early:8,late:10},
+    dmgType:"magic",scaleStat:"hp",
+    skills:[
+      {name:"Moonlight",desc:"ส่องแสงจันทร์ Reveal + ลด MR ศัตรูในพื้นที่"},
+      {name:"Starfall",desc:"ดาวตก AOE Stun + ดาเมจ Magic"},
+      {name:"Lunar Eclipse",desc:"เกิด Eclipse ขนาดใหญ่ Slow + ดาเมจ + ทำให้ Skill ศัตรูใช้เวลานานขึ้น"}
+    ],
+    counters:["butterfly","kriknak","nakroth"],
+    counteredBy:["murad","keera"],
+    technique:"SSS Tier — Lunar Eclipse ควบคุม Teamfight ทั้งหมด · Moonlight Reveal หา Vision · Must Ban ทุก Match",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  sinestrea:{name:"Sinestrea",nameTH:"ไซเนสทรีอา",emoji:"🦇",role:"assassin",tier:"SSS",
+    pos:["jg","ds"],banPriority:true,
+    stats:{hp:3300,atk:193,armor:87,magRes:56,as:1.1,ms:390},
+    power:{mobility:9,cc:4,burst:10,sustain:4,teamfight:8,split:9,early:8,late:10},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Shadow Dive",desc:"ดำเข้าเงาของศัตรูทันที ระยะทั่วแผนที่ Ult ระยะไกล"},
+      {name:"Night Slash",desc:"โจมตีในความมืด ดาเมจสูง + Invisible ชั่วคราว"},
+      {name:"Blood Hunt",desc:"เข้า Shadow ของเป้าหมาย Burst ทันที ฆ่า Carry ได้ใน 1 วิ"}
+    ],
+    counters:["telAnnas","capheny","violet","laville","wisp"],
+    counteredBy:["omen","grakk","ybneth"],
+    technique:"SSS Tier — Shadow Dive ข้ามแผนที่ฆ่า ADC ทันที · Must Ban ทุก Match · แก้ด้วย Ward เยอะๆ",
+    items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
+
+  flowbornCarry:{name:"Flowborn (Carry)",nameTH:"โฟลว์บอร์น (แคร์รี่)",emoji:"⚡",role:"marksman",tier:"SSS",
+    pos:["adc"],banPriority:true,
+    stats:{hp:3100,atk:195,armor:78,magRes:52,as:1.15,ms:375},
+    power:{mobility:7,cc:3,burst:10,sustain:4,teamfight:10,split:6,early:8,late:10},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Flow Charge",desc:"ชาร์จพลัง Flow เพิ่ม ATK Speed + ดาเมจต่อครั้ง"},
+      {name:"Energy Burst",desc:"ระเบิดพลังงาน AOE ดาเมจสูงมาก + ลด Armor"},
+      {name:"Overflow",desc:"ปล่อยพลัง Flow เต็มที่ ดาเมจ True + ไม่สามารถ Stop ได้"}
+    ],
+    counters:["telAnnas","capheny","violet","laville"],
+    counteredBy:["sinestrea","butterfly","keera"],
+    technique:"SSS Tier ADC — ดาเมจปลายเกมสูงสุด Farm ให้ได้ Item 3 ชิ้น แล้วชนะทุก Teamfight",
+    items:["clavesSancti","rankBreaker","omniArms","fenrirsTooh","boots","ultrabane"]},
+
+  flowbornMage:{name:"Flowborn (Mage)",nameTH:"โฟลว์บอร์น (เมจ)",emoji:"🌊",role:"mage",tier:"SSS",
+    pos:["mid"],banPriority:true,
+    stats:{hp:3050,atk:165,armor:75,magRes:52,as:0.9,ms:365},
+    power:{mobility:8,cc:6,burst:10,sustain:3,teamfight:9,split:5,early:7,late:10},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Flow Wave",desc:"คลื่นพลังงาน Magic ดาเมจ AOE ระยะกลาง"},
+      {name:"Flow Rush",desc:"Dash พร้อมดาเมจ + Slow บริเวณ"},
+      {name:"Tidal Force",desc:"ระเบิดพลัง Flow Magic มหาศาล AOE ดาเมจ + CC ทั้งทีม"}
+    ],
+    counters:["ilumia","lauriel","tulen","kahlii"],
+    counteredBy:["butterfly","sinestrea","nakroth"],
+    technique:"SSS Tier Midlane — Tidal Force Teamfight ล้างทีม · Flow Rush เข้าหา Backline ได้ · Must Ban",
+    items:["staff","boomstick","apocalypse","violetHatchet","magicBoots","violetHatchet2"]},
+
+  marja:{name:"Marja",nameTH:"มาร์จา",emoji:"🌺",role:"warrior",tier:"SS",
+    pos:["ds"],
+    stats:{hp:3700,atk:191,armor:102,magRes:57,as:1.0,ms:385},
+    power:{mobility:8,cc:5,burst:9,sustain:7,teamfight:9,split:9,early:8,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Bloom Dash",desc:"Dash เข้าหาศัตรู ดาเมจ + ดอกไม้ Mark เพิ่มดาเมจ"},
+      {name:"Petal Slash",desc:"โจมตีดอกไม้ AOE ดาเมจ + ชะลอ"},
+      {name:"Final Bloom",desc:"ระเบิดพลังดอกไม้ AOE ดาเมจสูง + Heal ตัวเอง"}
+    ],
+    counters:["nakroth","hayate","fennik","kriknak"],
+    counteredBy:["omen","grakk","ybneth"],
+    technique:"SS Tier Dark Slayer — Dark Slayer meta ตัวหลัก · Final Bloom Sustain ไฟต์ยาว · Split Push ได้ดีมาก",
+    items:["rankBreaker","omniArms","soulReaver","fenrirsTooh","atkItem","ultrabane"]},
+
+  jinna:{name:"Jinna",nameTH:"จินนา",emoji:"🎆",role:"mage",tier:"SS",
+    pos:["mid"],
+    stats:{hp:3000,atk:163,armor:73,magRes:51,as:0.87,ms:360},
+    power:{mobility:6,cc:7,burst:9,sustain:3,teamfight:8,split:4,early:6,late:9},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Firework",desc:"ยิงพลุไฟหลายดอก ดาเมจ Magic + CC"},
+      {name:"Sparkle",desc:"ระเบิดแสง AOE Stun บริเวณกว้าง"},
+      {name:"Grand Finale",desc:"ระเบิดพลุใหญ่ AOE ดาเมจสูงสุด + Slow ทีมทั้งฝั่ง"}
+    ],
+    counters:["ilumia","kahlii","diaochan"],
+    counteredBy:["butterfly","sinestrea","nakroth"],
+    technique:"SS Tier Midlane ใหม่ Season 38 — Grand Finale Teamfight ล้างทีม · Sparkle ล็อคก่อน Engage",
+    items:["staff","boomstick","apocalypse","violetHatchet","magicBoots","violetHatchet2"]},
+
+  zata:{name:"Zata",nameTH:"ซาตา",emoji:"⚔",role:"warrior",tier:"SS",
+    pos:["mid","ds"],
+    stats:{hp:3550,atk:190,armor:96,magRes:55,as:1.0,ms:385},
+    power:{mobility:9,cc:5,burst:9,sustain:5,teamfight:8,split:9,early:7,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Dual Form",desc:"สลับร่างระหว่าง 2 ฟอร์ม เปลี่ยน Skill Set ทั้งหมด"},
+      {name:"Shadow Strike",desc:"(Dark Form) โจมตีรวดเร็ว ดาเมจสูง + Invisible"},
+      {name:"Light Burst",desc:"(Light Form) ระเบิดแสง AOE ดาเมจ + Stun"}
+    ],
+    counters:["telAnnas","violet","capheny","laville"],
+    counteredBy:["omen","grakk","ybneth"],
+    technique:"SS Tier — Dual Form เปลี่ยน Playstyle ได้ตามสถานการณ์ · Dark Form กด ADC · Light Form Teamfight",
+    items:["rankBreaker","soulReaver","omniArms","clawsOfTalons","boots","atkItem"]},
+
+  teemee:{name:"Teemee",nameTH:"ทีมี",emoji:"🎪",role:"mage",tier:"A",
+    pos:["mid","roam"],
+    stats:{hp:3100,atk:160,armor:74,magRes:52,as:0.86,ms:358},
+    power:{mobility:5,cc:7,burst:8,sustain:5,teamfight:8,split:3,early:6,late:8},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Trick Shot",desc:"ยิงกระสุน Magic เด้งกระจกหลายครั้ง"},
+      {name:"Mirror Maze",desc:"สร้างกระจกลวงตา ทำให้ศัตรูสับสน"},
+      {name:"Grand Illusion",desc:"ระเบิด Illusion AOE ดาเมจ + Confuse ทั้งทีม"}
+    ],
+    counters:["ilumia","kahlii"],
+    counteredBy:["butterfly","nakroth","sinestrea"],
+    technique:"A Tier — Mirror Maze Zoning ได้ดี · Grand Illusion ใช้ใน Teamfight แคบ · เล่นยากปานกลาง",
+    items:["staff","boomstick","apocalypse","violetHatchet","magicBoots","violetHatchet2"]},
 };
 
 // ===== ITEM DATABASE =====
@@ -1238,9 +1385,12 @@ const ROLE_TIP={
   support:'SUP = Support (ผู้สนับสนุน)\nHeal / Shield / CC ช่วยทีมรอดในไฟต์',
 };
 const TIER_TIP={
-  S:'S-Tier = Super Meta\nMust Pick/Ban ในโปรลีก แรงที่สุดในปัจจุบัน',
-  A:'A-Tier = Strong Pick\nตัวเลือกที่ดี ใช้ได้เกือบทุกสถานการณ์',
-  B:'B-Tier = Situational\nใช้ได้เฉพาะทีมหรือสถานการณ์ที่เหมาะสม',
+  SSS:'SSS = ควร Ban/Pick ข้ามโลกาส · Season 38 OP สุด · Must Ban ทุก Match',
+  SS:'SS = เลือกตัวแรกๆ · First Pick Priority · แข็งในทุกสถานการณ์',
+  S:'S = Very Good เก่งมาก · Meta ที่ดี ใช้ได้ผลสูง',
+  A:'A = Good เก่ง · ตัวเลือกที่ดี ใช้ได้หลายสถานการณ์',
+  B:'B = Normal เฉยๆ · Situational ใช้ได้เฉพาะทีมที่เหมาะ',
+  F:'F = เทพ! (ประชด) · ไม่แนะนำ ณ Season นี้',
 };
 const POWER_TIP={
   Mobility:'Mobility = ความคล่องตัว\nความสามารถ Dash/Blink/หลบหลีก ยิ่งสูงยิ่งหนีได้เก่ง',

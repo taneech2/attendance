@@ -17,6 +17,8 @@ HERO_IDS = [
     "tulen","lauriel","kahlii","ilumia","diaochan","iggy","mganga",
     "grakk","baldum","mina","thane","ormarr","omega","cresht",
     "lumburr","zip","alice","xeniel",
+    "ybneth","rouie","sinestrea","flowbornCarry","flowbornMage",
+    "marja","jinna","zata","teemee",
 ]
 
 # ===== LOGGER =====
