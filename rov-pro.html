@@ -151,6 +151,23 @@ select:focus{outline:none;border-color:var(--accent)}
 @media(max-width:600px){.two-col{grid-template-columns:1fr}}
 .score-ring{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;border:3px solid var(--accent);font-size:1.1rem;font-weight:900;color:var(--accent)}
 .info-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin:8px 0}
+/* skill modal */
+.skill-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
+.skill-modal-overlay.open{display:flex}
+.skill-modal{background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:20px;max-width:420px;width:90%;max-height:85vh;overflow-y:auto}
+/* skill type tags */
+.skill-type{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.62rem;font-weight:700;margin-right:4px}
+.st-dmg{background:#ef444422;color:#ef4444}
+.st-cc{background:#3b82f622;color:#3b82f6}
+.st-mob{background:#22c55e22;color:#22c55e}
+.st-heal{background:#a855f722;color:#a855f7}
+.st-util{background:#f59e0b22;color:#f59e0b}
+/* skill combo */
+.combo-card{background:var(--surface3);border-left:3px solid var(--accent2);border-radius:0 8px 8px 0;padding:10px 12px;margin:6px 0}
+.combo-title{font-size:.78rem;font-weight:700;color:var(--accent2)}
+.combo-desc{font-size:.72rem;color:var(--dim);margin-top:3px;line-height:1.5}
+/* counter skill reason */
+.counter-reason{font-size:.68rem;color:var(--dim);font-style:italic;margin-top:2px}
 </style>
 </head>
 <body>
@@ -160,6 +177,11 @@ select:focus{outline:none;border-color:var(--accent)}
     <div class="logo">⚔ ROV PRO STRATEGIC TOOL</div>
     <div class="subtitle">คณิตศาสตร์การแข่งขัน · Draft · Counter · Win Probability</div>
   </div>
+</div>
+
+<!-- SKILL MODAL -->
+<div class="skill-modal-overlay" id="skillModal" onclick="if(event.target===this)closeSkillModal()">
+  <div class="skill-modal" id="skillModalContent"></div>
 </div>
 
 <div class="tabs">
@@ -843,6 +865,89 @@ function getCounter(heroId, targetId){
   return (COUNTER_MATRIX[heroId]?.[targetId]||0) - (COUNTER_MATRIX[targetId]?.[heroId]||0);
 }
 
+// ===== SKILL TYPE TAGS =====
+// dmg=ดาเมจ | cc=ล็อค | mob=เคลื่อนที่ | heal=ฮีล | util=สนับสนุน
+const SKILL_TYPES = {
+  telAnnas:  ['dmg','cc','dmg'],
+  violet:    ['util','dmg','dmg'],
+  capheny:   ['util','util','dmg'],
+  yorn:      ['dmg','cc','dmg'],
+  fennik:    ['cc','mob','dmg'],
+  wisp:      ['dmg','util','dmg'],
+  butterfly: ['dmg','mob','dmg'],
+  zephys:    ['mob','dmg','dmg'],
+  nakroth:   ['mob','dmg','dmg'],
+  murad:     ['dmg','mob','cc'],
+  kriknak:   ['util','cc','dmg'],
+  hayate:    ['dmg','mob','dmg'],
+  florentino:['util','mob','dmg'],
+  omen:      ['dmg','heal','cc'],
+  luBu:      ['dmg','heal','util'],
+  qi:        ['dmg','mob','cc'],
+  keera:     ['util','mob','cc'],
+  ryoma:     ['dmg','util','dmg'],
+  wukong:    ['util','dmg','cc'],
+  tulen:     ['dmg','dmg','cc'],
+  lauriel:   ['dmg','dmg','cc'],
+  kahlii:    ['dmg','dmg','dmg'],
+  ilumia:    ['dmg','util','cc'],
+  diaochan:  ['dmg','cc','dmg'],
+  grakk:     ['cc','util','cc'],
+  baldum:    ['mob','cc','cc'],
+  mina:      ['util','cc','cc'],
+  thane:     ['cc','util','dmg'],
+  ormarr:    ['util','cc','cc'],
+  lumburr:   ['dmg','cc','cc'],
+  zip:       ['heal','util','cc'],
+  alice:     ['heal','cc','dmg'],
+};
+
+// ===== COUNTER REASONS (skill-based) =====
+const COUNTER_REASONS = {
+  'omen-butterfly':   'Eclipse สูดพลังชีวิตทำให้ Butterfly ฆ่าไม่จบ + Black Hole ดึงหลัง Vanish',
+  'omen-zephys':      'HP Sustain จาก Eclipse ทำให้รอดจาก Execute Ult ของ Zephys ได้',
+  'omen-nakroth':     'Black Hole หยุด Nakroth กลางคอมโบ ทำให้ Reset ไม่ได้',
+  'qi-butterfly':     'Lightning Step มี Immune ช่วง Butterfly Vanish + Storm ล็อค Butterfly ได้',
+  'florentino-nakroth':'Joust Reset เร็วกว่า Nakroth Blood Rush ทำ DPS Race ชนะ',
+  'grakk-butterfly':  'Tongue Lash ดึง Butterfly ออกจาก Target ทำ Vanish เสียเปล่า',
+  'grakk-nakroth':    'Hook ล็อค Nakroth ก่อน Combo + Maw หยุด Reset Chain',
+  'butterfly-telAnnas':'Vanish เข้าหลัง Tel แล้ว Burst ก่อน Frost Arrow ออก',
+  'butterfly-violet':  'Vanish หลบ Tactical Fire แล้วเข้า Burst ใน 1 วินาที',
+  'butterfly-capheny': 'เข้า Vanish ขณะ Drone ถูกแยก + Burst ก่อน Full Power ชาร์จ',
+  'zephys-telAnnas':   'Shadow Rush เข้าถึงได้ก่อน Frost Arrow + Execute ต่ำกว่า 40%',
+  'keera-capheny':     'Pounce เข้าถึงก่อน Drone Active + Fox Form ทำ Capheny วิ่งไม่ทัน',
+  'murad-mina':        'Submerge ดำหนีใต้ Tsunami + Cyclone ดึง Mina เข้า Bush',
+  'kriknak-telAnnas':  'Venom ลด Armor + Shriek ล็อคก่อน Multi-Shot ออก',
+  'baldum-nakroth':    'Fury Ride ชนก่อน Nakroth Combo + Provoke ทำ Reset ไม่มีประโยชน์',
+  'tulen-telAnnas':    'Range ไกลกว่า + Thunderstrike ระเบิดก่อน Multi-Shot',
+  'ilumia-violet':     'Domain ล็อค Violet ทำ Tactical Fire ออกไม่ได้',
+  'zip-butterfly':     'Swallow กลืนพันธมิตรที่ Butterfly เลือก Target ก่อน Burst',
+  'ormarr-butterfly':  'Tremor Knockup ขัด Vanish Timing ทำ Butterfly เสีย Gap Close',
+};
+
+// ===== SKILL COMBOS (team synergy) =====
+const SKILL_COMBOS = [
+  {heroes:['grakk','tulen'],     name:'Hook → Thunderstrike',  desc:'Grakk Hook ดึงเข้า → Tulen ระเบิด Thunderstrike ทันที ไม่มีทางหนี',             rating:10},
+  {heroes:['grakk','butterfly'], name:'Hook → Vanish Burst',   desc:'Hook ดึงเข้ากลุ่ม → Butterfly Vanish เข้าหลัง Tank ปิดตัว Carry',               rating:9},
+  {heroes:['ilumia','butterfly'],name:'Domain → Mass Burst',   desc:'Domain ล็อคทีมศัตรู → Butterfly Vanish เข้า Burst ทุกคนที่ล็อคอยู่',           rating:9},
+  {heroes:['baldum','tulen'],    name:'Fury Ride → Thunderstrike',desc:'Baldum พุ่งเข้ากลุ่ม → Tulen วาง Thunderstrike ทับทันที CC Chain สูง',       rating:9},
+  {heroes:['mina','telAnnas'],   name:'Tsunami → Multi-Shot',  desc:'Mina ดัน Knock back → Tel\'Annas ยิง Multi-Shot ใส่ศัตรูที่กระจายออกมา',       rating:8},
+  {heroes:['lumburr','keera'],   name:'Entomb → Fox Burst',    desc:'Lumburr Entomb ล็อคเป้า → Keera Spirit Fox ระเบิดทันที ดาเมจเต็ม',              rating:9},
+  {heroes:['zip','florentino'],  name:'Spit Launch → Grand Duel',desc:'Zip ยิง Florentino พุ่งเข้าหาศัตรู → Florentino Mark + Grand Duel ปิด',      rating:8},
+  {heroes:['grakk','omen'],      name:'Hook → Black Hole',     desc:'Grakk Hook ดึงเข้า → Omen Black Hole ล็อคทุกคนรอบข้าง Teamfight ชนะ',         rating:10},
+  {heroes:['qi','lauriel'],      name:'Storm → Divine Wave',   desc:'Qi Storm Knockup → Lauriel บินลง Divine Wave ซ้ำ Double CC ทีมล่ม',            rating:9},
+  {heroes:['baldum','butterfly'],name:'Fury Ride → Dust of Death',desc:'Baldum พุ่งเข้า Knockup → Butterfly ตาม Burst ทุกคนที่ลอยอยู่',             rating:8},
+  {heroes:['grakk','capheny'],   name:'Hook → Full Power',     desc:'Grakk Hook ดึงเข้า → Capheny ชาร์จ Drone + Full Power ระเบิดใส่กลุ่ม',        rating:9},
+  {heroes:['ilumia','tulen'],    name:'Domain → Double Mage',  desc:'Domain ล็อคทีม → Tulen Thunderstrike ถล่มซ้ำ Magic Damage ล้น',               rating:8},
+  {heroes:['zip','telAnnas'],    name:'Swallow Peel → Kite',   desc:'Zip Swallow รับ Assassin แทน Tel\'Annas → Tel\'Annas Kite ต่อได้ Free',        rating:8},
+  {heroes:['ormarr','omen'],     name:'Tremor → Black Hole',   desc:'Ormarr Tremor Knockup → Omen Black Hole ดูดซ้ำทันที CC Chain ไม่มีสิ้นสุด',   rating:9},
+  {heroes:['murad','telAnnas'],  name:'Split + Carry',          desc:'Murad Split Push แยกทีมศัตรู → Tel\'Annas ชนะ 4v4 ด้วย DPS ที่เหลือ',        rating:7},
+];
+
+function getSkillCombo(teamIds){
+  return SKILL_COMBOS.filter(c=>c.heroes.every(h=>teamIds.includes(h)));
+}
+
 // ===== STATE =====
 let selectedHero = null;
 let roleFilter = 'all';
@@ -859,6 +964,43 @@ let draftStep = 0;
 let draftState = {A:{bans:[],picks:[]},B:{bans:[],picks:[]}};
 
 const teamAnalyzer = {A:[],B:[]};
+
+// ===== SKILL MODAL =====
+function showSkillModal(id, onConfirm){
+  const h = HEROES[id];
+  if(!h) return;
+  const types = SKILL_TYPES[id] || [];
+  const typeLabel = {dmg:'⚔ ดาเมจ',cc:'🔒 CC',mob:'💨 เคลื่อนที่',heal:'💚 ฮีล',util:'🔧 สนับสนุน'};
+  const typeClass = {dmg:'st-dmg',cc:'st-cc',mob:'st-mob',heal:'st-heal',util:'st-util'};
+  const modal = document.getElementById('skillModalContent');
+  modal.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <span style="font-size:2.5rem">${h.emoji}</span>
+      <div>
+        <div style="font-size:1.1rem;font-weight:900;color:${roleColor(h.role)}">${h.name}</div>
+        <div class="dim" style="font-size:.75rem">${h.nameTH} · ${roleBadge(h.role)} · Tier <span class="tier-badge tier-${h.tier}" style="position:static;display:inline">${h.tier}</span></div>
+      </div>
+    </div>
+    <div class="sec-title">⚡ Skills</div>
+    ${h.skills.map((s,i)=>`
+      <div class="skill-item">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="skill-name">${['Q','W','R'][i] || ''} — ${s.name}</span>
+          ${types[i]?`<span class="skill-type ${typeClass[types[i]]}">${typeLabel[types[i]]||types[i]}</span>`:''}
+        </div>
+        <div class="skill-desc">${s.desc}</div>
+      </div>`).join('')}
+    <div class="sec-title" style="margin-top:12px">🎯 เทคนิคสำคัญ</div>
+    <div class="info-box"><div class="dim" style="font-size:.76rem;line-height:1.7">${h.technique}</div></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      ${onConfirm?`<button class="btn btn-primary" style="flex:1" onclick="closeSkillModal();(${onConfirm})()">✅ เลือก ${h.name}</button>`:''}
+      <button class="btn btn-ghost" onclick="closeSkillModal()">${onConfirm?'ยกเลิก':'ปิด'}</button>
+    </div>`;
+  document.getElementById('skillModal').classList.add('open');
+}
+function closeSkillModal(){
+  document.getElementById('skillModal').classList.remove('open');
+}
 
 // ===== UTILITIES =====
 const ROLE_TIP={
@@ -1146,18 +1288,32 @@ function showCounter(){
       <div>
         <div class="sec-title" style="color:var(--green)">✅ ${h.name} ชนะ (Strong Against)</div>
         <ul class="counter-list">
-          ${beats.length?beats.map(x=>`
-            <li>${csTag(x.cs)} <span style="font-size:1.1rem">${x.h.emoji}</span>
-            <span>${x.h.name}</span> ${roleBadge(x.h.role)}</li>`).join('')
+          ${beats.length?beats.map(x=>{
+            const reason = COUNTER_REASONS[`${id}-${x.id}`] || COUNTER_REASONS[`${x.id}-${id}`] || '';
+            return `<li style="flex-direction:column;align-items:flex-start">
+              <div style="display:flex;align-items:center;gap:6px;width:100%">
+                ${csTag(x.cs)} <span style="font-size:1.1rem">${x.h.emoji}</span>
+                <span style="font-weight:700">${x.h.name}</span> ${roleBadge(x.h.role)}
+                <button onclick="showSkillModal('${x.id}')" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--dim);border-radius:4px;padding:1px 6px;font-size:.6rem;cursor:pointer">Skills</button>
+              </div>
+              ${reason?`<div class="counter-reason">💡 ${reason}</div>`:''}
+            </li>`;}).join('')
             :'<li class="dim">ไม่มีข้อมูล Strong Counter</li>'}
         </ul>
       </div>
       <div>
         <div class="sec-title" style="color:var(--red)">❌ ${h.name} แพ้ (Weak Against)</div>
         <ul class="counter-list">
-          ${loses.length?loses.map(x=>`
-            <li>${csTag(x.cs)} <span style="font-size:1.1rem">${x.h.emoji}</span>
-            <span>${x.h.name}</span> ${roleBadge(x.h.role)}</li>`).join('')
+          ${loses.length?loses.map(x=>{
+            const reason = COUNTER_REASONS[`${x.id}-${id}`] || '';
+            return `<li style="flex-direction:column;align-items:flex-start">
+              <div style="display:flex;align-items:center;gap:6px;width:100%">
+                ${csTag(x.cs)} <span style="font-size:1.1rem">${x.h.emoji}</span>
+                <span style="font-weight:700">${x.h.name}</span> ${roleBadge(x.h.role)}
+                <button onclick="showSkillModal('${x.id}')" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--dim);border-radius:4px;padding:1px 6px;font-size:.6rem;cursor:pointer">Skills</button>
+              </div>
+              ${reason?`<div class="counter-reason">⚠ ${reason}</div>`:''}
+            </li>`;}).join('')
             :'<li class="dim">ไม่มีข้อมูล Weak Counter</li>'}
         </ul>
       </div>
@@ -1222,7 +1378,23 @@ function renderDraft(){
 function draftPick(id){
   if(draftStep>=draftSequence.length) return;
   const [team,type]=draftSequence[draftStep];
-  draftState[team][type+'s'].push(id);
+  // Ban ไม่ต้องดู Skill — confirm ทันที
+  if(type==='ban'){
+    draftState[team].bans.push(id);
+    draftStep++;
+    renderDraft();
+  } else {
+    // Pick → เปิด Skill Modal ก่อน ให้ดู Skill แล้วค่อย confirm
+    showSkillModal(id, `function(){
+      const team='${team}';
+      DRAFT_CONFIRM('${id}');
+    }`);
+  }
+}
+function DRAFT_CONFIRM(id){
+  if(draftStep>=draftSequence.length) return;
+  const [team,type]=draftSequence[draftStep];
+  draftState[team].picks.push(id);
   draftStep++;
   renderDraft();
 }
@@ -1379,6 +1551,20 @@ function renderTeamResult(pA,pB,scoreA,scoreB,cAdvA,probA,containerId){
             <span class="counter-score cs-high" style="margin-left:auto">CS:+${m.cs}</span>
           </div>`;
         }).join('')}`:''}
+      ${(()=>{
+        const combosA = getSkillCombo(pA);
+        const combosB = getSkillCombo(pB);
+        if(!combosA.length && !combosB.length) return '';
+        const renderCombo = (combos, teamLabel, color) => combos.length ? `
+          <div class="sec-title mt12" style="color:${color}">⚡ Skill Combo — ทีม ${teamLabel}</div>
+          ${combos.map(c=>`
+            <div class="combo-card">
+              <div class="combo-title">${c.name} <span style="font-size:.65rem;color:var(--dim)">Rating: ${'★'.repeat(Math.round(c.rating/2))} ${c.rating}/10</span></div>
+              <div class="combo-desc">${c.desc}</div>
+              <div style="margin-top:4px">${c.heroes.map(h=>HEROES[h]?`<span style="font-size:.8rem;margin-right:8px">${HEROES[h].emoji} ${HEROES[h].name}</span>`:'').join('')}</div>
+            </div>`).join('')}` : '';
+        return renderCombo(combosA,'A','#3b82f6') + renderCombo(combosB,'B','#ef4444');
+      })()}
       <div class="sec-title mt12">💡 คำแนะนำ</div>
       <div class="info-box">
         <div style="font-size:.8rem;line-height:1.7">
