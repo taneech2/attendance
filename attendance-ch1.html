@@ -965,6 +965,8 @@ function cycleClass(sid, idx, date) {
   classData[sid].attendance[idx][date] = newVal;
   renderClass(sid);
   saveClassCell(sid, idx, date, newVal);
+  // reverse sync → เขียนกลับห้องต้นทาง (เฉพาะหน้ารวม)
+  if(MERGE_SOURCES.length) writeBackToSource(students[idx], sid, date, newVal, classData[sid]?.timestamps?.[idx]?.[date]||'').catch(()=>{});
 }
 
 async function saveClassCell(sid, idx, date, status){
@@ -1264,6 +1266,60 @@ async function mergeStudentsFromSources(silent=false){
 }
 
 // สร้าง map ชื่อนักเรียน → index ใน merged list (ใช้จับคู่กับ source pages)
+// หา label ของ source ที่นักเรียน index นี้สังกัด (ดู group header ก่อนหน้า)
+function getStudentSourceLabel(mergedIdx){
+  for(let i=mergedIdx;i>=0;i--){
+    if(isGroupHeader(students[i])) return groupLabel(students[i]);
+  }
+  return null;
+}
+
+// เขียนผลเช็คชื่อกลับไปยัง Firebase ของห้องต้นทาง
+async function writeBackToSource(studentName, subjectId, date, value, ts){
+  if(!MERGE_SOURCES.length) return;
+  const mergedIdx = students.indexOf(studentName);
+  if(mergedIdx<0) return;
+  const sourceLabel = getStudentSourceLabel(mergedIdx);
+  if(!sourceLabel) return;
+  const source = MERGE_SOURCES.find(s=>s.label===sourceLabel);
+  if(!source) return;
+  const srcStudents = sourceStudentCache[sourceLabel];
+  if(!srcStudents) return;
+  const srcIdx = srcStudents.indexOf(studentName);
+  if(srcIdx<0) return;
+  const srcBase = source.url.slice(0,-5); // ตัด .json ออก
+  try{
+    // ดึง attendance ปัจจุบันของนักเรียนในห้องต้นทาง
+    const attRes = await fetch(`${srcBase}/classData/${subjectId}/attendance/${srcIdx}.json`,{cache:'no-store'});
+    const attData = (await attRes.json())||{};
+    if(value!==0) attData[date]=value; else delete attData[date];
+    await fetch(`${srcBase}/classData/${subjectId}/attendance/${srcIdx}.json`,{
+      method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(attData)
+    });
+    // บันทึก timestamp
+    if(ts){
+      const tsRes = await fetch(`${srcBase}/classData/${subjectId}/timestamps/${srcIdx}.json`,{cache:'no-store'});
+      const tsData = (await tsRes.json())||{};
+      tsData[date]=ts;
+      await fetch(`${srcBase}/classData/${subjectId}/timestamps/${srcIdx}.json`,{
+        method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(tsData)
+      });
+    }
+    // เพิ่มวันที่ใน source ถ้ายังไม่มี
+    const datesRes = await fetch(`${srcBase}/classData/${subjectId}/dates.json`,{cache:'no-store'});
+    let dates = (await datesRes.json())||[];
+    if(!Array.isArray(dates)) dates=[];
+    if(!dates.includes(date)){
+      dates.push(date);
+      await fetch(`${srcBase}/classData/${subjectId}/dates.json`,{
+        method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(dates)
+      });
+    }
+    // อัพเดท savedAt ของ source
+    await fetch(source.url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({savedAt:Date.now()})});
+  }catch(e){ console.warn('writeBackToSource failed:',sourceLabel,e); }
+}
+
 function buildNameIndexMap(){
   const map={};
   students.forEach((name,i)=>{ if(!isGroupHeader(name)) map[name]=i; });
@@ -1293,6 +1349,8 @@ async function syncAttendanceFromSources(){
       }}
     }
     if(!srcStudents||!srcWeekData) return;
+    // cache student list ของแต่ละห้อง (ใช้สำหรับ reverse sync)
+    sourceStudentCache[MERGE_SOURCES[i].label] = srcStudents;
     srcStudents.forEach((name,srcIdx)=>{
       if(isGroupHeader(name)) return;
       const mergedIdx = nameMap[name];
@@ -2511,6 +2569,7 @@ const FACE_GUIDES = [
   { label:'ก้มลง',     emoji:'⬇️', hint:'ก้มหน้าลงเล็กน้อย' },
 ];
 let faceDescriptors = {}; // { studentIdx: Float32Array[] }
+const sourceStudentCache = {}; // { label: [student names] } — สำหรับ reverse sync
 let facePhotos = {};       // { studentIdx: base64 JPEG string }
 let faceMarked = {};       // { studentIdx: true } — เช็คแล้วในรอบนี้
 let faceConfirmCount = {}; // { studentIdx: count } — กี่เฟรมแล้วที่เห็นหน้านี้
@@ -2948,6 +3007,8 @@ async function markFaceAttend(idx, date) {
     setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
     updateFaceCount();
     await saveToFirebase();
+    // reverse sync → เขียนกลับไปห้องต้นทาง (เฉพาะหน้ารวม)
+    if(MERGE_SOURCES.length) writeBackToSource(students[idx], faceSubject, date, 1, cd.timestamps?.[idx]?.[date]||'').catch(()=>{});
     playPing();
     speakName(students[idx]);
     setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]);
