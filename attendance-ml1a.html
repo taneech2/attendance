@@ -199,7 +199,7 @@ td.num{color:#c9a84c;font-weight:600;}
 .barcode-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
 .barcode-overlay.active{display:flex;}
 .barcode-box{position:relative;width:min(360px,90vw);}
-#barcode-video{width:100%;border-radius:10px;border:2px solid #c9a84c;}
+#barcode-video{width:100%;border-radius:10px;border:2px solid #c9a84c;cursor:pointer;touch-action:manipulation;}
 .barcode-aim{position:absolute;inset:20%;border:2px solid #c9a84ccc;border-radius:4px;pointer-events:none;}
 .barcode-aim::before,.barcode-aim::after{content:'';position:absolute;width:20px;height:20px;border-color:#f0d060;border-style:solid;}
 .barcode-aim::before{top:-2px;left:-2px;border-width:3px 0 0 3px;}
@@ -3088,11 +3088,30 @@ async function openBarcodeScanner(sid){
   document.getElementById('barcode-pick-btn').style.display='none';
   setBarcodeStatus('🔍 กำลังเปิดกล้อง...');
   try{
-    barcodeStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+    barcodeStream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:'environment', width:{ideal:1920}, height:{ideal:1080} }
+    });
+    // เปิด continuous autofocus + zoom (Android Chrome รองรับ)
+    const track = barcodeStream.getVideoTracks()[0];
+    try{
+      const caps = track.getCapabilities();
+      const adv = {};
+      if(caps.focusMode?.includes('continuous')) adv.focusMode='continuous';
+      if(caps.zoom) adv.zoom = Math.min(caps.zoom.max, (caps.zoom.min||1)*2);
+      if(Object.keys(adv).length) await track.applyConstraints({advanced:[adv]});
+    }catch(e){}
     const video = document.getElementById('barcode-video');
     video.srcObject = barcodeStream;
     await video.play();
-    setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร');
+    // tap-to-focus บนมือถือ
+    video.onclick = async()=>{
+      try{
+        const t=barcodeStream?.getVideoTracks()[0];
+        if(t) await t.applyConstraints({advanced:[{focusMode:'single-shot'}]});
+        setTimeout(async()=>{ try{ await t.applyConstraints({advanced:[{focusMode:'continuous'}]}); }catch(e){} }, 800);
+      }catch(e){}
+    };
+    setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร — แตะหน้าจอเพื่อโฟกัส');
     await startBarcodeDetection(video, sid);
   }catch(e){
     setBarcodeStatus('❌ ไม่สามารถเปิดกล้องได้: '+e.message);
