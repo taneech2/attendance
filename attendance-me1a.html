@@ -467,7 +467,9 @@ let pinnedView = null; // { type:'lb'|'week'|'summary'|'class', val:weekNum|subj
 const TOTAL_WEEKS = 18;
 
 // ===== CLASS DATA =====
-const CLASS_SUBJECTS = [];
+const CLASS_SUBJECTS = [
+  { id:'scout', name:'ลูกเสือ', full:'กิจกรรมลูกเสือวิสามัญ 1', day:'พฤหัสบดี', teacher:'อ.ธานี' },
+];
 let extraSubjects = []; // ห้องเรียนที่เพิ่มแบบ dynamic
 function getAllSubjects(){ return [...CLASS_SUBJECTS, ...extraSubjects]; }
 let classData = {};

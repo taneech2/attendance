@@ -94,7 +94,7 @@ TARGETS = [
             "default_students": "[]",
             "manifest":         "manifest-me1a.json",
             "pwa_name":         "เช็คชื่อ ชย.1ก",
-            "class_subjects":   "[]",
+            "class_subjects":   "[\n  { id:'scout', name:'ลูกเสือ', full:'กิจกรรมลูกเสือวิสามัญ 1', day:'พฤหัสบดี', teacher:'อ.ธานี' },\n]",
         },
     },
 
@@ -111,7 +111,7 @@ TARGETS = [
             "default_students": "[]",
             "manifest":         "manifest-me1b.json",
             "pwa_name":         "เช็คชื่อ ชย.1ข",
-            "class_subjects":   "[]",
+            "class_subjects":   "[\n  { id:'scout', name:'ลูกเสือ', full:'กิจกรรมลูกเสือวิสามัญ 1', day:'พฤหัสบดี', teacher:'อ.ธานี' },\n]",
         },
     },
 
@@ -128,7 +128,7 @@ TARGETS = [
             "default_students": "[]",
             "manifest":         "manifest-ml1a.json",
             "pwa_name":         "เช็คชื่อ ชก.1ก",
-            "class_subjects":   "[]",
+            "class_subjects":   "[\n  { id:'scout', name:'ลูกเสือ', full:'กิจกรรมลูกเสือวิสามัญ 1', day:'พฤหัสบดี', teacher:'อ.ธานี' },\n]",
         },
     },
 
@@ -145,7 +145,7 @@ TARGETS = [
             "default_students": "[]",
             "manifest":         "manifest-ml1b.json",
             "pwa_name":         "เช็คชื่อ ชก.1ข",
-            "class_subjects":   "[]",
+            "class_subjects":   "[\n  { id:'scout', name:'ลูกเสือ', full:'กิจกรรมลูกเสือวิสามัญ 1', day:'พฤหัสบดี', teacher:'อ.ธานี' },\n]",
         },
     },
 
@@ -162,7 +162,7 @@ TARGETS = [
             "default_students": "[]",
             "manifest":         "manifest-el1.json",
             "pwa_name":         "เช็คชื่อ ชฟ.1",
-            "class_subjects":   "[]",
+            "class_subjects":   "[\n  { id:'scout', name:'ลูกเสือ', full:'กิจกรรมลูกเสือวิสามัญ 1', day:'พฤหัสบดี', teacher:'อ.ธานี' },\n]",
         },
     },
 
@@ -179,7 +179,7 @@ TARGETS = [
             "default_students": "[]",
             "manifest":         "manifest-ct1.json",
             "pwa_name":         "เช็คชื่อ คธ.1",
-            "class_subjects":   "[]",
+            "class_subjects":   "[\n  { id:'scout', name:'ลูกเสือ', full:'กิจกรรมลูกเสือวิสามัญ 1', day:'พฤหัสบดี', teacher:'อ.ธานี' },\n]",
         },
     },
 
@@ -196,7 +196,7 @@ TARGETS = [
             "default_students": "[]",
             "manifest":         "manifest-ac1.json",
             "pwa_name":         "เช็คชื่อ บช.1",
-            "class_subjects":   "[]",
+            "class_subjects":   "[\n  { id:'scout', name:'ลูกเสือ', full:'กิจกรรมลูกเสือวิสามัญ 1', day:'พฤหัสบดี', teacher:'อ.ธานี' },\n]",
         },
     },
 
