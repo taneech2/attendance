@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROV Pro League — Strategic Tool</title>
+<style>
+:root {
+  --bg:#080d1a; --surface:#0f1729; --surface2:#162035; --surface3:#1e2d45;
+  --accent:#f59e0b; --accent2:#8b5cf6; --text:#e2e8f0; --dim:#64748b;
+  --border:#1e2d3d; --red:#ef4444; --blue:#3b82f6; --green:#22c55e;
+  --marksman:#f59e0b; --assassin:#a855f7; --warrior:#ef4444;
+  --mage:#3b82f6; --tank:#6b7280; --support:#22c55e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+/* header */
+.header{background:linear-gradient(135deg,#0a0f1e,#1a0a2e);border-bottom:2px solid var(--accent);padding:14px 24px;display:flex;align-items:center;gap:16px}
+.logo{font-size:1.5rem;font-weight:900;background:linear-gradient(90deg,#f59e0b,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{color:var(--dim);font-size:.8rem}
+/* tabs */
+.tabs{display:flex;gap:4px;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tab{padding:8px 18px;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--dim);transition:.2s;border:1px solid transparent}
+.tab:hover{color:var(--text);background:var(--surface2)}
+.tab.active{color:var(--accent);background:var(--surface2);border-color:var(--accent)}
+/* panels */
+.panel{display:none;padding:20px 24px}
+.panel.active{display:block}
+/* grids */
+.hero-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:12px}
+.hero-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;transition:.2s;position:relative}
+.hero-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.hero-card.selected{border-color:var(--accent);background:rgba(245,158,11,.1)}
+.hero-card.banned{opacity:.35;pointer-events:none}
+.role-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.hero-name{font-size:.75rem;font-weight:700;margin-top:4px}
+.hero-role-tag{font-size:.6rem;color:var(--dim);margin-top:2px}
+.tier-badge{position:absolute;top:4px;right:4px;font-size:.6rem;font-weight:900;padding:1px 5px;border-radius:4px}
+.tier-S{background:#f59e0b;color:#000}
+.tier-A{background:#3b82f6;color:#fff}
+.tier-B{background:#6b7280;color:#fff}
+/* hero avatar emoji */
+.hero-avatar{font-size:2rem;line-height:1}
+/* detail panel */
+.detail{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:16px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.detail-grid{grid-template-columns:1fr}}
+.stat-bar-wrap{margin:6px 0}
+.stat-label{font-size:.75rem;color:var(--dim);display:flex;justify-content:space-between;margin-bottom:2px}
+.stat-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.stat-fill{height:100%;border-radius:3px;transition:width .5s}
+/* section titles */
+.sec-title{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+/* draft board */
+.draft-board{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;margin-top:12px}
+.team-slot{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;min-height:60px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.2s;position:relative}
+.team-slot.filled{border-color:#22c55e}
+.team-slot.ban{border-color:var(--red);opacity:.7}
+.team-slot.empty{border:1px dashed var(--border)}
+.team-slot:hover:not(.filled):not(.ban){border-color:var(--accent)}
+.phase-indicator{text-align:center;padding:12px}
+.phase-label{font-size:.7rem;color:var(--dim)}
+.phase-val{font-size:1rem;font-weight:700;color:var(--accent)}
+/* analyzer */
+.analyzer-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:12px}
+@media(max-width:700px){.analyzer-grid{grid-template-columns:1fr}}
+.prob-bar-wrap{background:var(--surface2);border-radius:12px;overflow:hidden;height:36px;margin:16px 0;position:relative;border:1px solid var(--border)}
+.prob-bar-a{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,#3b82f6,#1d4ed8);transition:width .8s cubic-bezier(.4,0,.2,1)}
+.prob-bar-b{position:absolute;right:0;top:0;height:100%;background:linear-gradient(90deg,#ef4444,#991b1b);transition:width .8s cubic-bezier(.4,0,.2,1)}
+.prob-labels{display:flex;justify-content:space-between;font-size:.85rem;font-weight:700}
+.prob-a{color:#3b82f6} .prob-b{color:#ef4444}
+/* item cards */
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.item-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;transition:.2s}
+.item-card:hover{border-color:var(--accent)}
+.item-card.selected{border-color:var(--accent);background:rgba(245,158,11,.1)}
+.item-icon{font-size:1.5rem;margin-bottom:4px}
+.item-name{font-size:.75rem;font-weight:700}
+.item-stat{font-size:.65rem;color:var(--dim);margin-top:2px}
+/* counter table */
+.counter-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.counter-grid{grid-template-columns:1fr}}
+.counter-list{list-style:none;padding:0}
+.counter-list li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:.8rem}
+.counter-score{font-weight:700;min-width:30px;text-align:center;padding:2px 6px;border-radius:4px;font-size:.7rem}
+.cs-high{background:#22c55e22;color:#22c55e}
+.cs-mid{background:#f59e0b22;color:#f59e0b}
+.cs-low{background:#ef444422;color:#ef4444}
+/* formula box */
+.formula-box{background:var(--surface3);border-left:3px solid var(--accent2);padding:12px 16px;border-radius:0 8px 8px 0;font-family:monospace;font-size:.75rem;color:#c4b5fd;margin:10px 0}
+/* skill list */
+.skill-item{background:var(--surface3);border-radius:8px;padding:10px;margin:6px 0}
+.skill-name{font-size:.8rem;font-weight:700;color:var(--accent)}
+.skill-desc{font-size:.72rem;color:var(--dim);margin-top:4px;line-height:1.5}
+/* filter bar */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filter-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--dim);font-size:.75rem;cursor:pointer;transition:.2s}
+.filter-btn:hover{color:var(--text)}
+.filter-btn.active{border-color:var(--accent);color:var(--accent)}
+/* search */
+.search-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.85rem;width:100%;margin-bottom:12px}
+.search-box:focus{outline:none;border-color:var(--accent)}
+/* button */
+.btn{padding:8px 20px;border-radius:8px;border:none;font-weight:700;cursor:pointer;transition:.2s;font-size:.85rem}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{opacity:.85}
+.btn-danger{background:var(--red);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--dim)}
+.btn-ghost:hover{border-color:var(--text);color:var(--text)}
+/* util */
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:8px}
+.badge{padding:2px 8px;border-radius:12px;font-size:.65rem;font-weight:700}
+.badge-mark{background:#f59e0b22;color:var(--marksman)}
+.badge-ass{background:#a855f722;color:var(--assassin)}
+.badge-war{background:#ef444422;color:var(--warrior)}
+.badge-mag{background:#3b82f622;color:var(--mage)}
+.badge-tank{background:#6b728022;color:var(--tank)}
+.badge-sup{background:#22c55e22;color:var(--support)}
+.bold{font-weight:700}
+.dim{color:var(--dim);font-size:.8rem}
+.mb8{margin-bottom:8px}
+.mt12{margin-top:12px}
+.tag{display:inline-block;background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:.6rem;color:var(--dim);margin:2px}
+select,input[type=range]{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:.8rem}
+select:focus{outline:none;border-color:var(--accent)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+.score-ring{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;border:3px solid var(--accent);font-size:1.1rem;font-weight:900;color:var(--accent)}
+.info-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin:8px 0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">⚔ ROV PRO STRATEGIC TOOL</div>
+    <div class="subtitle">คณิตศาสตร์การแข่งขัน · Draft · Counter · Win Probability</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('heroes')">🦸 Hero Database</div>
+  <div class="tab" onclick="switchTab('counters')">⚡ Counter Picks</div>
+  <div class="tab" onclick="switchTab('draft')">🎯 Draft Simulator</div>
+  <div class="tab" onclick="switchTab('analyzer')">📊 Team Analyzer</div>
+  <div class="tab" onclick="switchTab('items')">🛡 Item Builder</div>
+</div>
+
+<!-- PANEL: Heroes -->
+<div class="panel active" id="panel-heroes">
+  <div class="row mb8">
+    <input class="search-box" style="max-width:260px" id="heroSearch" placeholder="🔍 ค้นหาตัวละคร..." oninput="filterHeroes()">
+    <div class="filter-bar" id="roleFilters">
+      <div class="filter-btn active" onclick="setRoleFilter('all',this)">ทั้งหมด</div>
+      <div class="filter-btn" onclick="setRoleFilter('marksman',this)" style="color:var(--marksman)">🏹 Marksman</div>
+      <div class="filter-btn" onclick="setRoleFilter('assassin',this)" style="color:var(--assassin)">🗡 Assassin</div>
+      <div class="filter-btn" onclick="setRoleFilter('warrior',this)" style="color:var(--warrior)">⚔ Warrior</div>
+      <div class="filter-btn" onclick="setRoleFilter('mage',this)" style="color:var(--mage)">🔮 Mage</div>
+      <div class="filter-btn" onclick="setRoleFilter('tank',this)" style="color:var(--tank)">🛡 Tank</div>
+      <div class="filter-btn" onclick="setRoleFilter('support',this)" style="color:var(--support)">💚 Support</div>
+    </div>
+  </div>
+  <div class="hero-grid" id="heroGrid"></div>
+  <div id="heroDetail" style="display:none" class="detail mt12"></div>
+</div>
+
+<!-- PANEL: Counters -->
+<div class="panel" id="panel-counters">
+  <div class="mb8 dim">เลือกตัวละครเพื่อดูการแพ้ทางและวิธีเอาชนะ</div>
+  <select id="counterSelect" onchange="showCounter()" style="width:100%;max-width:320px">
+    <option value="">— เลือกตัวละคร —</option>
+  </select>
+  <div id="counterDetail" class="mt12"></div>
+  <div class="formula-box mt12">
+    Counter Score (CS) = Σ advantage_factors<br>
+    Range Adv: +2 · CC Chain: +1.5 · Mobility Gap: ±1 · Dmg Type: +2<br>
+    CS &gt; 4 = Strong Counter · CS 2-4 = Soft Counter · CS &lt; 2 = Even
+  </div>
+</div>
+
+<!-- PANEL: Draft -->
+<div class="panel" id="panel-draft">
+  <div class="row mb8">
+    <div class="bold">Phase: <span id="draftPhase" style="color:var(--accent)">Ban Phase 1</span></div>
+    <div class="dim" id="draftTurn"></div>
+    <button class="btn btn-ghost" onclick="resetDraft()">↺ รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="showDraftResult()">📊 วิเคราะห์ทีม</button>
+  </div>
+  <div class="draft-board">
+    <div id="teamAPanel" class="col">
+      <div class="sec-title" style="color:#3b82f6">🔵 ทีม A</div>
+      <div class="dim" style="font-size:.7rem">Bans</div>
+      <div id="teamABans" class="col" style="gap:6px"></div>
+      <div class="dim mt12" style="font-size:.7rem">Picks</div>
+      <div id="teamAPicks" class="col" style="gap:6px"></div>
+    </div>
+    <div class="col" style="align-items:center">
+      <div class="phase-indicator">
+        <div class="phase-label">ตาที่</div>
+        <div class="phase-val" id="draftTurnNum">1</div>
+      </div>
+      <div style="font-size:2rem">⚡</div>
+    </div>
+    <div id="teamBPanel" class="col">
+      <div class="sec-title" style="color:#ef4444">🔴 ทีม B</div>
+      <div class="dim" style="font-size:.7rem">Bans</div>
+      <div id="teamBBans" class="col" style="gap:6px"></div>
+      <div class="dim mt12" style="font-size:.7rem">Picks</div>
+      <div id="teamBPicks" class="col" style="gap:6px"></div>
+    </div>
+  </div>
+  <div class="sec-title mt12">เลือกตัวละคร</div>
+  <div class="hero-grid" id="draftHeroGrid"></div>
+  <div id="draftResult" class="mt12" style="display:none"></div>
+</div>
+
+<!-- PANEL: Analyzer -->
+<div class="panel" id="panel-analyzer">
+  <div class="dim mb8">เพิ่มตัวละครในแต่ละทีมเพื่อคำนวณ Win Probability ด้วยสูตรคณิตศาสตร์</div>
+  <div class="analyzer-grid">
+    <div>
+      <div class="sec-title" style="color:#3b82f6">🔵 ทีม A</div>
+      <select id="addHeroA" style="width:100%" onchange="addToTeam('A')">
+        <option value="">+ เพิ่มตัวละคร</option>
+      </select>
+      <div id="teamAList" class="col mt12" style="gap:6px"></div>
+    </div>
+    <div>
+      <div class="sec-title" style="color:#ef4444">🔴 ทีม B</div>
+      <select id="addHeroB" style="width:100%" onchange="addToTeam('B')">
+        <option value="">+ เพิ่มตัวละคร</option>
+      </select>
+      <div id="teamBList" class="col mt12" style="gap:6px"></div>
+    </div>
+  </div>
+  <button class="btn btn-primary mt12" onclick="analyzeTeams()">⚡ คำนวณ Win Probability</button>
+  <div id="analyzerResult" class="mt12"></div>
+  <div class="formula-box mt12">
+    <b>สูตร Win Probability (Logistic Model):</b><br>
+    P(A wins) = 1 / (1 + e<sup>−Δscore/50</sup>) × 100%<br>
+    Δscore = PowerScore(A) − PowerScore(B) + CounterAdv(A→B)<br>
+    PowerScore = Σ BaseHeroPower × RoleMultiplier<br>
+    CounterAdv = Σ counterMatrix[A_hero][B_hero]
+  </div>
+</div>
+
+<!-- PANEL: Items -->
+<div class="panel" id="panel-items">
+  <div class="mb8">
+    <div class="dim mb8">เลือกตัวละครเพื่อดูไอเทมแนะนำและการคำนวณ Effective DPS</div>
+    <select id="itemHeroSelect" onchange="showItemBuild()" style="width:100%;max-width:320px">
+      <option value="">— เลือกตัวละคร —</option>
+    </select>
+  </div>
+  <div id="itemBuildResult"></div>
+  <div class="formula-box">
+    <b>Effective Damage Formula:</b><br>
+    Physical DMG = ATK × Skill_Multi × (1 − Armor/(Armor + 200)) × (1 + CritRate × 1.5)<br>
+    Magic DMG = AP × Skill_Multi × (1 − MagRes/(MagRes + 200))<br>
+    DPS = Burst_DMG + (ATK × AS × Attack_Multi × armor_reduction)<br>
+    Effective HP = HP × (1 + Armor/100) [vs physical]
+  </div>
+</div>
+
+<script>
+// ===== HERO DATABASE =====
+const HEROES = {
+  // ⏰ อัปเดตล่าสุด: 2026-06-05 20:44
+  telAnnas:{name:"Tel'Annas",nameTH:"เทลอันนัส",emoji:"🏹",role:"marksman",tier:"S",
+    stats:{hp:3150,atk:185,armor:80,magRes:50,as:0.95,ms:360},
+    power:{mobility:5,cc:3,burst:6,sustain:3,teamfight:8,split:4,early:5,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Barbed Arrow",desc:"ยิงลูกศรแทงทะลุ ดีลดาเมจ Physical แก่ศัตรูทุกตัวในเส้นทาง"},
+      {name:"Frost Arrow",desc:"ลูกศรน้ำแข็งชะลอศัตรู ใช้เพิ่มระยะ Kiting ป้องกัน Assassin เข้าหา"},
+      {name:"Multi-Shot",desc:"ยิงลูกศร 7 ดอกพร้อมกัน ดาเมจ AOE สูง ใช้ระเบิดทีมไฟต์"}
+    ],
+    counters:["violet","fennik","wisp"],
+    counteredBy:["butterfly","zephys","nakroth"],
+    technique:"Kite ด้วย Frost Arrow + ยืนหลัง Tank เสมอ · จังหวะ Ult ตี Multi-Shot เมื่อศัตรูรวมกลุ่ม",
+    items:["clavesSancti","omniArms","rankBreaker","nakamarasBow","azureKnife","ultrabane"]},
+
+  violet:{name:"Violet",nameTH:"ไวโอเล็ต",emoji:"🔫",role:"marksman",tier:"A",
+    stats:{hp:3000,atk:175,armor:75,magRes:50,as:1.0,ms:360},
+    power:{mobility:7,cc:2,burst:8,sustain:2,teamfight:6,split:5,early:6,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Eagle Eye",desc:"ติดมาร์คศัตรู ดาเมจโบนัสทุกครั้งที่โจมตี"},
+      {name:"Tactical Fire",desc:"ยิงกระสุนทะลุ ลด Armor ศัตรู ชั่วคราว"},
+      {name:"Full Barrage",desc:"ยิงสายกระสุนขนาดใหญ่ Ult ดาเมจสูง เหมาะ Teamfight"}
+    ],
+    counters:["yorn","wisp","capheny"],
+    counteredBy:["nakroth","kriknak","murad"],
+    technique:"ใช้ Tactical Fire ลด Armor ก่อนระเบิด Eagle Eye · จังหวะไฟต์ใช้ Bush เพื่อหลบ",
+    items:["rankBreaker","clavesSancti","omniArms","fenrirsTooth","azureKnife","ultrabane"]},
+
+  capheny:{name:"Capheny",nameTH:"คาเฟนี่",emoji:"⚡",role:"marksman",tier:"S",
+    stats:{hp:2900,atk:170,armor:72,magRes:50,as:1.1,ms:350},
+    power:{mobility:4,cc:2,burst:9,sustain:2,teamfight:9,split:3,early:4,late:10},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Drone Summon",desc:"ปล่อย Drone ช่วยโจมตีและ Reveal พื้นที่"},
+      {name:"Auto Charge",desc:"ชาร์จพลังงานเพิ่ม ATK Speed และดาเมจอัตโนมัติ"},
+      {name:"Full Power",desc:"ระเบิด Drone ทำดาเมจ AOE มหาศาล เหมาะ Teamfight ปลายเกม"}
+    ],
+    counters:["telAnnas","yorn","violet"],
+    counteredBy:["butterfly","keera","murad"],
+    technique:"Farm ให้ถึง Lv4 ก่อนไฟต์ · Drone ต้องไม่โดน Kill · เล่น Late Game คือ Win",
+    items:["clavesSancti","rankBreaker","omniArms","fenrirsTooh","azureKnife","ultrabane"]},
+
+  yorn:{name:"Yorn",nameTH:"ยอร์น",emoji:"🎸",role:"marksman",tier:"A",
+    stats:{hp:3050,atk:178,armor:78,magRes:50,as:0.9,ms:360},
+    power:{mobility:4,cc:4,burst:7,sustain:3,teamfight:7,split:3,early:6,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Twinkle",desc:"ยิงลูกศรพุ่งตรง ดาเมจ Physical + ชะลอ"},
+      {name:"Sonic Wave",desc:"คลื่นเสียงระเบิด Slow AOE"},
+      {name:"Rock Concert",desc:"ระเบิดเสียง AOE ดาเมจสูง + Stun บริเวณกว้าง"}
+    ],
+    counters:["wisp","fennik","violet"],
+    counteredBy:["zephys","butterfly","hayate"],
+    technique:"Positioning สำคัญมาก · Ult ใช้ใน Teamfight ต้องอยู่ในระยะ · Poke ด้วย Twinkle",
+    items:["rankBreaker","clavesSancti","omniArms","azureKnife","fenrirsTooh","ultrabane"]},
+
+  fennik:{name:"Fennik",nameTH:"เฟนนิค",emoji:"🌀",role:"marksman",tier:"B",
+    stats:{hp:3100,atk:172,armor:80,magRes:50,as:1.05,ms:370},
+    power:{mobility:8,cc:1,burst:6,sustain:4,teamfight:5,split:7,early:7,late:6},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Steel Trap",desc:"วางกับดักชะลอศัตรู"},
+      {name:"Turbo",desc:"เพิ่ม MS และ ATK Speed ชั่วคราว"},
+      {name:"Full Throttle",desc:"ระเบิดรอบตัว ดาเมจ + ดีด Blink ออก"}
+    ],
+    counters:["wisp","yorn"],
+    counteredBy:["telAnnas","capheny","zephys"],
+    technique:"Split Push ได้ดีด้วย Mobility สูง · วาง Trap ก่อน Engage ทุกครั้ง",
+    items:["rankBreaker","omniArms","clavesSancti","azureKnife","boots","ultrabane"]},
+
+  wisp:{name:"Wisp",nameTH:"วิส",emoji:"✨",role:"marksman",tier:"S",
+    stats:{hp:2950,atk:180,armor:73,magRes:50,as:1.0,ms:355},
+    power:{mobility:6,cc:3,burst:7,sustain:3,teamfight:7,split:4,early:5,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Mystic Orb",desc:"ปล่อยลูกบอลโคจรรอบตัวเองโจมตีศัตรู"},
+      {name:"Link",desc:"ผูกพันธะกับพันธมิตรหรือศัตรู"},
+      {name:"Super Charged",desc:"ชาร์จพลังยิงลูกบอลขนาดใหญ่ ดาเมจสูง"}
+    ],
+    counters:["fennik","yorn"],
+    counteredBy:["butterfly","hayate","nakroth"],
+    technique:"Link กับ Tank เพื่อความปลอดภัย · ใช้ Orb Harass ตลอดเกม",
+    items:["clavesSancti","rankBreaker","omniArms","azureKnife","ultrabane","boots"]},
+
+  butterfly:{name:"Butterfly",nameTH:"บัตเตอร์ฟลาย",emoji:"🦋",role:"assassin",tier:"S",
+    stats:{hp:3300,atk:190,armor:85,magRes:55,as:1.1,ms:390},
+    power:{mobility:9,cc:2,burst:10,sustain:3,teamfight:8,split:9,early:8,late:10},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Bladestorm",desc:"หมุนใบมีดโจมตีรอบตัว ดาเมจ AOE"},
+      {name:"Vanish",desc:"หายตัวและ Blink ไปด้านหลังเป้าหมาย ตัดเกราะ"},
+      {name:"Dust of Death",desc:"ฆ่าศัตรูทันทีหากเลือดต่ำกว่า Threshold หรือดาเมจสูง"}
+    ],
+    counters:["telAnnas","violet","yorn","capheny"],
+    counteredBy:["omen","astrid","qi"],
+    technique:"เปิด Vanish → ตาม Burst → ใช้ Ult ปิด · อย่า Engage ตอน Tank มี HP เต็ม · Target ADC ก่อน",
+    items:["clawsOfTalons","rankBreaker","omniArms","soulReaver","boots","atkItem"]},
+
+  zephys:{name:"Zephys",nameTH:"ซีฟิส",emoji:"💀",role:"assassin",tier:"A",
+    stats:{hp:3200,atk:185,armor:83,magRes:53,as:1.0,ms:385},
+    power:{mobility:8,cc:3,burst:10,sustain:2,teamfight:7,split:8,early:7,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Shadow Rush",desc:"พุ่งเข้าหาเป้าหมาย ดาเมจสูง + ชะลอ"},
+      {name:"Death Sentence",desc:"ดาเมจสูงขึ้นเมื่อเป้าหมาย HP ต่ำ"},
+      {name:"Lethal Strike",desc:"โจมตี Execute ฆ่าเป้าหมาย HP ต่ำได้ทันที"}
+    ],
+    counters:["yorn","violet","wisp","fennik"],
+    counteredBy:["omen","astrid","butterfly"],
+    technique:"Wait ให้ Tank เปิด → เลือก Target ADC หรือ Mage → Execute ด้วย Ult",
+    items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
+
+  nakroth:{name:"Nakroth",nameTH:"นาครอธ",emoji:"⚡",role:"assassin",tier:"A",
+    stats:{hp:3100,atk:180,armor:80,magRes:52,as:1.15,ms:395},
+    power:{mobility:10,cc:2,burst:8,sustain:2,teamfight:6,split:9,early:7,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Justice Blades",desc:"ขว้างใบมีดไปข้างหน้า ดาเมจ + Blink"},
+      {name:"Somersault",desc:"หมุนโจมตีรอบตัว เพิ่ม MS ชั่วคราว"},
+      {name:"Blood Rush",desc:"AOE ดาเมจรอบตัว Reset Cooldown เมื่อ Kill"}
+    ],
+    counters:["wisp","yorn","fennik"],
+    counteredBy:["omen","butterfly","grakk"],
+    technique:"เล่น Split Push และ Skirmish · เปิดไฟต์ด้วย Justice Blades → Combo · Farm Jungle ให้เร็ว",
+    items:["rankBreaker","clawsOfTalons","omniArms","soulReaver","boots","atkItem"]},
+
+  murad:{name:"Murad",nameTH:"มูราด",emoji:"🌊",role:"assassin",tier:"S",
+    stats:{hp:3250,atk:182,armor:82,magRes:54,as:1.0,ms:380},
+    power:{mobility:9,cc:4,burst:9,sustain:3,teamfight:6,split:10,early:6,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Surf",desc:"เซิร์ฟข้ามพื้นน้ำ ดาเมจ + ชะลอ"},
+      {name:"Submerge",desc:"ดำน้ำหายตัว เคลื่อนที่ใต้ดินได้"},
+      {name:"Cyclone",desc:"ดึงศัตรูเข้ามา Stun + ดาเมจมหาศาล"}
+    ],
+    counters:["violet","yorn","wisp"],
+    counteredBy:["omen","qi","grakk"],
+    technique:"Split Push เกือบตลอดเกม · Cyclone ใช้ใน Bush ล่อ · ระวัง Map Control",
+    items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
+
+  kriknak:{name:"Kriknak",nameTH:"คริกแน็ก",emoji:"🪲",role:"assassin",tier:"A",
+    stats:{hp:3180,atk:183,armor:81,magRes:52,as:1.05,ms:385},
+    power:{mobility:8,cc:5,burst:9,sustain:2,teamfight:7,split:8,early:8,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Venom",desc:"โจมตีติด Poison ลด Armor ศัตรู"},
+      {name:"Shriek",desc:"ดักจับศัตรู Stun ใน Cocoon"},
+      {name:"Bug Rush",desc:"พุ่งเข้าหาศัตรู AOE ดาเมจ + CC"}
+    ],
+    counters:["telAnnas","violet","capheny"],
+    counteredBy:["omen","astrid","thane"],
+    technique:"Stun ด้วย Shriek → Burst ทันที · Jungle Control สำคัญ · Venom ลด Armor ก่อน Combo",
+    items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
+
+  hayate:{name:"Hayate",nameTH:"ฮายาเตะ",emoji:"🌪",role:"assassin",tier:"A",
+    stats:{hp:3050,atk:178,armor:79,magRes:51,as:1.1,ms:400},
+    power:{mobility:10,cc:1,burst:7,sustain:2,teamfight:5,split:9,early:6,late:7},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Shuriken",desc:"ขว้าง Shuriken ดาเมจ Physical"},
+      {name:"Shadowstep",desc:"Teleport รอบ ๆ ศัตรูได้เร็ว"},
+      {name:"Iaido",desc:"โจมตีฉับพลัน ดาเมจสูงในจังหวะเดียว"}
+    ],
+    counters:["wisp","fennik"],
+    counteredBy:["omen","astrid","grakk"],
+    technique:"Harass ด้วย Shuriken · อย่า All-in ตัวเดียว · ใช้ Mobility หลบ Skill ศัตรู",
+    items:["rankBreaker","soulReaver","omniArms","clawsOfTalons","boots","atkItem"]},
+
+  florentino:{name:"Florentino",nameTH:"ฟลอเรนติโน",emoji:"🌹",role:"warrior",tier:"S",
+    stats:{hp:3600,atk:192,armor:100,magRes:55,as:1.0,ms:375},
+    power:{mobility:7,cc:4,burst:9,sustain:6,teamfight:9,split:8,early:8,late:10},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Blossom",desc:"ขว้างดอกไม้ติด Mark ศัตรู เพิ่มดาเมจ"},
+      {name:"Joust",desc:"พุ่ง Dash ดาเมจ + รีเซ็ตได้เมื่อ Kill หรือ Assist"},
+      {name:"Grand Duel",desc:"ดวลกับศัตรูคนเดียว ดาเมจสูงมาก ถ้า Kill ได้ HP Regen"}
+    ],
+    counters:["nakroth","zephys","hayate","butterfly"],
+    counteredBy:["omen","qi","grakk"],
+    technique:"Mark ด้วย Blossom → Dash Joust หลาย ๆ รอบ → Grand Duel ปิด · Split Push และ Duel มือ 1v1",
+    items:["rankBreaker","omniArms","fenrirsTooh","soulReaver","atkItem","ultrabane"]},
+
+  omen:{name:"Omen",nameTH:"โอเมน",emoji:"🌑",role:"warrior",tier:"S",
+    stats:{hp:3800,atk:185,armor:110,magRes:60,as:0.95,ms:380},
+    power:{mobility:6,cc:6,burst:7,sustain:7,teamfight:9,split:6,early:7,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Dark Nova",desc:"โจมตี AOE รอบตัว ดาเมจ + Slow"},
+      {name:"Eclipse",desc:"ดูดพลังชีวิตศัตรู เพิ่ม Sustain"},
+      {name:"Black Hole",desc:"ดูดศัตรูเข้าหาตัวเอง AOE ดาเมจ + CC"}
+    ],
+    counters:["butterfly","zephys","nakroth","murad","florentino"],
+    counteredBy:["grakk","qi","mina"],
+    technique:"Counter Assassin หลัก · Black Hole ใช้ Engage Teamfight · Eclipse sustain ตลอดไฟต์",
+    items:["soulReaver","rankBreaker","omniArms","atkItem","fenrirsTooh","ultrabane"]},
+
+  luBu:{name:"Lu Bu",nameTH:"ลู่ปู้",emoji:"🐉",role:"warrior",tier:"B",
+    stats:{hp:3700,atk:188,armor:105,magRes:58,as:0.95,ms:370},
+    power:{mobility:5,cc:5,burst:8,sustain:7,teamfight:8,split:7,early:7,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Sky Splitter",desc:"โจมตีพุ่งลงมาจากอากาศ ดาเมจ AOE + Slow"},
+      {name:"Rampage",desc:"เพิ่ม ATK Speed และ Lifesteal ชั่วคราว"},
+      {name:"War God",desc:"เข้าสู่สถานะ War God เพิ่ม Stats ทุกอย่าง"}
+    ],
+    counters:["hayate","nakroth","fennik"],
+    counteredBy:["butterfly","omen","grakk"],
+    technique:"เปิดด้วย Sky Splitter → Rampage → ไฟต์ยาว · War God ใช้เมื่อ HP ต่ำลง 50%",
+    items:["soulReaver","rankBreaker","omniArms","fenrirsTooh","atkItem","ultrabane"]},
+
+  qi:{name:"Qi",nameTH:"ฉี",emoji:"⚡",role:"warrior",tier:"S",
+    stats:{hp:3650,atk:186,armor:108,magRes:57,as:1.0,ms:375},
+    power:{mobility:7,cc:7,burst:7,sustain:6,teamfight:8,split:7,early:7,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Thunder Strike",desc:"โจมตีฟ้าผ่า ดาเมจ + ชะลอ"},
+      {name:"Lightning Step",desc:"Dash พร้อมดาเมจ Immune สั้น ๆ"},
+      {name:"Storm Tornado",desc:"พายุ Knockup AOE รอบตัว Teamfight สูง"}
+    ],
+    counters:["butterfly","murad","zephys","omen"],
+    counteredBy:["florentino","grakk","baldum"],
+    technique:"เปิด Storm Tornado → Teamfight · Lightning Step ใช้ Dodge Ult ศัตรู · Counter Assassin ได้ดี",
+    items:["soulReaver","rankBreaker","omniArms","fenrirsTooh","atkItem","ultrabane"]},
+
+  keera:{name:"Keera",nameTH:"คีร่า",emoji:"🦊",role:"warrior",tier:"S",
+    stats:{hp:3500,atk:190,armor:95,magRes:55,as:1.05,ms:385},
+    power:{mobility:9,cc:4,burst:9,sustain:5,teamfight:8,split:9,early:7,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Fox Form",desc:"แปลงร่างเพิ่ม Mobility + ดาเมจ"},
+      {name:"Pounce",desc:"กระโดดโจมตีเป้าหมาย ดาเมจ + ชะลอ"},
+      {name:"Spirit Fox",desc:"ระเบิด Fox Spirit AOE ดาเมจสูง + Stun"}
+    ],
+    counters:["capheny","violet","yorn"],
+    counteredBy:["omen","qi","grakk"],
+    technique:"Engage ด้วย Fox Form + Pounce → Burst · เหมาะ Solo Lane และ Teamfight · Snowball เร็ว",
+    items:["rankBreaker","soulReaver","omniArms","fenrirsTooh","atkItem","ultrabane"]},
+
+  ryoma:{name:"Ryoma",nameTH:"เรียวม่า",emoji:"🗡",role:"warrior",tier:"A",
+    stats:{hp:3550,atk:184,armor:100,magRes:55,as:0.95,ms:375},
+    power:{mobility:6,cc:4,burst:7,sustain:7,teamfight:7,split:7,early:7,late:7},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Iaijutsu",desc:"โจมตีดาบฉับพลัน ดาเมจสูงในช็อตเดียว"},
+      {name:"Bushido",desc:"เพิ่ม DEF และสะท้อนดาเมจ"},
+      {name:"Musou Itto-ryu",desc:"โจมตีพุ่งยาว ดาเมจ Physical สูงมาก"}
+    ],
+    counters:["hayate","kriknak"],
+    counteredBy:["omen","butterfly","keera"],
+    technique:"เน้น Duel 1v1 ดี · Bushido ใช้รับ Burst จาก Assassin · Ult ใช้ Chase Kill",
+    items:["soulReaver","rankBreaker","omniArms","atkItem","fenrirsTooh","ultrabane"]},
+
+  wukong:{name:"Wukong",nameTH:"วู่คง",emoji:"🐒",role:"warrior",tier:"B",
+    stats:{hp:3500,atk:183,armor:98,magRes:54,as:1.0,ms:380},
+    power:{mobility:8,cc:5,burst:8,sustain:5,teamfight:7,split:8,early:6,late:7},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Clone",desc:"สร้างตัวหลอกหลอกศัตรู"},
+      {name:"Staff Spin",desc:"หมุน Staff โจมตี AOE ดาเมจ + ชะลอ"},
+      {name:"Cyclone Staff",desc:"หมุนพุ่งขึ้นฟ้า Knockup AOE ดาเมจ"}
+    ],
+    counters:["hayate","fennik","yorn"],
+    counteredBy:["omen","butterfly","zephys"],
+    technique:"Ult เปิด Teamfight ด้วย Cyclone Staff · Clone ใช้หลอกเวลา HP ต่ำ",
+    items:["rankBreaker","soulReaver","omniArms","fenrirsTooh","atkItem","ultrabane"]},
+
+  tulen:{name:"Tulen",nameTH:"ทูเลน",emoji:"🌩",role:"mage",tier:"A",
+    stats:{hp:3050,atk:160,armor:75,magRes:52,as:0.85,ms:360},
+    power:{mobility:8,cc:5,burst:10,sustain:2,teamfight:9,split:5,early:7,late:9},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Lightning Orb",desc:"ยิงลูกบอลไฟฟ้า ดาเมจ Magic + ติด Charge"},
+      {name:"Thunderclap",desc:"ระเบิดพลังงาน Charge ทำดาเมจ AOE สูง"},
+      {name:"Thunderstrike",desc:"ฟ้าผ่าบริเวณกว้าง ดาเมจ AOE + Stun มหาศาล"}
+    ],
+    counters:["ilumia","lauriel","diaochan"],
+    counteredBy:["butterfly","zephys","nakroth"],
+    technique:"Stack Charge 3 ก้อน → Thunderclap ระเบิด · Ult Thunderstrike ใช้ Teamfight เท่านั้น · ต้อง Protect",
+    items:["staff","boomstick","violetHatchet","apocalypse","magicBoots","violetHatchet2"]},
+
+  lauriel:{name:"Lauriel",nameTH:"ลอเรียล",emoji:"👼",role:"mage",tier:"A",
+    stats:{hp:3100,atk:165,armor:78,magRes:53,as:0.9,ms:355},
+    power:{mobility:7,cc:5,burst:9,sustain:3,teamfight:8,split:5,early:6,late:8},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Arc of Light",desc:"โจมตี Arc ดาเมจ Magic รอบตัว"},
+      {name:"Holy Light",desc:"ลงมาจากฟ้าจุดที่กำหนด ดาเมจ AOE"},
+      {name:"Divine Wave",desc:"บินขึ้นฟ้า ระเบิด Holy AOE ดาเมจมาก + Stun"}
+    ],
+    counters:["kahlii","diaochan","ilumia"],
+    counteredBy:["tulen","butterfly","zephys"],
+    technique:"ขึ้นบิน → เลือก Position → ลง Divine Wave ปิดไฟต์ · Zoning ด้วย Holy Light",
+    items:["staff","boomstick","violetHatchet","apocalypse","magicBoots","violetHatchet2"]},
+
+  kahlii:{name:"Kahlii",nameTH:"คาลี่",emoji:"👻",role:"mage",tier:"B",
+    stats:{hp:2950,atk:162,armor:72,magRes:50,as:0.85,ms:350},
+    power:{mobility:4,cc:6,burst:8,sustain:4,teamfight:8,split:3,early:5,late:8},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Soul Orb",desc:"ปล่อย Orb วนรอบตัวเองโจมตีศัตรู"},
+      {name:"Spirit of Pain",desc:"ดาเมจ Magic + ชะลอ"},
+      {name:"Release",desc:"ปลดปล่อยพลัง AOE ดาเมจ + Slow บริเวณกว้าง"}
+    ],
+    counters:["ilumia","lauriel"],
+    counteredBy:["butterfly","nakroth","zephys"],
+    technique:"Poke ด้วย Soul Orb · Ult Release ใช้จาก Bush ล่อ · ต้องมี Tank ปกป้อง",
+    items:["staff","boomstick","violetHatchet","apocalypse","magicBoots","violetHatchet2"]},
+
+  ilumia:{name:"Ilumia",nameTH:"อิลูเมีย",emoji:"🌟",role:"mage",tier:"A",
+    stats:{hp:3000,atk:163,armor:74,magRes:51,as:0.85,ms:355},
+    power:{mobility:5,cc:8,burst:7,sustain:3,teamfight:10,split:3,early:5,late:8},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Orb",desc:"ยิง Orb ไฟ ดาเมจ Magic"},
+      {name:"Veil",desc:"เรียก Veil ชะลอ + ลด Magic Res ศัตรู"},
+      {name:"Domain",desc:"ล็อคบริเวณ Stun ศัตรูทุกคนในพื้นที่ Teamfight สูงสุด"}
+    ],
+    counters:["kahlii","telAnnas","violet"],
+    counteredBy:["tulen","butterfly","zephys"],
+    technique:"Domain ใช้ Teamfight เปิดไฟต์ Combo ดี · Veil Poke ลด MR · ต้องระวัง Assassin มาก",
+    items:["staff","boomstick","apocalypse","magicBoots","violetHatchet","violetHatchet2"]},
+
+  diaochan:{name:"Diaochan",nameTH:"เตี่ยวเสี้ยน",emoji:"🌺",role:"mage",tier:"A",
+    stats:{hp:2900,atk:160,armor:70,magRes:50,as:0.85,ms:350},
+    power:{mobility:5,cc:6,burst:8,sustain:4,teamfight:7,split:3,early:5,late:8},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Ice Flower",desc:"ดาเมจ Magic + ชะลอ"},
+      {name:"Ice Wall",desc:"สร้างกำแพงน้ำแข็งขวาง Path ศัตรู"},
+      {name:"Blizzard",desc:"พายุหิมะ AOE ดาเมจ + ชะลอรุนแรง ในพื้นที่"}
+    ],
+    counters:["ilumia"],
+    counteredBy:["tulen","lauriel","butterfly"],
+    technique:"Ice Wall แบ่งทีมศัตรู → Blizzard ถล่มคนที่ถูกแยก · Zoning ได้ดี",
+    items:["staff","boomstick","apocalypse","magicBoots","violetHatchet","violetHatchet2"]},
+
+  grakk:{name:"Grakk",nameTH:"แกรก",emoji:"🦑",role:"tank",tier:"B",
+    stats:{hp:4200,atk:150,armor:140,magRes:80,as:0.8,ms:365},
+    power:{mobility:6,cc:9,burst:5,sustain:6,teamfight:10,split:4,early:8,late:9},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Tongue Lash",desc:"จิ้มลิ้นดึงศัตรูเข้ามา CC สูง"},
+      {name:"Devour",desc:"กลืนกิน Minion หรือศัตรูเล็ก ๆ ได้"},
+      {name:"Maw",desc:"ดึงศัตรูทุกคนรอบตัวเข้ามา Stun + ดาเมจ"}
+    ],
+    counters:["butterfly","nakroth","hayate"],
+    counteredBy:["murad","qi"],
+    technique:"Hook ด้วย Tongue Lash → Maw Ult → ทีมโจมตี · Roam เปิดไฟต์ · Vision Control",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  baldum:{name:"Baldum",nameTH:"บัลดัม",emoji:"🐻",role:"tank",tier:"S",
+    stats:{hp:4100,atk:148,armor:135,magRes:77,as:0.8,ms:370},
+    power:{mobility:7,cc:8,burst:4,sustain:6,teamfight:9,split:4,early:7,late:8},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Rage Run",desc:"วิ่งพุ่งเข้าหาศัตรู ดาเมจ + ชะลอ"},
+      {name:"Provoke",desc:"ยั่วยุศัตรูให้โจมตีตัวเองชั่วคราว"},
+      {name:"Fury Ride",desc:"ขี่คลื่นพุ่งเข้าหาศัตรู Knockup AOE"}
+    ],
+    counters:["nakroth","hayate","kriknak"],
+    counteredBy:["qi","murad"],
+    technique:"Engage ด้วย Fury Ride → Provoke → ทีมตาม · Flank ด้านข้างได้ดี",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  mina:{name:"Mina",nameTH:"มีนา",emoji:"🌊",role:"tank",tier:"A",
+    stats:{hp:4000,atk:145,armor:130,magRes:78,as:0.8,ms:365},
+    power:{mobility:5,cc:8,burst:3,sustain:7,teamfight:9,split:3,early:7,late:8},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Wave",desc:"ดันน้ำชะลอศัตรูรอบตัว"},
+      {name:"Shield Bash",desc:"โจมตีด้วยโล่ ดาเมจ + Stun"},
+      {name:"Tsunami",desc:"คลื่นยักษ์ AOE ดาเมจ + Knockback ทีมทั้งฝั่ง"}
+    ],
+    counters:["butterfly","zephys","nakroth"],
+    counteredBy:["omen","qi"],
+    technique:"Tsunami ใช้เปิดหรือปิดไฟต์ · Peel ปกป้อง ADC · Vision Control ด้วย Roam",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  thane:{name:"Thane",nameTH:"เธน",emoji:"⚔",role:"tank",tier:"B",
+    stats:{hp:4150,atk:152,armor:138,magRes:79,as:0.82,ms:360},
+    power:{mobility:5,cc:7,burst:5,sustain:6,teamfight:8,split:4,early:7,late:8},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Shield Slam",desc:"โจมตีด้วยโล่ ดาเมจ + ชะลอ"},
+      {name:"Guard",desc:"สร้าง Shield ปกป้องพันธมิตรใกล้เคียง"},
+      {name:"Excalibur",desc:"โจมตีดาบขนาดใหญ่ ดาเมจ + Knockback AOE"}
+    ],
+    counters:["kriknak","hayate"],
+    counteredBy:["murad","omen"],
+    technique:"Guard ให้ ADC · Excalibur ดัน Backline ออก · เน้น Peel มากกว่า Engage",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  ormarr:{name:"Ormarr",nameTH:"ออร์มาร์",emoji:"🪨",role:"tank",tier:"A",
+    stats:{hp:4300,atk:148,armor:142,magRes:82,as:0.78,ms:360},
+    power:{mobility:5,cc:9,burst:4,sustain:7,teamfight:9,split:3,early:8,late:8},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Spiked Armor",desc:"สะท้อนดาเมจเมื่อถูกโจมตี"},
+      {name:"Ground Smash",desc:"ทุ่มลงพื้น Stun AOE รอบตัว"},
+      {name:"Tremor",desc:"สั่นสะเทือนพื้น Knockup ศัตรูรอบตัวหลาย ๆ ครั้ง"}
+    ],
+    counters:["butterfly","nakroth","kriknak"],
+    counteredBy:["murad","zephys"],
+    technique:"Tremor เปิด Teamfight · Spiked Armor ต้าน Assassin · เป็น Hard Engage Tank",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  lumburr:{name:"Lumburr",nameTH:"ลัมเบอร์",emoji:"🐺",role:"support",tier:"S",
+    stats:{hp:3800,atk:142,armor:120,magRes:72,as:0.82,ms:365},
+    power:{mobility:6,cc:9,burst:3,sustain:7,teamfight:9,split:3,early:7,late:8},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Crumble",desc:"โยนก้อนหินใส่ศัตรู ดาเมจ + ชะลอ"},
+      {name:"Entomb",desc:"ฝังศัตรูในพื้นดิน Stun ชั่วคราว"},
+      {name:"Groundswell",desc:"ยกดินสูง Knockup AOE ดาเมจ + CC"}
+    ],
+    counters:["butterfly","nakroth","hayate"],
+    counteredBy:["murad","omen"],
+    technique:"Entomb CC เดี่ยว → Groundswell AOE · Roam ช่วยทุก Lane ต้องมี Vision",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  zip:{name:"Zip",nameTH:"ซิป",emoji:"🎪",role:"support",tier:"A",
+    stats:{hp:3600,atk:138,armor:115,magRes:70,as:0.82,ms:360},
+    power:{mobility:5,cc:8,burst:3,sustain:9,teamfight:9,split:2,early:7,late:8},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Swallow",desc:"กลืนพันธมิตรปกป้องจากดาเมจ"},
+      {name:"Spit",desc:"ยิงพันธมิตรออกไป หรือยิงศัตรูให้กระเด็น"},
+      {name:"Zipline",desc:"ดึงศัตรูเข้าหาตัวเองหรือเปิดไฟต์"}
+    ],
+    counters:["butterfly","kriknak","zephys"],
+    counteredBy:["omen","tulen"],
+    technique:"Swallow พันธมิตรที่โดน Focus · Spit ส่ง Tank เปิดไฟต์ · Roam ยาก แต่ Peel ดีมาก",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  alice:{name:"Alice",nameTH:"อลิซ",emoji:"🧙",role:"support",tier:"B",
+    stats:{hp:3500,atk:140,armor:112,magRes:68,as:0.83,ms:360},
+    power:{mobility:6,cc:7,burst:5,sustain:8,teamfight:8,split:3,early:6,late:7},
+    dmgType:"magic",scaleStat:"hp",
+    skills:[
+      {name:"Wonderland",desc:"สร้างพื้นที่ Heal พันธมิตรในบริเวณ"},
+      {name:"Hex",desc:"แปลงศัตรูเป็น Frog ชั่วคราว (Polymorph)"},
+      {name:"Magic Surge",desc:"ระเบิด Magic AOE ดาเมจ + Silence"}
+    ],
+    counters:["tulen","lauriel"],
+    counteredBy:["butterfly","zephys"],
+    technique:"Hex ใช้ Disable ตัวอันตราย · Wonderland Heal ใน Teamfight · Polymorph เปลี่ยนเกมได้",
+    items:["mail","staff","shield","magicBoots","armor","hp"]},
+};
+
+// ===== ITEM DATABASE =====
+const ITEMS = {
+  clavesSancti:{name:"Claves Sancti",icon:"⚡",cost:1890,
+    stats:{"ATK":+80,"Crit Rate":"+30%","ATK Speed":"+10%"},
+    desc:"ไอเทมหลัก Marksman เพิ่ม Crit สูง",roles:["marksman"]},
+  rankBreaker:{name:"Rankbreaker",icon:"💀",cost:1890,
+    stats:{"ATK":+100,"Armor Pen":"+42%"},
+    desc:"เจาะ Armor ศัตรู เหมาะโดนทีม Armor สูง",roles:["marksman","assassin","warrior"]},
+  omniArms:{name:"Omni Arms",icon:"⚔",cost:1890,
+    stats:{"ATK":+80,"ATK Speed":"+25%","Spell Vamp":"+20%"},
+    desc:"เพิ่ม DPS และ Lifesteal จาก Skill",roles:["warrior","assassin"]},
+  fenrirsTooh:{name:"Fenrir's Tooth",icon:"🦷",cost:2100,
+    stats:{"ATK":+120,"Max HP%":"+8% as bonus dmg"},
+    desc:"ดาเมจโบนัสตาม HP สูงสุดของเป้าหมาย เหมาะตี Tank",roles:["warrior","marksman"]},
+  soulReaver:{name:"Soul Reaver",icon:"💜",cost:1890,
+    stats:{"ATK":+90,"True DMG":"เมื่อ HP ต่ำกว่า 40%"},
+    desc:"True Damage เมื่อ HP ศัตรูต่ำ เหมาะ Assassin Execute",roles:["assassin"]},
+  clawsOfTalons:{name:"Claws of Talons",icon:"🦅",cost:1890,
+    stats:{"ATK":+85,"Crit Rate":"+15%","Crit DMG":"+50%"},
+    desc:"เพิ่ม Crit Damage สูง เหมาะ Burst Assassin",roles:["assassin"]},
+  ultrabane:{name:"Ultrabane",icon:"🔱",cost:1890,
+    stats:{"ATK":+100,"Hybrid Pen":"Armor+MagRes"},
+    desc:"เจาะทั้ง Armor และ Magic Resist บางส่วน",roles:["marksman","warrior"]},
+  azureKnife:{name:"Azure Knife",icon:"🔵",cost:1890,
+    stats:{"ATK":+75,"Slow":"ทุกครั้งที่โจมตี 15%"},
+    desc:"ชะลอศัตรูทุก Auto Attack เหมาะ Kiting",roles:["marksman"]},
+  nakamarasBow:{name:"Nakamara's Bow",icon:"🏹",cost:1890,
+    stats:{"ATK":+80,"ATK Speed":"+35%","HP Drain":"2% on hit"},
+    desc:"ATK Speed สูง + Lifesteal จากการโจมตี",roles:["marksman"]},
+  staff:{name:"Staff of Nuul",icon:"🔮",cost:1890,
+    stats:{"AP":+200,"Magic Pen":"+40%"},
+    desc:"Magic Penetration หลักของ Mage",roles:["mage"]},
+  boomstick:{name:"Boomstick",icon:"💥",cost:1890,
+    stats:{"AP":+220,"Cooldown":"-10%"},
+    desc:"AP สูง ลด Cooldown เหมาะ Burst Mage",roles:["mage"]},
+  apocalypse:{name:"Apocalypse",icon:"☄",cost:1890,
+    stats:{"AP":+180,"Next AA":"ดาเมจเพิ่ม 150 Magic"},
+    desc:"เพิ่มดาเมจ Auto Attack หลัง Skill เหมาะ Hybrid Mage",roles:["mage"]},
+  violetHatchet:{name:"Violet Hatchet",icon:"🪓",cost:1890,
+    stats:{"AP":+200,"Slow Area":"หลัง Skill"},
+    desc:"ชะลอ AOE หลัง Skill เหมาะ CC Mage",roles:["mage"]},
+  magicBoots:{name:"Enchanted Boots",icon:"👡",cost:710,
+    stats:{"AP":+30,"Magic Pen":"+10%","Move Speed":"+60"},
+    desc:"รองเท้า Mage",roles:["mage","support"]},
+  mail:{name:"Mail of Pain",icon:"🛡",cost:1890,
+    stats:{"Armor":+250,"HP":+500,"Reflect":"12% dmg taken"},
+    desc:"สะท้อนดาเมจ Physical กลับ เหมาะ Tank vs AD",roles:["tank","support"]},
+  spear:{name:"Spear of Longinus",icon:"🗡",cost:1890,
+    stats:{"Armor":+200,"HP":+600,"Armor Pen":"+20% AoE"},
+    desc:"ลด Armor ศัตรูรอบข้างในไฟต์",roles:["tank","warrior"]},
+  shield:{name:"Medallion of Troy",icon:"🏅",cost:1890,
+    stats:{"Magic Res":+300,"HP":+500,"Magic Barrier":"เมื่อ HP ต่ำ"},
+    desc:"Shield ป้องกัน Magic สำหรับ Tank",roles:["tank","support"]},
+  trinketBoots:{name:"Gilded Greaves",icon:"👢",cost:710,
+    stats:{"Magic Res":+50,"Move Speed":"+60","Tenacity":"+25%"},
+    desc:"รองเท้า Tank ลด Duration CC",roles:["tank","support"]},
+  armor:{name:"Aegis",icon:"⚜",cost:1890,
+    stats:{"Armor":+220,"HP":+550,"Passive":"ลด crit DMG 30%"},
+    desc:"ต้าน Crit จาก Marksman ดีมาก",roles:["tank","support"]},
+  hp:{name:"Leviathan",icon:"🌊",cost:1890,
+    stats:{"HP":+1500,"HP Regen":"+20/s"},
+    desc:"เพิ่ม HP มหาศาล เหมาะ Bruiser Tank",roles:["tank","warrior"]},
+  boots:{name:"War Boots",icon:"👟",cost:710,
+    stats:{"ATK Speed":"+25%","Move Speed":"+60"},
+    desc:"รองเท้า Marksman/Assassin ATK Speed",roles:["marksman","assassin"]},
+  atkItem:{name:"Fafnir's Talon",icon:"🐉",cost:1890,
+    stats:{"ATK":+95,"HP":+400,"Passive":"ดาเมจบวกต่อ Tanky targets"},
+    desc:"เหมาะ Warriors ที่ต้องตีทั้ง Tank และ Carry",roles:["warrior"]},
+  violetHatchet2:{name:"Rhea's Blessing",icon:"💎",cost:1890,
+    stats:{"AP":+190,"HP":+350,"Shield":"ให้พันธมิตรเมื่อ Cast"},
+    desc:"เหมาะ Support Mage ที่ต้อง Protect ทีม",roles:["mage","support"]},
+};
+
+// ===== COUNTER MATRIX (A→B: positive = A counters B) =====
+const COUNTER_MATRIX = {
+  omen:{butterfly:5,zephys:5,nakroth:4,murad:3,kriknak:3,hayate:4,florentino:2,qi:-2,grakk:-1},
+  qi:{butterfly:4,murad:3,zephys:3,omen:2,florentino:2,grakk:-2},
+  florentino:{butterfly:3,nakroth:3,zephys:3,hayate:4,fennik:2,murad:-1},
+  grakk:{butterfly:4,nakroth:4,hayate:3,murad:2,nakroth:3,qi:2,florentino:2},
+  butterfly:{telAnnas:5,violet:5,yorn:4,capheny:5,wisp:4,kahlii:4,diaochan:3,lauriel:3,ilumia:3},
+  zephys:{telAnnas:5,violet:4,yorn:5,wisp:4,fennik:4,kahlii:3},
+  nakroth:{telAnnas:4,wisp:5,fennik:3,yorn:3,violet:3},
+  murad:{mina:4,qi:3,grakk:3,baldum:3,thane:3},
+  keera:{capheny:5,violet:4,yorn:3,wisp:3},
+  tulen:{ilumia:2,lauriel:2,kahlii:2,diaochan:2,telAnnas:3},
+  kriknak:{telAnnas:4,violet:3,capheny:4,wisp:3},
+  hayate:{wisp:4,fennik:3},
+  baldum:{nakroth:3,hayate:4,kriknak:3},
+  mina:{butterfly:3,zephys:3,nakroth:3},
+  lumburr:{butterfly:3,nakroth:3,hayate:3},
+  zip:{butterfly:3,kriknak:3,zephys:3},
+  ormarr:{butterfly:4,nakroth:4,kriknak:3},
+  thane:{kriknak:3,hayate:2},
+};
+
+function getCounter(heroId, targetId){
+  return (COUNTER_MATRIX[heroId]?.[targetId]||0) - (COUNTER_MATRIX[targetId]?.[heroId]||0);
+}
+
+// ===== STATE =====
+let selectedHero = null;
+let roleFilter = 'all';
+let searchText = '';
+
+const draftSequence = [
+  // [team, type] — standard tournament draft
+  ['A','ban'],['B','ban'],['A','ban'],['B','ban'],['A','ban'],['B','ban'],
+  ['A','pick'],['B','pick'],['B','pick'],['A','pick'],['A','pick'],['B','pick'],
+  ['B','pick'],['A','pick'],['A','pick'],['B','pick'],['A','pick'],['B','pick'],
+  ['A','pick'],['B','pick'],
+];
+let draftStep = 0;
+let draftState = {A:{bans:[],picks:[]},B:{bans:[],picks:[]}};
+
+const teamAnalyzer = {A:[],B:[]};
+
+// ===== UTILITIES =====
+function roleBadge(role){
+  const map={marksman:'badge-mark',assassin:'badge-ass',warrior:'badge-war',mage:'badge-mag',tank:'badge-tank',support:'badge-sup'};
+  const label={marksman:'MM',assassin:'ASS',warrior:'WAR',mage:'MAGE',tank:'TANK',support:'SUP'};
+  return `<span class="badge ${map[role]}">${label[role]||role}</span>`;
+}
+function roleColor(role){
+  const c={marksman:'var(--marksman)',assassin:'var(--assassin)',warrior:'var(--warrior)',mage:'var(--mage)',tank:'var(--tank)',support:'var(--support)'};
+  return c[role]||'var(--text)';
+}
+function statBar(label,val,max,color){
+  const pct=Math.min(100,Math.round(val/max*100));
+  return `<div class="stat-bar-wrap">
+    <div class="stat-label"><span>${label}</span><span style="color:${color}">${val}</span></div>
+    <div class="stat-bar"><div class="stat-fill" style="width:${pct}%;background:${color}"></div></div>
+  </div>`;
+}
+function powerBar(label,val){
+  const colors=['#ef4444','#f59e0b','#22c55e'];
+  const c = val<=3?colors[0]:val<=6?colors[1]:colors[2];
+  return statBar(label,val,10,c);
+}
+
+// ===== HERO GRID =====
+function renderHeroGrid(containerId, clickFn, bannedSet=new Set()){
+  const container = document.getElementById(containerId);
+  container.innerHTML='';
+  const heroes = Object.entries(HEROES).filter(([id,h])=>{
+    if(bannedSet.has(id)) return false;
+    if(roleFilter!=='all' && h.role!==roleFilter) return false;
+    if(searchText && !h.name.toLowerCase().includes(searchText) && !h.nameTH.includes(searchText)) return false;
+    return true;
+  });
+  heroes.forEach(([id,h])=>{
+    const div=document.createElement('div');
+    div.className='hero-card';
+    div.style.borderColor=roleColor(h.role)+'44';
+    div.innerHTML=`
+      <div class="tier-badge tier-${h.tier}">${h.tier}</div>
+      <div class="hero-avatar">${h.emoji}</div>
+      <div class="hero-name" style="color:${roleColor(h.role)}">${h.name}</div>
+      <div class="hero-role-tag">${h.nameTH}</div>`;
+    div.onclick=()=>clickFn(id);
+    container.appendChild(div);
+  });
+}
+
+function filterHeroes(){
+  searchText=document.getElementById('heroSearch').value.toLowerCase();
+  renderHeroGrid('heroGrid', selectHero);
+}
+
+function setRoleFilter(role,el){
+  roleFilter=role;
+  document.querySelectorAll('#roleFilters .filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderHeroGrid('heroGrid', selectHero);
+}
+
+function selectHero(id){
+  selectedHero=id;
+  document.querySelectorAll('#heroGrid .hero-card').forEach((c,i)=>{
+    const hid=Object.keys(HEROES)[i];
+    c.classList.toggle('selected',hid===id);
+  });
+  renderHeroDetail(id);
+}
+
+function renderHeroDetail(id){
+  const h=HEROES[id];
+  const box=document.getElementById('heroDetail');
+  box.style.display='block';
+
+  // Recommended items with stat totals
+  const recItems=h.items.map(i=>ITEMS[i]).filter(Boolean);
+  const totalStats={};
+  recItems.forEach(item=>{
+    Object.entries(item.stats).forEach(([k,v])=>{
+      const num=parseFloat(String(v).replace(/[^0-9.+-]/g,''));
+      if(!isNaN(num)) totalStats[k]=(totalStats[k]||0)+num;
+    });
+  });
+
+  // Counter info
+  const counters=h.counters.map(cid=>HEROES[cid]).filter(Boolean);
+  const counteredBy=h.counteredBy.map(cid=>HEROES[cid]).filter(Boolean);
+
+  // Math: Effective DPS estimate
+  const armorReduction = 1 - 100/(100+200); // vs 200 armor baseline
+  const dpsEst = h.dmgType==='physical'
+    ? Math.round(h.stats.atk * (totalStats['ATK']?1+(totalStats['ATK']/100):1.8) * h.stats.as * armorReduction * 1.3)
+    : Math.round(165 * (totalStats['AP']?1+(totalStats['AP']/200):2.0) * (1-100/(100+200)) * 2.2);
+
+  box.innerHTML=`
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+      <div style="font-size:3rem">${h.emoji}</div>
+      <div>
+        <div style="font-size:1.4rem;font-weight:900;color:${roleColor(h.role)}">${h.name}</div>
+        <div class="dim">${h.nameTH} · ${roleBadge(h.role)} <span class="tier-badge tier-${h.tier}" style="position:static;display:inline">${h.tier}</span></div>
+        <div class="dim mt12">DMG Type: <b style="color:${h.dmgType==='physical'?'#f59e0b':'#3b82f6'}">${h.dmgType.toUpperCase()}</b></div>
+      </div>
+      <div style="margin-left:auto;text-align:center">
+        <div class="score-ring">${calcHeroPower(id)}</div>
+        <div class="dim" style="font-size:.65rem;margin-top:4px">Power Score</div>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div>
+        <div class="sec-title">📊 Base Stats (Lv1)</div>
+        ${statBar('HP',h.stats.hp,5000,'#22c55e')}
+        ${statBar('ATK',h.stats.atk,220,'#f59e0b')}
+        ${statBar('Armor',h.stats.armor,160,'#3b82f6')}
+        ${statBar('Magic Res',h.stats.magRes,100,'#a855f7')}
+        ${statBar('Move Speed',h.stats.ms,450,'#06b6d4')}
+        <div class="sec-title mt12">⚡ Power Ratings</div>
+        ${powerBar('Mobility',h.power.mobility)}
+        ${powerBar('CC',h.power.cc)}
+        ${powerBar('Burst',h.power.burst)}
+        ${powerBar('Sustain',h.power.sustain)}
+        ${powerBar('Teamfight',h.power.teamfight)}
+        ${powerBar('Split Push',h.power.split)}
+        ${powerBar('Early Game',h.power.early)}
+        ${powerBar('Late Game',h.power.late)}
+      </div>
+      <div>
+        <div class="sec-title">🛡 Recommended Items</div>
+        ${recItems.map(item=>`
+          <div class="info-box" style="padding:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:1.2rem">${item.icon}</span>
+              <div>
+                <div style="font-size:.78rem;font-weight:700">${item.name}</div>
+                <div class="dim" style="font-size:.65rem">${Object.entries(item.stats).map(([k,v])=>`${k}: ${v}`).join(' · ')}</div>
+              </div>
+            </div>
+          </div>`).join('')}
+        <div class="formula-box mt12">
+          Est. Full Build DPS ≈ <b style="color:var(--accent)">${dpsEst.toLocaleString()}</b><br>
+          <span class="dim">vs baseline ${h.dmgType==='physical'?'200 Armor':'200 MagRes'} enemy</span>
+        </div>
+        <div class="sec-title mt12">⚔ Counters</div>
+        <div class="counter-grid">
+          <div>
+            <div class="dim mb8" style="font-size:.7rem">✅ Beats</div>
+            ${counters.map(c=>`<div style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:.78rem">${c.emoji} ${c.name}</div>`).join('')}
+          </div>
+          <div>
+            <div class="dim mb8" style="font-size:.7rem">❌ Loses to</div>
+            ${counteredBy.map(c=>`<div style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:.78rem">${c.emoji} ${c.name}</div>`).join('')}
+          </div>
+        </div>
+        <div class="sec-title mt12">💡 Skills</div>
+        ${h.skills.map(s=>`
+          <div class="skill-item">
+            <div class="skill-name">${s.name}</div>
+            <div class="skill-desc">${s.desc}</div>
+          </div>`).join('')}
+        <div class="sec-title mt12">🎯 เทคนิค</div>
+        <div class="info-box"><div class="dim" style="font-size:.78rem;line-height:1.6">${h.technique}</div></div>
+      </div>
+    </div>`;
+}
+
+// ===== POWER SCORE CALCULATOR =====
+function calcHeroPower(id){
+  const h=HEROES[id];
+  const p=h.power;
+  const roleWeight={marksman:1.1,assassin:1.1,warrior:1.0,mage:1.1,tank:0.95,support:0.9};
+  const tierBonus={S:15,A:10,B:5};
+  const raw=(p.burst*3+p.teamfight*3+p.sustain*1.5+p.cc*2+p.mobility*1.5+p.late*2)/14;
+  return Math.round(raw*(roleWeight[h.role]||1)*10+tierBonus[h.tier]);
+}
+
+function calcTeamPower(ids){
+  if(!ids.length) return 0;
+  const base=ids.reduce((s,id)=>s+calcHeroPower(id),0);
+  // Role coverage bonus
+  const roles=ids.map(id=>HEROES[id]?.role);
+  const roleBonus=(roles.includes('tank')||roles.includes('support')?10:0)
+    +(roles.includes('marksman')?10:0)
+    +(roles.some(r=>r==='mage')?8:0)
+    +(roles.some(r=>r==='assassin')||roles.some(r=>r==='warrior')?5:0);
+  // Teamfight bonus
+  const tfScore=ids.reduce((s,id)=>s+(HEROES[id]?.power.teamfight||5),0);
+  const tfBonus=tfScore>30?10:tfScore>20?5:0;
+  return base+roleBonus+tfBonus;
+}
+
+function calcCounterAdv(teamA,teamB){
+  let adv=0;
+  teamA.forEach(a=>teamB.forEach(b=>{
+    const c=getCounter(a,b);
+    adv+=c*3;
+  }));
+  return adv;
+}
+
+function winProb(scoreA,scoreB){
+  const diff=scoreA-scoreB;
+  const p=1/(1+Math.exp(-diff/50));
+  return Math.round(p*100);
+}
+
+// ===== COUNTER PANEL =====
+function populateCounterSelect(){
+  const sel=document.getElementById('counterSelect');
+  Object.entries(HEROES).forEach(([id,h])=>{
+    const opt=document.createElement('option');
+    opt.value=id; opt.textContent=`${h.emoji} ${h.name} (${h.nameTH})`;
+    sel.appendChild(opt);
+  });
+}
+
+function showCounter(){
+  const id=document.getElementById('counterSelect').value;
+  if(!id) return;
+  const h=HEROES[id];
+  const detail=document.getElementById('counterDetail');
+
+  // All heroes sorted by counter score
+  const all=Object.entries(HEROES).filter(([hid])=>hid!==id);
+  const beats=all.map(([hid,hh])=>({id:hid,h:hh,cs:getCounter(id,hid)})).filter(x=>x.cs>0).sort((a,b)=>b.cs-a.cs);
+  const loses=all.map(([hid,hh])=>({id:hid,h:hh,cs:getCounter(hid,id)})).filter(x=>x.cs>0).sort((a,b)=>b.cs-a.cs);
+
+  function csTag(cs){
+    if(cs>=5) return `<span class="counter-score cs-high">+${cs}</span>`;
+    if(cs>=3) return `<span class="counter-score cs-mid">+${cs}</span>`;
+    return `<span class="counter-score cs-low">+${cs}</span>`;
+  }
+
+  detail.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="font-size:2.5rem">${h.emoji}</div>
+      <div>
+        <div style="font-size:1.2rem;font-weight:900;color:${roleColor(h.role)}">${h.name}</div>
+        <div class="dim">${h.nameTH} · ${roleBadge(h.role)}</div>
+      </div>
+    </div>
+    <div class="counter-grid">
+      <div>
+        <div class="sec-title" style="color:var(--green)">✅ ${h.name} ชนะ (Strong Against)</div>
+        <ul class="counter-list">
+          ${beats.length?beats.map(x=>`
+            <li>${csTag(x.cs)} <span style="font-size:1.1rem">${x.h.emoji}</span>
+            <span>${x.h.name}</span> ${roleBadge(x.h.role)}</li>`).join('')
+            :'<li class="dim">ไม่มีข้อมูล Strong Counter</li>'}
+        </ul>
+      </div>
+      <div>
+        <div class="sec-title" style="color:var(--red)">❌ ${h.name} แพ้ (Weak Against)</div>
+        <ul class="counter-list">
+          ${loses.length?loses.map(x=>`
+            <li>${csTag(x.cs)} <span style="font-size:1.1rem">${x.h.emoji}</span>
+            <span>${x.h.name}</span> ${roleBadge(x.h.role)}</li>`).join('')
+            :'<li class="dim">ไม่มีข้อมูล Weak Counter</li>'}
+        </ul>
+      </div>
+    </div>
+    <div class="sec-title mt12">💡 เทคนิคเล่น ${h.name}</div>
+    <div class="info-box"><div class="dim" style="line-height:1.7;font-size:.8rem">${h.technique}</div></div>
+    <div class="sec-title mt12">📈 Item แนะนำ vs สถานการณ์</div>
+    <div class="info-box">
+      ${h.items.map(i=>ITEMS[i]).filter(Boolean).map(item=>`
+        <span style="display:inline-flex;align-items:center;gap:4px;margin:4px;background:var(--surface3);border-radius:6px;padding:4px 8px;font-size:.75rem">
+          ${item.icon} ${item.name}
+        </span>`).join('')}
+    </div>`;
+}
+
+// ===== DRAFT SIMULATOR =====
+function getDraftBanned(){
+  return new Set([...draftState.A.bans,...draftState.B.bans,...draftState.A.picks,...draftState.B.picks]);
+}
+
+function renderDraft(){
+  const seq=draftSequence[draftStep]||null;
+
+  // Update phase display
+  const phase = draftStep < 6 ? 'Ban Phase 1'
+    : draftStep < 10 ? 'Pick Phase 1'
+    : draftStep < 16 ? 'Pick Phase 2'
+    : draftStep < 20 ? 'Pick Phase 3'
+    : 'Draft Complete';
+  document.getElementById('draftPhase').textContent=phase;
+  document.getElementById('draftTurnNum').textContent=draftStep+1;
+  document.getElementById('draftTurn').textContent=seq?`ทีม ${seq[0]} — ${seq[1]==='ban'?'Ban':'Pick'}`:'เสร็จสิ้น';
+
+  // Render slots
+  function renderSlots(team, type, containerId, count){
+    const container=document.getElementById(containerId);
+    const filled=draftState[team][type+'s'];
+    container.innerHTML='';
+    for(let i=0;i<count;i++){
+      const div=document.createElement('div');
+      div.className='team-slot '+(filled[i]?type==='ban'?'ban':'filled':'empty');
+      if(filled[i]){
+        const h=HEROES[filled[i]];
+        div.innerHTML=`<span style="font-size:1.2rem">${h.emoji}</span><span style="font-size:.8rem;font-weight:700">${h.name}</span>${type==='ban'?'<span style="color:var(--red);font-size:.7rem"> BAN</span>':''}`;
+      } else {
+        const isNext=seq&&seq[0]===team&&seq[1]===type&&filled.length===i;
+        div.innerHTML=`<span class="dim" style="font-size:.75rem">${isNext?'▶ เลือก...':type==='ban'?'Ban Slot':'Pick Slot'} ${i+1}</span>`;
+        if(isNext) div.style.borderColor='var(--accent)';
+      }
+      container.appendChild(div);
+    }
+  }
+  renderSlots('A','ban','teamABans',3);
+  renderSlots('A','pick','teamAPicks',5);
+  renderSlots('B','ban','teamBBans',3);
+  renderSlots('B','pick','teamBPicks',5);
+
+  // Render hero selection grid
+  renderHeroGrid('draftHeroGrid', draftPick, getDraftBanned());
+}
+
+function draftPick(id){
+  if(draftStep>=draftSequence.length) return;
+  const [team,type]=draftSequence[draftStep];
+  draftState[team][type+'s'].push(id);
+  draftStep++;
+  renderDraft();
+}
+
+function resetDraft(){
+  draftStep=0;
+  draftState={A:{bans:[],picks:[]},B:{bans:[],picks:[]}};
+  document.getElementById('draftResult').style.display='none';
+  renderDraft();
+}
+
+function showDraftResult(){
+  const pA=draftState.A.picks;
+  const pB=draftState.B.picks;
+  if(!pA.length&&!pB.length){alert('ยังไม่ได้ Pick ตัวละคร');return;}
+  const scoreA=calcTeamPower(pA);
+  const scoreB=calcTeamPower(pB);
+  const cAdvA=calcCounterAdv(pA,pB);
+  const adjA=scoreA+cAdvA;
+  const adjB=scoreB-cAdvA;
+  const probA=winProb(adjA,adjB);
+  renderTeamResult(pA,pB,scoreA,scoreB,cAdvA,probA,'draftResult');
+}
+
+// ===== TEAM ANALYZER =====
+function populateAnalyzerSelects(){
+  ['addHeroA','addHeroB'].forEach(selId=>{
+    const sel=document.getElementById(selId);
+    Object.entries(HEROES).forEach(([id,h])=>{
+      const opt=document.createElement('option');
+      opt.value=id; opt.textContent=`${h.emoji} ${h.name}`;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function addToTeam(team){
+  const sel=document.getElementById(`addHero${team}`);
+  const id=sel.value;
+  if(!id) return;
+  if(teamAnalyzer[team].length>=5){alert('มีตัวละครครบ 5 แล้ว');sel.value='';return;}
+  if(teamAnalyzer[team].includes(id)){alert('มีตัวละครนี้แล้ว');sel.value='';return;}
+  teamAnalyzer[team].push(id);
+  sel.value='';
+  renderTeamLists();
+}
+
+function removeFromTeam(team,id){
+  teamAnalyzer[team]=teamAnalyzer[team].filter(x=>x!==id);
+  renderTeamLists();
+}
+
+function renderTeamLists(){
+  ['A','B'].forEach(team=>{
+    const container=document.getElementById(`team${team}List`);
+    container.innerHTML='';
+    teamAnalyzer[team].forEach(id=>{
+      const h=HEROES[id];
+      const div=document.createElement('div');
+      div.className='team-slot filled';
+      div.style.justifyContent='space-between';
+      div.innerHTML=`<div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:1.2rem">${h.emoji}</span>
+        <div><div style="font-size:.8rem;font-weight:700">${h.name}</div><div class="dim" style="font-size:.65rem">${h.nameTH} · Power:${calcHeroPower(id)}</div></div>
+      </div>
+      <button onclick="removeFromTeam('${team}','${id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:1rem">✕</button>`;
+      container.appendChild(div);
+    });
+  });
+}
+
+function analyzeTeams(){
+  const pA=teamAnalyzer.A;
+  const pB=teamAnalyzer.B;
+  if(!pA.length||!pB.length){alert('เพิ่มตัวละครทั้ง 2 ทีมก่อน');return;}
+  const scoreA=calcTeamPower(pA);
+  const scoreB=calcTeamPower(pB);
+  const cAdvA=calcCounterAdv(pA,pB);
+  const adjA=scoreA+cAdvA;
+  const adjB=scoreB-cAdvA;
+  const probA=winProb(adjA,adjB);
+  renderTeamResult(pA,pB,scoreA,scoreB,cAdvA,probA,'analyzerResult');
+}
+
+function renderTeamResult(pA,pB,scoreA,scoreB,cAdvA,probA,containerId){
+  const probB=100-probA;
+  const container=document.getElementById(containerId);
+  container.style.display='block';
+
+  // Best match-ups
+  let bestMatchups=[];
+  pA.forEach(a=>pB.forEach(b=>{
+    const cs=getCounter(a,b);
+    if(cs>0) bestMatchups.push({a,b,cs,dir:'A'});
+    else if(cs<0) bestMatchups.push({a:b,b:a,cs:-cs,dir:'B'});
+  }));
+  bestMatchups.sort((x,y)=>y.cs-x.cs);
+
+  const rolesA=pA.map(id=>HEROES[id]?.role);
+  const rolesB=pB.map(id=>HEROES[id]?.role);
+  const roleAnalysis=(team,roles)=>{
+    const checks=[
+      ['Tank/Support',roles.some(r=>r==='tank'||r==='support')],
+      ['Marksman',roles.includes('marksman')],
+      ['Mage',roles.includes('mage')],
+      ['Assassin/Warrior',roles.some(r=>r==='assassin'||r==='warrior')],
+      ['CC Chain',pA.concat(pB).filter(id=>HEROES[id]?.power.cc>=6).length>=2],
+    ];
+    return checks.map(([label,ok])=>
+      `<div style="display:flex;align-items:center;gap:6px;margin:3px 0;font-size:.75rem">
+        <span>${ok?'✅':'❌'}</span><span class="${ok?'':'dim'}">${label}</span>
+      </div>`).join('');
+  };
+
+  container.innerHTML=`
+    <div class="detail">
+      <div class="sec-title">📊 Win Probability Analysis</div>
+      <div class="prob-labels">
+        <span class="prob-a">🔵 ทีม A: ${probA}%</span>
+        <span class="prob-b">ทีม B: ${probB}% 🔴</span>
+      </div>
+      <div class="prob-bar-wrap">
+        <div class="prob-bar-a" style="width:${probA}%"></div>
+        <div class="prob-bar-b" style="width:${probB}%"></div>
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:.7rem;font-weight:700;color:#fff;text-shadow:0 0 4px #000">VS</div>
+      </div>
+      <div class="formula-box">
+        Team A Score: ${scoreA} + CounterAdv: ${cAdvA>0?'+':''}${cAdvA} = <b>${scoreA+cAdvA}</b><br>
+        Team B Score: ${scoreB} − CounterAdv: ${cAdvA>0?'+':''}${cAdvA} = <b>${scoreB-cAdvA}</b><br>
+        Δscore = ${(scoreA+cAdvA)-(scoreB-cAdvA)} → P(A) = 1/(1+e<sup>−${Math.abs((scoreA+cAdvA)-(scoreB-cAdvA))}/50</sup>) = <b>${probA}%</b>
+      </div>
+      <div class="two-col">
+        <div>
+          <div class="sec-title" style="color:#3b82f6">🔵 ทีม A — Team Composition</div>
+          ${roleAnalysis('A',rolesA)}
+          <div class="mt12 dim" style="font-size:.75rem">TF Score: ${pA.reduce((s,id)=>s+(HEROES[id]?.power.teamfight||0),0)}/50</div>
+        </div>
+        <div>
+          <div class="sec-title" style="color:#ef4444">🔴 ทีม B — Team Composition</div>
+          ${roleAnalysis('B',rolesB)}
+          <div class="mt12 dim" style="font-size:.75rem">TF Score: ${pB.reduce((s,id)=>s+(HEROES[id]?.power.teamfight||0),0)}/50</div>
+        </div>
+      </div>
+      ${bestMatchups.length?`
+        <div class="sec-title mt12">⚡ Key Matchups</div>
+        ${bestMatchups.slice(0,4).map(m=>{
+          const ha=HEROES[m.a],hb=HEROES[m.b];
+          return `<div class="info-box" style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.2rem">${ha.emoji}</span>
+            <span style="font-size:.8rem;font-weight:700;color:${m.dir==='A'?'#3b82f6':'#ef4444'}">${ha.name}</span>
+            <span class="dim">counters</span>
+            <span style="font-size:1.2rem">${hb.emoji}</span>
+            <span style="font-size:.8rem">${hb.name}</span>
+            <span class="counter-score cs-high" style="margin-left:auto">CS:+${m.cs}</span>
+          </div>`;
+        }).join('')}`:''}
+      <div class="sec-title mt12">💡 คำแนะนำ</div>
+      <div class="info-box">
+        <div style="font-size:.8rem;line-height:1.7">
+          ${probA>=65?`<b style="color:#22c55e">ทีม A ได้เปรียบชัดเจน</b> — เน้น Teamfight และ Objective Control`
+          :probA>=55?`<b style="color:#f59e0b">ทีม A ได้เปรียบเล็กน้อย</b> — อย่า Throw และรักษา Advantage`
+          :probA>=45?`<b style="color:#94a3b8">สมดุล</b> — Execution และ Macro Play จะตัดสิน`
+          :probA>=35?`<b style="color:#f59e0b">ทีม B ได้เปรียบ</b> — ทีม A ต้องหา Pick off และ Splitpush`
+          :`<b style="color:#ef4444">ทีม B ได้เปรียบชัดเจน</b> — ทีม A ต้องเปลี่ยนกลยุทธ์ทันที`}
+          <br>Counter Advantage: ${cAdvA>0?`ทีม A มี Counter Adv +${cAdvA} คะแนน`
+            :cAdvA<0?`ทีม B มี Counter Adv +${-cAdvA} คะแนน`:`ไม่มี Counter Advantage ฝ่ายใด`}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ===== ITEM BUILDER =====
+function populateItemHeroSelect(){
+  const sel=document.getElementById('itemHeroSelect');
+  Object.entries(HEROES).forEach(([id,h])=>{
+    const opt=document.createElement('option');
+    opt.value=id; opt.textContent=`${h.emoji} ${h.name} (${h.role})`;
+    sel.appendChild(opt);
+  });
+}
+
+function showItemBuild(){
+  const id=document.getElementById('itemHeroSelect').value;
+  if(!id) return;
+  const h=HEROES[id];
+  const container=document.getElementById('itemBuildResult');
+  const recItems=h.items.map(i=>({id:i,...ITEMS[i]})).filter(x=>x.name);
+
+  // Calculate totals
+  const totals={};
+  recItems.forEach(item=>{
+    Object.entries(item.stats||{}).forEach(([k,v])=>{
+      const n=parseFloat(String(v).replace(/[^0-9.]/g,''));
+      if(!isNaN(n)) totals[k]=(totals[k]||0)+n;
+    });
+  });
+  const totalGold=recItems.reduce((s,i)=>s+(i.cost||0),0);
+
+  // Math calculations
+  const baseAtk=h.stats.atk;
+  const totalAtk=baseAtk+(totals['ATK']||0);
+  const baseAs=h.stats.as;
+  const totalAs=baseAs+((totals['ATK Speed']||0)/100);
+  const armorPen=(totals['Armor Pen']||0)/100;
+  const ap=(totals['AP']||0);
+  const baseHP=h.stats.hp+(totals['HP']||0);
+
+  // vs 200 armor/MR enemy
+  const physMult=h.dmgType==='physical'?(1-200/(200+200))*(1+armorPen) : null;
+  const magMult=h.dmgType==='magic'?(1-200/(200+200)) : null;
+  const critBonus=(totals['Crit Rate']||0)/100*1.5+1;
+  const dps=h.dmgType==='physical'
+    ? Math.round(totalAtk*totalAs*physMult*critBonus)
+    : Math.round((165+ap)*1.8*magMult);
+  const ttk1000=Math.round(1000/dps*10)/10;
+
+  container.innerHTML=`
+    <div class="detail">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:2.5rem">${h.emoji}</span>
+        <div>
+          <div style="font-size:1.2rem;font-weight:900">${h.name} — Item Build</div>
+          <div class="dim">${h.nameTH} · ${roleBadge(h.role)}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:.8rem;color:var(--accent);font-weight:700">💰 ${totalGold.toLocaleString()} Gold</div>
+          <div class="dim" style="font-size:.65rem">Full Build Cost</div>
+        </div>
+      </div>
+      <div class="item-grid">
+        ${recItems.map((item,i)=>`
+          <div class="item-card" style="border-color:${i===0?'var(--accent)':'var(--border)'}">
+            ${i===0?'<div style="font-size:.6rem;color:var(--accent);margin-bottom:4px">ไอเทมหลัก</div>':''}
+            <div class="item-icon">${item.icon}</div>
+            <div class="item-name">${item.name}</div>
+            <div class="item-stat">${Object.entries(item.stats||{}).map(([k,v])=>`${k}: <b style="color:var(--accent)">${v}</b>`).join('<br>')}</div>
+            <div class="dim" style="font-size:.6rem;margin-top:4px">${item.desc}</div>
+            <div style="font-size:.65rem;color:var(--dim);margin-top:4px">💰 ${item.cost||0}</div>
+          </div>`).join('')}
+      </div>
+      <div class="sec-title mt12">📊 Full Build Stats Summary</div>
+      <div class="two-col">
+        <div>
+          ${h.dmgType==='physical'?`
+            ${statBar('Total ATK',Math.round(totalAtk),400,'#f59e0b')}
+            ${statBar('ATK Speed',Math.round(totalAs*100)/100,2.5,'#22c55e')}
+            ${statBar('Armor Pen %',Math.round(armorPen*100),100,'#ef4444')}
+          `:`
+            ${statBar('Total AP',ap,800,'#a855f7')}
+            ${statBar('Magic Pen %',totals['Magic Pen']||0,80,'#3b82f6')}
+          `}
+          ${statBar('Effective HP',Math.round(baseHP*(1+(h.stats.armor/100))),15000,'#22c55e')}
+        </div>
+        <div>
+          <div class="formula-box">
+            <b>📐 การคำนวณ DPS</b><br>
+            ${h.dmgType==='physical'?`
+              ATK = ${baseAtk} + ${totals['ATK']||0} = ${Math.round(totalAtk)}<br>
+              AS = ${baseAs} + ${(totals['ATK Speed']||0)/100} = ${Math.round(totalAs*100)/100}/s<br>
+              Armor Pen = ${Math.round(armorPen*100)}%<br>
+              Crit = ×${Math.round(critBonus*100)/100}<br>
+              vs 200 Armor:<br>
+              DPS = ${Math.round(totalAtk)} × ${Math.round(totalAs*100)/100} × ${Math.round(physMult*100)/100} × ${Math.round(critBonus*100)/100}<br>
+              <b>= ${dps.toLocaleString()} DPS</b>
+            `:`
+              Base AP = 165 + ${ap} = ${165+ap}<br>
+              vs 200 MagRes:<br>
+              Burst DMG ≈ ${dps.toLocaleString()} Magic DMG
+            `}
+            TTK (1000HP target) ≈ <b>${ttk1000}s</b>
+          </div>
+        </div>
+      </div>
+      <div class="sec-title">🎯 สถานการณ์ปรับ Build</div>
+      <div class="info-box"><div class="dim" style="font-size:.78rem;line-height:1.7">
+        <b>ศัตรู Armor สูง:</b> เพิ่ม ${h.dmgType==='physical'?'Rankbreaker / Spear of Longinus':'Staff of Nuul / Raz'}<br>
+        <b>ศัตรู Assassin:</b> ${h.role==='marksman'||h.role==='mage'?'ซื้อ Aegis + ขอ Support ปกป้อง':'ซื้อ HP + Armor'}<br>
+        <b>เกมยาว (Late):</b> เน้น ${h.dmgType==='physical'?'Crit + Fenrir Tooth':'AP + Magic Pen'}<br>
+        <b>เกมสั้น (Early):</b> เน้น ${h.dmgType==='physical'?'Rankbreaker + Omni Arms':'Boomstick + Cooldown'}
+      </div></div>
+    </div>`;
+}
+
+// ===== TAB SWITCHING =====
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+// ===== INIT =====
+function init(){
+  renderHeroGrid('heroGrid', selectHero);
+  populateCounterSelect();
+  populateAnalyzerSelects();
+  populateItemHeroSelect();
+  renderDraft();
+}
+
+init();
+</script>
+</body>
+</html>
