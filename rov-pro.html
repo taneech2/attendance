@@ -505,7 +505,7 @@ const HEROES = {
       {name:"Joust",desc:"พุ่ง Dash ดาเมจ + รีเซ็ตได้เมื่อ Kill หรือ Assist"},
       {name:"Grand Duel",desc:"ดวลกับศัตรูคนเดียว ดาเมจสูงมาก ถ้า Kill ได้ HP Regen"}
     ],
-    counters:["nakroth","zephys","hayate","butterfly"],
+    counters:["nakroth","zephys","hayate","butterfly","omen"],
     counteredBy:["omen","qi","grakk"],
     technique:"Mark ด้วย Blossom → Dash Joust หลาย ๆ รอบ → Grand Duel ปิด · Split Push และ Duel มือ 1v1",
     items:["rankBreaker","omniArms","fenrirsTooh","soulReaver","atkItem","ultrabane"]},
@@ -520,7 +520,7 @@ const HEROES = {
       {name:"Black Hole",desc:"ดูดศัตรูเข้าหาตัวเอง AOE ดาเมจ + CC"}
     ],
     counters:["butterfly","zephys","nakroth","murad","florentino"],
-    counteredBy:["grakk","qi","mina"],
+    counteredBy:["grakk","qi","mina","florentino"],
     technique:"Counter Assassin หลัก · Black Hole ใช้ Engage Teamfight · Eclipse sustain ตลอดไฟต์",
     items:["soulReaver","rankBreaker","omniArms","atkItem","fenrirsTooh","ultrabane"]},
 
@@ -1199,9 +1199,9 @@ const ITEMS = {
 
 // ===== COUNTER MATRIX (A→B: positive = A counters B) =====
 const COUNTER_MATRIX = {
-  omen:{butterfly:5,zephys:5,nakroth:4,murad:3,kriknak:3,hayate:4,florentino:2,qi:-2,grakk:-1},
+  omen:{butterfly:5,zephys:5,nakroth:4,murad:3,kriknak:3,hayate:4,qi:-2,grakk:-1,florentino:-3},
   qi:{butterfly:4,murad:3,zephys:3,omen:2,florentino:2,grakk:-2},
-  florentino:{butterfly:3,nakroth:3,zephys:3,hayate:4,fennik:2,murad:-1},
+  florentino:{butterfly:3,nakroth:3,zephys:3,hayate:4,fennik:2,murad:-1,omen:3},
   grakk:{butterfly:4,nakroth:4,hayate:3,murad:2,nakroth:3,qi:2,florentino:2},
   butterfly:{telAnnas:5,violet:5,yorn:4,capheny:5,wisp:4,kahlii:4,diaochan:3,lauriel:3,ilumia:3},
   zephys:{telAnnas:5,violet:4,yorn:5,wisp:4,fennik:4,kahlii:3},
@@ -1280,6 +1280,7 @@ const COUNTER_REASONS = {
   'omen-butterfly':   'Eclipse สูดพลังชีวิตทำให้ Butterfly ฆ่าไม่จบ + Black Hole ดึงหลัง Vanish',
   'omen-zephys':      'HP Sustain จาก Eclipse ทำให้รอดจาก Execute Ult ของ Zephys ได้',
   'omen-nakroth':     'Black Hole หยุด Nakroth กลางคอมโบ ทำให้ Reset ไม่ได้',
+  'florentino-omen':  'Grand Duel ล็อค Omen ไม่ให้ใช้ Black Hole หนี + Joust Reset ทำ DPS ต่อเนื่องเกิน Eclipse รับได้',
   'qi-butterfly':     'Lightning Step มี Immune ช่วง Butterfly Vanish + Storm ล็อค Butterfly ได้',
   'florentino-nakroth':'Joust Reset เร็วกว่า Nakroth Blood Rush ทำ DPS Race ชนะ',
   'grakk-butterfly':  'Tongue Lash ดึง Butterfly ออกจาก Target ทำ Vanish เสียเปล่า',
