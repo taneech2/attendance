@@ -3089,29 +3089,36 @@ async function openBarcodeScanner(sid){
   setBarcodeStatus('🔍 กำลังเปิดกล้อง...');
   try{
     barcodeStream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'environment', width:{ideal:1920}, height:{ideal:1080} }
+      video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }
     });
-    // เปิด continuous autofocus + zoom (Android Chrome รองรับ)
     const track = barcodeStream.getVideoTracks()[0];
+    // เปิด continuous autofocus เท่านั้น (ไม่ zoom — zoom digital ทำให้เบลอ)
     try{
       const caps = track.getCapabilities();
       const adv = {};
       if(caps.focusMode?.includes('continuous')) adv.focusMode='continuous';
-      if(caps.zoom) adv.zoom = Math.min(caps.zoom.max, (caps.zoom.min||1)*2);
+      if(caps.pointsOfInterest) adv.pointsOfInterest=[{x:0.5,y:0.5}];
       if(Object.keys(adv).length) await track.applyConstraints({advanced:[adv]});
     }catch(e){}
     const video = document.getElementById('barcode-video');
     video.srcObject = barcodeStream;
     await video.play();
-    // tap-to-focus บนมือถือ
-    video.onclick = async()=>{
+    // แตะภาพ = focus ตรงนั้น
+    video.onclick = async(e)=>{
       try{
+        const rect=video.getBoundingClientRect();
+        const x=(e.clientX-rect.left)/rect.width;
+        const y=(e.clientY-rect.top)/rect.height;
         const t=barcodeStream?.getVideoTracks()[0];
-        if(t) await t.applyConstraints({advanced:[{focusMode:'single-shot'}]});
-        setTimeout(async()=>{ try{ await t.applyConstraints({advanced:[{focusMode:'continuous'}]}); }catch(e){} }, 800);
+        if(!t) return;
+        await t.applyConstraints({advanced:[{focusMode:'single-shot',pointsOfInterest:[{x,y}]}]});
+        setTimeout(async()=>{ try{ await t.applyConstraints({advanced:[{focusMode:'continuous'}]}); }catch(e){} }, 1000);
       }catch(e){}
     };
-    setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร — แตะหน้าจอเพื่อโฟกัส');
+    // รอ autofocus ก่อนเริ่มสแกน
+    setBarcodeStatus('⏳ กล้องกำลังโฟกัส...');
+    await new Promise(r=>setTimeout(r,1500));
+    setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร — แตะภาพเพื่อโฟกัส');
     await startBarcodeDetection(video, sid);
   }catch(e){
     setBarcodeStatus('❌ ไม่สามารถเปิดกล้องได้: '+e.message);
@@ -3223,9 +3230,25 @@ function confirmBarcodeRegForIdx(idx){
   saveToFirebase();
 }
 
+let torchOn = false;
+async function toggleTorch(){
+  if(!barcodeStream) return;
+  const track = barcodeStream.getVideoTracks()[0];
+  try{
+    const caps = track.getCapabilities();
+    if(!caps.torch){ setBarcodeStatus('⚠️ กล้องนี้ไม่รองรับไฟฉาย'); return; }
+    torchOn = !torchOn;
+    await track.applyConstraints({advanced:[{torch:torchOn}]});
+    const btn = document.getElementById('torch-btn');
+    if(btn){ btn.textContent = torchOn?'🔦 ปิดไฟ':'🔦 ไฟฉาย'; btn.style.background=torchOn?'#c9a84c':'#2a2010'; btn.style.color=torchOn?'#000':''; }
+  }catch(e){ setBarcodeStatus('⚠️ เปิดไฟไม่ได้: '+e.message); }
+}
+
 function closeBarcodeScanner(){
   if(barcodeInterval){ clearInterval(barcodeInterval); barcodeInterval=null; }
   if(window._zxingReader){ try{window._zxingReader.reset();}catch(e){} window._zxingReader=null; }
+  torchOn=false;
+  const tb=document.getElementById('torch-btn'); if(tb){tb.textContent='🔦 ไฟฉาย';tb.style.background='#2a2010';tb.style.color='';}
   if(barcodeStream){ barcodeStream.getTracks().forEach(t=>t.stop()); barcodeStream=null; }
   document.getElementById('barcode-overlay').classList.remove('active');
   const video=document.getElementById('barcode-video'); if(video) video.srcObject=null;
@@ -3644,8 +3667,9 @@ init();
     <input id="barcode-reg-input" placeholder="ไม่พบ — เลือกนักเรียนเพื่อผูกบัตร" readonly>
     <button class="btn btn-green" onclick="confirmBarcodeReg()">ผูกบัตร</button>
   </div>
-  <div style="display:flex;gap:10px;margin-top:4px;">
+  <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;justify-content:center;">
     <button class="btn" onclick="closeBarcodeScanner()" style="background:rgba(255,255,255,.08);">✕ ปิด</button>
+    <button class="btn" id="torch-btn" onclick="toggleTorch()" style="background:#2a2010;border-color:#c9a84c44;">🔦 ไฟฉาย</button>
     <button class="btn" onclick="openStudentPickerForBarcode()" id="barcode-pick-btn" style="display:none;background:linear-gradient(135deg,#1a3a5c,#0d2240);">👤 เลือกนักเรียน</button>
   </div>
 </div>
