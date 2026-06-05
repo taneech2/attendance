@@ -56,6 +56,12 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;mi
 .tier-S{background:#f59e0b;color:#000}
 .tier-A{background:#3b82f6;color:#fff}
 .tier-B{background:#6b7280;color:#fff}
+/* buff/nerf badges */
+.patch-buff{position:absolute;top:4px;left:4px;font-size:.7rem;background:#22c55e;color:#000;border-radius:4px;padding:1px 4px;font-weight:900;z-index:2}
+.patch-nerf{position:absolute;top:4px;left:4px;font-size:.7rem;background:#ef4444;color:#fff;border-radius:4px;padding:1px 4px;font-weight:900;z-index:2}
+.patch-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
+.patch-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:.8rem}
+.patch-arrow{font-weight:900;font-size:.9rem}
 /* hero avatar emoji */
 .hero-avatar{font-size:2rem;line-height:1}
 /* detail panel */
@@ -166,6 +172,7 @@ select:focus{outline:none;border-color:var(--accent)}
 
 <!-- PANEL: Heroes -->
 <div class="panel active" id="panel-heroes">
+  <div id="patchBanner"></div>
   <div class="row mb8">
     <input class="search-box" style="max-width:260px" id="heroSearch" placeholder="🔍 ค้นหาตัวละคร..." oninput="filterHeroes()">
     <div class="filter-bar" id="roleFilters">
@@ -281,9 +288,13 @@ select:focus{outline:none;border-color:var(--accent)}
 </div>
 
 <script>
+// ===== PATCH DATA =====
+const PATCH_CHANGES = {"murad": {"from": "S", "to": "A", "type": "nerf"}, "hayate": {"from": "A", "to": "S", "type": "buff"}, "ilumia": {"from": "A", "to": "B", "type": "nerf"}, "grakk": {"from": "B", "to": "A", "type": "buff"}, "lumburr": {"from": "S", "to": "B", "type": "nerf"}, "zip": {"from": "A", "to": "S", "type": "buff"}};
+const PATCH_DATE = "05/06/2026 21:05";
+
 // ===== HERO DATABASE =====
 const HEROES = {
-  // ⏰ อัปเดตล่าสุด: 2026-06-05 20:44
+  // ⏰ อัปเดตล่าสุด: 2026-06-05 21:05
   telAnnas:{name:"Tel'Annas",nameTH:"เทลอันนัส",emoji:"🏹",role:"marksman",tier:"S",
     stats:{hp:3150,atk:185,armor:80,magRes:50,as:0.95,ms:360},
     power:{mobility:5,cc:3,burst:6,sustain:3,teamfight:8,split:4,early:5,late:9},
@@ -410,7 +421,7 @@ const HEROES = {
     technique:"เล่น Split Push และ Skirmish · เปิดไฟต์ด้วย Justice Blades → Combo · Farm Jungle ให้เร็ว",
     items:["rankBreaker","clawsOfTalons","omniArms","soulReaver","boots","atkItem"]},
 
-  murad:{name:"Murad",nameTH:"มูราด",emoji:"🌊",role:"assassin",tier:"S",
+  murad:{name:"Murad",nameTH:"มูราด",emoji:"🌊",role:"assassin",tier:"A",
     stats:{hp:3250,atk:182,armor:82,magRes:54,as:1.0,ms:380},
     power:{mobility:9,cc:4,burst:9,sustain:3,teamfight:6,split:10,early:6,late:9},
     dmgType:"physical",scaleStat:"atk",
@@ -438,7 +449,7 @@ const HEROES = {
     technique:"Stun ด้วย Shriek → Burst ทันที · Jungle Control สำคัญ · Venom ลด Armor ก่อน Combo",
     items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
 
-  hayate:{name:"Hayate",nameTH:"ฮายาเตะ",emoji:"🌪",role:"assassin",tier:"A",
+  hayate:{name:"Hayate",nameTH:"ฮายาเตะ",emoji:"🌪",role:"assassin",tier:"S",
     stats:{hp:3050,atk:178,armor:79,magRes:51,as:1.1,ms:400},
     power:{mobility:10,cc:1,burst:7,sustain:2,teamfight:5,split:9,early:6,late:7},
     dmgType:"physical",scaleStat:"atk",
@@ -592,7 +603,7 @@ const HEROES = {
     technique:"Poke ด้วย Soul Orb · Ult Release ใช้จาก Bush ล่อ · ต้องมี Tank ปกป้อง",
     items:["staff","boomstick","violetHatchet","apocalypse","magicBoots","violetHatchet2"]},
 
-  ilumia:{name:"Ilumia",nameTH:"อิลูเมีย",emoji:"🌟",role:"mage",tier:"A",
+  ilumia:{name:"Ilumia",nameTH:"อิลูเมีย",emoji:"🌟",role:"mage",tier:"B",
     stats:{hp:3000,atk:163,armor:74,magRes:51,as:0.85,ms:355},
     power:{mobility:5,cc:8,burst:7,sustain:3,teamfight:10,split:3,early:5,late:8},
     dmgType:"magic",scaleStat:"ap",
@@ -620,7 +631,7 @@ const HEROES = {
     technique:"Ice Wall แบ่งทีมศัตรู → Blizzard ถล่มคนที่ถูกแยก · Zoning ได้ดี",
     items:["staff","boomstick","apocalypse","magicBoots","violetHatchet","violetHatchet2"]},
 
-  grakk:{name:"Grakk",nameTH:"แกรก",emoji:"🦑",role:"tank",tier:"B",
+  grakk:{name:"Grakk",nameTH:"แกรก",emoji:"🦑",role:"tank",tier:"A",
     stats:{hp:4200,atk:150,armor:140,magRes:80,as:0.8,ms:365},
     power:{mobility:6,cc:9,burst:5,sustain:6,teamfight:10,split:4,early:8,late:9},
     dmgType:"physical",scaleStat:"hp",
@@ -690,7 +701,7 @@ const HEROES = {
     technique:"Tremor เปิด Teamfight · Spiked Armor ต้าน Assassin · เป็น Hard Engage Tank",
     items:["mail","spear","shield","trinketBoots","armor","hp"]},
 
-  lumburr:{name:"Lumburr",nameTH:"ลัมเบอร์",emoji:"🐺",role:"support",tier:"S",
+  lumburr:{name:"Lumburr",nameTH:"ลัมเบอร์",emoji:"🐺",role:"support",tier:"B",
     stats:{hp:3800,atk:142,armor:120,magRes:72,as:0.82,ms:365},
     power:{mobility:6,cc:9,burst:3,sustain:7,teamfight:9,split:3,early:7,late:8},
     dmgType:"physical",scaleStat:"hp",
@@ -704,7 +715,7 @@ const HEROES = {
     technique:"Entomb CC เดี่ยว → Groundswell AOE · Roam ช่วยทุก Lane ต้องมี Vision",
     items:["mail","spear","shield","trinketBoots","armor","hp"]},
 
-  zip:{name:"Zip",nameTH:"ซิป",emoji:"🎪",role:"support",tier:"A",
+  zip:{name:"Zip",nameTH:"ซิป",emoji:"🎪",role:"support",tier:"S",
     stats:{hp:3600,atk:138,armor:115,magRes:70,as:0.82,ms:360},
     power:{mobility:5,cc:8,burst:3,sustain:9,teamfight:9,split:2,early:7,late:8},
     dmgType:"physical",scaleStat:"hp",
@@ -925,7 +936,12 @@ function renderHeroGrid(containerId, clickFn, bannedSet=new Set()){
     div.className='hero-card';
     div.style.borderColor=roleColor(h.role)+'44';
     const tierTip=(TIER_TIP[h.tier]||'').replace(/\n/g,' · ');
+    const chg = (typeof PATCH_CHANGES!=='undefined') ? PATCH_CHANGES[id] : null;
+    const patchBadge = chg
+      ? `<div class="${chg.type==='buff'?'patch-buff':'patch-nerf'}" data-tip="${chg.type==='buff'?'Buff':'Nerf'}: ${chg.from} → ${chg.to}">${chg.type==='buff'?'🔺':'🔻'}</div>`
+      : '';
     div.innerHTML=`
+      ${patchBadge}
       <div class="tier-badge tier-${h.tier}" data-tip="${tierTip}">${h.tier}</div>
       <div class="hero-avatar">${h.emoji}</div>
       <div class="hero-name" style="color:${roleColor(h.role)}">${h.name}</div>
@@ -1498,8 +1514,58 @@ function switchTab(tab){
   document.getElementById('panel-'+tab).classList.add('active');
 }
 
+// ===== PATCH BANNER =====
+function renderPatchBanner(){
+  const banner = document.getElementById('patchBanner');
+  if(!banner) return;
+  const changes = (typeof PATCH_CHANGES!=='undefined') ? PATCH_CHANGES : {};
+  const date = (typeof PATCH_DATE!=='undefined') ? PATCH_DATE : null;
+  const keys = Object.keys(changes);
+  if(!keys.length){
+    if(date) banner.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:8px">⏰ อัปเดตล่าสุด: ${date} · ไม่มีการเปลี่ยนแปลง Tier</div>`;
+    return;
+  }
+  const buffs = keys.filter(k=>changes[k].type==='buff');
+  const nerfs = keys.filter(k=>changes[k].type==='nerf');
+  const heroName = id => HEROES[id]?.name || id;
+  banner.innerHTML=`
+    <div class="patch-box">
+      <div class="row mb8" style="justify-content:space-between">
+        <div style="font-weight:700;font-size:.85rem">📋 Patch Notes ล่าสุด</div>
+        ${date?`<div class="dim" style="font-size:.72rem">⏰ ${date}</div>`:''}
+      </div>
+      ${buffs.length?`
+        <div style="color:var(--green);font-weight:700;font-size:.75rem;margin-bottom:4px">🔺 Buff (${buffs.length})</div>
+        ${buffs.map(k=>`
+          <div class="patch-row">
+            <span style="font-size:1.1rem">${HEROES[k]?.emoji||'?'}</span>
+            <span style="font-weight:700">${heroName(k)}</span>
+            <span class="dim">${HEROES[k]?.nameTH||''}</span>
+            <span class="patch-arrow" style="margin-left:auto">
+              <span class="tier-badge tier-${changes[k].from}" style="position:static;display:inline">${changes[k].from}</span>
+              →
+              <span class="tier-badge tier-${changes[k].to}" style="position:static;display:inline">${changes[k].to}</span>
+            </span>
+          </div>`).join('')}`:''}
+      ${nerfs.length?`
+        <div style="color:var(--red);font-weight:700;font-size:.75rem;margin:8px 0 4px">🔻 Nerf (${nerfs.length})</div>
+        ${nerfs.map(k=>`
+          <div class="patch-row">
+            <span style="font-size:1.1rem">${HEROES[k]?.emoji||'?'}</span>
+            <span style="font-weight:700">${heroName(k)}</span>
+            <span class="dim">${HEROES[k]?.nameTH||''}</span>
+            <span class="patch-arrow" style="margin-left:auto">
+              <span class="tier-badge tier-${changes[k].from}" style="position:static;display:inline">${changes[k].from}</span>
+              →
+              <span class="tier-badge tier-${changes[k].to}" style="position:static;display:inline">${changes[k].to}</span>
+            </span>
+          </div>`).join('')}`:''}
+    </div>`;
+}
+
 // ===== INIT =====
 function init(){
+  renderPatchBanner();
   renderHeroGrid('heroGrid', selectHero);
   populateCounterSelect();
   populateAnalyzerSelects();
