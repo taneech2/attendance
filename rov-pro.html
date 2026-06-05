@@ -14,6 +14,23 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+/* ===== TOOLTIP ===== */
+[data-tip]{position:relative;cursor:help;border-bottom:1px dashed rgba(245,158,11,.4)}
+[data-tip]::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:#1a2332;color:#e2e8f0;font-size:.72rem;font-weight:400;line-height:1.5;
+  padding:7px 11px;border-radius:8px;border:1px solid #f59e0b55;
+  white-space:nowrap;max-width:220px;white-space:normal;text-align:center;
+  pointer-events:none;opacity:0;transition:opacity .2s;z-index:999;
+  box-shadow:0 4px 20px rgba(0,0,0,.6);
+}
+[data-tip]::before{
+  content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:#f59e0b55;
+  pointer-events:none;opacity:0;transition:opacity .2s;z-index:999;
+}
+[data-tip]:hover::after,[data-tip]:hover::before{opacity:1}
 /* header */
 .header{background:linear-gradient(135deg,#0a0f1e,#1a0a2e);border-bottom:2px solid var(--accent);padding:14px 24px;display:flex;align-items:center;gap:16px}
 .logo{font-size:1.5rem;font-weight:900;background:linear-gradient(90deg,#f59e0b,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -173,9 +190,9 @@ select:focus{outline:none;border-color:var(--accent)}
   </select>
   <div id="counterDetail" class="mt12"></div>
   <div class="formula-box mt12">
-    Counter Score (CS) = Σ advantage_factors<br>
-    Range Adv: +2 · CC Chain: +1.5 · Mobility Gap: ±1 · Dmg Type: +2<br>
-    CS &gt; 4 = Strong Counter · CS 2-4 = Soft Counter · CS &lt; 2 = Even
+    <span data-tip="CS = Counter Score · คะแนนรวมที่ได้เปรียบเหนือตัวละครนั้น · ยิ่งสูงยิ่ง Counter ได้แรง">CS</span> = Σ advantage_factors<br>
+    <span data-tip="Range Adv = ได้เปรียบด้านระยะ · เช่น Marksman vs Melee ยิ่งไกลยิ่ง Kite ได้">Range Adv: +2</span> · <span data-tip="CC Chain = ล็อกศัตรูได้ต่อเนื่อง · เช่น Tank Stun แล้ว Mage ตาม Burst ทันที">CC Chain: +1.5</span> · <span data-tip="Mobility Gap = ช่องว่างความคล่องตัว · ถ้า A เร็วกว่า B มาก = ได้เปรียบ · ถ้าช้ากว่า = เสียเปรียบ">Mobility Gap: ±1</span> · <span data-tip="Dmg Type = ประเภทดาเมจได้เปรียบ · เช่น Magic vs ทีมที่ไม่มี MagRes สูง">Dmg Type: +2</span><br>
+    <span data-tip="Strong Counter = CS > 4 · ตัวละครนี้แพ้ทางอย่างชัดเจน · ควรหลีกเลี่ยงหรือ Ban ออก" style="color:var(--green)">CS &gt; 4 = Strong Counter</span> · <span data-tip="Soft Counter = CS 2-4 · ได้เปรียบบ้าง แต่ยังสู้กันได้หากเล่น Skill สูง" style="color:var(--accent)">CS 2-4 = Soft Counter</span> · <span data-tip="Even = CS < 2 · สมดุล · ผลขึ้นอยู่กับฝีมือและ Team Comp">CS &lt; 2 = Even</span>
   </div>
 </div>
 
@@ -239,9 +256,9 @@ select:focus{outline:none;border-color:var(--accent)}
   <div class="formula-box mt12">
     <b>สูตร Win Probability (Logistic Model):</b><br>
     P(A wins) = 1 / (1 + e<sup>−Δscore/50</sup>) × 100%<br>
-    Δscore = PowerScore(A) − PowerScore(B) + CounterAdv(A→B)<br>
-    PowerScore = Σ BaseHeroPower × RoleMultiplier<br>
-    CounterAdv = Σ counterMatrix[A_hero][B_hero]
+    <span data-tip="Δscore = ผลต่างคะแนนทีม · ยิ่งมากยิ่งได้เปรียบ · บวกได้จาก Counter Picks">Δscore</span> = <span data-tip="PowerScore = ผลรวมคะแนนตัวละครทุกตัวในทีม · คำนวณจาก Stats + Role + Tier">PowerScore</span>(A) − PowerScore(B) + <span data-tip="CounterAdv = คะแนนได้เปรียบจากการ Counter ตัวละครฝ่ายตรงข้าม · ยิ่ง Counter ได้มากยิ่งบวกสูง">CounterAdv</span>(A→B)<br>
+    PowerScore = Σ <span data-tip="BaseHeroPower = คะแนนพลังพื้นฐานของตัวละคร · คำนวณจาก Burst + TF + CC + Sustain + Mobility + Late">BaseHeroPower</span> × <span data-tip="RoleMultiplier = ตัวคูณตามบทบาท · MM/ASS/MAGE = ×1.1 · WAR = ×1.0 · TANK/SUP = ×0.9-0.95">RoleMultiplier</span><br>
+    CounterAdv = Σ <span data-tip="counterMatrix = ตาราง Counter ระหว่างตัวละคร · ค่าบวก = ได้เปรียบ · ค่าลบ = เสียเปรียบ">counterMatrix</span>[A_hero][B_hero]
   </div>
 </div>
 
@@ -256,10 +273,10 @@ select:focus{outline:none;border-color:var(--accent)}
   <div id="itemBuildResult"></div>
   <div class="formula-box">
     <b>Effective Damage Formula:</b><br>
-    Physical DMG = ATK × Skill_Multi × (1 − Armor/(Armor + 200)) × (1 + CritRate × 1.5)<br>
-    Magic DMG = AP × Skill_Multi × (1 − MagRes/(MagRes + 200))<br>
-    DPS = Burst_DMG + (ATK × AS × Attack_Multi × armor_reduction)<br>
-    Effective HP = HP × (1 + Armor/100) [vs physical]
+    <span data-tip="Physical DMG = ดาเมจกายภาพ · มาจาก ATK × Skill Multiplier หักด้วย Armor ศัตรู">Physical DMG</span> = <span data-tip="ATK = พลังโจมตีกายภาพทั้งหมด (base + items)">ATK</span> × <span data-tip="Skill_Multi = ตัวคูณของ Skill แต่ละท่า · เช่น ท่า Ult อาจคูณ ×3.0">Skill_Multi</span> × (1 − Armor/(Armor + 200)) × (1 + <span data-tip="CritRate = อัตราการ Critical Hit · ×1.5 หมายถึงดาเมจเพิ่ม 50% เมื่อ Crit">CritRate</span> × 1.5)<br>
+    <span data-tip="Magic DMG = ดาเมจเวทย์ · มาจาก AP × Skill Multiplier หักด้วย Magic Resistance ศัตรู">Magic DMG</span> = <span data-tip="AP = Ability Power · พลังเวทย์สะสมจาก Items ยิ่งสูงยิ่งดาเมจ Skill มาก">AP</span> × Skill_Multi × (1 − <span data-tip="MagRes = Magic Resistance · เกราะป้องกันเวทย์ · สูตรเดียวกับ Armor">MagRes</span>/(MagRes + 200))<br>
+    <span data-tip="DPS = Damage Per Second · ดาเมจรวมที่ทำได้ต่อวินาที รวมทั้ง Auto Attack และ Skill">DPS</span> = Burst_DMG + (<span data-tip="ATK × AS = พลังโจมตี × ความเร็วโจมตี · ยิ่ง AS สูงยิ่งโจมตีได้บ่อย">ATK × AS</span> × Attack_Multi × armor_reduction)<br>
+    <span data-tip="Effective HP = เลือดที่มีประสิทธิภาพจริง · รวม Armor แล้ว · เช่น HP 3000 + Armor 200 = Eff.HP 9000 vs Physical">Effective HP</span> = <span data-tip="HP = พลังชีวิตทั้งหมด">HP</span> × (1 + <span data-tip="Armor/100 = ทุก 100 Armor เพิ่ม Effective HP เป็น 2 เท่า vs Physical">Armor/100</span>) [vs physical]
   </div>
 </div>
 
@@ -833,10 +850,42 @@ let draftState = {A:{bans:[],picks:[]},B:{bans:[],picks:[]}};
 const teamAnalyzer = {A:[],B:[]};
 
 // ===== UTILITIES =====
+const ROLE_TIP={
+  marksman:'MM = Marksman (นักธนู/ปืน)\nดีลจากระยะไกล ดาเมจสูงปลายเกม ต้องการการปกป้อง',
+  assassin:'ASS = Assassin (นักฆ่า)\nBurst สูง ฆ่าเดี่ยวได้ทันที Mobility สูง แต่ทนต่ำ',
+  warrior:'WAR = Warrior (นักรบ)\nสู้ระยะใกล้ ทนทาน+ดาเมจ เหมาะ Solo Lane',
+  mage:'MAGE = Mage (นักเวทย์)\nดาเมจ Magic + CC ระยะไกล ช่วย Teamfight',
+  tank:'TANK = Tank (ผู้รับดาเมจ)\nHP/Armor สูง เปิดไฟต์ ปกป้องทีม',
+  support:'SUP = Support (ผู้สนับสนุน)\nHeal / Shield / CC ช่วยทีมรอดในไฟต์',
+};
+const TIER_TIP={
+  S:'S-Tier = Super Meta\nMust Pick/Ban ในโปรลีก แรงที่สุดในปัจจุบัน',
+  A:'A-Tier = Strong Pick\nตัวเลือกที่ดี ใช้ได้เกือบทุกสถานการณ์',
+  B:'B-Tier = Situational\nใช้ได้เฉพาะทีมหรือสถานการณ์ที่เหมาะสม',
+};
+const POWER_TIP={
+  Mobility:'Mobility = ความคล่องตัว\nความสามารถ Dash/Blink/หลบหลีก ยิ่งสูงยิ่งหนีได้เก่ง',
+  CC:'CC = Crowd Control\nความสามารถ Stun/Slow/Knockup ล็อคศัตรู ยิ่งสูงยิ่งควบคุมไฟต์ได้',
+  Burst:'Burst = ดาเมจระเบิด\nดาเมจที่ปล่อยออกมาในระยะเวลาสั้นมาก ยิ่งสูงยิ่ง One-shot ได้',
+  Sustain:'Sustain = ความทนทาน\nความสามารถฟื้น HP/ดูดเลือดระหว่างไฟต์ ยิ่งสูงยิ่งสู้ได้นาน',
+  Teamfight:'TF = Teamfight\nประสิทธิภาพในการต่อสู้ 5v5 ยิ่งสูงยิ่งช่วยทีมได้มาก',
+  'Split Push':'Split Push = บุกคนเดียว\nความสามารถบุกเลนคนเดียว กดดัน Map Control',
+  'Early Game':'Early Game = ช่วงต้นเกม\nความแข็งแกร่งใน Lv1-10 ยิ่งสูงยิ่ง Snowball เร็ว',
+  'Late Game':'Late Game = ช่วงปลายเกม\nความแข็งแกร่งเมื่อ Build ครบ Full Item',
+};
+const STAT_TIP={
+  HP:'HP = Hit Points (เลือด)\nพลังชีวิต ยิ่งสูงยิ่งทนดาเมจได้มากขึ้น',
+  ATK:'ATK = Attack (พลังโจมตี)\nดาเมจกายภาพต่อครั้ง คูณกับ Skill Multiplier',
+  Armor:'Armor = เกราะกายภาพ\nลดดาเมจจากโจมตีกายภาพ สูตร: ลด% = Armor/(Armor+200)',
+  'Magic Res':'MagRes = Magic Resistance\nลดดาเมจจากเวทย์ สูตรเดียวกับ Armor',
+  'Move Speed':'MS = Move Speed (ความเร็วเดิน)\nยิ่งสูงยิ่ง Kite/หนีได้ดีกว่า',
+};
+
 function roleBadge(role){
   const map={marksman:'badge-mark',assassin:'badge-ass',warrior:'badge-war',mage:'badge-mag',tank:'badge-tank',support:'badge-sup'};
   const label={marksman:'MM',assassin:'ASS',warrior:'WAR',mage:'MAGE',tank:'TANK',support:'SUP'};
-  return `<span class="badge ${map[role]}">${label[role]||role}</span>`;
+  const tip=(ROLE_TIP[role]||role).replace(/\n/g,' · ');
+  return `<span class="badge ${map[role]}" data-tip="${tip}">${label[role]||role}</span>`;
 }
 function roleColor(role){
   const c={marksman:'var(--marksman)',assassin:'var(--assassin)',warrior:'var(--warrior)',mage:'var(--mage)',tank:'var(--tank)',support:'var(--support)'};
@@ -844,15 +893,21 @@ function roleColor(role){
 }
 function statBar(label,val,max,color){
   const pct=Math.min(100,Math.round(val/max*100));
+  const tip=STAT_TIP[label]?` data-tip="${STAT_TIP[label].replace(/\n/g,' · ')}"` : '';
   return `<div class="stat-bar-wrap">
-    <div class="stat-label"><span>${label}</span><span style="color:${color}">${val}</span></div>
+    <div class="stat-label"><span${tip} style="cursor:${tip?'help':'default'}">${label}</span><span style="color:${color}">${val}</span></div>
     <div class="stat-bar"><div class="stat-fill" style="width:${pct}%;background:${color}"></div></div>
   </div>`;
 }
 function powerBar(label,val){
   const colors=['#ef4444','#f59e0b','#22c55e'];
   const c = val<=3?colors[0]:val<=6?colors[1]:colors[2];
-  return statBar(label,val,10,c);
+  const tip=POWER_TIP[label]?` data-tip="${POWER_TIP[label].replace(/\n/g,' · ')}"` : '';
+  const pct=Math.min(100,val*10);
+  return `<div class="stat-bar-wrap">
+    <div class="stat-label"><span${tip} style="cursor:${tip?'help':'default'}">${label}</span><span style="color:${c}">${val}/10</span></div>
+    <div class="stat-bar"><div class="stat-fill" style="width:${pct}%;background:${c}"></div></div>
+  </div>`;
 }
 
 // ===== HERO GRID =====
@@ -869,8 +924,9 @@ function renderHeroGrid(containerId, clickFn, bannedSet=new Set()){
     const div=document.createElement('div');
     div.className='hero-card';
     div.style.borderColor=roleColor(h.role)+'44';
+    const tierTip=(TIER_TIP[h.tier]||'').replace(/\n/g,' · ');
     div.innerHTML=`
-      <div class="tier-badge tier-${h.tier}">${h.tier}</div>
+      <div class="tier-badge tier-${h.tier}" data-tip="${tierTip}">${h.tier}</div>
       <div class="hero-avatar">${h.emoji}</div>
       <div class="hero-name" style="color:${roleColor(h.role)}">${h.name}</div>
       <div class="hero-role-tag">${h.nameTH}</div>`;
