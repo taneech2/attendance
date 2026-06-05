@@ -11,12 +11,12 @@ HTML_FILE  = os.path.join(SCRIPT_DIR, 'rov-pro.html')
 LOG_FILE   = os.path.join(SCRIPT_DIR, 'rov_update.log')
 
 HERO_IDS = [
-    "telAnnas","violet","capheny","yorn","fennik","wisp",
-    "butterfly","zephys","nakroth","murad","kriknak","hayate",
-    "florentino","omen","luBu","qi","keera","ryoma","wukong",
-    "tulen","lauriel","kahlii","ilumia","diaochan",
-    "grakk","baldum","mina","thane","ormarr",
-    "lumburr","zip","alice"
+    "telAnnas","violet","capheny","yorn","fennik","wisp","laville","slimz","lindis","valhein",
+    "butterfly","zephys","nakroth","murad","kriknak","hayate","quillen",
+    "florentino","omen","luBu","qi","keera","ryoma","wukong","airi","maloch","veres","taara","volkath",
+    "tulen","lauriel","kahlii","ilumia","diaochan","iggy","mganga",
+    "grakk","baldum","mina","thane","ormarr","omega","cresht",
+    "lumburr","zip","alice","xeniel",
 ]
 
 # ===== LOGGER =====

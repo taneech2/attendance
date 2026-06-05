@@ -764,6 +764,217 @@ const HEROES = {
     counteredBy:["butterfly","zephys"],
     technique:"Hex ใช้ Disable ตัวอันตราย · Wonderland Heal ใน Teamfight · Polymorph เปลี่ยนเกมได้",
     items:["mail","staff","shield","magicBoots","armor","hp"]},
+
+  // ===== เพิ่มเติม =====
+  airi:{name:"Airi",nameTH:"ไออิริ",emoji:"⚔",role:"warrior",tier:"S",
+    stats:{hp:3550,atk:192,armor:97,magRes:56,as:1.05,ms:390},
+    power:{mobility:9,cc:5,burst:9,sustain:5,teamfight:8,split:9,early:8,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Shadow Step",desc:"Dash พุ่งเข้าหาศัตรู ดาเมจ + Slow ใช้ซ้ำได้เมื่อโจมตี"},
+      {name:"Slash",desc:"โจมตีหมุนดาบรอบตัว ดาเมจ AOE + ลด Armor ศัตรู"},
+      {name:"Final Blade",desc:"พุ่งดาบ Execute ฆ่าศัตรู HP ต่ำได้ทันที Reset เมื่อ Kill"}
+    ],
+    counters:["telAnnas","violet","yorn","capheny"],
+    counteredBy:["omen","grakk","qi"],
+    technique:"Shadow Step เข้าหา ADC → Slash ลด Armor → Final Blade Execute · Reset ทุก Kill",
+    items:["rankBreaker","omniArms","soulReaver","clawsOfTalons","boots","atkItem"]},
+
+  maloch:{name:"Maloch",nameTH:"มาล็อก",emoji:"👹",role:"warrior",tier:"A",
+    stats:{hp:3900,atk:186,armor:108,magRes:60,as:0.9,ms:370},
+    power:{mobility:5,cc:7,burst:7,sustain:7,teamfight:9,split:6,early:7,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Cleave",desc:"โจมตี AOE รอบตัว ดาเมจ Physical สูง"},
+      {name:"Stomp",desc:"กระทืบพื้น Knockup AOE ศัตรูรอบตัว"},
+      {name:"Rampage",desc:"เพิ่ม Size + ATK + DEF ชั่วคราว ทำ Teamfight ชนะง่าย"}
+    ],
+    counters:["nakroth","hayate","kriknak","fennik"],
+    counteredBy:["butterfly","murad","keera"],
+    technique:"Stomp เปิดไฟต์ → Rampage → ไฟต์ยาวชนะ · เหมาะ Offlane แบก Solo",
+    items:["soulReaver","rankBreaker","omniArms","fenrirsTooh","atkItem","hp"]},
+
+  veres:{name:"Veres",nameTH:"เวเรส",emoji:"🐍",role:"warrior",tier:"A",
+    stats:{hp:3480,atk:188,armor:95,magRes:54,as:1.0,ms:380},
+    power:{mobility:8,cc:6,burst:8,sustain:5,teamfight:8,split:8,early:7,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Slither",desc:"เลื้อยพุ่งเข้าหาศัตรู ดาเมจ + Slow"},
+      {name:"Venom",desc:"ปล่อยพิษ DOT ดาเมจต่อเนื่อง + ลด Heal ศัตรู"},
+      {name:"Death Spiral",desc:"หมุนโจมตี AOE ดาเมจ + Knockback ศัตรูออก"}
+    ],
+    counters:["lumburr","zip","alice"],
+    counteredBy:["omen","qi","grakk"],
+    technique:"Venom ลด Heal ก่อนไฟต์กับ Sustain Hero · Slither เข้าหา Backline ได้เร็ว",
+    items:["rankBreaker","omniArms","soulReaver","fenrirsTooh","atkItem","ultrabane"]},
+
+  taara:{name:"Taara",nameTH:"ทาราห์",emoji:"⚡",role:"warrior",tier:"B",
+    stats:{hp:3750,atk:183,armor:104,magRes:57,as:0.95,ms:375},
+    power:{mobility:5,cc:3,burst:6,sustain:10,teamfight:7,split:7,early:6,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Battle Cry",desc:"เพิ่ม ATK + Lifesteal ชั่วคราว"},
+      {name:"Whirlwind",desc:"หมุนโจมตี AOE ดาเมจ + ดูดเลือด"},
+      {name:"Raging Blow",desc:"โจมตีพุ่ง ดาเมจสูง + สะสม Rage เพิ่ม Sustain"}
+    ],
+    counters:["hayate","fennik","ryoma"],
+    counteredBy:["butterfly","zephys","murad"],
+    technique:"เน้น Sustain ไฟต์ยาว · Lifesteal สูงมาก ยิ่งต่ำยิ่งแข็ง · เหมาะ vs DOT team",
+    items:["omniArms","soulReaver","rankBreaker","fenrirsTooh","atkItem","hp"]},
+
+  xeniel:{name:"Xeniel",nameTH:"ซีเนียล",emoji:"👼",role:"support",tier:"A",
+    stats:{hp:3700,atk:138,armor:118,magRes:74,as:0.8,ms:360},
+    power:{mobility:5,cc:7,burst:3,sustain:10,teamfight:9,split:2,early:7,late:9},
+    dmgType:"magic",scaleStat:"hp",
+    skills:[
+      {name:"Divine Shield",desc:"สร้าง Shield ให้พันธมิตร รับดาเมจแทน"},
+      {name:"Holy Light",desc:"Heal พันธมิตรในบริเวณ + ลด CC Duration"},
+      {name:"Holy Guardian",desc:"บินขึ้นฟ้า ลงมาสร้าง Shield + Heal AOE ทีมทั้งหมด"}
+    ],
+    counters:["butterfly","kriknak","zephys"],
+    counteredBy:["veres","omen","tulen"],
+    technique:"Holy Guardian ใช้ตอนทีมกำลังโดน Burst · Shield ให้ ADC ก่อนไฟต์เสมอ",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  mganga:{name:"Mganga",nameTH:"มกังกา",emoji:"🎭",role:"mage",tier:"B",
+    stats:{hp:2980,atk:158,armor:72,magRes:50,as:0.85,ms:355},
+    power:{mobility:4,cc:5,burst:7,sustain:4,teamfight:7,split:3,early:5,late:7},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Voodoo Doll",desc:"ใส่ตุ๊กตา Voodoo ศัตรูรับดาเมจเพิ่ม"},
+      {name:"Plague",desc:"ปล่อยโรคระบาด DOT ดาเมจต่อเนื่อง"},
+      {name:"Curse",desc:"สาป Transform ศัตรูเป็น Frog ชั่วคราว + ลด Armor"}
+    ],
+    counters:["alice","zip"],
+    counteredBy:["butterfly","nakroth","zephys"],
+    technique:"Voodoo Mark ก่อนทุก Skill · Curse ใช้ Disable ตัว Carry ศัตรู",
+    items:["staff","boomstick","violetHatchet","apocalypse","magicBoots","violetHatchet2"]},
+
+  lindis:{name:"Lindis",nameTH:"ลินดิส",emoji:"🏹",role:"marksman",tier:"A",
+    stats:{hp:3050,atk:178,armor:76,magRes:50,as:1.0,ms:375},
+    power:{mobility:8,cc:3,burst:8,sustain:3,teamfight:6,split:8,early:6,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Eagle Eye",desc:"มองเห็นศัตรูในพุ่มไม้ + ดาเมจเพิ่มเมื่อโจมตีจาก Bush"},
+      {name:"Trailblazer",desc:"Dash เร็ว + ทิ้ง Trail ชะลอศัตรูที่เหยียบ"},
+      {name:"Stealth Hunt",desc:"หายตัวในพุ่มไม้ + พุ่งออกโจมตี ดาเมจสูง"}
+    ],
+    counters:["wisp","fennik","yorn"],
+    counteredBy:["butterfly","kriknak","nakroth"],
+    technique:"เล่น Bush เสมอ · Eagle Eye ดาเมจ x2 เมื่ออยู่ใน Bush · Stealth Hunt Burst จาก Bush",
+    items:["clavesSancti","rankBreaker","omniArms","azureKnife","boots","ultrabane"]},
+
+  valhein:{name:"Valhein",nameTH:"วาลเฮน",emoji:"🎩",role:"marksman",tier:"B",
+    stats:{hp:3100,atk:175,armor:78,magRes:50,as:1.0,ms:360},
+    power:{mobility:6,cc:5,burst:7,sustain:3,teamfight:7,split:5,early:6,late:7},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Silver Bullet",desc:"ยิงกระสุนเงิน ดาเมจ + ชะลอ"},
+      {name:"Bat Summon",desc:"เรียกค้างคาวโจมตีศัตรู + Reveal"},
+      {name:"Death Sentence",desc:"ยิงกระสุนพิเศษ ดาเมจ True + Stun เป้าหมาย"}
+    ],
+    counters:["wisp","fennik"],
+    counteredBy:["butterfly","nakroth","hayate"],
+    technique:"Silver Bullet Poke ต่อเนื่อง · Death Sentence ใช้ Stun ก่อน Engage ทีม",
+    items:["rankBreaker","omniArms","clavesSancti","azureKnife","boots","ultrabane"]},
+
+  slimz:{name:"Slimz",nameTH:"สลิมซ์",emoji:"🐸",role:"marksman",tier:"B",
+    stats:{hp:2950,atk:172,armor:74,magRes:50,as:1.1,ms:380},
+    power:{mobility:9,cc:2,burst:6,sustain:3,teamfight:5,split:8,early:7,late:7},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Jump",desc:"กระโดดข้ามกำแพง/แม่น้ำได้ เพิ่ม MS"},
+      {name:"Tongue",desc:"ยิงลิ้นดึงศัตรูเข้ามา + Stun สั้น"},
+      {name:"Swamp Fever",desc:"ปล่อยก๊าซพิษ AOE ดาเมจ + Slow รอบตัว"}
+    ],
+    counters:["yorn","fennik"],
+    counteredBy:["butterfly","zephys","keera"],
+    technique:"Mobility สูงมาก ข้ามผ่านได้ทุกที่ · เหมาะ Split Push · Tongue Stun จาก Bush",
+    items:["rankBreaker","clavesSancti","omniArms","azureKnife","boots","ultrabane"]},
+
+  quillen:{name:"Quillen",nameTH:"ควิลเลน",emoji:"🎯",role:"assassin",tier:"A",
+    stats:{hp:3100,atk:182,armor:80,magRes:52,as:1.0,ms:380},
+    power:{mobility:7,cc:3,burst:10,sustain:2,teamfight:6,split:8,early:6,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Snipe",desc:"ยิงกระสุนระยะไกลมาก ดาเมจสูงมาก"},
+      {name:"Shadow Step",desc:"Teleport ระยะสั้น หลบ Skill"},
+      {name:"Final Shot",desc:"ยิง Execute ฆ่าศัตรู HP ต่ำกว่า 30% ได้ทันที"}
+    ],
+    counters:["telAnnas","yorn","capheny","violet"],
+    counteredBy:["grakk","omen","baldum"],
+    technique:"Snipe ดาเมจไกลสูงมาก · Final Shot Execute ADC ที่ HP ต่ำ · ซ่อนใน Bush ก่อน Snipe",
+    items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
+
+  omega:{name:"Omega",nameTH:"โอเมกา",emoji:"🤖",role:"tank",tier:"A",
+    stats:{hp:4400,atk:150,armor:145,magRes:83,as:0.78,ms:355},
+    power:{mobility:4,cc:8,burst:5,sustain:8,teamfight:9,split:3,early:8,late:9},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Shield Charge",desc:"พุ่งโล่เข้าหาศัตรู ดาเมจ + Stun"},
+      {name:"Reconstruct",desc:"ซ่อมแซมตัวเอง Heal HP จำนวนมาก"},
+      {name:"Devastate",desc:"ระเบิด AOE รอบตัว ดาเมจ + Knockback ทุกทิศ"}
+    ],
+    counters:["nakroth","butterfly","hayate"],
+    counteredBy:["murad","veres","keera"],
+    technique:"Shield Charge เปิดไฟต์ → Devastate ดัน → Reconstruct เมื่อ HP ต่ำ · แข็งมากปลายเกม",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  cresht:{name:"Cresht",nameTH:"เครสต์",emoji:"🦀",role:"tank",tier:"B",
+    stats:{hp:4250,atk:147,armor:140,magRes:80,as:0.8,ms:365},
+    power:{mobility:6,cc:8,burst:4,sustain:6,teamfight:8,split:4,early:7,late:8},
+    dmgType:"physical",scaleStat:"hp",
+    skills:[
+      {name:"Claw Snap",desc:"โจมตีด้วยก้าม ดาเมจ + Stun ระยะใกล้"},
+      {name:"Bubble",desc:"สร้าง Bubble กักขังศัตรูชั่วคราว CC สูง"},
+      {name:"Tidal Surge",desc:"คลื่นยักษ์ AOE Knockback + ดาเมจ"}
+    ],
+    counters:["hayate","nakroth","kriknak"],
+    counteredBy:["murad","omen"],
+    technique:"Bubble ล็อคเป้าเดี่ยว ก่อน Teamfight · Tidal Surge ดัน Backline ออก · Vision Control",
+    items:["mail","spear","shield","trinketBoots","armor","hp"]},
+
+  iggy:{name:"Iggy & Scorch",nameTH:"อิกกี้แอนด์สกอร์ช",emoji:"🔥",role:"mage",tier:"A",
+    stats:{hp:3000,atk:162,armor:73,magRes:51,as:0.88,ms:355},
+    power:{mobility:5,cc:6,burst:8,sustain:3,teamfight:8,split:4,early:6,late:8},
+    dmgType:"magic",scaleStat:"ap",
+    skills:[
+      {name:"Fire Breath",desc:"ลูกไฟ DOT ดาเมจต่อเนื่อง + ติด Burn"},
+      {name:"Oil Spill",desc:"วางน้ำมัน ถ้าโดน Fire → ลุกไหม้ AOE ดาเมจสูง"},
+      {name:"Inferno",desc:"ระเบิดไฟ AOE ขนาดใหญ่มาก ดาเมจมหาศาล"}
+    ],
+    counters:["ilumia","diaochan","kahlii"],
+    counteredBy:["butterfly","nakroth","zephys"],
+    technique:"Oil Spill ก่อน → Fire Breath จุดไฟ → Inferno ปิด Combo · Zoning ด้วย Oil Spill",
+    items:["staff","boomstick","apocalypse","violetHatchet","magicBoots","violetHatchet2"]},
+
+  laville:{name:"Laville",nameTH:"ลาวีล",emoji:"🔫",role:"marksman",tier:"A",
+    stats:{hp:2980,atk:176,armor:74,magRes:50,as:1.05,ms:365},
+    power:{mobility:6,cc:2,burst:9,sustain:2,teamfight:7,split:5,early:7,late:9},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Rapid Fire",desc:"ยิงกระสุนเร็วต่อเนื่อง เพิ่ม ATK Speed ชั่วคราว"},
+      {name:"Reload",desc:"เติมกระสุน + Buff ดาเมจชุดถัดไป"},
+      {name:"Storm Bullets",desc:"ยิงกระสุนฝน AOE ดาเมจสูง บริเวณกว้าง"}
+    ],
+    counters:["violet","yorn","wisp"],
+    counteredBy:["butterfly","keera","airi"],
+    technique:"Reload ก่อนไฟต์ทุกครั้ง · Storm Bullets ใช้ Teamfight · ต้องการ Support ปกป้อง",
+    items:["clavesSancti","rankBreaker","omniArms","azureKnife","boots","ultrabane"]},
+
+  volkath:{name:"Volkath",nameTH:"โวลคาธ",emoji:"😈",role:"warrior",tier:"A",
+    stats:{hp:3600,atk:188,armor:100,magRes:56,as:0.95,ms:380},
+    power:{mobility:8,cc:6,burst:8,sustain:6,teamfight:8,split:8,early:7,late:8},
+    dmgType:"physical",scaleStat:"atk",
+    skills:[
+      {name:"Dash Strike",desc:"Dash เข้าหาศัตรู ดาเมจ + ลด Armor"},
+      {name:"Soul Drain",desc:"ดูดพลังชีวิตศัตรู Sustain ระหว่างไฟต์"},
+      {name:"Hellfire",desc:"ระเบิดไฟนรก AOE รอบตัว ดาเมจ + Slow"}
+    ],
+    counters:["hayate","fennik","kriknak"],
+    counteredBy:["omen","grakk","qi"],
+    technique:"Dash Strike ลด Armor → Soul Drain → Hellfire ปิด · เหมาะ vs Squishy Team",
+    items:["soulReaver","rankBreaker","omniArms","fenrirsTooh","atkItem","ultrabane"]},
 };
 
 // ===== ITEM DATABASE =====
@@ -900,6 +1111,21 @@ const SKILL_TYPES = {
   lumburr:   ['dmg','cc','cc'],
   zip:       ['heal','util','cc'],
   alice:     ['heal','cc','dmg'],
+  airi:      ['mob','dmg','dmg'],
+  maloch:    ['dmg','cc','util'],
+  veres:     ['mob','util','dmg'],
+  taara:     ['util','heal','dmg'],
+  xeniel:    ['util','heal','heal'],
+  mganga:    ['util','dmg','cc'],
+  lindis:    ['util','mob','dmg'],
+  valhein:   ['dmg','util','cc'],
+  slimz:     ['mob','cc','dmg'],
+  quillen:   ['dmg','mob','dmg'],
+  omega:     ['cc','heal','dmg'],
+  cresht:    ['cc','cc','dmg'],
+  iggy:      ['dmg','util','dmg'],
+  laville:   ['dmg','util','dmg'],
+  volkath:   ['mob','heal','dmg'],
 };
 
 // ===== COUNTER REASONS (skill-based) =====
