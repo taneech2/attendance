@@ -289,12 +289,12 @@ select:focus{outline:none;border-color:var(--accent)}
 
 <script>
 // ===== PATCH DATA =====
-const PATCH_CHANGES = {"murad": {"from": "S", "to": "A", "type": "nerf"}, "hayate": {"from": "A", "to": "S", "type": "buff"}, "ilumia": {"from": "A", "to": "B", "type": "nerf"}, "grakk": {"from": "B", "to": "A", "type": "buff"}, "lumburr": {"from": "S", "to": "B", "type": "nerf"}, "zip": {"from": "A", "to": "S", "type": "buff"}};
-const PATCH_DATE = "05/06/2026 21:05";
+const PATCH_CHANGES = {"murad": {"from": "A", "to": "S", "type": "buff"}, "hayate": {"from": "S", "to": "A", "type": "nerf"}, "ilumia": {"from": "B", "to": "A", "type": "buff"}, "lumburr": {"from": "B", "to": "S", "type": "buff"}};
+const PATCH_DATE = "05/06/2026 21:11";
 
 // ===== HERO DATABASE =====
 const HEROES = {
-  // ⏰ อัปเดตล่าสุด: 2026-06-05 21:05
+  // ⏰ อัปเดตล่าสุด: 2026-06-05 21:11
   telAnnas:{name:"Tel'Annas",nameTH:"เทลอันนัส",emoji:"🏹",role:"marksman",tier:"S",
     stats:{hp:3150,atk:185,armor:80,magRes:50,as:0.95,ms:360},
     power:{mobility:5,cc:3,burst:6,sustain:3,teamfight:8,split:4,early:5,late:9},
@@ -421,7 +421,7 @@ const HEROES = {
     technique:"เล่น Split Push และ Skirmish · เปิดไฟต์ด้วย Justice Blades → Combo · Farm Jungle ให้เร็ว",
     items:["rankBreaker","clawsOfTalons","omniArms","soulReaver","boots","atkItem"]},
 
-  murad:{name:"Murad",nameTH:"มูราด",emoji:"🌊",role:"assassin",tier:"A",
+  murad:{name:"Murad",nameTH:"มูราด",emoji:"🌊",role:"assassin",tier:"S",
     stats:{hp:3250,atk:182,armor:82,magRes:54,as:1.0,ms:380},
     power:{mobility:9,cc:4,burst:9,sustain:3,teamfight:6,split:10,early:6,late:9},
     dmgType:"physical",scaleStat:"atk",
@@ -449,7 +449,7 @@ const HEROES = {
     technique:"Stun ด้วย Shriek → Burst ทันที · Jungle Control สำคัญ · Venom ลด Armor ก่อน Combo",
     items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
 
-  hayate:{name:"Hayate",nameTH:"ฮายาเตะ",emoji:"🌪",role:"assassin",tier:"S",
+  hayate:{name:"Hayate",nameTH:"ฮายาเตะ",emoji:"🌪",role:"assassin",tier:"A",
     stats:{hp:3050,atk:178,armor:79,magRes:51,as:1.1,ms:400},
     power:{mobility:10,cc:1,burst:7,sustain:2,teamfight:5,split:9,early:6,late:7},
     dmgType:"physical",scaleStat:"atk",
@@ -603,7 +603,7 @@ const HEROES = {
     technique:"Poke ด้วย Soul Orb · Ult Release ใช้จาก Bush ล่อ · ต้องมี Tank ปกป้อง",
     items:["staff","boomstick","violetHatchet","apocalypse","magicBoots","violetHatchet2"]},
 
-  ilumia:{name:"Ilumia",nameTH:"อิลูเมีย",emoji:"🌟",role:"mage",tier:"B",
+  ilumia:{name:"Ilumia",nameTH:"อิลูเมีย",emoji:"🌟",role:"mage",tier:"A",
     stats:{hp:3000,atk:163,armor:74,magRes:51,as:0.85,ms:355},
     power:{mobility:5,cc:8,burst:7,sustain:3,teamfight:10,split:3,early:5,late:8},
     dmgType:"magic",scaleStat:"ap",
@@ -701,7 +701,7 @@ const HEROES = {
     technique:"Tremor เปิด Teamfight · Spiked Armor ต้าน Assassin · เป็น Hard Engage Tank",
     items:["mail","spear","shield","trinketBoots","armor","hp"]},
 
-  lumburr:{name:"Lumburr",nameTH:"ลัมเบอร์",emoji:"🐺",role:"support",tier:"B",
+  lumburr:{name:"Lumburr",nameTH:"ลัมเบอร์",emoji:"🐺",role:"support",tier:"S",
     stats:{hp:3800,atk:142,armor:120,magRes:72,as:0.82,ms:365},
     power:{mobility:6,cc:9,burst:3,sustain:7,teamfight:9,split:3,early:7,late:8},
     dmgType:"physical",scaleStat:"hp",
@@ -1518,46 +1518,66 @@ function switchTab(tab){
 function renderPatchBanner(){
   const banner = document.getElementById('patchBanner');
   if(!banner) return;
-  const changes = (typeof PATCH_CHANGES!=='undefined') ? PATCH_CHANGES : {};
-  const date = (typeof PATCH_DATE!=='undefined') ? PATCH_DATE : null;
-  const keys = Object.keys(changes);
-  if(!keys.length){
-    if(date) banner.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:8px">⏰ อัปเดตล่าสุด: ${date} · ไม่มีการเปลี่ยนแปลง Tier</div>`;
-    return;
-  }
+  const changes  = (typeof PATCH_CHANGES!=='undefined')  ? PATCH_CHANGES  : {};
+  const official = (typeof PATCH_OFFICIAL!=='undefined') ? PATCH_OFFICIAL : {};
+  const date     = (typeof PATCH_DATE!=='undefined')     ? PATCH_DATE     : null;
+  const keys  = Object.keys(changes);
   const buffs = keys.filter(k=>changes[k].type==='buff');
   const nerfs = keys.filter(k=>changes[k].type==='nerf');
-  const heroName = id => HEROES[id]?.name || id;
+  const heroName     = id => HEROES[id]?.name || id;
+  const officialNotes  = official.notes   || [];
+  const generalChanges = official.general || [];
+  const patchVer  = official.version || '';
+  const patchDate = official.date    || '';
+  const sourceURL = official.source  || '';
+  const hasOfficial = officialNotes.length > 0 || generalChanges.length > 0;
+  if(!keys.length && !hasOfficial){
+    if(date) banner.innerHTML=`<div class="dim" style="font-size:.72rem;margin-bottom:8px">⏰ อัปเดตล่าสุด: ${date} · ไม่มีการเปลี่ยนแปลง</div>`;
+    return;
+  }
+  const typeColor = t => t==='buff'?'#22c55e':t==='nerf'?'#ef4444':t==='new'?'#a855f7':'#f59e0b';
+  const typeIcon  = t => t==='buff'?'🔺':t==='nerf'?'🔻':t==='new'?'✨':'🔧';
   banner.innerHTML=`
     <div class="patch-box">
-      <div class="row mb8" style="justify-content:space-between">
-        <div style="font-weight:700;font-size:.85rem">📋 Patch Notes ล่าสุด</div>
-        ${date?`<div class="dim" style="font-size:.72rem">⏰ ${date}</div>`:''}
+      <div class="row mb8" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="font-weight:700;font-size:.9rem">📋 Patch Notes ล่าสุด
+          ${patchVer?`<span class="badge badge-mag" style="margin-left:6px">v${patchVer}</span>`:''}
+        </div>
+        <div class="row" style="gap:12px">
+          ${patchDate?`<span class="dim" style="font-size:.7rem">📅 ${patchDate}</span>`:''}
+          ${date?`<span class="dim" style="font-size:.7rem">⏰ วิเคราะห์: ${date}</span>`:''}
+          ${sourceURL?`<a href="${sourceURL}" target="_blank" style="font-size:.7rem;color:var(--accent)">🔗 แหล่งข้อมูล</a>`:''}
+        </div>
       </div>
-      ${buffs.length?`
-        <div style="color:var(--green);font-weight:700;font-size:.75rem;margin-bottom:4px">🔺 Buff (${buffs.length})</div>
-        ${buffs.map(k=>`
+      ${hasOfficial?`
+        <div style="font-weight:700;font-size:.75rem;color:var(--accent);margin-bottom:6px;padding:4px 8px;background:var(--surface3);border-radius:6px">
+          🏛 จาก Garena อย่างเป็นทางการ
+        </div>
+        ${officialNotes.map(n=>`
+          <div class="patch-row">
+            <span>${typeIcon(n.type)}</span>
+            <span style="font-weight:700;min-width:80px">${n.hero}</span>
+            <span class="dim" style="font-size:.72rem;flex:1">${n.detail}</span>
+            <span style="font-size:.62rem;background:${typeColor(n.type)}22;color:${typeColor(n.type)};padding:1px 6px;border-radius:4px;font-weight:700">${n.type.toUpperCase()}</span>
+          </div>`).join('')}
+        ${generalChanges.map(g=>`
+          <div style="font-size:.72rem;color:var(--dim);padding:4px 8px;border-bottom:1px solid var(--border)">🔧 ${g}</div>`
+        ).join('')}
+        <div style="height:10px"></div>`:''}
+      ${(buffs.length||nerfs.length)?`
+        <div style="font-weight:700;font-size:.75rem;color:var(--accent2);margin-bottom:6px;padding:4px 8px;background:var(--surface3);border-radius:6px">
+          🤖 การเปลี่ยนแปลง Tier จาก AI วิเคราะห์ Meta
+        </div>
+        ${[...buffs.map(k=>({k,t:'buff'})),...nerfs.map(k=>({k,t:'nerf'}))].map(({k,t})=>`
           <div class="patch-row">
             <span style="font-size:1.1rem">${HEROES[k]?.emoji||'?'}</span>
-            <span style="font-weight:700">${heroName(k)}</span>
-            <span class="dim">${HEROES[k]?.nameTH||''}</span>
-            <span class="patch-arrow" style="margin-left:auto">
+            <span style="font-weight:700;min-width:80px">${heroName(k)}</span>
+            <span class="dim" style="font-size:.7rem;flex:1">${HEROES[k]?.nameTH||''}</span>
+            <span style="display:flex;align-items:center;gap:4px">
               <span class="tier-badge tier-${changes[k].from}" style="position:static;display:inline">${changes[k].from}</span>
-              →
+              <span style="color:${t==='buff'?'var(--green)':'var(--red)'}">→</span>
               <span class="tier-badge tier-${changes[k].to}" style="position:static;display:inline">${changes[k].to}</span>
-            </span>
-          </div>`).join('')}`:''}
-      ${nerfs.length?`
-        <div style="color:var(--red);font-weight:700;font-size:.75rem;margin:8px 0 4px">🔻 Nerf (${nerfs.length})</div>
-        ${nerfs.map(k=>`
-          <div class="patch-row">
-            <span style="font-size:1.1rem">${HEROES[k]?.emoji||'?'}</span>
-            <span style="font-weight:700">${heroName(k)}</span>
-            <span class="dim">${HEROES[k]?.nameTH||''}</span>
-            <span class="patch-arrow" style="margin-left:auto">
-              <span class="tier-badge tier-${changes[k].from}" style="position:static;display:inline">${changes[k].from}</span>
-              →
-              <span class="tier-badge tier-${changes[k].to}" style="position:static;display:inline">${changes[k].to}</span>
+              <span>${t==='buff'?'🔺':'🔻'}</span>
             </span>
           </div>`).join('')}`:''}
     </div>`;

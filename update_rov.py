@@ -63,6 +63,51 @@ def search_rov_meta():
         log(f"⚠ Search error: {e}")
     return "\n".join(results[:8]) if results else "No search results available."
 
+# ===== FETCH OFFICIAL PATCH NOTES =====
+def fetch_patch_notes():
+    """ดึง Patch Notes จริงจาก Garena ROV Thailand"""
+    try:
+        import requests
+        from ddgs import DDGS
+
+        # ค้นหาหน้า Patch Notes ล่าสุด
+        patch_url = None
+        with DDGS() as ddgs:
+            for r in ddgs.text(
+                'ROV patch notes ล่าสุด site:rov.garena.in.th OR site:fb.com/ROVThailand',
+                max_results=5
+            ):
+                if 'garena' in r.get('href','').lower() or 'rov' in r.get('href','').lower():
+                    patch_url = r['href']
+                    break
+
+        raw_text = ""
+        if patch_url:
+            log(f"   📄 ดึง Patch Notes จาก: {patch_url}")
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            resp = requests.get(patch_url, headers=headers, timeout=10)
+            resp.encoding = 'utf-8'
+            # ดึงเฉพาะ text ออกจาก HTML
+            raw = resp.text
+            import re as _re
+            raw_text = _re.sub(r'<[^>]+>', ' ', raw)
+            raw_text = _re.sub(r'\s+', ' ', raw_text)[:4000]
+
+        # ถ้าดึง URL ไม่ได้ ใช้ DuckDuckGo snippets แทน
+        if not raw_text:
+            snippets = []
+            with DDGS() as ddgs:
+                for r in ddgs.text('ROV Thailand patch notes buff nerf ล่าสุด 2026', max_results=5):
+                    snippets.append(r['body'])
+            raw_text = "\n".join(snippets[:5])
+
+        return raw_text, patch_url or ""
+
+    except Exception as e:
+        log(f"⚠ Patch fetch error: {e}")
+        return "", ""
+
+
 # ===== CLAUDE ANALYSIS =====
 def analyze_tiers(search_text):
     import anthropic
@@ -129,6 +174,61 @@ All {len(HERO_IDS)} heroes must be included."""
         log(f"⚠ Claude error: {e}")
     return None
 
+# ===== SUMMARIZE PATCH NOTES WITH CLAUDE =====
+def summarize_patch(raw_text, source_url):
+    """ให้ Claude สรุป Patch Notes เป็นภาษาไทย"""
+    import anthropic
+    api_key = os.environ.get("ANTHROPIC_API_KEY","")
+    if not api_key:
+        try:
+            import subprocess
+            r = subprocess.run(
+                ["powershell","-command",
+                 "[System.Environment]::GetEnvironmentVariable('ANTHROPIC_API_KEY','User')"],
+                capture_output=True, text=True)
+            api_key = r.stdout.strip()
+        except: pass
+    if not api_key:
+        return {}
+
+    client = anthropic.Anthropic(api_key=api_key)
+    prompt = f"""You are summarizing ROV (Realm of Valor) patch notes for Thai players.
+
+Raw text from patch source:
+---
+{raw_text[:3000]}
+---
+
+Extract and return a JSON object with:
+{{
+  "version": "patch version if found, else ''",
+  "date": "patch date if found, else ''",
+  "notes": [
+    {{"hero": "hero name in English", "type": "buff|nerf|adjust|new", "detail": "สรุปสั้นๆ เป็นภาษาไทย 1 ประโยค"}},
+    ...
+  ],
+  "general": ["general game changes in Thai, 1 sentence each", ...],
+  "source": "{source_url}"
+}}
+
+If no real patch notes found, return {{"notes": [], "general": [], "version": "", "date": "", "source": "{source_url}"}}.
+Return ONLY valid JSON, no explanation."""
+
+    try:
+        resp = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1000,
+            messages=[{"role":"user","content":prompt}]
+        )
+        text = resp.content[0].text.strip()
+        m = re.search(r'\{[\s\S]+\}', text)
+        if m:
+            return json.loads(m.group())
+    except Exception as e:
+        log(f"⚠ Patch summary error: {e}")
+    return {}
+
+
 # ===== READ OLD TIERS =====
 def read_old_tiers() -> dict:
     """อ่าน tier เดิมจาก HTML ก่อนอัปเดต"""
@@ -162,7 +262,7 @@ def compare_tiers(old: dict, new: dict) -> dict:
     return changes
 
 # ===== UPDATE HTML =====
-def update_html(tiers: dict, changes: dict) -> int:
+def update_html(tiers: dict, changes: dict, patch_summary: dict = {}) -> int:
     if not os.path.exists(HTML_FILE):
         log(f"❌ ไม่พบ {HTML_FILE}")
         return 0
@@ -193,28 +293,27 @@ def update_html(tiers: dict, changes: dict) -> int:
                 lines.insert(i+1, ts_comment)
                 break
 
-    # Embed PATCH_CHANGES and update timestamp into HTML JS
+    # Embed PATCH data into HTML JS
     content = ''.join(lines)
-    changes_json = json.dumps(changes, ensure_ascii=False)
+    changes_json  = json.dumps(changes,       ensure_ascii=False)
+    summary_json  = json.dumps(patch_summary, ensure_ascii=False)
     ts_full = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
 
-    # Replace PATCH_CHANGES variable
     if 'const PATCH_CHANGES' in content:
-        content = re.sub(
-            r'const PATCH_CHANGES\s*=\s*\{[^;]*\};',
-            f'const PATCH_CHANGES = {changes_json};',
-            content
-        )
-        content = re.sub(
-            r'const PATCH_DATE\s*=\s*"[^"]*";',
-            f'const PATCH_DATE = "{ts_full}";',
-            content
-        )
+        content = re.sub(r'const PATCH_CHANGES\s*=\s*\{[^;]*\};',
+                         f'const PATCH_CHANGES = {changes_json};', content)
+        content = re.sub(r'const PATCH_DATE\s*=\s*"[^"]*";',
+                         f'const PATCH_DATE = "{ts_full}";', content)
+        content = re.sub(r'const PATCH_OFFICIAL\s*=\s*\{[^;]*\};',
+                         f'const PATCH_OFFICIAL = {summary_json};', content)
     else:
-        # Insert before HEROES definition
         content = content.replace(
             '// ===== HERO DATABASE =====',
-            f'// ===== PATCH DATA =====\nconst PATCH_CHANGES = {changes_json};\nconst PATCH_DATE = "{ts_full}";\n\n// ===== HERO DATABASE ====='
+            f'// ===== PATCH DATA =====\n'
+            f'const PATCH_CHANGES = {changes_json};\n'
+            f'const PATCH_DATE = "{ts_full}";\n'
+            f'const PATCH_OFFICIAL = {summary_json};\n\n'
+            f'// ===== HERO DATABASE ====='
         )
 
     with open(HTML_FILE, 'w', encoding='utf-8') as f:
@@ -284,12 +383,20 @@ def main():
         log("   ตรวจสอบ ANTHROPIC_API_KEY ใน environment variables")
         return
 
+    log("📰 ดึง Patch Notes จริงจาก Garena...")
+    patch_raw, patch_url = fetch_patch_notes()
+    patch_summary = summarize_patch(patch_raw, patch_url) if patch_raw else {}
+    if patch_summary.get('notes'):
+        log(f"   ✅ ได้ Patch Notes: {len(patch_summary['notes'])} รายการ")
+    else:
+        log("   ⚠ ไม่พบ Patch Notes อย่างเป็นทางการ")
+
     log("📖 อ่าน tier เดิมก่อนอัปเดต...")
     old_tiers = read_old_tiers()
 
     log("📝 อัปเดต rov-pro.html...")
     changes = compare_tiers(old_tiers, tiers)
-    n = update_html(tiers, changes)
+    n = update_html(tiers, changes, patch_summary)
     log(f"✅ อัปเดตสำเร็จ {n} hero tiers!")
 
     if changes:
