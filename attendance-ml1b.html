@@ -195,6 +195,25 @@ td.num{color:#c9a84c;font-weight:600;}
 .day-chip-pct{font-size:14px;font-weight:800;}
 .day-chip-detail{color:#8899bb;font-size:10px;}
 
+/* BARCODE SCANNER */
+.barcode-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.barcode-overlay.active{display:flex;}
+.barcode-box{position:relative;width:min(360px,90vw);}
+#barcode-video{width:100%;border-radius:10px;border:2px solid #c9a84c;}
+.barcode-aim{position:absolute;inset:20%;border:2px solid #c9a84ccc;border-radius:4px;pointer-events:none;}
+.barcode-aim::before,.barcode-aim::after{content:'';position:absolute;width:20px;height:20px;border-color:#f0d060;border-style:solid;}
+.barcode-aim::before{top:-2px;left:-2px;border-width:3px 0 0 3px;}
+.barcode-aim::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;}
+.barcode-status{color:#c9a84c;font-size:15px;font-weight:700;text-align:center;max-width:360px;}
+.barcode-log{background:#0d1530;border:1px solid #c9a84c44;border-radius:8px;padding:12px 16px;width:min(360px,90vw);max-height:180px;overflow-y:auto;font-size:13px;}
+.barcode-log-ok{color:#4caf8a;}
+.barcode-log-dup{color:#e8c84a;}
+.barcode-log-err{color:#e05555;}
+.barcode-reg-row{display:flex;gap:8px;width:min(360px,90vw);}
+.barcode-reg-row input{flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:8px 12px;border-radius:6px;font-family:'Sarabun',sans-serif;font-size:13px;}
+.chip-barcode{font-size:10px;background:#1a2a40;border:1px solid #4a8abf44;color:#89c4e1;padding:1px 5px;border-radius:8px;cursor:pointer;margin-left:4px;}
+.chip-barcode.has-id{border-color:#4caf8a66;color:#4caf8a;}
+
 /* SIG */
 .sig-row{display:flex;justify-content:space-between;margin:20px 0 16px;gap:20px;}
 .sig-box{flex:1;text-align:center;}
@@ -876,6 +895,7 @@ function renderClass(sid) {
   html += '<button class="btn" onclick="addClassDate(\'' + sid + '\')">+ เพิ่มวันที่</button>';
   html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importClassDates(\'' + sid + '\')">📅 วางหลายวันที่เดียว</button>';
   html += '<button class="btn-scan" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
+  html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="openBarcodeScanner(\'' + sid + '\')">🪪 สแกนบัตร</button>';
   if(cd.dates.length > 1) html += '<button class="btn btn-red" onclick="clearAllClassDates(\'' + sid + '\')">🗑️ ลบวันที่ทั้งหมด (' + cd.dates.length + ')</button>';
   html += '<button class="btn-pin ' + (isPinned('class',sid)?'pinned':'') + '" data-pin-type="class" data-pin-val="' + sid + '" onclick="pinView(\'class\',\'' + sid + '\')"> ' + (isPinned('class',sid)?'📌 ปักหมุดอยู่':'📌 ปักหมุดหน้านี้') + '</button>';
   html += '</div>';
@@ -1128,7 +1148,9 @@ function renderStudentChips(){
       : '';
     const hideBtn = `<button class="btn-hide" onclick="toggleHideStudent(${i})" title="${isHidden?'แสดงกลับ':'ซ่อน (ไม่นับ%)'}">${isHidden?'👁':'🙈'}</button>`;
     const editBtn = `<button class="btn-hide" onclick="editStudent(${i})" title="แก้ชื่อ-นามสกุล">✏️</button>`;
-    chip.innerHTML = `${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}${editBtn}${hideBtn}${!isHidden?`<button onclick="removeStudent(${i})" title="ลบ">✕</button>`:''}`;
+    const bcVal = studentBarcodes[i];
+    const bcBadge = `<span class="chip-barcode ${bcVal?'has-id':''}" onclick="promptBarcode(${i})" title="${bcVal?'บัตร: '+bcVal:'คลิกผูกบัตร'}">${bcVal?'🪪':'＋🪪'}</span>`;
+    chip.innerHTML = `${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}${bcBadge}${editBtn}${hideBtn}${!isHidden?`<button onclick="removeStudent(${i})" title="ลบ">✕</button>`:''}`;
     wrap.appendChild(chip);
   };
 
@@ -2051,6 +2073,7 @@ function getPayload(includeFacePhotos=true){
   return { students, weekData, classData,
     extraSubjects,
     hiddenStudents: Array.from(hiddenStudents),
+    studentBarcodes,
     infoBar: getInfoBar(), pin: classPin, pinnedView,
     namesHidden,
     fd: serializeFD(),
@@ -2118,6 +2141,7 @@ function applyData(parsed){
     Object.keys(cts).forEach(k => { if(cts[k]) classData[s.id].timestamps[Number(k)] = cts[k]; });
   });
   hiddenStudents = new Set(parsed.hiddenStudents || []);
+  studentBarcodes = parsed.studentBarcodes || {};
   pinnedView = parsed.pinnedView || null;
   applyInfoBar(parsed.infoBar);
   // sync privacy state ข้ามเครื่อง
@@ -2549,6 +2573,7 @@ const FACE_GUIDES = [
 ];
 let faceDescriptors = {}; // { studentIdx: Float32Array[] }
 const sourceStudentCache = {}; // { label: [student names] } — สำหรับ reverse sync
+let studentBarcodes = {}; // { studentIdx: barcodeString } — สำหรับสแกนบัตร
 let facePhotos = {};       // { studentIdx: base64 JPEG string }
 let faceMarked = {};       // { studentIdx: true } — เช็คแล้วในรอบนี้
 let faceConfirmCount = {}; // { studentIdx: count } — กี่เฟรมแล้วที่เห็นหน้านี้
@@ -3016,6 +3041,178 @@ async function markFaceAttend(idx, date) {
   setFaceStatus('✅ บันทึกแล้ว: ' + students[idx]);
 }
 
+// ══════════════════════════════════════════════════════════════
+// 🪪  BARCODE SCANNER
+// ══════════════════════════════════════════════════════════════
+let barcodeStream = null;
+let barcodeSubject = null;
+let barcodeInterval = null;
+let barcodeDetector = null;
+let pendingBarcode = null; // barcode value รอผูกกับนักเรียน
+
+function setBarcodeStatus(msg){ const el=document.getElementById('barcode-status'); if(el) el.textContent=msg; }
+function addBarcodeLog(msg, cls=''){
+  const el=document.getElementById('barcode-log');
+  if(!el) return;
+  const d=document.createElement('div');
+  d.className=cls; d.textContent=msg;
+  el.prepend(d);
+  if(el.children.length>20) el.removeChild(el.lastChild);
+}
+
+// ผูกบัตรให้นักเรียนด้วย manual input
+function promptBarcode(idx){
+  if(!requireUnlock()) return;
+  const name = students[idx];
+  const cur = studentBarcodes[idx]||'';
+  const val = prompt(`ผูกบัตร/เลข ID ให้: ${name}\n(เว้นว่างเพื่อลบ)`, cur);
+  if(val===null) return;
+  if(val.trim()==='') { delete studentBarcodes[idx]; }
+  else { studentBarcodes[idx]=val.trim(); }
+  renderStudentChips();
+  saveToFirebase();
+}
+
+// reverse lookup: หา studentIdx จาก barcode value
+function findStudentByBarcode(val){
+  return Object.keys(studentBarcodes).find(k=>studentBarcodes[k]===val);
+}
+
+async function openBarcodeScanner(sid){
+  if(!requireUnlock()) return;
+  barcodeSubject = sid;
+  pendingBarcode = null;
+  document.getElementById('barcode-overlay').classList.add('active');
+  document.getElementById('barcode-log').innerHTML='<span style="color:#6a7fa0">รอสแกนบัตร...</span>';
+  document.getElementById('barcode-reg-row').style.display='none';
+  document.getElementById('barcode-pick-btn').style.display='none';
+  setBarcodeStatus('🔍 กำลังเปิดกล้อง...');
+  try{
+    barcodeStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+    const video = document.getElementById('barcode-video');
+    video.srcObject = barcodeStream;
+    await video.play();
+    setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร');
+    await startBarcodeDetection(video, sid);
+  }catch(e){
+    setBarcodeStatus('❌ ไม่สามารถเปิดกล้องได้: '+e.message);
+  }
+}
+
+async function startBarcodeDetection(video, sid){
+  // ลอง BarcodeDetector API ก่อน (Android Chrome)
+  if('BarcodeDetector' in window){
+    barcodeDetector = new BarcodeDetector({formats:['code_39','code_128','ean_13','ean_8','qr_code','pdf417','data_matrix']});
+    barcodeInterval = setInterval(async()=>{
+      if(!barcodeStream) return;
+      try{
+        const codes = await barcodeDetector.detect(video);
+        if(codes.length) handleBarcodeDetected(codes[0].rawValue, sid);
+      }catch(e){}
+    }, 400);
+    return;
+  }
+  // Fallback: ZXing.js (iOS / เบราว์เซอร์อื่น)
+  setBarcodeStatus('⏳ โหลด ZXing...');
+  try{
+    await loadZXingScript();
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร');
+    codeReader.decodeFromVideoDevice(null, 'barcode-video', (result, err)=>{
+      if(result) handleBarcodeDetected(result.getText(), sid);
+    });
+    // เก็บ reader เพื่อ stop ทีหลัง
+    window._zxingReader = codeReader;
+  }catch(e){
+    setBarcodeStatus('❌ ZXing โหลดไม่ได้: '+e.message);
+  }
+}
+
+function loadZXingScript(){
+  return new Promise((res,rej)=>{
+    if(window.ZXing){ res(); return; }
+    const s=document.createElement('script');
+    s.src='https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js';
+    s.onload=res; s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+function handleBarcodeDetected(val, sid){
+  if(!val) return;
+  const cd = classData[sid];
+  const today = cd?.dates?.[cd.dates.length-1]||'';
+  // หานักเรียนจาก barcode
+  const idxStr = findStudentByBarcode(val);
+  if(idxStr!==undefined){
+    const idx = Number(idxStr);
+    if(isGroupHeader(students[idx])) return;
+    if(!cd||!today){ addBarcodeLog('⚠️ ยังไม่มีวันที่ในวิชานี้','barcode-log-err'); return; }
+    if(!cd.attendance[idx]) cd.attendance[idx]={};
+    if(cd.attendance[idx][today]===1){
+      addBarcodeLog('⏭ เช็คแล้ว: '+students[idx],'barcode-log-dup'); return;
+    }
+    cd.attendance[idx][today]=1;
+    if(!cd.timestamps) cd.timestamps={};
+    if(!cd.timestamps[idx]) cd.timestamps[idx]={};
+    cd.timestamps[idx][today]='b'+nowHHMM(); // b=barcode scan
+    renderClass(sid);
+    addBarcodeLog('✓ '+students[idx]+' ('+today+')','barcode-log-ok');
+    setBarcodeStatus('✅ '+students[idx]);
+    saveClassCell(sid, idx, today, 1);
+    if(MERGE_SOURCES.length) writeBackToSource(students[idx], sid, today, 1, cd.timestamps[idx][today]).catch(()=>{});
+    playPing();
+    speakName(students[idx]);
+    setTimeout(()=>setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร'), 1500);
+  } else {
+    // ไม่พบนักเรียน — แสดง barcode value + ให้เลือกผูก
+    pendingBarcode = val;
+    addBarcodeLog('❓ ไม่พบ: '+val,'barcode-log-err');
+    setBarcodeStatus('❓ ไม่พบบัตร '+val);
+    document.getElementById('barcode-reg-input').value = val;
+    document.getElementById('barcode-reg-row').style.display='flex';
+    document.getElementById('barcode-pick-btn').style.display='';
+  }
+}
+
+function openStudentPickerForBarcode(){
+  if(!pendingBarcode) return;
+  const names = students.map((n,i)=>isGroupHeader(n)?null:`${i+1}. ${n}`).filter(Boolean);
+  const chosen = prompt('เลือกนักเรียนเพื่อผูกกับบัตร '+pendingBarcode+':\n\n'+names.join('\n')+'\n\nพิมพ์เลขลำดับ:');
+  if(!chosen) return;
+  const num = parseInt(chosen)-1;
+  if(isNaN(num)||num<0||num>=students.length) { alert('เลขไม่ถูกต้อง'); return; }
+  confirmBarcodeRegForIdx(num);
+}
+
+function confirmBarcodeReg(){
+  // ค้นหานักเรียนด้วยชื่อที่พิมพ์ใน input
+  const val = pendingBarcode;
+  if(!val) return;
+  openStudentPickerForBarcode();
+}
+
+function confirmBarcodeRegForIdx(idx){
+  if(!pendingBarcode||idx===undefined) return;
+  studentBarcodes[idx] = pendingBarcode;
+  addBarcodeLog('✅ ผูกบัตร '+pendingBarcode+' → '+students[idx],'barcode-log-ok');
+  setBarcodeStatus('✅ ผูกบัตรแล้ว: '+students[idx]);
+  document.getElementById('barcode-reg-row').style.display='none';
+  document.getElementById('barcode-pick-btn').style.display='none';
+  pendingBarcode = null;
+  renderStudentChips();
+  saveToFirebase();
+}
+
+function closeBarcodeScanner(){
+  if(barcodeInterval){ clearInterval(barcodeInterval); barcodeInterval=null; }
+  if(window._zxingReader){ try{window._zxingReader.reset();}catch(e){} window._zxingReader=null; }
+  if(barcodeStream){ barcodeStream.getTracks().forEach(t=>t.stop()); barcodeStream=null; }
+  document.getElementById('barcode-overlay').classList.remove('active');
+  const video=document.getElementById('barcode-video'); if(video) video.srcObject=null;
+  barcodeSubject=null; pendingBarcode=null;
+}
+
 async function openFaceModalClass(sid) {
   if(!requireUnlock()) return;
   faceSubject = sid;
@@ -3416,6 +3613,23 @@ init();
 
 <button class="btn-undo no-print" id="undo-btn" onclick="undo()" disabled title="ยังไม่มีอะไรให้ย้อนกลับ">↩️ ย้อนกลับ</button>
 
+<!-- BARCODE SCANNER MODAL -->
+<div class="barcode-overlay no-print" id="barcode-overlay">
+  <div id="barcode-status" class="barcode-status">🔍 กำลังเปิดกล้อง...</div>
+  <div class="barcode-box">
+    <video id="barcode-video" autoplay playsinline muted></video>
+    <div class="barcode-aim"></div>
+  </div>
+  <div class="barcode-log" id="barcode-log"><span style="color:#6a7fa0">รอสแกนบัตร...</span></div>
+  <div class="barcode-reg-row" id="barcode-reg-row" style="display:none">
+    <input id="barcode-reg-input" placeholder="ไม่พบ — เลือกนักเรียนเพื่อผูกบัตร" readonly>
+    <button class="btn btn-green" onclick="confirmBarcodeReg()">ผูกบัตร</button>
+  </div>
+  <div style="display:flex;gap:10px;margin-top:4px;">
+    <button class="btn" onclick="closeBarcodeScanner()" style="background:rgba(255,255,255,.08);">✕ ปิด</button>
+    <button class="btn" onclick="openStudentPickerForBarcode()" id="barcode-pick-btn" style="display:none;background:linear-gradient(135deg,#1a3a5c,#0d2240);">👤 เลือกนักเรียน</button>
+  </div>
+</div>
 
 </body>
 </html>
