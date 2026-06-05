@@ -3246,6 +3246,50 @@ function confirmBarcodeRegForIdx(idx){
   saveToFirebase();
 }
 
+// เปิดกล้องเนทีฟ ถ่ายรูป แล้วสแกน barcode จากรูป
+function barcodeCapturePhoto(){
+  const inp = document.getElementById('barcode-file-input');
+  if(inp){ inp.value=''; inp.click(); }
+}
+
+async function barcodeProcessFile(e){
+  const file = e.target.files?.[0];
+  if(!file) return;
+  setBarcodeStatus('⏳ กำลังสแกนรูป...');
+  try{
+    // ลอง BarcodeDetector บนรูปก่อน
+    if('BarcodeDetector' in window){
+      const img = await createImageBitmap(file);
+      const det = new BarcodeDetector({formats:['code_39','code_128','ean_13','ean_8','qr_code','pdf417','data_matrix','aztec']});
+      const codes = await det.detect(img);
+      if(codes.length){
+        handleBarcodeDetected(codes[0].rawValue, barcodeSubject);
+        return;
+      }
+      setBarcodeStatus('⚠️ ไม่พบบาร์โค้ดในรูป — ลองใหม่');
+      return;
+    }
+    // Fallback: ZXing บนรูป
+    await loadZXingScript();
+    const reader = new FileReader();
+    reader.onload = async(ev)=>{
+      try{
+        const img = new Image();
+        img.src = ev.target.result;
+        await new Promise(r=>{ img.onload=r; });
+        const canvas = document.createElement('canvas');
+        canvas.width=img.width; canvas.height=img.height;
+        canvas.getContext('2d').drawImage(img,0,0);
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        const result = await codeReader.decodeFromCanvas(canvas);
+        if(result) handleBarcodeDetected(result.getText(), barcodeSubject);
+        else setBarcodeStatus('⚠️ ไม่พบบาร์โค้ดในรูป — ลองใหม่');
+      }catch(err){ setBarcodeStatus('⚠️ ไม่พบบาร์โค้ด — ถ่ายใหม่ให้ชัดขึ้น'); }
+    };
+    reader.readAsDataURL(file);
+  }catch(err){ setBarcodeStatus('❌ เกิดข้อผิดพลาด: '+err.message); }
+}
+
 let torchOn = false;
 async function toggleTorch(){
   if(!barcodeStream) return;
@@ -3685,9 +3729,12 @@ init();
   </div>
   <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;justify-content:center;">
     <button class="btn" onclick="closeBarcodeScanner()" style="background:rgba(255,255,255,.08);">✕ ปิด</button>
+    <button class="btn btn-green" onclick="barcodeCapturePhoto()" style="font-size:15px;padding:10px 20px;">📸 ถ่ายรูปสแกน</button>
     <button class="btn" id="torch-btn" onclick="toggleTorch()" style="background:#2a2010;border-color:#c9a84c44;">🔦 ไฟฉาย</button>
     <button class="btn" onclick="openStudentPickerForBarcode()" id="barcode-pick-btn" style="display:none;background:linear-gradient(135deg,#1a3a5c,#0d2240);">👤 เลือกนักเรียน</button>
   </div>
+  <div style="color:#6a7fa0;font-size:11px;text-align:center;">📸 ถ่ายรูป = เปิดกล้องเนทีฟ โฟกัสดีกว่า</div>
+  <input type="file" id="barcode-file-input" accept="image/*" capture="environment" style="display:none" onchange="barcodeProcessFile(event)">
 </div>
 
 </body>
