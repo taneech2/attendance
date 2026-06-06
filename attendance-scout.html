@@ -298,6 +298,7 @@ td.num{color:#c9a84c;font-weight:600;}
 .de-del:hover{filter:brightness(1.3);}
 body.hide-names td.name{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 body.hide-names .student-chip span{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
+body.hide-photos .face-thumb,body.hide-photos .face-thumb-none{display:none!important;}
 
 /* ===== MODE SWITCHER ===== */
 .mode-switcher{display:flex;gap:6px;margin-bottom:16px;}
@@ -433,7 +434,10 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
 
   <!-- STUDENT MANAGER -->
   <div class="student-manager no-print">
-    <h4>📋 รายชื่อนักเรียน (จัดการครั้งเดียว — ใช้ทุกสัปดาห์)</h4>
+    <h4 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span>📋 รายชื่อนักเรียน (จัดการครั้งเดียว — ใช้ทุกสัปดาห์)</span>
+      <button id="toggle-photos-btn" onclick="togglePhotos()" title="แสดง/ซ่อนรูปนักเรียน" style="font-size:12px;padding:3px 10px;border-radius:16px;background:#1a2540;border:1px solid #c9a84c55;color:#c9a84c;cursor:pointer;white-space:nowrap;flex-shrink:0;">🖼 ซ่อนรูป</button>
+    </h4>
     <div class="student-list" id="student-chips"></div>
     <div class="add-student-row">
       <input id="inp-student" placeholder="ชื่อ-สกุล นักเรียน เช่น นายสมชาย ใจดี" onkeydown="if(event.key==='Enter')addStudent()">
@@ -1122,6 +1126,24 @@ function editStudent(i){
   saveToFirebase();
   showStatus(`✏️ แก้ชื่อเป็น "${neu.trim()}" แล้ว`, '#4caf8a');
 }
+
+function togglePhotos(){
+  const hiding = !document.body.classList.contains('hide-photos');
+  document.body.classList.toggle('hide-photos', hiding);
+  const btn = document.getElementById('toggle-photos-btn');
+  if(btn){ btn.textContent = hiding ? '🖼 แสดงรูป' : '🖼 ซ่อนรูป'; }
+  try{ localStorage.setItem('hidePhotos', hiding ? '1' : ''); }catch(e){}
+}
+// โหลดค่าที่จำไว้เมื่อเปิดหน้า
+(function(){
+  try{ if(localStorage.getItem('hidePhotos')==='1'){
+    document.body.classList.add('hide-photos');
+    window.addEventListener('DOMContentLoaded',()=>{
+      const btn=document.getElementById('toggle-photos-btn');
+      if(btn) btn.textContent='🖼 แสดงรูป';
+    });
+  }}catch(e){}
+})();
 
 function toggleHideStudent(i){
   if(!requireUnlock()) return;
