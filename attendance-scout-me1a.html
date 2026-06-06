@@ -143,6 +143,17 @@ td.num{color:#c9a84c;font-weight:600;}
 .check{color:#4caf8a;font-size:17px;font-weight:700;}
 .cross{color:#e05555;font-size:17px;font-weight:700;}
 .slash{color:#2a3550;font-size:12px;}
+.sick{font-size:16px;cursor:default;}
+.leave{font-size:16px;cursor:default;}
+/* ── Status Popup ── */
+#status-popup{position:fixed;z-index:8500;background:#0d1530;border:2px solid #c9a84c66;border-radius:14px;padding:10px 12px;box-shadow:0 8px 32px rgba(0,0,0,.7);display:none;flex-direction:column;gap:8px;min-width:180px;}
+#status-popup .pop-row{display:flex;gap:6px;justify-content:center;}
+.pop-btn{font-size:26px;background:none;border:2px solid transparent;border-radius:10px;cursor:pointer;padding:4px 6px;line-height:1;transition:.15s;}
+.pop-btn:hover{background:#c9a84c22;border-color:#c9a84c55;}
+.pop-btn.active-state{border-color:#c9a84c;background:#c9a84c18;}
+.pop-divider{border:none;border-top:1px solid #c9a84c22;margin:2px 0;}
+.pop-time-btn{font-size:13px;color:#8bc4f0;background:none;border:1px solid #4a8abf44;border-radius:8px;cursor:pointer;width:100%;padding:5px 8px;font-family:'Sarabun',sans-serif;transition:.15s;}
+.pop-time-btn:hover{background:#4a8abf22;border-color:#4a8abf;}
 .badge-ma{background:#1a3a2a;color:#4caf8a;padding:2px 7px;border-radius:10px;font-size:11px;}
 .badge-noma{background:#3a1a1a;color:#e05555;padding:2px 7px;border-radius:10px;font-size:11px;}
 .btn-tiny{background:transparent;border:1px solid #c9a84c44;color:#c9a84c;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:14px;}
@@ -650,7 +661,7 @@ function renderWeek(w){
       wd.dates.forEach(d=>{
         const s=wd.attendance[i]&&wd.attendance[i][d]||0;
         const ts=wd.timestamps&&wd.timestamps[i]&&wd.timestamps[i][d]||'';
-        cells+=`<td class="td-date" onclick="cycle(${w},${i},'${d}')" oncontextmenu="editTime(event,${w},${i},'${d}');return false;" style="cursor:pointer">${sym(s,ts)}</td>`;
+        cells+=`<td class="td-date" onclick="cycle(${w},${i},'${d}')" oncontextmenu="showStatusPopup(event,'week',${w},${i},'${d}');return false;" style="cursor:pointer">${sym(s,ts)}</td>`;
       });
     } else {
       cells+=`<td style="color:#555">—</td>`;
@@ -728,6 +739,8 @@ function sym(s, ts){
     return `<span class="check" title="${tip}">✓</span><span class="ts-label ${cls}" title="${tip}">${raw.slice(0,5)}</span>`;
   }
   if(s===2) return `<span class="cross">✗</span>`;
+  if(s===3) return `<span class="sick" title="🤒 ลาป่วย">🤒</span>`;
+  if(s===4) return `<span class="leave" title="📋 ลากิจ">📋</span>`;
   return `<span class="slash">/</span>`;
 }
 function nowHHMM(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
@@ -931,7 +944,7 @@ function renderClass(sid) {
       cd.dates.forEach(d => {
         const s = att[d] || 0;
         const ts = cd.timestamps?.[idx]?.[d] || '';
-        html += '<td class="td-date" onclick="cycleClass(\'' + sid + '\',' + idx + ',\'' + d + '\')" style="cursor:pointer">' + classSymbol(s, ts) + '</td>';
+        html += '<td class="td-date" onclick="cycleClass(\'' + sid + '\',' + idx + ',\'' + d + '\')" oncontextmenu="showStatusPopup(event,\'class\',\'' + sid + '\',' + idx + ',\'' + d + '\');return false;" style="cursor:pointer">' + classSymbol(s, ts) + '</td>';
       });
       html += '<td><span class="badge-ma">' + ma + '</span></td>';
       html += '<td><span class="badge-noma">' + noma + '</span></td>';
@@ -953,6 +966,8 @@ function classSymbol(s, ts) {
     return '<span class="check" title="'+tip+'">✓</span><span class="ts-label '+cls+'" title="'+tip+'">'+raw.slice(0,5)+'</span>';
   }
   if(s===2) return '<span class="cross">✗</span>';
+  if(s===3) return '<span class="sick" title="🤒 ลาป่วย">🤒</span>';
+  if(s===4) return '<span class="leave" title="📋 ลากิจ">📋</span>';
   return '<span class="slash">/</span>';
 }
 
@@ -3746,6 +3761,106 @@ init();
   <div style="color:#6a7fa0;font-size:11px;text-align:center;">📸 ถ่ายรูป = เปิดกล้องเนทีฟ โฟกัสดีกว่า</div>
   <input type="file" id="barcode-file-input" accept="image/*" capture="environment" style="display:none" onchange="barcodeProcessFile(event)">
 </div>
+
+<!-- ══ Status Popup (right-click / long-press) ══════════════════════ -->
+<div id="status-popup" onclick="event.stopPropagation()">
+  <div class="pop-row">
+    <button class="pop-btn" id="pop-0" onclick="applyStatus(0)" title="ว่าง (ลบออก)">⬜</button>
+    <button class="pop-btn" id="pop-1" onclick="applyStatus(1)" title="มา">✅</button>
+    <button class="pop-btn" id="pop-2" onclick="applyStatus(2)" title="ขาด">❌</button>
+    <button class="pop-btn" id="pop-3" onclick="applyStatus(3)" title="ลาป่วย">🤒</button>
+    <button class="pop-btn" id="pop-4" onclick="applyStatus(4)" title="ลากิจ">📋</button>
+  </div>
+  <hr class="pop-divider">
+  <button class="pop-time-btn" id="pop-time-btn" onclick="editTimeFromPopup()">✏️ แก้เวลา</button>
+</div>
+
+<script>
+// ── Status Popup ──────────────────────────────────────────────────────
+let _popCtx = null; // {type:'week'|'class', w?, i?, d, sid?, idx?}
+
+function showStatusPopup(e, type) {
+  e.preventDefault();
+  if(!requireUnlock()) return;
+  const args = [...arguments].slice(2);
+  if(type === 'week') {
+    _popCtx = {type, w: args[0], i: args[1], d: args[2]};
+  } else {
+    _popCtx = {type, sid: args[0], idx: args[1], d: args[2]};
+  }
+  // แสดง/ซ่อนปุ่ม "แก้เวลา" เฉพาะ week mode
+  document.getElementById('pop-time-btn').style.display = type === 'week' ? '' : 'none';
+  // highlight สถานะปัจจุบัน
+  let cur = 0;
+  if(type === 'week') {
+    cur = weekData[_popCtx.w]?.attendance?.[_popCtx.i]?.[_popCtx.d] || 0;
+  } else {
+    cur = classData[_popCtx.sid]?.attendance?.[_popCtx.idx]?.[_popCtx.d] || 0;
+  }
+  [0,1,2,3,4].forEach(v => {
+    document.getElementById('pop-'+v).classList.toggle('active-state', v === cur);
+  });
+  // วาง popup ใกล้ตำแหน่งที่กด
+  const pop = document.getElementById('status-popup');
+  pop.style.display = 'flex';
+  const pw = 200, ph = 100;
+  const x = Math.min(e.clientX, window.innerWidth  - pw - 8);
+  const y = Math.min(e.clientY, window.innerHeight - ph - 8);
+  pop.style.left = Math.max(8, x) + 'px';
+  pop.style.top  = Math.max(8, y) + 'px';
+}
+
+function hideStatusPopup() {
+  document.getElementById('status-popup').style.display = 'none';
+  _popCtx = null;
+}
+
+function applyStatus(val) {
+  if(!_popCtx) return;
+  const ctx = _popCtx;
+  hideStatusPopup();
+  if(!requireUnlock()) return;
+  if(ctx.type === 'week') {
+    const wd = weekData[ctx.w];
+    pushUndo(students[ctx.i]);
+    if(!wd.attendance[ctx.i]) wd.attendance[ctx.i] = {};
+    if(!wd.timestamps) wd.timestamps = {};
+    if(!wd.timestamps[ctx.i]) wd.timestamps[ctx.i] = {};
+    wd.attendance[ctx.i][ctx.d] = val;
+    if(val === 1 && !wd.timestamps[ctx.i][ctx.d]) {
+      wd.timestamps[ctx.i][ctx.d] = 'm' + nowHHMM();
+    } else if(val === 0) {
+      delete wd.timestamps[ctx.i][ctx.d];
+    }
+    renderWeek(ctx.w);
+    saveAttendanceCell(ctx.w, ctx.i, ctx.d, val, wd.timestamps[ctx.i]?.[ctx.d] || null);
+  } else {
+    if(!classData[ctx.sid].attendance[ctx.idx]) classData[ctx.sid].attendance[ctx.idx] = {};
+    classData[ctx.sid].attendance[ctx.idx][ctx.d] = val;
+    renderClass(ctx.sid);
+    saveClassCell(ctx.sid, ctx.idx, ctx.d, val);
+    if(MERGE_SOURCES.length) writeBackToSource(students[ctx.idx], ctx.sid, ctx.d, val, classData[ctx.sid]?.timestamps?.[ctx.idx]?.[ctx.d]||'').catch(()=>{});
+  }
+}
+
+function editTimeFromPopup() {
+  if(!_popCtx || _popCtx.type !== 'week') return;
+  const ctx = _popCtx;
+  hideStatusPopup();
+  // เรียก logic เดิมของ editTime
+  const fakeE = { preventDefault: ()=>{} };
+  editTime(fakeE, ctx.w, ctx.i, ctx.d);
+}
+
+// ปิด popup เมื่อคลิกที่อื่น
+document.addEventListener('click', function(e) {
+  const pop = document.getElementById('status-popup');
+  if(pop && pop.style.display !== 'none' && !pop.contains(e.target)) hideStatusPopup();
+});
+document.addEventListener('keydown', function(e) {
+  if(e.key === 'Escape') hideStatusPopup();
+});
+</script>
 
 </body>
 </html>
