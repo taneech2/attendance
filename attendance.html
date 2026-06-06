@@ -3135,7 +3135,8 @@ let barcodeSubject = null;
 let barcodeWeek    = 0;    // > 0 = week mode (เสาธง), 0 = class mode
 let barcodeInterval = null;
 let barcodeDetector = null;
-let pendingBarcode = null; // barcode value รอผูกกับนักเรียน
+let pendingBarcode = null;      // barcode value รอผูกกับนักเรียน
+let barcodeTargetDate = '';     // วันที่ที่เลือกจะบันทึก
 
 function setBarcodeStatus(msg){ const el=document.getElementById('barcode-status'); if(el) el.textContent=msg; }
 function addBarcodeLog(msg, cls=''){
@@ -3163,6 +3164,38 @@ function promptBarcode(idx){
 // reverse lookup: หา studentIdx จาก barcode value
 function findStudentByBarcode(val){
   return Object.keys(studentBarcodes).find(k=>studentBarcodes[k]===val);
+}
+
+// แสดงปุ่มเลือกวันที่ใน barcode overlay
+function populateBarcodeDate(dates){
+  const row = document.getElementById('barcode-date-row');
+  if(!row) return;
+  if(!dates || dates.length === 0){
+    row.innerHTML = '<span style="color:#6a7fa0;font-size:12px;">ยังไม่มีวันที่</span>';
+    barcodeTargetDate = '';
+    return;
+  }
+  // default = วันที่ล่าสุด
+  barcodeTargetDate = dates[dates.length - 1];
+  row.innerHTML = dates.map(d =>
+    `<button onclick="selectBarcodeDate('${d}',this)"
+      style="padding:4px 10px;border-radius:14px;border:1px solid #c9a84c44;
+             background:${d===barcodeTargetDate?'#c9a84c':'#1a2540'};
+             color:${d===barcodeTargetDate?'#000':'#c9a84c'};
+             font-size:12px;font-family:Sarabun,sans-serif;cursor:pointer;white-space:nowrap;"
+    >${d}</button>`
+  ).join('');
+}
+function selectBarcodeDate(d, btn){
+  barcodeTargetDate = d;
+  const row = document.getElementById('barcode-date-row');
+  if(!row) return;
+  row.querySelectorAll('button').forEach(b=>{
+    const active = b === btn;
+    b.style.background = active ? '#c9a84c' : '#1a2540';
+    b.style.color      = active ? '#000'    : '#c9a84c';
+  });
+  setBarcodeStatus('📅 วันที่: ' + d + ' — ส่องบัตรได้เลย');
 }
 
 // บังคับโฟกัสระยะใกล้ (สำหรับสแกนบัตร ~15-25 ซม.)
@@ -3201,6 +3234,11 @@ async function openBarcodeScanner(sid, w=0){
   document.getElementById('barcode-log').innerHTML='<span style="color:#6a7fa0">รอสแกนบัตร...</span>';
   document.getElementById('barcode-reg-row').style.display='none';
   document.getElementById('barcode-pick-btn').style.display='none';
+  // โหลดวันที่ให้เลือก
+  const dates = w > 0
+    ? (weekData[w]?.dates || [])
+    : (classData[sid]?.dates || []);
+  populateBarcodeDate(dates);
   setBarcodeStatus('🔍 กำลังเปิดกล้อง...');
   try{
     // ใช้ความละเอียดต่ำ → หลีกเลี่ยงเลนส์ telephoto/ultrawide
@@ -3287,7 +3325,7 @@ function handleBarcodeDetected(val, sid){
   if(barcodeWeek > 0){ handleBarcodeWeek(val, barcodeWeek); return; }
   // ── class mode ─────────────────────────────────────────
   const cd = classData[sid];
-  const today = cd?.dates?.[cd.dates.length-1]||'';
+  const today = barcodeTargetDate || cd?.dates?.[cd.dates.length-1]||'';
   // หานักเรียนจาก barcode
   const idxStr = findStudentByBarcode(val);
   if(idxStr!==undefined){
@@ -3323,7 +3361,7 @@ function handleBarcodeDetected(val, sid){
 
 function handleBarcodeWeek(val, w){
   const wd = weekData[w];
-  const today = wd?.dates?.[wd.dates.length-1]||'';
+  const today = barcodeTargetDate || wd?.dates?.[wd.dates.length-1]||'';
   const idxStr = findStudentByBarcode(val);
   if(idxStr !== undefined){
     const idx = Number(idxStr);
@@ -3867,10 +3905,14 @@ init();
 <!-- BARCODE SCANNER MODAL -->
 <div class="barcode-overlay no-print" id="barcode-overlay">
   <div id="barcode-status" class="barcode-status">🔍 กำลังเปิดกล้อง...</div>
+  <!-- เลือกวันที่ -->
+  <div id="barcode-date-row" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:min(360px,90vw);overflow-x:auto;padding:2px 0;"></div>
   <div class="barcode-box">
     <video id="barcode-video" autoplay playsinline muted></video>
     <div class="barcode-aim"><div class="barcode-scan-line"></div></div>
   </div>
+  <!-- ปุ่มถ่ายรูปหลัก -->
+  <button onclick="barcodeCapturePhoto()" style="background:linear-gradient(135deg,#00c96e,#009a50);color:#fff;border:none;padding:14px 40px;border-radius:12px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:700;font-size:20px;box-shadow:0 0 20px rgba(0,201,110,.5);letter-spacing:.5px;">📸 ถ่ายรูปสแกน</button>
   <div class="barcode-log" id="barcode-log"><span style="color:#6a7fa0">รอสแกนบัตร...</span></div>
   <div class="barcode-reg-row" id="barcode-reg-row" style="display:none">
     <input id="barcode-reg-input" placeholder="ไม่พบ — เลือกนักเรียนเพื่อผูกบัตร" readonly>
@@ -3882,7 +3924,6 @@ init();
     <button class="btn" id="torch-btn" onclick="toggleTorch()" style="background:#2a2010;border-color:#c9a84c44;">🔦 ไฟฉาย</button>
     <button class="btn" onclick="openStudentPickerForBarcode()" id="barcode-pick-btn" style="display:none;background:linear-gradient(135deg,#1a3a5c,#0d2240);">👤 เลือกนักเรียน</button>
   </div>
-  <div style="color:#6a7fa0;font-size:11px;text-align:center;">ส่องบาร์โค้ดหลังบัตร — ระบบสแกนให้อัตโนมัติ · <a href="#" onclick="barcodeCapturePhoto();return false;" style="color:#4a8abf;">ถ่ายรูปแทน</a></div>
   <input type="file" id="barcode-file-input" accept="image/*" capture="environment" style="display:none" onchange="barcodeProcessFile(event)">
 </div>
 
