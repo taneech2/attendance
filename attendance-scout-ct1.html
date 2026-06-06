@@ -211,10 +211,12 @@ td.num{color:#c9a84c;font-weight:600;}
 .barcode-overlay.active{display:flex;}
 .barcode-box{position:relative;width:min(360px,90vw);}
 #barcode-video{width:100%;border-radius:10px;border:2px solid #c9a84c;cursor:pointer;touch-action:manipulation;}
-.barcode-aim{position:absolute;inset:20%;border:2px solid #c9a84ccc;border-radius:4px;pointer-events:none;}
+.barcode-aim{position:absolute;inset:20%;border:2px solid #c9a84ccc;border-radius:4px;pointer-events:none;overflow:hidden;}
 .barcode-aim::before,.barcode-aim::after{content:'';position:absolute;width:20px;height:20px;border-color:#f0d060;border-style:solid;}
 .barcode-aim::before{top:-2px;left:-2px;border-width:3px 0 0 3px;}
 .barcode-aim::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;}
+.barcode-scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00e57a,transparent);animation:scan-sweep 1.8s ease-in-out infinite;}
+@keyframes scan-sweep{0%{top:0%}50%{top:95%}100%{top:0%}}
 .barcode-status{color:#c9a84c;font-size:15px;font-weight:700;text-align:center;max-width:360px;}
 .barcode-log{background:#0d1530;border:1px solid #c9a84c44;border-radius:8px;padding:12px 16px;width:min(360px,90vw);max-height:180px;overflow-y:auto;font-size:13px;}
 .barcode-log-ok{color:#4caf8a;}
@@ -581,6 +583,7 @@ function buildPanels(){
         <button class="btn" onclick="addDate(${w})">+ เพิ่มวันที่</button>
         <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importDates(${w})">📅 วางหลายวันที่เดียว</button>
         <button class="btn-scan" onclick="openFaceModal(${w})">📷 สแกนใบหน้า</button>
+        <button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="openBarcodeScanner(null,${w})">🪪 สแกนบัตร</button>
         <button class="btn" onclick="printWeek(${w})" style="margin-left:auto">🖨 พิมพ์สัปดาห์นี้</button>
         <button class="btn-pin" data-pin-type="week" data-pin-val="${w}" onclick="pinView('week',${w})">📌 ปักหมุดหน้านี้</button>
       </div>
@@ -3113,6 +3116,7 @@ async function markFaceAttend(idx, date) {
 // ══════════════════════════════════════════════════════════════
 let barcodeStream = null;
 let barcodeSubject = null;
+let barcodeWeek    = 0;    // > 0 = week mode (เสาธง), 0 = class mode
 let barcodeInterval = null;
 let barcodeDetector = null;
 let pendingBarcode = null; // barcode value รอผูกกับนักเรียน
@@ -3145,9 +3149,10 @@ function findStudentByBarcode(val){
   return Object.keys(studentBarcodes).find(k=>studentBarcodes[k]===val);
 }
 
-async function openBarcodeScanner(sid){
+async function openBarcodeScanner(sid, w=0){
   if(!requireUnlock()) return;
-  barcodeSubject = sid;
+  barcodeSubject = sid || null;
+  barcodeWeek    = w   || 0;
   pendingBarcode = null;
   document.getElementById('barcode-overlay').classList.add('active');
   document.getElementById('barcode-log').innerHTML='<span style="color:#6a7fa0">รอสแกนบัตร...</span>';
@@ -3202,7 +3207,7 @@ async function startBarcodeDetection(video, sid){
         const codes = await barcodeDetector.detect(video);
         if(codes.length) handleBarcodeDetected(codes[0].rawValue, sid);
       }catch(e){}
-    }, 400);
+    }, 200);
     return;
   }
   // Fallback: ZXing.js (iOS / เบราว์เซอร์อื่น)
@@ -3233,6 +3238,9 @@ function loadZXingScript(){
 
 function handleBarcodeDetected(val, sid){
   if(!val) return;
+  // ── week (เสาธง) mode ──────────────────────────────────
+  if(barcodeWeek > 0){ handleBarcodeWeek(val, barcodeWeek); return; }
+  // ── class mode ─────────────────────────────────────────
   const cd = classData[sid];
   const today = cd?.dates?.[cd.dates.length-1]||'';
   // หานักเรียนจาก barcode
@@ -3259,6 +3267,40 @@ function handleBarcodeDetected(val, sid){
     setTimeout(()=>setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร'), 1500);
   } else {
     // ไม่พบนักเรียน — แสดง barcode value + ให้เลือกผูก
+    pendingBarcode = val;
+    addBarcodeLog('❓ ไม่พบ: '+val,'barcode-log-err');
+    setBarcodeStatus('❓ ไม่พบบัตร '+val);
+    document.getElementById('barcode-reg-input').value = val;
+    document.getElementById('barcode-reg-row').style.display='flex';
+    document.getElementById('barcode-pick-btn').style.display='';
+  }
+}
+
+function handleBarcodeWeek(val, w){
+  const wd = weekData[w];
+  const today = wd?.dates?.[wd.dates.length-1]||'';
+  const idxStr = findStudentByBarcode(val);
+  if(idxStr !== undefined){
+    const idx = Number(idxStr);
+    if(isGroupHeader(students[idx])) return;
+    if(!today){ addBarcodeLog('⚠️ ยังไม่มีวันที่ในสัปดาห์นี้','barcode-log-err'); return; }
+    if(!wd.attendance[idx]) wd.attendance[idx]={};
+    if(wd.attendance[idx][today]===1){
+      addBarcodeLog('⏭ เช็คแล้ว: '+students[idx],'barcode-log-dup'); return;
+    }
+    wd.attendance[idx][today] = 1;
+    if(!wd.timestamps) wd.timestamps={};
+    if(!wd.timestamps[idx]) wd.timestamps[idx]={};
+    wd.timestamps[idx][today] = 'b'+nowHHMM();
+    renderWeek(w);
+    addBarcodeLog('✓ '+students[idx]+' ('+today+')','barcode-log-ok');
+    setBarcodeStatus('✅ '+students[idx]);
+    saveAttendanceCell(w, idx, today, 1, wd.timestamps[idx][today]);
+    if(MERGE_SOURCES.length) writeBackToSource(students[idx], null, today, 1, wd.timestamps[idx][today]).catch(()=>{});
+    playPing();
+    speakName(students[idx]);
+    setTimeout(()=>setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร'), 1500);
+  } else {
     pendingBarcode = val;
     addBarcodeLog('❓ ไม่พบ: '+val,'barcode-log-err');
     setBarcodeStatus('❓ ไม่พบบัตร '+val);
@@ -3363,7 +3405,7 @@ function closeBarcodeScanner(){
   if(barcodeStream){ barcodeStream.getTracks().forEach(t=>t.stop()); barcodeStream=null; }
   document.getElementById('barcode-overlay').classList.remove('active');
   const video=document.getElementById('barcode-video'); if(video) video.srcObject=null;
-  barcodeSubject=null; pendingBarcode=null;
+  barcodeSubject=null; barcodeWeek=0; pendingBarcode=null;
 }
 
 async function openFaceModalClass(sid) {
@@ -3771,7 +3813,7 @@ init();
   <div id="barcode-status" class="barcode-status">🔍 กำลังเปิดกล้อง...</div>
   <div class="barcode-box">
     <video id="barcode-video" autoplay playsinline muted></video>
-    <div class="barcode-aim"></div>
+    <div class="barcode-aim"><div class="barcode-scan-line"></div></div>
   </div>
   <div class="barcode-log" id="barcode-log"><span style="color:#6a7fa0">รอสแกนบัตร...</span></div>
   <div class="barcode-reg-row" id="barcode-reg-row" style="display:none">
@@ -3780,11 +3822,10 @@ init();
   </div>
   <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;justify-content:center;">
     <button class="btn" onclick="closeBarcodeScanner()" style="background:rgba(255,255,255,.08);">✕ ปิด</button>
-    <button class="btn btn-green" onclick="barcodeCapturePhoto()" style="font-size:15px;padding:10px 20px;">📸 ถ่ายรูปสแกน</button>
     <button class="btn" id="torch-btn" onclick="toggleTorch()" style="background:#2a2010;border-color:#c9a84c44;">🔦 ไฟฉาย</button>
     <button class="btn" onclick="openStudentPickerForBarcode()" id="barcode-pick-btn" style="display:none;background:linear-gradient(135deg,#1a3a5c,#0d2240);">👤 เลือกนักเรียน</button>
   </div>
-  <div style="color:#6a7fa0;font-size:11px;text-align:center;">📸 ถ่ายรูป = เปิดกล้องเนทีฟ โฟกัสดีกว่า</div>
+  <div style="color:#6a7fa0;font-size:11px;text-align:center;">ส่องบาร์โค้ดหลังบัตร — ระบบสแกนให้อัตโนมัติ · <a href="#" onclick="barcodeCapturePhoto();return false;" style="color:#4a8abf;">ถ่ายรูปแทน</a></div>
   <input type="file" id="barcode-file-input" accept="image/*" capture="environment" style="display:none" onchange="barcodeProcessFile(event)">
 </div>
 
