@@ -298,7 +298,9 @@ td.num{color:#c9a84c;font-weight:600;}
 .de-del:hover{filter:brightness(1.3);}
 body.hide-names td.name{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
 body.hide-names .student-chip span{color:transparent!important;background:#1e2d4a;border-radius:3px;user-select:none;}
-body.hide-photos .face-thumb,body.hide-photos .face-thumb-none{display:none!important;}
+.student-manager.collapsed .student-list,
+.student-manager.collapsed .add-student-row,
+.student-manager.collapsed #merge-row{display:none!important;}
 
 /* ===== MODE SWITCHER ===== */
 .mode-switcher{display:flex;gap:6px;margin-bottom:16px;}
@@ -436,7 +438,7 @@ body.hide-photos .face-thumb,body.hide-photos .face-thumb-none{display:none!impo
   <div class="student-manager no-print">
     <h4 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span>📋 รายชื่อนักเรียน (จัดการครั้งเดียว — ใช้ทุกสัปดาห์)</span>
-      <button id="toggle-photos-btn" onclick="togglePhotos()" title="แสดง/ซ่อนรูปนักเรียน" style="font-size:12px;padding:3px 10px;border-radius:16px;background:#1a2540;border:1px solid #c9a84c55;color:#c9a84c;cursor:pointer;white-space:nowrap;flex-shrink:0;">🖼 ซ่อนรูป</button>
+      <button id="toggle-photos-btn" onclick="togglePhotos()" title="พับ/펼ขยายรายชื่อนักเรียน" style="font-size:12px;padding:3px 10px;border-radius:16px;background:#1a2540;border:1px solid #c9a84c55;color:#c9a84c;cursor:pointer;white-space:nowrap;flex-shrink:0;">▲ พับรายชื่อ</button>
     </h4>
     <div class="student-list" id="student-chips"></div>
     <div class="add-student-row">
@@ -1145,19 +1147,22 @@ function editStudent(i){
 }
 
 function togglePhotos(){
-  const hiding = !document.body.classList.contains('hide-photos');
-  document.body.classList.toggle('hide-photos', hiding);
+  const mgr = document.querySelector('.student-manager');
+  if(!mgr) return;
+  const collapsing = !mgr.classList.contains('collapsed');
+  mgr.classList.toggle('collapsed', collapsing);
   const btn = document.getElementById('toggle-photos-btn');
-  if(btn){ btn.textContent = hiding ? '🖼 แสดงรูป' : '🖼 ซ่อนรูป'; }
-  try{ localStorage.setItem('hidePhotos', hiding ? '1' : ''); }catch(e){}
+  if(btn){ btn.textContent = collapsing ? '▼ แสดงรายชื่อ' : '▲ พับรายชื่อ'; }
+  try{ localStorage.setItem('studentListCollapsed', collapsing ? '1' : ''); }catch(e){}
 }
 // โหลดค่าที่จำไว้เมื่อเปิดหน้า
 (function(){
-  try{ if(localStorage.getItem('hidePhotos')==='1'){
-    document.body.classList.add('hide-photos');
+  try{ if(localStorage.getItem('studentListCollapsed')==='1'){
     window.addEventListener('DOMContentLoaded',()=>{
+      const mgr=document.querySelector('.student-manager');
+      if(mgr) mgr.classList.add('collapsed');
       const btn=document.getElementById('toggle-photos-btn');
-      if(btn) btn.textContent='🖼 แสดงรูป';
+      if(btn) btn.textContent='▼ แสดงรายชื่อ';
     });
   }}catch(e){}
 })();
