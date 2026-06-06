@@ -3149,6 +3149,33 @@ function findStudentByBarcode(val){
   return Object.keys(studentBarcodes).find(k=>studentBarcodes[k]===val);
 }
 
+// บังคับโฟกัสระยะใกล้ (สำหรับสแกนบัตร ~15-25 ซม.)
+async function applyCloseFocus(track, caps, px=0.5, py=0.5){
+  try{
+    const adv = {};
+    if(caps.pointsOfInterest) adv.pointsOfInterest=[{x:px, y:py}];
+
+    // 1) ลอง manual focus ระยะใกล้สุด
+    if(caps.focusMode?.includes('manual') && caps.focusDistance){
+      const mn = caps.focusDistance.min ?? 0;
+      const mx = caps.focusDistance.max ?? 1;
+      // ระยะประมาณ 15-20 ซม. → ใช้ค่าใกล้ minimum (~10% จาก min)
+      adv.focusMode = 'manual';
+      adv.focusDistance = mn + (mx - mn) * 0.08;
+      await track.applyConstraints({advanced:[adv]});
+      return;
+    }
+    // 2) single-shot → รอ → กลับ continuous
+    if(caps.focusMode?.includes('single-shot')){
+      await track.applyConstraints({advanced:[{...adv, focusMode:'single-shot'}]});
+      await new Promise(r=>setTimeout(r,700));
+    }
+    if(caps.focusMode?.includes('continuous')){
+      await track.applyConstraints({advanced:[{...adv, focusMode:'continuous'}]});
+    }
+  }catch(e){}
+}
+
 async function openBarcodeScanner(sid, w=0){
   if(!requireUnlock()) return;
   barcodeSubject = sid || null;
@@ -3160,38 +3187,40 @@ async function openBarcodeScanner(sid, w=0){
   document.getElementById('barcode-pick-btn').style.display='none';
   setBarcodeStatus('🔍 กำลังเปิดกล้อง...');
   try{
+    // ใช้ความละเอียดต่ำ → หลีกเลี่ยงเลนส์ telephoto/ultrawide
+    // เลนส์หลัก (main) โฟกัสระยะใกล้ได้ดีกว่า
     barcodeStream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }
+      video:{ facingMode:'environment', width:{ideal:640}, height:{ideal:480} }
     });
     const track = barcodeStream.getVideoTracks()[0];
-    // เปิด continuous autofocus เท่านั้น (ไม่ zoom — zoom digital ทำให้เบลอ)
-    try{
-      const caps = track.getCapabilities();
-      const adv = {};
-      if(caps.focusMode?.includes('continuous')) adv.focusMode='continuous';
-      if(caps.pointsOfInterest) adv.pointsOfInterest=[{x:0.5,y:0.5}];
-      if(Object.keys(adv).length) await track.applyConstraints({advanced:[adv]});
-    }catch(e){}
+    const caps  = track.getCapabilities();
+
+    // ── บังคับโฟกัสระยะใกล้ ──────────────────────────────
+    await applyCloseFocus(track, caps);
+
     const video = document.getElementById('barcode-video');
     video.srcObject = barcodeStream;
     await video.play();
-    // แตะภาพ = focus ตรงนั้น
-    video.onclick = async(e)=>{
-      try{
-        const rect=video.getBoundingClientRect();
-        const x=(e.clientX-rect.left)/rect.width;
-        const y=(e.clientY-rect.top)/rect.height;
-        const t=barcodeStream?.getVideoTracks()[0];
-        if(!t) return;
-        await t.applyConstraints({advanced:[{focusMode:'single-shot',pointsOfInterest:[{x,y}]}]});
-        setTimeout(async()=>{ try{ await t.applyConstraints({advanced:[{focusMode:'continuous'}]}); }catch(e){} }, 1000);
-      }catch(e){}
+
+    // แตะภาพ = single-shot focus ตรงนั้น แล้วกลับ continuous
+    video.onclick = async(ev)=>{
+      const rect=video.getBoundingClientRect();
+      const x=(ev.clientX-rect.left)/rect.width;
+      const y=(ev.clientY-rect.top)/rect.height;
+      await applyCloseFocus(track, caps, x, y);
     };
-    // รอ autofocus ก่อนเริ่มสแกน
-    setBarcodeStatus('⏳ กล้องกำลังโฟกัส...');
-    await new Promise(r=>setTimeout(r,1500));
-    setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตร — แตะภาพเพื่อโฟกัส');
+
+    setBarcodeStatus('⏳ กำลังโฟกัส...');
+    await new Promise(r=>setTimeout(r,1200));
+    setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตรให้อยู่ในกรอบ');
     await startBarcodeDetection(video, sid);
+
+    // auto re-focus ทุก 4 วิ ถ้ายังไม่เจอบัตร
+    window._barcodeRefocusTimer = setInterval(()=>{
+      if(!barcodeStream) return;
+      applyCloseFocus(track, caps).catch(()=>{});
+    }, 4000);
+
   }catch(e){
     setBarcodeStatus('❌ ไม่สามารถเปิดกล้องได้: '+e.message);
   }
@@ -3383,6 +3412,16 @@ async function barcodeProcessFile(e){
   }catch(err){ setBarcodeStatus('❌ เกิดข้อผิดพลาด: '+err.message); }
 }
 
+async function manualRefocus(){
+  if(!barcodeStream) return;
+  const track = barcodeStream.getVideoTracks()[0];
+  const caps  = track.getCapabilities();
+  setBarcodeStatus('🔍 กำลังโฟกัส...');
+  await applyCloseFocus(track, caps);
+  await new Promise(r=>setTimeout(r,800));
+  setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตรให้อยู่ในกรอบ');
+}
+
 let torchOn = false;
 async function toggleTorch(){
   if(!barcodeStream) return;
@@ -3398,6 +3437,7 @@ async function toggleTorch(){
 }
 
 function closeBarcodeScanner(){
+  if(window._barcodeRefocusTimer){ clearInterval(window._barcodeRefocusTimer); window._barcodeRefocusTimer=null; }
   if(barcodeInterval){ clearInterval(barcodeInterval); barcodeInterval=null; }
   if(window._zxingReader){ try{window._zxingReader.reset();}catch(e){} window._zxingReader=null; }
   torchOn=false;
@@ -3822,6 +3862,7 @@ init();
   </div>
   <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;justify-content:center;">
     <button class="btn" onclick="closeBarcodeScanner()" style="background:rgba(255,255,255,.08);">✕ ปิด</button>
+    <button class="btn" onclick="manualRefocus()" style="background:#1a2a10;border-color:#4caf8a55;color:#4caf8a;">🔍 โฟกัส</button>
     <button class="btn" id="torch-btn" onclick="toggleTorch()" style="background:#2a2010;border-color:#c9a84c44;">🔦 ไฟฉาย</button>
     <button class="btn" onclick="openStudentPickerForBarcode()" id="barcode-pick-btn" style="display:none;background:linear-gradient(135deg,#1a3a5c,#0d2240);">👤 เลือกนักเรียน</button>
   </div>
