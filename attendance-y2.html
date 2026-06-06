@@ -1383,21 +1383,47 @@ async function syncAttendanceFromSources(){
             weekData[w].attendance[mergedIdx][d]=v; changed=true;
           }
         });
+        // sync timestamps (เวลาสแกน — ใช้สำหรับ Leaderboard + หลักฐาน)
+        const srcTs = (fixArr(wd.timestamps||{}))[srcIdx]||{};
+        if(!weekData[w].timestamps) weekData[w].timestamps={};
+        if(!weekData[w].timestamps[mergedIdx]) weekData[w].timestamps[mergedIdx]={};
+        Object.keys(srcTs).forEach(d=>{
+          const v=srcTs[d];
+          if(v && !weekData[w].timestamps[mergedIdx][d]){
+            weekData[w].timestamps[mergedIdx][d]=v; changed=true;
+          }
+        });
       }
 
-      // sync classData.scout จาก source (วิชาลูกเสือวิสามัญในแต่ละห้อง)
-      if(raw.classData?.scout){
-        const srcCD = raw.classData.scout;
-        if(srcCD.dates) srcCD.dates.forEach(d=>{
-          if(!classData.scout.dates.includes(d)){ classData.scout.dates.push(d); changed=true; }
-        });
-        const srcAtt = (fixArr(srcCD.attendance||{}))[srcIdx]||{};
-        if(!classData.scout.attendance[mergedIdx]) classData.scout.attendance[mergedIdx]={};
-        Object.keys(srcAtt).forEach(d=>{
-          const v=srcAtt[d];
-          if(v && classData.scout.attendance[mergedIdx][d]!==v){
-            classData.scout.attendance[mergedIdx][d]=v; changed=true;
-          }
+      // sync classData ทุกวิชาจาก source (scout + วิชาอื่นๆ ที่มีใน merged page)
+      if(raw.classData){
+        Object.keys(raw.classData).forEach(sid=>{
+          if(!classData[sid]) return; // วิชานี้ไม่มีใน merged page → ข้าม
+          const srcCD = raw.classData[sid];
+          if(!srcCD) return;
+          // sync dates
+          if(srcCD.dates) srcCD.dates.forEach(d=>{
+            if(!classData[sid].dates.includes(d)){ classData[sid].dates.push(d); changed=true; }
+          });
+          // sync attendance (เฉพาะค่า ≥1)
+          const srcAtt = (fixArr(srcCD.attendance||{}))[srcIdx]||{};
+          if(!classData[sid].attendance[mergedIdx]) classData[sid].attendance[mergedIdx]={};
+          Object.keys(srcAtt).forEach(d=>{
+            const v=srcAtt[d];
+            if(v && classData[sid].attendance[mergedIdx][d]!==v){
+              classData[sid].attendance[mergedIdx][d]=v; changed=true;
+            }
+          });
+          // sync timestamps (เวลาสแกน — หลักฐาน + Leaderboard)
+          const srcTs = (fixArr(srcCD.timestamps||{}))[srcIdx]||{};
+          if(!classData[sid].timestamps) classData[sid].timestamps={};
+          if(!classData[sid].timestamps[mergedIdx]) classData[sid].timestamps[mergedIdx]={};
+          Object.keys(srcTs).forEach(d=>{
+            const v=srcTs[d];
+            if(v && !classData[sid].timestamps[mergedIdx][d]){
+              classData[sid].timestamps[mergedIdx][d]=v; changed=true;
+            }
+          });
         });
       }
 
