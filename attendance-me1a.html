@@ -915,7 +915,6 @@ function renderClass(sid) {
   html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="importClassDates(\'' + sid + '\')">📅 วางหลายวันที่เดียว</button>';
   html += '<button class="btn-scan" onclick="openFaceModalClass(\'' + sid + '\')">📷 สแกนใบหน้า</button>';
   html += '<button class="btn" style="background:linear-gradient(135deg,#1a3a5c,#0d2240);border-color:#4a8abf55;" onclick="openBarcodeScanner(\'' + sid + '\')">🪪 สแกนบัตร</button>';
-  if(cd.dates.length > 1) html += '<button class="btn btn-red" onclick="clearAllClassDates(\'' + sid + '\')">🗑️ ลบวันที่ทั้งหมด (' + cd.dates.length + ')</button>';
   html += '<button class="btn-pin ' + (isPinned('class',sid)?'pinned':'') + '" data-pin-type="class" data-pin-val="' + sid + '" onclick="pinView(\'class\',\'' + sid + '\')"> ' + (isPinned('class',sid)?'📌 ปักหมุดอยู่':'📌 ปักหมุดหน้านี้') + '</button>';
   html += '</div>';
 
