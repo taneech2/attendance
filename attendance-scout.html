@@ -1149,7 +1149,9 @@ async function exportClassToExcel(sid){
     const rowData=[seq1,name,...dateCells,ma,noma,p];
     const r=ws1.addRow(rowData);
     const bg=zebra?'FF0D1530':'FF0A1020';
-    r.eachCell(cell=>{ cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; });
+    r.eachCell(cell=>{ cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; cell.font={color:{argb:'FFD4C4A0'}}; });
+    r.getCell(1).font={color:{argb:'FF8090A8'}}; // ลำดับ — สีเทา
+    r.getCell(2).font={bold:true,color:{argb:'FFD4C4A0'}}; // ชื่อ — ครีมตัวหนา
     r.getCell(2).alignment={horizontal:'left'};
     if(p!==null){
       const pc=r.getCell(nc); pc.numFmt='0%';
