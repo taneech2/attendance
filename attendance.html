@@ -169,6 +169,12 @@ td.num{color:#c9a84c;font-weight:600;}
 /* GROUP HEADER ROW */
 .dept-row-header td{font-weight:800;font-size:13px;padding:8px 14px;letter-spacing:.8px;text-align:left;border-left:none!important;border-right:none!important;}
 .chip-group-header{background:#1a2540;border:1px dashed #c9a84c44;color:#c9a84c;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
+/* SCOUT ↔ CLASS CROSS-LINK */
+#scout-link-bar{display:none;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;margin:-4px 0 12px;}
+.scout-link-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(76,175,138,.1);border:1px solid #4caf8a66;color:#4caf8a;padding:6px 16px;border-radius:24px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;text-decoration:none;transition:.2s;}
+.scout-link-btn:hover{background:rgba(76,175,138,.2);border-color:#4caf8a;}
+.mcl-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(201,168,76,.08);border:1px solid #c9a84c55;color:#c9a84c;padding:4px 12px;border-radius:16px;font-size:12px;font-family:'Sarabun',sans-serif;text-decoration:none;white-space:nowrap;transition:.2s;}
+.mcl-btn:hover{background:rgba(201,168,76,.2);}
 
 /* STUDENT MANAGER */
 .student-manager{background:rgba(201,168,76,.04);border:1px solid #c9a84c44;border-radius:6px;padding:16px;margin-bottom:16px;}
@@ -449,6 +455,12 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
     <div id="ios-hint" style="display:none;width:100%;margin-top:4px;background:#1a2540;border:1px solid #c9a84c55;border-radius:10px;padding:10px 16px;font-size:13px;color:#c9a84c;max-width:340px;margin-left:auto;margin-right:auto;">iOS: กด <strong>Share</strong> แล้วเลือก <strong>"Add to Home Screen"</strong> 📱</div>
   </div>
 
+  <!-- SCOUT LINK BAR (แสดงเฉพาะห้องที่มีวิชาลูกเสือ) -->
+  <div id="scout-link-bar" class="no-print">
+    <a href="attendance-scout.html" class="scout-link-btn">🏕️ ดูลูกเสือ รวม →</a>
+    <span style="color:#4caf8a66;font-size:12px;">ข้อมูลเชื่อมกันทั้งสองทาง ↔ อัพเดทอัตโนมัติ</span>
+  </div>
+
   <!-- INFO BAR -->
   <div class="info-bar no-print">
     <input id="inp-term" placeholder="ภาคเรียนที่" value="1">
@@ -472,7 +484,9 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
     <div id="merge-row" style="display:none;margin-top:10px;align-items:center;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-green" onclick="mergeStudentsFromSources()">🔄 ดึงรายชื่อจากทุกห้อง</button>
       <span style="color:#4caf8a99;font-size:12px;">รวมรายชื่อนักเรียนจากทุกสาขาวิชาอัตโนมัติ</span>
+      <span id="sync-timestamp" style="color:#4caf8a55;font-size:11px;"></span>
     </div>
+    <div id="merge-class-links" class="no-print" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid #c9a84c22;"></div>
   </div>
 
   <!-- MODE SWITCHER -->
@@ -695,7 +709,10 @@ function renderWeek(w){
       const colSpan = 3 + (wd.dates.length||1) + 2;
       const tr = document.createElement('tr');
       tr.className = 'dept-row-header no-print-subtle';
-      tr.innerHTML = `<td colspan="${colSpan}" style="background:${color}28;border-top:3px solid ${color}cc;border-bottom:2px solid ${color}66;color:${color};font-size:13px;font-weight:800;padding:8px 14px;letter-spacing:.8px;">◆ ${groupLabel(name)}</td>`;
+      const _gLbl = groupLabel(name);
+      const _gUrl = getSourcePageUrl(_gLbl);
+      const _gLink = _gUrl ? ` <a href="${_gUrl}" onclick="event.stopPropagation()" style="font-size:11px;opacity:.55;margin-left:8px;color:inherit;text-decoration:none;border:1px solid currentColor;border-radius:10px;padding:1px 7px;" title="เปิดหน้า ${_gLbl}">🔗 ${_gLbl}</a>` : '';
+      tr.innerHTML = `<td colspan="${colSpan}" style="background:${color}28;border-top:3px solid ${color}cc;border-bottom:2px solid ${color}66;color:${color};font-size:13px;font-weight:800;padding:8px 14px;letter-spacing:.8px;">◆ ${_gLbl}${_gLink}</td>`;
       tbody.appendChild(tr);
       return;
     }
@@ -979,7 +996,10 @@ function renderClass(sid) {
       if(isGroupHeader(name)){
         const color = getGroupColor(idx);
         const colSpan = 3 + cd.dates.length + 3;
-        html += `<tr class="dept-row-header no-print-subtle"><td colspan="${colSpan}" style="background:${color}28;border-top:3px solid ${color}cc;border-bottom:2px solid ${color}66;color:${color};font-size:13px;font-weight:800;padding:8px 14px;letter-spacing:.8px;">◆ ${groupLabel(name)}</td></tr>`;
+        const _gLbl2 = groupLabel(name);
+        const _gUrl2 = getSourcePageUrl(_gLbl2);
+        const _gLink2 = _gUrl2 ? ` <a href="${_gUrl2}" onclick="event.stopPropagation()" style="font-size:11px;opacity:.55;margin-left:8px;color:inherit;text-decoration:none;border:1px solid currentColor;border-radius:10px;padding:1px 7px;" title="เปิดหน้า ${_gLbl2}">🔗 ${_gLbl2}</a>` : '';
+        html += `<tr class="dept-row-header no-print-subtle"><td colspan="${colSpan}" style="background:${color}28;border-top:3px solid ${color}cc;border-bottom:2px solid ${color}66;color:${color};font-size:13px;font-weight:800;padding:8px 14px;letter-spacing:.8px;">◆ ${_gLbl2}${_gLink2}</td></tr>`;
         return;
       }
       classSeq++;
@@ -1429,6 +1449,13 @@ function buildNameIndexMap(){
   const map={};
   students.forEach((name,i)=>{ if(!isGroupHeader(name)) map[name]=i; });
   return map;
+}
+
+// คืน URL หน้า HTML ของ source ตาม label (สำหรับ cross-link ในหน้ารวม)
+function getSourcePageUrl(label){
+  const src = MERGE_SOURCES.find(s=>s.label===label);
+  if(!src) return null;
+  return src.page || src.url.split('/').pop().replace('.json','.html');
 }
 
 // ดึง attendance จากทุก source แล้ว map เข้า weekData ของหน้ารวม
@@ -3866,6 +3893,24 @@ async function init(){
     if(mr) mr.style.display = 'flex';
     // ดึงรายชื่อจาก source ใหม่ทุกครั้งที่โหลด — ไม่พึ่ง Firebase เก็บ student list
     await mergeStudentsFromSources(true);
+    // สร้าง quick-link ปุ่มแต่ละห้อง
+    const linksDiv = document.getElementById('merge-class-links');
+    if(linksDiv){
+      linksDiv.style.display = 'flex';
+      MERGE_SOURCES.forEach(src => {
+        const pageFile = src.page || src.url.split('/').pop().replace('.json','.html');
+        const a = document.createElement('a');
+        a.href = pageFile;
+        a.className = 'mcl-btn';
+        a.textContent = '📚 ' + src.label;
+        a.title = 'เปิดหน้า ' + src.label;
+        linksDiv.appendChild(a);
+      });
+    }
+  } else if(CLASS_SUBJECTS.some(s=>s.id==='scout')){
+    // แสดง Scout Link Bar ในห้องที่มีวิชาลูกเสือ
+    const bar = document.getElementById('scout-link-bar');
+    if(bar) bar.style.display = 'flex';
   }
   buildTabs();
   buildPanels();
@@ -4011,6 +4056,13 @@ async function init(){
       if(MERGE_SOURCES.length){
         const attChanged = await syncAttendanceFromSources();
         if(attChanged) changed = true;
+        // อัพเดท sync timestamp
+        const tsEl = document.getElementById('sync-timestamp');
+        if(tsEl){
+          const d = new Date();
+          const hms = [d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>n.toString().padStart(2,'0')).join(':');
+          tsEl.textContent = '· ซิงค์ '+hms+' น.';
+        }
       }
 
       if(changed){

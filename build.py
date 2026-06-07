@@ -126,8 +126,8 @@ TARGETS = [
 ]""",
             "merge_sources": """\
 [
-  {label:'ชช.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json'},
-  {label:'ชช.2',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-y2.json'},
+  {label:'ชช.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json',    page:'attendance-ch1.html'},
+  {label:'ชช.2',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-y2.json', page:'attendance-y2.html'},
 ]""",
         },
     },
@@ -275,14 +275,14 @@ TARGETS = [
 ]""",
             "merge_sources": """\
 [
-  {label:'ชช.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json'},
-  {label:'ชย.1ก', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-me1a.json'},
-  {label:'ชย.1ข', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-me1b.json'},
-  {label:'ชก.1ก', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ml1a.json'},
-  {label:'ชก.1ข', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ml1b.json'},
-  {label:'ชฟ.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-el1.json'},
-  {label:'คธ.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ct1.json'},
-  {label:'บช.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ac1.json'},
+  {label:'ชช.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance.json',      page:'attendance-ch1.html'},
+  {label:'ชย.1ก', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-me1a.json', page:'attendance-me1a.html'},
+  {label:'ชย.1ข', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-me1b.json', page:'attendance-me1b.html'},
+  {label:'ชก.1ก', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ml1a.json', page:'attendance-ml1a.html'},
+  {label:'ชก.1ข', url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ml1b.json', page:'attendance-ml1b.html'},
+  {label:'ชฟ.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-el1.json',  page:'attendance-el1.html'},
+  {label:'คธ.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ct1.json',  page:'attendance-ct1.html'},
+  {label:'บช.1',  url:'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-ac1.json',  page:'attendance-ac1.html'},
 ]""",
         },
     },
