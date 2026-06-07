@@ -906,6 +906,8 @@ function confirmAddRoom() {
   buildClassPanels();
   renderClass(id);
   saveToFirebase();
+  // กระจายวิชาใหม่ไปยังห้องต้นทาง (เฉพาะหน้ารวม เช่น ลูกเสือ รวม)
+  if(MERGE_SOURCES.length) propagateExtraSubjectToSources({id,name,full,day,teacher}).catch(()=>{});
   showStatus('✅ เพิ่มวิชา "' + name + '" แล้ว', '#c9a84c');
 }
 
@@ -925,6 +927,8 @@ function deleteRoom(sid) {
   buildClassPanels();
   if(currentSubject) renderClass(currentSubject);
   saveToFirebase();
+  // ลบวิชาออกจากห้องต้นทางด้วย (เฉพาะหน้ารวม)
+  if(MERGE_SOURCES.length) deleteExtraSubjectFromSources(sid).catch(()=>{});
   showStatus('🗑️ ลบวิชา "' + subj.name + '" แล้ว', '#e05555');
 }
 
@@ -1429,6 +1433,47 @@ async function writeBackToSource(studentName, subjectId, date, value, ts){
   }catch(e){ console.warn('writeBackToSource failed:',sourceLabel,e); }
 }
 
+// กระจาย extraSubject ใหม่จากหน้ารวม → ทุก source class pages
+async function propagateExtraSubjectToSources(subj){
+  if(!MERGE_SOURCES.length) return;
+  await Promise.allSettled(MERGE_SOURCES.map(async source => {
+    try{
+      const base = source.url.slice(0,-5);
+      const res = await fetch(`${base}/extraSubjects.json`,{cache:'no-store'});
+      let arr = (await res.json())||[];
+      if(!Array.isArray(arr)) arr=[];
+      if(arr.find(s=>s.id===subj.id)) return; // มีแล้ว — ไม่ต้องทำ
+      arr.push(subj);
+      await fetch(`${base}/extraSubjects.json`,{
+        method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(arr)
+      });
+      // nudge savedAt → ให้ class page poll เห็นการเปลี่ยนแปลง
+      await fetch(source.url,{method:'PATCH',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({savedAt:Date.now()})});
+    }catch(e){ console.warn('propagateExtraSubjectToSources failed:',source.label,e); }
+  }));
+}
+
+// ลบ extraSubject ออกจากทุก source class pages (เมื่อหน้ารวมลบออก)
+async function deleteExtraSubjectFromSources(sid){
+  if(!MERGE_SOURCES.length) return;
+  await Promise.allSettled(MERGE_SOURCES.map(async source => {
+    try{
+      const base = source.url.slice(0,-5);
+      const res = await fetch(`${base}/extraSubjects.json`,{cache:'no-store'});
+      let arr = (await res.json())||[];
+      if(!Array.isArray(arr)) arr=[];
+      const filtered = arr.filter(s=>s.id!==sid);
+      if(filtered.length===arr.length) return; // ไม่มีอยู่แล้ว
+      await fetch(`${base}/extraSubjects.json`,{
+        method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(filtered)
+      });
+      await fetch(source.url,{method:'PATCH',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({savedAt:Date.now()})});
+    }catch(e){ console.warn('deleteExtraSubjectFromSources failed:',source.label,e); }
+  }));
+}
+
 function buildNameIndexMap(){
   const map={};
   students.forEach((name,i)=>{ if(!isGroupHeader(name)) map[name]=i; });
@@ -1473,6 +1518,20 @@ async function syncAttendanceFromSources(){
     }
     // cache student list ของแต่ละห้อง (ใช้สำหรับ reverse sync)
     sourceStudentCache[MERGE_SOURCES[i].label] = srcStudents;
+
+    // sync extraSubjects จาก source page → เพิ่มวิชาใหม่ที่สร้างจากห้องเรียนก่อน
+    // (ต้องทำก่อน classData sync เพื่อให้ getAllSubjects() รู้จักวิชานั้นแล้ว)
+    if(raw.extraSubjects && Array.isArray(raw.extraSubjects)){
+      raw.extraSubjects.forEach(s => {
+        if(s.id && s.name && !getAllSubjects().find(sub=>sub.id===s.id)){
+          extraSubjects.push(s);
+          if(!classData[s.id]) classData[s.id]={dates:[],attendance:{},timestamps:{}};
+          changed = true;
+        }
+      });
+      if(changed){ buildClassTabs(); buildClassPanels(); }
+    }
+
     srcStudents.forEach((name,srcIdx)=>{
       if(isGroupHeader(name)) return;
       const mergedIdx = nameMap[name];
@@ -1506,7 +1565,10 @@ async function syncAttendanceFromSources(){
       // sync classData ทุกวิชาจาก source (scout + วิชาอื่นๆ ที่มีใน merged page)
       if(raw.classData){
         Object.keys(raw.classData).forEach(sid=>{
-          if(!classData[sid]) return; // วิชานี้ไม่มีใน merged page → ข้าม
+          // ข้ามวิชาที่ไม่รู้จักเลย (ไม่มีใน CLASS_SUBJECTS หรือ extraSubjects)
+          if(!getAllSubjects().some(s=>s.id===sid)) return;
+          // สร้าง classData entry ถ้ายังไม่มี (วิชาที่เพิ่งถูก propagate มา)
+          if(!classData[sid]) classData[sid]={dates:[],attendance:{},timestamps:{}};
           const srcCD = raw.classData[sid];
           if(!srcCD) return;
           // sync dates
