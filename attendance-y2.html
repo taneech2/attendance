@@ -1057,26 +1057,37 @@ async function exportClassToExcel(sid){
   const deptStats = [];
   let curDept = null;
   if(!hasGroups){
-    curDept = {name:ib.cls||subj.name, students:0, ma:0, noma:0};
+    curDept = {name:ib.cls||subj.name, students:0, ma:0, noma:0, activeDates:new Set()};
     deptStats.push(curDept);
   }
   students.forEach((name,idx)=>{
     if(hiddenStudents.has(idx)) return;
     if(isGroupHeader(name)){
-      curDept = {name:groupLabel(name), students:0, ma:0, noma:0};
+      curDept = {name:groupLabel(name), students:0, ma:0, noma:0, activeDates:new Set()};
       deptStats.push(curDept);
       return;
     }
     if(!curDept) return;
     curDept.students++;
     const att=cd.attendance[idx]||{};
-    cd.dates.forEach(d=>{ if(att[d]===1)curDept.ma++; else if(att[d]===2)curDept.noma++; });
+    cd.dates.forEach(d=>{
+      if(att[d]===1){ curDept.ma++; curDept.activeDates.add(d); }
+      else if(att[d]===2){ curDept.noma++; curDept.activeDates.add(d); }
+    });
   });
   const totals = deptStats.reduce((a,d)=>({students:a.students+d.students,ma:a.ma+d.ma,noma:a.noma+d.noma}),{students:0,ma:0,noma:0});
 
   // helpers
-  const pctMa  = (ma,noma,n)=>{ const t=n*daysCount; return t>0?ma/t:0; };
-  const pctKha = (ma,noma,n)=>{ const t=n*daysCount; return t>0?Math.max(0,(t-ma-noma)/t):0; };
+  // คำนวณ % โดยใช้เฉพาะวันที่มีข้อมูลจริง (activeDates) เป็น denominator
+  // เพื่อไม่ให้วันที่ยังไม่ได้สอนมาลด % มาเรียน
+  const deptPct = (dept) => {
+    const aDays = Math.max(1, dept.activeDates ? dept.activeDates.size : 0) || 1;
+    const t = dept.students * aDays;
+    const pm = t>0 ? dept.ma/t : 0;
+    const pn = t>0 ? dept.noma/t : 0;
+    const pk = t>0 ? Math.max(0,(t-dept.ma-dept.noma)/t) : 0;
+    return {pm, pn, pk};
+  };
   const statusOf = p => p>=0.8?'✅ ผ่าน':p>=0.6?'⚠️ เฝ้าระวัง':'🔴 วิกฤต';
   const fgOf    = p => p>=0.8?'FF4CAF8A':p>=0.6?'FFE8C84A':'FFE05555';
   const bgOf    = p => p>=0.8?'FF0A2A10':p>=0.6?'FF2A1E00':'FF2A0500';
@@ -1196,9 +1207,7 @@ async function exportClassToExcel(sid){
 
   // ── แถวข้อมูลต่อแผนก ──
   deptStats.forEach((dept,di)=>{
-    const pm=pctMa(dept.ma,dept.noma,dept.students);
-    const pn=dept.students*daysCount>0?dept.noma/(dept.students*daysCount):0;
-    const pk=pctKha(dept.ma,dept.noma,dept.students);
+    const {pm,pn,pk}=deptPct(dept);
     const st=statusOf(pm);
     const rn=ws2.rowCount+1;
     const r=ws2.addRow([dept.name,dept.students,pm,pn,pk,st,null]);
@@ -1215,17 +1224,20 @@ async function exportClassToExcel(sid){
     r.getCell(3).fill={type:'pattern',pattern:'solid',fgColor:{argb:bgOf(pm)}};
     r.getCell(3).font={bold:true,color:{argb:fgOf(pm)}};
 
-    r.getCell(1).font={bold:true,size:11};
+    // zebra rows + ตั้งสีตัวอักษรให้มองเห็นบนพื้นมืด
+    const zbg=di%2===0?'FF131E2E':'FF0D1530';
+    const ztxt='FFD4C4A0';
+    r.getCell(1).font={bold:true,size:11,color:{argb:ztxt}};
     r.getCell(1).alignment={horizontal:'left',vertical:'middle'};
+    r.getCell(2).font={color:{argb:ztxt}};
     r.getCell(2).alignment={horizontal:'center'};
+    r.getCell(4).font={color:{argb:ztxt}};
+    r.getCell(5).font={color:{argb:ztxt}};
+    r.getCell(6).font={color:{argb:ztxt}};
     r.getCell(6).alignment={horizontal:'center'};
-
-    // zebra
-    const zbg=di%2===0?'FF0A1020':'FF0D1530';
-    [1,2,4,5,6].forEach(ci=>{
+    [1,2,4,5,6,7].forEach(ci=>{
       r.getCell(ci).fill={type:'pattern',pattern:'solid',fgColor:{argb:zbg}};
     });
-    r.getCell(7).fill={type:'pattern',pattern:'solid',fgColor:{argb:zbg}};
   });
 
   // separator
@@ -1235,9 +1247,10 @@ async function exportClassToExcel(sid){
   ws2.mergeCells(sep.number,1,sep.number,7);
 
   // ── แถวรวม ──
-  const tpm=pctMa(totals.ma,totals.noma,totals.students);
-  const tpn=totals.students*daysCount>0?totals.noma/(totals.students*daysCount):0;
-  const tpk=pctKha(totals.ma,totals.noma,totals.students);
+  const totalAllRec=deptStats.reduce((a,d)=>a+d.students*Math.max(1,d.activeDates?d.activeDates.size:0||1),0)||1;
+  const tpm=totals.ma/totalAllRec;
+  const tpn=totals.noma/totalAllRec;
+  const tpk=Math.max(0,(totalAllRec-totals.ma-totals.noma)/totalAllRec);
   const trn=ws2.rowCount+1;
   const tr=ws2.addRow(['รวมทั้งหมด',totals.students,tpm,tpn,tpk,statusOf(tpm),null]);
   tr.getCell(7).value={formula:`REPT("█",ROUND(C${trn}*20,0))&REPT("░",20-ROUND(C${trn}*20,0))`};
@@ -1245,8 +1258,7 @@ async function exportClassToExcel(sid){
   tr.height=26;
   [3,4,5].forEach(ci=>{ tr.getCell(ci).numFmt='0.0%'; tr.getCell(ci).alignment={horizontal:'center'}; });
   tr.eachCell(cell=>{
-    if(!cell.font?.color) cell.font={bold:true,size:12};
-    else cell.font={...cell.font,bold:true,size:12};
+    cell.font={...(cell.font||{}),bold:true,size:12,color:{argb:'FFD4C4A0'}};
     if(cell.col!==3) cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0A1020'}};
     cell.border={top:{style:'double',color:{argb:'FF4CAF8A'}},bottom:{style:'medium',color:{argb:'FF4CAF8A'}}};
   });
@@ -1280,8 +1292,7 @@ async function exportClassToExcel(sid){
   const chh=ws2.addRow(['แผนก','% มาเรียน','% ขาด']);
   chh.eachCell((cell,ci)=>{ if(ci<=3) setHdr(cell,cell.value,'FF1A3040'); });
   deptStats.forEach(dept=>{
-    const pm2=pctMa(dept.ma,dept.noma,dept.students);
-    const pk2=pctKha(dept.ma,dept.noma,dept.students);
+    const {pm:pm2,pk:pk2}=deptPct(dept);
     const cr=ws2.addRow([dept.name,pm2,pk2]);
     cr.getCell(2).numFmt='0.0%'; cr.getCell(3).numFmt='0.0%';
     [2,3].forEach(ci=>cr.getCell(ci).alignment={horizontal:'center'});
