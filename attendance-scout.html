@@ -1418,6 +1418,12 @@ async function syncAttendanceFromSources(){
       }}
     }
     if(!srcStudents||!srcWeekData) return;
+    // หา fp/fd — รองรับทั้ง root level (format ใหม่) และ inside raw.p (format เก่า)
+    let srcFP = raw.fp||{};
+    let srcFD = raw.fd||null;
+    if(!Object.keys(srcFP).length && raw.p){
+      try{ const _p=JSON.parse(raw.p); if(_p.fp) srcFP=_p.fp; if(_p.fd&&!srcFD) srcFD=_p.fd; }catch(e){}
+    }
     // cache student list ของแต่ละห้อง (ใช้สำหรับ reverse sync)
     sourceStudentCache[MERGE_SOURCES[i].label] = srcStudents;
     srcStudents.forEach((name,srcIdx)=>{
@@ -1482,8 +1488,7 @@ async function syncAttendanceFromSources(){
         });
       }
 
-      // sync รูปภาพ (fp) — เอาจาก source ถ้ายังไม่มีใน merged
-      const srcFP = raw.fp||{};
+      // sync รูปภาพ (fp) — เอาจาก source ถ้ายังไม่มีใน merged (รองรับทั้ง format เก่า/ใหม่)
       const photos = srcFP[srcIdx];
       if(photos && photos.length){
         if(!facePhotos[mergedIdx]||facePhotos[mergedIdx].length===0){
@@ -1493,9 +1498,9 @@ async function syncAttendanceFromSources(){
       }
 
       // sync face descriptors (fd) — เอาจาก source ถ้ายังไม่มีใน merged
-      if(raw.fd && raw.fd[srcIdx]){
+      if(srcFD && srcFD[srcIdx]){
         if(!faceDescriptors[mergedIdx]||faceDescriptors[mergedIdx].length===0){
-          const v = raw.fd[srcIdx];
+          const v = srcFD[srcIdx];
           if(v){
             faceDescriptors[mergedIdx] = Array.isArray(v[0])
               ? v.map(a=>new Float32Array(a))
