@@ -291,6 +291,7 @@ td.num{color:#c9a84c;font-weight:600;}
 .tools-act-save    {border-color:#4caf8a;color:#4caf8a;}
 .tools-act-load    {border-color:#4a8abf;color:#4a8abf;}
 .tools-act-download{border-color:#c9a84c;color:#c9a84c;}
+.tools-act-danger  {border-color:#e05555;color:#e05555;}
 .tools-act-upload  {border-color:#e67e22;color:#e67e22;}
 .tools-log{margin-top:8px;padding:14px;background:#05091a;border:1px dashed #4a8abf44;border-radius:10px;font-family:'Consolas','Courier New',monospace;font-size:13px;color:#a8c0e0;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;}
 .de-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
@@ -386,6 +387,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
           <input type="file" accept=".json,application/json" style="display:none" onchange="uploadBackup(event)">
         </label>
         <button class="tools-act" style="border-color:#9b59b6;color:#9b59b6;" onclick="showDateEditorPanel()">✏️ แก้ไขวันที่ (สัปดาห์/วิชาที่เลือกอยู่)</button>
+        <button class="tools-act tools-act-danger" onclick="clearAllFacePhotos()">🗑️ ลบรูปใบหน้าทุกคนออกทั้งหมด</button>
       </div>
       <!-- Date Editor Panel -->
       <div id="date-editor-panel" style="display:none;flex-direction:column;gap:10px;">
@@ -2904,6 +2906,17 @@ function updateRegPhotoPreview() {
   // ซ่อนปุ่มถ่ายถ้าครบแล้ว
   const capBtn = document.getElementById('btn-capture');
   if(capBtn) capBtn.style.opacity = done ? '0.35' : '1';
+}
+
+function clearAllFacePhotos() {
+  const total = Object.keys(facePhotos).length;
+  if(!total){ toolsLog('ℹ️ ไม่มีรูปในระบบอยู่แล้ว'); return; }
+  if(!confirm(`ลบรูปใบหน้าทุกคน (${total} คน) ออกทั้งหมด?\nข้อมูลการเช็คชื่อยังอยู่ครบ — ลบแค่รูปเท่านั้น`)) return;
+  facePhotos = {};
+  faceDescriptors = {};
+  renderStudentChips();
+  saveToFirebase();
+  toolsLog(`🗑️ ลบรูปใบหน้าทุกคน (${total} คน) เรียบร้อย — ข้อมูลเช็คชื่อยังอยู่ครบ`);
 }
 
 function clearStudentFace() {
