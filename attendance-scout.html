@@ -2047,14 +2047,16 @@ let lbPeriod = 'term'; // 'week' | 'month' | 'term'
 
 function calcScore(ts){
   // ts = "fHH:MM:SS" หรือ "mHH:MM:SS" หรือ "HH:MM:SS"
+  // ระบบ smooth: สูงสุด 20pt @ ≤07:50 → ลด 1pt ต่อนาที → 0pt @ ≥08:10
+  // (ไม่มีการตัดคะแนนกะทันหัน — smooth linear decay)
   if(!ts) return 0;
   const raw = (ts[0]==='f'||ts[0]==='m') ? ts.slice(1) : ts;
   const [h,m,s] = raw.split(':').map(Number);
   const t = h*60 + m + (s||0)/60; // นาทีตั้งแต่เที่ยงคืน
-  // 3 ระดับ: ≤07:50 = 20pt | 07:51-08:09 = 10pt | ≥08:10 = 0pt
-  if(t <= 7*60+50) return 20;     // มาก่อน/ตรงเพลงเรียก
-  if(t < 8*60+10) return 10;      // มาช่วงเข้าแถว
-  return 0;                        // สาย/หมดเวลา
+  const DEADLINE = 7*60+50; // 07:50 = เวลาที่ได้คะแนนเต็ม 20
+  if(t <= DEADLINE) return 20;
+  const lateMin = t - DEADLINE;      // จำนวนนาทีที่มาช้ากว่า 07:50
+  return Math.max(0, 20 - Math.round(lateMin)); // -1pt/นาที, min 0
 }
 
 // ===== GROUP HEADER HELPERS =====
