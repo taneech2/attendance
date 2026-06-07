@@ -268,6 +268,17 @@ td.num{color:#c9a84c;font-weight:600;}
 .btn-undo{position:fixed;bottom:22px;right:22px;background:linear-gradient(135deg,#1a3a5c,#0d2240);border:2px solid #4a8abf77;color:#8bc4f0;padding:9px 18px;border-radius:50px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:999;transition:.2s;white-space:nowrap;}
 .btn-undo:hover:not(:disabled){background:linear-gradient(135deg,#2a5a8c,#1a3a6c);border-color:#4a8abf;color:#c0e0ff;transform:translateY(-2px);box-shadow:0 6px 24px rgba(74,138,191,.35);}
 .btn-undo:disabled{opacity:.3;cursor:default;}
+/* SCAN UNDO TOAST — ลอยเหนือทุก overlay */
+#scan-undo-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:10001;
+  display:none;align-items:center;gap:12px;
+  background:#130a00;border:2px solid #e07830;border-radius:16px;
+  padding:12px 18px;box-shadow:0 4px 28px rgba(224,120,48,.5);
+  font-family:'Sarabun',sans-serif;white-space:nowrap;animation:toast-in .2s ease;}
+#scan-undo-toast.show{display:flex;}
+@keyframes toast-in{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+#scan-undo-toast .undo-name{color:#f0c090;font-size:15px;font-weight:700;max-width:180px;overflow:hidden;text-overflow:ellipsis;}
+#scan-undo-toast .undo-timer{color:#a07040;font-size:12px;min-width:20px;text-align:right;}
+#scan-undo-toast .undo-act{background:linear-gradient(135deg,#e07830,#b05010);color:#fff;border:none;padding:8px 16px;border-radius:9px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Sarabun',sans-serif;}
 
 @media print{
   body{background:#fff;padding:0;}
@@ -2083,6 +2094,46 @@ function updateUndoBtn() {
     : 'ยังไม่มีอะไรให้ย้อนกลับ';
 }
 
+// ── SCAN UNDO TOAST — โผล่หลังสแกนสำเร็จทุกครั้ง ──────────────
+let _undoToastTimer = null;
+let _undoToastCountdown = null;
+
+function showScanUndoToast(name){
+  // บันทึก state ก่อนเสมอ
+  pushUndo(name);
+  // แสดง toast
+  clearInterval(_undoToastCountdown);
+  clearTimeout(_undoToastTimer);
+  const toast = document.getElementById('scan-undo-toast');
+  const nameEl = document.getElementById('undo-toast-name');
+  const timerEl = document.getElementById('undo-toast-timer');
+  if(!toast) return;
+  if(nameEl) nameEl.textContent = name;
+  toast.classList.add('show');
+  let sec = 8;
+  if(timerEl) timerEl.textContent = sec;
+  _undoToastCountdown = setInterval(()=>{
+    sec--;
+    if(timerEl) timerEl.textContent = sec;
+    if(sec <= 0){ clearInterval(_undoToastCountdown); hideScanUndoToast(); }
+  }, 1000);
+}
+
+function hideScanUndoToast(){
+  clearInterval(_undoToastCountdown);
+  clearTimeout(_undoToastTimer);
+  const toast = document.getElementById('scan-undo-toast');
+  if(toast) toast.classList.remove('show');
+}
+
+function undoLastScanAction(){
+  hideScanUndoToast();
+  undo(); // ใช้ระบบ undo เดิม — restore weekData+classData แล้ว save
+  // ล้าง faceMarked ด้วยเพื่อให้สแกนหน้าเดิมซ้ำได้
+  faceMarked = {}; updateFaceCount?.();
+  speakName('ยกเลิก');
+}
+
 document.addEventListener('keydown', e => {
   // ── Bluetooth remote / keyboard shortcut → ถ่ายรูป ──────
   // รองรับ: Space, Enter, ArrowRight, VolumeUp (Android)
@@ -3129,6 +3180,7 @@ async function markFaceAttend(idx, date) {
     addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
     setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
     updateFaceCount();
+    showScanUndoToast(students[idx]); // toast undo
     await saveToFirebase();
     // reverse sync → เขียนกลับไปห้องต้นทาง (เฉพาะหน้ารวม)
     if(MERGE_SOURCES.length) writeBackToSource(students[idx], faceSubject, date, 1, cd.timestamps?.[idx]?.[date]||'').catch(()=>{});
@@ -3154,6 +3206,7 @@ async function markFaceAttend(idx, date) {
   addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
   updateFaceCount();
+  showScanUndoToast(students[idx]); // toast undo
   await saveToFirebase();
   playPing();
   speakName(students[idx]);
@@ -3456,6 +3509,7 @@ function handleBarcodeDetected(val, sid){
     renderClass(sid);
     addBarcodeLog('✓ '+students[idx]+' ('+today+')','barcode-log-ok');
     setBarcodeStatus('✅ '+students[idx]);
+    showScanUndoToast(students[idx]); // toast undo
     saveClassCell(sid, idx, today, 1);
     if(MERGE_SOURCES.length) writeBackToSource(students[idx], sid, today, 1, cd.timestamps[idx][today]).catch(()=>{});
     playPing();
@@ -3491,6 +3545,7 @@ function handleBarcodeWeek(val, w){
     renderWeek(w);
     addBarcodeLog('✓ '+students[idx]+' ('+today+')','barcode-log-ok');
     setBarcodeStatus('✅ '+students[idx]);
+    showScanUndoToast(students[idx]); // toast undo
     saveAttendanceCell(w, idx, today, 1, wd.timestamps[idx][today]);
     if(MERGE_SOURCES.length) writeBackToSource(students[idx], null, today, 1, wd.timestamps[idx][today]).catch(()=>{});
     playPing();
@@ -4066,6 +4121,13 @@ init();
   </div>
 </div>
 
+<!-- SCAN UNDO TOAST — โผล่ทันทีหลังสแกนสำเร็จ, ลอยเหนือทุก overlay -->
+<div id="scan-undo-toast">
+  <span>↩</span>
+  <span class="undo-name" id="undo-toast-name">—</span>
+  <span class="undo-timer" id="undo-toast-timer">8</span>
+  <button class="undo-act" onclick="undoLastScanAction()">ยกเลิก</button>
+</div>
 <button class="btn-undo no-print" id="undo-btn" onclick="undo()" disabled title="ยังไม่มีอะไรให้ย้อนกลับ">↩️ ย้อนกลับ</button>
 
 <!-- BARCODE SCANNER MODAL -->
