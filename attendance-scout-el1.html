@@ -3218,29 +3218,22 @@ function selectBarcodeDate(d, btn){
   setBarcodeStatus('📅 วันที่: ' + d + ' — ส่องบัตรได้เลย');
 }
 
-// บังคับโฟกัสระยะใกล้ (สำหรับสแกนบัตร ~15-25 ซม.)
+// ตั้งค่า autofocus สำหรับสแกนบัตร
 async function applyCloseFocus(track, caps, px=0.5, py=0.5){
   try{
     const adv = {};
+    // ชี้จุดโฟกัสไปตรงกลาง (หรือจุดที่แตะ)
     if(caps.pointsOfInterest) adv.pointsOfInterest=[{x:px, y:py}];
-
-    // 1) ลอง manual focus ระยะใกล้สุด
-    if(caps.focusMode?.includes('manual') && caps.focusDistance){
-      const mn = caps.focusDistance.min ?? 0;
-      const mx = caps.focusDistance.max ?? 1;
-      // ระยะประมาณ 15-20 ซม. → ใช้ค่าใกล้ minimum (~10% จาก min)
-      adv.focusMode = 'manual';
-      adv.focusDistance = mn + (mx - mn) * 0.08;
-      await track.applyConstraints({advanced:[adv]});
-      return;
-    }
-    // 2) single-shot → รอ → กลับ continuous
-    if(caps.focusMode?.includes('single-shot')){
-      await track.applyConstraints({advanced:[{...adv, focusMode:'single-shot'}]});
-      await new Promise(r=>setTimeout(r,700));
-    }
+    // 1) continuous — กล้องโฟกัสตลอดเวลา (เหมือนแอป Android) ← ดีที่สุด
     if(caps.focusMode?.includes('continuous')){
       await track.applyConstraints({advanced:[{...adv, focusMode:'continuous'}]});
+      return;
+    }
+    // 2) single-shot (iOS/บางรุ่น)
+    if(caps.focusMode?.includes('single-shot')){
+      await track.applyConstraints({advanced:[{...adv, focusMode:'single-shot'}]});
+    } else if(caps.pointsOfInterest){
+      await track.applyConstraints({advanced:[adv]});
     }
   }catch(e){}
 }
@@ -3285,15 +3278,8 @@ async function openBarcodeScanner(sid, w=0){
     };
 
     setBarcodeStatus('⏳ กำลังโฟกัส...');
-    await new Promise(r=>setTimeout(r,1200));
-    setBarcodeStatus('📱 ส่องบาร์โค้ดหลังบัตรให้อยู่ในกรอบ');
+    await new Promise(r=>setTimeout(r,400)); // รอกล้องเสถียร
     await startBarcodeDetection(video, sid);
-
-    // auto re-focus ทุก 4 วิ ถ้ายังไม่เจอบัตร
-    window._barcodeRefocusTimer = setInterval(()=>{
-      if(!barcodeStream) return;
-      applyCloseFocus(track, caps).catch(()=>{});
-    }, 4000);
 
   }catch(e){
     setBarcodeStatus('❌ ไม่สามารถเปิดกล้องได้: '+e.message);
@@ -3304,13 +3290,34 @@ async function startBarcodeDetection(video, sid){
   // ลอง BarcodeDetector API ก่อน (Android Chrome)
   if('BarcodeDetector' in window){
     barcodeDetector = new BarcodeDetector({formats:['code_39','code_128','ean_13','ean_8','qr_code','pdf417','data_matrix']});
-    barcodeInterval = setInterval(async()=>{
-      if(!barcodeStream) return;
-      try{
-        const codes = await barcodeDetector.detect(video);
-        if(codes.length) handleBarcodeDetected(codes[0].rawValue, sid);
-      }catch(e){}
-    }, 200);
+    let _alive = true;
+    window._barcodeScanStop = ()=>{ _alive=false; };
+    let _lastVal='', _lastTime=0, _tick=0;
+    const _spin=['◐','◓','◑','◒'];
+    // async loop — รอ detect() เสร็จก่อน (ไม่ซ้อน), กัน double-scan
+    (async()=>{
+      while(_alive && barcodeStream){
+        try{
+          const codes = await barcodeDetector.detect(video);
+          if(codes.length && codes[0].rawValue){
+            const val=codes[0].rawValue, now=Date.now();
+            // กัน double-scan บัตรเดิมภายใน 3 วิ
+            if(val!==_lastVal || now-_lastTime>3000){
+              _lastVal=val; _lastTime=now;
+              handleBarcodeDetected(val, sid);
+            }
+            await new Promise(r=>setTimeout(r,2000)); // cooldown หลัง scan สำเร็จ
+          } else {
+            // แสดงว่า scan กำลังทำงาน (spinner)
+            if(!pendingBarcode){
+              _tick=(_tick+1)%4;
+              setBarcodeStatus(_spin[_tick]+' ส่องบาร์โค้ดหลังบัตรให้อยู่ในกรอบ');
+            }
+            await new Promise(r=>setTimeout(r,350));
+          }
+        }catch(e){ await new Promise(r=>setTimeout(r,500)); }
+      }
+    })();
     return;
   }
   // Fallback: ZXing.js (iOS / เบราว์เซอร์อื่น)
@@ -3511,7 +3518,7 @@ async function toggleTorch(){
 }
 
 function closeBarcodeScanner(){
-  if(window._barcodeRefocusTimer){ clearInterval(window._barcodeRefocusTimer); window._barcodeRefocusTimer=null; }
+  if(window._barcodeScanStop){ window._barcodeScanStop(); window._barcodeScanStop=null; }
   if(barcodeInterval){ clearInterval(barcodeInterval); barcodeInterval=null; }
   if(window._zxingReader){ try{window._zxingReader.reset();}catch(e){} window._zxingReader=null; }
   torchOn=false;
