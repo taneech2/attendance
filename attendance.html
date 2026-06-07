@@ -225,6 +225,19 @@ td.num{color:#c9a84c;font-weight:600;}
 .barcode-reg-row input{flex:1;background:#0d1530;border:1px solid #c9a84c55;color:#d4c4a0;padding:8px 12px;border-radius:6px;font-family:'Sarabun',sans-serif;font-size:13px;}
 .chip-barcode{font-size:10px;background:#1a2a40;border:1px solid #4a8abf44;color:#89c4e1;padding:1px 5px;border-radius:8px;cursor:pointer;margin-left:4px;}
 .chip-barcode.has-id{border-color:#4caf8a66;color:#4caf8a;}
+/* NUMPAD พิมพ์เลขบัตร */
+.numpad-wrap{background:#0a1020;border:1px solid #c9a84c44;border-radius:14px;padding:14px 16px;width:min(280px,88vw);}
+.numpad-display{font-size:24px;font-weight:800;color:#a89060;text-align:center;background:#060b18;border-radius:8px;padding:10px 12px;letter-spacing:3px;min-height:50px;margin-bottom:12px;font-family:'Courier New',monospace;word-break:break-all;}
+.numpad-display.has-val{color:#d4c4a0;}
+.numpad-display.full{color:#4caf8a;}
+.numpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.np{font-size:22px;font-weight:700;padding:13px 0;border-radius:9px;border:1px solid #c9a84c33;background:#0d1a35;color:#d4c4a0;cursor:pointer;touch-action:manipulation;user-select:none;transition:background .1s;}
+.np:active{background:#1e2e50;}
+.np-del{background:#1e0f0f;border-color:#e0555544;color:#e05555;font-size:18px;}
+.np-del:active{background:#3a1515;}
+.np-ok{background:linear-gradient(135deg,#0d3320,#061a10);border-color:#4caf8a55;color:#4caf8a;font-size:18px;}
+.np-ok.ready{background:linear-gradient(135deg,#0a7a40,#065025);border-color:#4caf8a;color:#fff;box-shadow:0 0 14px rgba(76,175,138,.35);}
+.np-ok:active{opacity:.8;}
 
 /* SIG */
 .sig-row{display:flex;justify-content:space-between;margin:20px 0 16px;gap:20px;}
@@ -3177,6 +3190,42 @@ let _barcodeDevices = [];       // กล้องทั้งหมดที่
 let _barcodeDevIdx  = 0;        // index กล้องที่ใช้อยู่
 
 function setBarcodeStatus(msg){ const el=document.getElementById('barcode-status'); if(el) el.textContent=msg; }
+
+// ── NUMPAD พิมพ์เลขบัตรด้วยมือ ──────────────────────────────
+let _npCode = '';
+function _npRefresh(){
+  const el=document.getElementById('numpad-display');
+  const ok=document.getElementById('np-ok-btn');
+  if(!el) return;
+  if(!_npCode){ el.textContent='— กดตัวเลข —'; el.className='numpad-display'; }
+  else{
+    // แสดงเป็นกลุ่ม: 1 4444 55555 66 6 (13 หลัก)
+    const d=_npCode;
+    let fmt=d;
+    if(d.length>1) fmt=d[0]+' '+d.slice(1);
+    if(d.length>5) fmt=d[0]+' '+d.slice(1,5)+' '+d.slice(5);
+    if(d.length>10) fmt=d[0]+' '+d.slice(1,5)+' '+d.slice(5,10)+' '+d.slice(10);
+    if(d.length>12) fmt=d[0]+' '+d.slice(1,5)+' '+d.slice(5,10)+' '+d.slice(10,12)+' '+d.slice(12);
+    el.textContent=fmt;
+    el.className='numpad-display '+(d.length===13?'full':'has-val');
+  }
+  if(ok) ok.className='np np-ok'+(_npCode.length>=1?' ready':'');
+}
+function npPress(d){ if(_npCode.length>=13) return; _npCode+=d; _npRefresh(); }
+function npDel(){ _npCode=_npCode.slice(0,-1); _npRefresh(); }
+function npConfirm(){
+  if(!_npCode) return;
+  handleBarcodeDetected(_npCode, barcodeSubject);
+  _npCode=''; _npRefresh();
+}
+function toggleNumpad(){
+  const sec=document.getElementById('numpad-section');
+  if(!sec) return;
+  const show=sec.style.display==='none';
+  sec.style.display=show?'block':'none';
+  if(show){ _npCode=''; _npRefresh(); }
+}
+
 function addBarcodeLog(msg, cls=''){
   const el=document.getElementById('barcode-log');
   if(!el) return;
@@ -3580,6 +3629,7 @@ function closeBarcodeScanner(){
   document.getElementById('barcode-overlay').classList.remove('active');
   const video=document.getElementById('barcode-video'); if(video) video.srcObject=null;
   barcodeSubject=null; barcodeWeek=0; pendingBarcode=null;
+  _npCode=''; const ns=document.getElementById('numpad-section'); if(ns) ns.style.display='none';
 }
 
 // เปลี่ยนเลนส์ (multi-lens phones) — ข้ามกล้องหน้าและ ultrawide อัตโนมัติ
@@ -4050,8 +4100,29 @@ init();
     <input id="barcode-reg-input" placeholder="ไม่พบ — เลือกนักเรียนเพื่อผูกบัตร" readonly>
     <button class="btn btn-green" onclick="confirmBarcodeReg()">ผูกบัตร</button>
   </div>
+  <!-- NUMPAD พิมพ์เลขบัตร (สำหรับบัตรบาร์โค้ดเสีย) -->
+  <div id="numpad-section" style="display:none">
+    <div class="numpad-wrap">
+      <div id="numpad-display" class="numpad-display">— กดตัวเลข —</div>
+      <div class="numpad-grid">
+        <button class="np" onclick="npPress('1')">1</button>
+        <button class="np" onclick="npPress('2')">2</button>
+        <button class="np" onclick="npPress('3')">3</button>
+        <button class="np" onclick="npPress('4')">4</button>
+        <button class="np" onclick="npPress('5')">5</button>
+        <button class="np" onclick="npPress('6')">6</button>
+        <button class="np" onclick="npPress('7')">7</button>
+        <button class="np" onclick="npPress('8')">8</button>
+        <button class="np" onclick="npPress('9')">9</button>
+        <button class="np np-del" onclick="npDel()">⌫</button>
+        <button class="np" onclick="npPress('0')">0</button>
+        <button class="np np-ok" id="np-ok-btn" onclick="npConfirm()">✓ ส่ง</button>
+      </div>
+    </div>
+  </div>
   <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;justify-content:center;">
     <button class="btn" onclick="closeBarcodeScanner()" style="background:rgba(255,255,255,.08);">✕ ปิด</button>
+    <button class="btn" onclick="toggleNumpad()" style="background:#1a1535;border-color:#8a6abf55;color:#b89ae8;">⌨️ พิมพ์เลข</button>
     <button class="btn" onclick="manualRefocus()" style="background:#1a2a10;border-color:#4caf8a55;color:#4caf8a;">🔍 โฟกัส</button>
     <button class="btn" id="torch-btn" onclick="toggleTorch()" style="background:#2a2010;border-color:#c9a84c44;">🔦 ไฟฉาย</button>
     <button class="btn" id="lens-switch-btn" onclick="switchBarcodeLens()" style="display:none;background:#1a2535;border-color:#4a8abf55;color:#7ab8e8;">🔄 เปลี่ยนเลนส์</button>
