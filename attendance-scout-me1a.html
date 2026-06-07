@@ -1017,93 +1017,281 @@ function renderClass(sid) {
   panel.innerHTML = html;
 }
 
-// ===== EXCEL EXPORT =====
+// ===== EXCEL EXPORT (ExcelJS — 2 Sheets + สรุปผู้บริหาร) =====
 async function exportClassToExcel(sid){
   const subj = getAllSubjects().find(s=>s.id===sid);
   const cd = classData[sid];
-  if(!cd || !subj){ showStatus('❌ ไม่พบข้อมูลวิชา','#e05555'); return; }
+  if(!cd||!subj){ showStatus('❌ ไม่พบข้อมูลวิชา','#e05555'); return; }
   if(cd.dates.length===0){ showStatus('⚠️ ยังไม่มีวันที่ — เพิ่มวันที่ก่อน','#c9a84c'); return; }
 
-  // โหลด SheetJS แบบ lazy (ครั้งเดียว)
-  if(!window.XLSX){
-    showStatus('⏳ กำลังโหลด SheetJS...','#c9a84c');
-    await new Promise((res,rej)=>{
+  // Lazy-load ExcelJS
+  if(!window.ExcelJS){
+    showStatus('⏳ กำลังโหลด ExcelJS...','#c9a84c');
+    const ok = await new Promise(res=>{
       const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload=res; s.onerror=rej;
+      s.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+      s.onload=()=>res(true); s.onerror=()=>res(false);
       document.head.appendChild(s);
-    }).catch(()=>{ showStatus('❌ โหลด SheetJS ไม่ได้ — ตรวจสอบ internet','#e05555'); return null; });
-    if(!window.XLSX) return;
+    });
+    if(!ok||!window.ExcelJS){ showStatus('❌ โหลด ExcelJS ไม่ได้ — ตรวจสอบ internet','#e05555'); return; }
   }
 
   const ib = getInfoBar();
-  const rows = [];
+  const daysCount = cd.dates.length;
 
-  // ── แถวหัวเอกสาร ──
-  rows.push([subj.full || subj.name]);
-  rows.push([
-    (subj.day?'วัน'+subj.day+' | ':'') + 'ครู: '+(subj.teacher||ib.teacher)
-  ]);
-  rows.push([
-    'ภาคเรียน '+ib.term+'/'+ib.year +
-    (ib.cls?' | กลุ่มเรียน: '+ib.cls:'') +
-    (ib.teacher?' | ครูที่ปรึกษา: '+ib.teacher:'')
-  ]);
-  rows.push([]); // เว้นบรรทัด
-
-  // ── แถว header คอลัมน์ ──
-  rows.push(['ลำดับ','ชื่อ – สกุล',...cd.dates,'มา','ลา','%']);
-
-  // ── แถวนักเรียน ──
-  let seq=0;
+  // ── คำนวณสถิติต่อแผนก ──────────────────────────────────────
+  const hasGroups = students.some(n=>isGroupHeader(n));
+  const deptStats = [];
+  let curDept = null;
+  if(!hasGroups){
+    curDept = {name:ib.cls||subj.name, students:0, ma:0, noma:0};
+    deptStats.push(curDept);
+  }
   students.forEach((name,idx)=>{
     if(hiddenStudents.has(idx)) return;
     if(isGroupHeader(name)){
-      rows.push(['','◆ '+groupLabel(name)]); // group header
+      curDept = {name:groupLabel(name), students:0, ma:0, noma:0};
+      deptStats.push(curDept);
       return;
     }
-    seq++;
-    const att = cd.attendance[idx]||{};
-    let ma=0, noma=0;
-    const dateCells = cd.dates.map(d=>{
+    if(!curDept) return;
+    curDept.students++;
+    const att=cd.attendance[idx]||{};
+    cd.dates.forEach(d=>{ if(att[d]===1)curDept.ma++; else if(att[d]===2)curDept.noma++; });
+  });
+  const totals = deptStats.reduce((a,d)=>({students:a.students+d.students,ma:a.ma+d.ma,noma:a.noma+d.noma}),{students:0,ma:0,noma:0});
+
+  // helpers
+  const pctMa  = (ma,noma,n)=>{ const t=n*daysCount; return t>0?ma/t:0; };
+  const pctKha = (ma,noma,n)=>{ const t=n*daysCount; return t>0?Math.max(0,(t-ma-noma)/t):0; };
+  const statusOf = p => p>=0.8?'✅ ผ่าน':p>=0.6?'⚠️ เฝ้าระวัง':'🔴 วิกฤต';
+  const fgOf    = p => p>=0.8?'FF4CAF8A':p>=0.6?'FFE8C84A':'FFE05555';
+  const bgOf    = p => p>=0.8?'FF0A2A10':p>=0.6?'FF2A1E00':'FF2A0500';
+  const setHdr  = (cell,txt,bg='FF1A3D1A',fg='FFFFFFFF',sz=11)=>{
+    cell.value=txt;
+    cell.font={bold:true,size:sz,color:{argb:fg}};
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}};
+    cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+  };
+
+  // ── สร้าง Workbook ──────────────────────────────────────────
+  const wb = new ExcelJS.Workbook();
+  wb.creator='บริษัทชมสุข69';
+
+  // ══════════════════════════════════════════════════════════
+  // SHEET 1 — รายชื่อนักเรียน
+  // ══════════════════════════════════════════════════════════
+  const ws1 = wb.addWorksheet('รายชื่อนักเรียน');
+  ws1.properties.defaultRowHeight=18;
+  ws1.columns=[{width:6},{width:32},...cd.dates.map(()=>({width:10})),{width:7},{width:7},{width:9}];
+
+  const nc = 2+daysCount+3; // total columns
+  // title
+  const r1a=ws1.addRow([subj.full||subj.name]);
+  r1a.height=26; ws1.mergeCells(r1a.number,1,r1a.number,nc);
+  setHdr(r1a.getCell(1),subj.full||subj.name,'FF0D2A10','FFFFFFFF',14);
+
+  const r1b=ws1.addRow([`ภาคเรียน ${ib.term}/${ib.year}  |  กลุ่มเรียน: ${ib.cls}  |  ครู: ${ib.teacher||subj.teacher}`]);
+  r1b.height=18; ws1.mergeCells(r1b.number,1,r1b.number,nc);
+  setHdr(r1b.getCell(1),r1b.getCell(1).value,'FFC9A84C','FF0A0F1E',11);
+
+  const r1c=ws1.addRow([`วิชา: ${subj.name}  |  วัน: ${subj.day||'—'}  |  บันทึก ${daysCount} วัน`]);
+  r1c.height=16; ws1.mergeCells(r1c.number,1,r1c.number,nc);
+  setHdr(r1c.getCell(1),r1c.getCell(1).value,'FF0D1530','FFD4C4A0',10);
+
+  ws1.addRow([]);
+
+  // header row
+  const h1=ws1.addRow(['ลำดับ','ชื่อ – สกุล',...cd.dates,'มา','ลา','%']);
+  h1.height=22;
+  h1.eachCell((cell,ci)=>{
+    setHdr(cell,cell.value);
+    cell.border={bottom:{style:'medium',color:{argb:'FF4CAF8A'}}};
+    if(ci===2) cell.alignment={horizontal:'left',vertical:'middle'};
+  });
+  ws1.views=[{state:'frozen',ySplit:5,xSplit:2}];
+
+  // data rows
+  let seq1=0, zebra=false;
+  students.forEach((name,idx)=>{
+    if(hiddenStudents.has(idx)) return;
+    if(isGroupHeader(name)){
+      zebra=false;
+      const gr=ws1.addRow(['','◆ '+groupLabel(name)]);
+      gr.height=20; ws1.mergeCells(gr.number,2,gr.number,nc);
+      gr.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0D1530'}};
+      const gc=gr.getCell(2);
+      gc.value='◆ '+groupLabel(name);
+      gc.font={bold:true,size:11,color:{argb:'FFC9A84C'}};
+      gc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0D1530'}};
+      return;
+    }
+    seq1++; zebra=!zebra;
+    const att=cd.attendance[idx]||{};
+    let ma=0,noma=0;
+    const dateCells=cd.dates.map(d=>{ const v=att[d]||0; if(v===1){ma++;return'มา';} if(v===2){noma++;return'ลา';} return''; });
+    const rec=ma+noma, p=rec>0?ma/rec:null;
+    const rowData=[seq1,name,...dateCells,ma,noma,p];
+    const r=ws1.addRow(rowData);
+    const bg=zebra?'FF0D1530':'FF0A1020';
+    r.eachCell(cell=>{ cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; });
+    r.getCell(2).alignment={horizontal:'left'};
+    if(p!==null){
+      const pc=r.getCell(nc); pc.numFmt='0%';
+      pc.font={bold:true,color:{argb:fgOf(p)}};
+    }
+    // color date cells
+    cd.dates.forEach((d,di)=>{
       const v=att[d]||0;
-      if(v===1){ ma++; return 'มา'; }
-      if(v===2){ noma++; return 'ลา'; }
-      return '';
+      const c=r.getCell(3+di);
+      c.alignment={horizontal:'center'};
+      if(v===1) c.font={color:{argb:'FF4CAF8A'}};
+      else if(v===2) c.font={color:{argb:'FFE8C84A'}};
+      else if(!v) c.font={color:{argb:'FF555555'}};
     });
-    const recorded=ma+noma;
-    const pct = recorded>0 ? Math.round(ma/recorded*100) : null;
-    rows.push([seq, name, ...dateCells, ma, noma, pct!==null ? pct+'%' : '—']);
+    [nc-2,nc-1].forEach(ci=>{ r.getCell(ci).alignment={horizontal:'center'}; });
   });
 
-  // ── สร้าง Workbook ──
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  // ══════════════════════════════════════════════════════════
+  // SHEET 2 — สรุปผู้บริหาร
+  // ══════════════════════════════════════════════════════════
+  const ws2 = wb.addWorksheet('สรุปผู้บริหาร');
+  ws2.properties.defaultRowHeight=22;
+  ws2.columns=[{width:22},{width:14},{width:12},{width:10},{width:10},{width:14},{width:24}];
 
-  // กำหนดความกว้างคอลัมน์
-  ws['!cols'] = [
-    {wch:6}, {wch:32},
-    ...cd.dates.map(()=>({wch:11})),
-    {wch:6},{wch:6},{wch:8}
+  // ── หัวรายงาน ──
+  const s2r1=ws2.addRow(['📊 รายงานสรุปการเข้าเรียน']);
+  s2r1.height=32; ws2.mergeCells(s2r1.number,1,s2r1.number,7);
+  setHdr(s2r1.getCell(1),s2r1.getCell(1).value,'FF0A1F0A','FFFFFFFF',16);
+
+  const s2r2=ws2.addRow([subj.full||subj.name]);
+  s2r2.height=22; ws2.mergeCells(s2r2.number,1,s2r2.number,7);
+  setHdr(s2r2.getCell(1),s2r2.getCell(1).value,'FFC9A84C','FF0A0F1E',13);
+
+  const s2r3=ws2.addRow([`ภาคเรียน ${ib.term}/${ib.year}   ·   กลุ่มเรียน: ${ib.cls}   ·   ครู: ${ib.teacher||subj.teacher}   ·   บันทึก ${daysCount} วัน`]);
+  s2r3.height=18; ws2.mergeCells(s2r3.number,1,s2r3.number,7);
+  setHdr(s2r3.getCell(1),s2r3.getCell(1).value,'FF0D1530','FFD4C4A0',10);
+  s2r3.getCell(1).alignment={horizontal:'center',wrapText:false};
+
+  ws2.addRow([]);
+
+  // ── header ──
+  const s2h=ws2.addRow(['แผนก / กลุ่มเรียน','จำนวนนักเรียน','% มาเรียน','% ลา','% ขาด','สถานะ','แผนภูมิ % มา']);
+  s2h.height=24;
+  s2h.eachCell(cell=>{ setHdr(cell,cell.value); cell.border={bottom:{style:'medium',color:{argb:'FF4CAF8A'}}}; });
+  s2h.getCell(1).alignment={horizontal:'left',vertical:'middle'};
+
+  // ── แถวข้อมูลต่อแผนก ──
+  deptStats.forEach((dept,di)=>{
+    const pm=pctMa(dept.ma,dept.noma,dept.students);
+    const pn=dept.students*daysCount>0?dept.noma/(dept.students*daysCount):0;
+    const pk=pctKha(dept.ma,dept.noma,dept.students);
+    const st=statusOf(pm);
+    const rn=ws2.rowCount+1;
+    const r=ws2.addRow([dept.name,dept.students,pm,pn,pk,st,null]);
+    r.height=20;
+
+    // formula bar
+    const bc=r.getCell(7);
+    bc.value={formula:`REPT("█",ROUND(C${rn}*20,0))&REPT("░",20-ROUND(C${rn}*20,0))`};
+    bc.font={name:'Courier New',size:11,bold:true,color:{argb:fgOf(pm)}};
+    bc.alignment={horizontal:'left'};
+
+    // % cells format + color
+    [3,4,5].forEach(ci=>{ r.getCell(ci).numFmt='0.0%'; r.getCell(ci).alignment={horizontal:'center'}; });
+    r.getCell(3).fill={type:'pattern',pattern:'solid',fgColor:{argb:bgOf(pm)}};
+    r.getCell(3).font={bold:true,color:{argb:fgOf(pm)}};
+
+    r.getCell(1).font={bold:true,size:11};
+    r.getCell(1).alignment={horizontal:'left',vertical:'middle'};
+    r.getCell(2).alignment={horizontal:'center'};
+    r.getCell(6).alignment={horizontal:'center'};
+
+    // zebra
+    const zbg=di%2===0?'FF0A1020':'FF0D1530';
+    [1,2,4,5,6].forEach(ci=>{
+      r.getCell(ci).fill={type:'pattern',pattern:'solid',fgColor:{argb:zbg}};
+    });
+    r.getCell(7).fill={type:'pattern',pattern:'solid',fgColor:{argb:zbg}};
+  });
+
+  // separator
+  const sep=ws2.addRow(['']);
+  sep.height=4;
+  sep.eachCell(cell=>{ cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF4CAF8A'}}; });
+  ws2.mergeCells(sep.number,1,sep.number,7);
+
+  // ── แถวรวม ──
+  const tpm=pctMa(totals.ma,totals.noma,totals.students);
+  const tpn=totals.students*daysCount>0?totals.noma/(totals.students*daysCount):0;
+  const tpk=pctKha(totals.ma,totals.noma,totals.students);
+  const trn=ws2.rowCount+1;
+  const tr=ws2.addRow(['รวมทั้งหมด',totals.students,tpm,tpn,tpk,statusOf(tpm),null]);
+  tr.getCell(7).value={formula:`REPT("█",ROUND(C${trn}*20,0))&REPT("░",20-ROUND(C${trn}*20,0))`};
+  tr.getCell(7).font={name:'Courier New',size:12,bold:true,color:{argb:fgOf(tpm)}};
+  tr.height=26;
+  [3,4,5].forEach(ci=>{ tr.getCell(ci).numFmt='0.0%'; tr.getCell(ci).alignment={horizontal:'center'}; });
+  tr.eachCell(cell=>{
+    if(!cell.font?.color) cell.font={bold:true,size:12};
+    else cell.font={...cell.font,bold:true,size:12};
+    if(cell.col!==3) cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0A1020'}};
+    cell.border={top:{style:'double',color:{argb:'FF4CAF8A'}},bottom:{style:'medium',color:{argb:'FF4CAF8A'}}};
+  });
+  tr.getCell(3).fill={type:'pattern',pattern:'solid',fgColor:{argb:bgOf(tpm)}};
+  tr.getCell(1).alignment={horizontal:'left',vertical:'middle'};
+  tr.getCell(2).alignment={horizontal:'center'};
+  tr.getCell(6).alignment={horizontal:'center'};
+
+  // ── เกณฑ์ ──
+  ws2.addRow([]);
+  const leg=[
+    ['เกณฑ์การประเมิน:','FFD4C4A0',true],
+    ['  ✅  ผ่าน          =  มาเรียน ≥ 80%','FF4CAF8A',false],
+    ['  ⚠️  เฝ้าระวัง  =  มาเรียน 60 – 79%','FFE8C84A',false],
+    ['  🔴  วิกฤต        =  มาเรียน < 60%','FFE05555',false],
   ];
+  leg.forEach(([txt,fg,bold])=>{
+    const lr=ws2.addRow([txt]); ws2.mergeCells(lr.number,1,lr.number,7);
+    lr.getCell(1).font={bold,size:10,color:{argb:fg}};
+    lr.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF060B18'}};
+    lr.height=16;
+  });
 
-  // Merge cell แถวหัวเอกสาร (A1:ไปถึงคอลัมน์สุดท้าย)
-  const lastCol = 2 + cd.dates.length + 2; // 0-indexed
-  ws['!merges'] = [
-    {s:{r:0,c:0},e:{r:0,c:lastCol}},
-    {s:{r:1,c:0},e:{r:1,c:lastCol}},
-    {s:{r:2,c:0},e:{r:2,c:lastCol}},
-  ];
+  // ── ตารางข้อมูลสร้างแผนภูมิ (chart source) ──
+  ws2.addRow([]);
+  const ch0=ws2.addRow(['ตารางข้อมูลสร้างแผนภูมิ  (เลือก A→C แล้ว Insert → Chart)']);
+  ws2.mergeCells(ch0.number,1,ch0.number,7);
+  ch0.getCell(1).font={italic:true,size:10,color:{argb:'FF6080A0'}};
+  ch0.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF060B18'}};
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, subj.name.slice(0,31));
+  const chh=ws2.addRow(['แผนก','% มาเรียน','% ขาด']);
+  chh.eachCell((cell,ci)=>{ if(ci<=3) setHdr(cell,cell.value,'FF1A3040'); });
+  deptStats.forEach(dept=>{
+    const pm2=pctMa(dept.ma,dept.noma,dept.students);
+    const pk2=pctKha(dept.ma,dept.noma,dept.students);
+    const cr=ws2.addRow([dept.name,pm2,pk2]);
+    cr.getCell(2).numFmt='0.0%'; cr.getCell(3).numFmt='0.0%';
+    [2,3].forEach(ci=>cr.getCell(ci).alignment={horizontal:'center'});
+  });
+  // total line
+  const ctr=ws2.addRow(['รวม',tpm,tpk]);
+  ctr.eachCell(cell=>{ cell.font={bold:true}; });
+  ctr.getCell(2).numFmt='0.0%'; ctr.getCell(3).numFmt='0.0%';
 
-  // ชื่อไฟล์
-  const today = new Date();
-  const dd = [today.getDate(),today.getMonth()+1,today.getFullYear()%100].map(n=>String(n).padStart(2,'0')).join('');
-  const fname = (subj.name+'_'+(ib.cls||'')+'_'+dd).replace(/[^\w฀-๿]/g,'_')+'.xlsx';
+  ws2.views=[{state:'frozen',ySplit:5}];
 
-  XLSX.writeFile(wb, fname);
-  showStatus('✅ บันทึก Excel แล้ว: '+fname,'#4caf8a');
+  // ── Download ──
+  const today=new Date();
+  const dd=[today.getDate(),today.getMonth()+1,today.getFullYear()%100].map(n=>String(n).padStart(2,'0')).join('');
+  const fname=(subj.name+'_สรุป_'+(ib.cls||'')+'_'+dd).replace(/[^\w฀-๿\-]/g,'_')+'.xlsx';
+
+  showStatus('⏳ กำลังสร้างไฟล์...','#c9a84c');
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=fname; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+  showStatus('✅ Export สำเร็จ: '+fname,'#4caf8a');
 }
 
 function classSymbol(s, ts) {
