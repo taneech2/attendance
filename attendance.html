@@ -1035,6 +1035,16 @@ function renderClass(sid) {
 
 // ===== EXCEL EXPORT (ExcelJS — 2 Sheets + สรุปผู้บริหาร) =====
 async function exportClassToExcel(sid){
+  // ── Force-refresh ข้อมูลจาก Firebase ก่อน export เสมอ ──────────
+  showStatus('⏳ ซิงค์ข้อมูลล่าสุดจาก Firebase...','#c9a84c');
+  try{
+    if(MERGE_SOURCES.length){
+      await syncAttendanceFromSources();
+    } else {
+      await loadFromFirebase(true);
+    }
+  } catch(e){ console.warn('exportClassToExcel: pre-export sync failed',e); }
+
   const subj = getAllSubjects().find(s=>s.id===sid);
   const cd = classData[sid];
   if(!cd||!subj){ showStatus('❌ ไม่พบข้อมูลวิชา','#e05555'); return; }
@@ -1129,7 +1139,7 @@ async function exportClassToExcel(sid){
   ws1.addRow([]);
 
   // header row
-  const h1=ws1.addRow(['ลำดับ','ชื่อ – สกุล',...cd.dates,'มา','ลา','%']);
+  const h1=ws1.addRow(['ลำดับ','ชื่อ – สกุล',...cd.dates,'มา','ขาด/ลา','%']);
   h1.height=22;
   h1.eachCell((cell,ci)=>{
     setHdr(cell,cell.value);
@@ -1156,7 +1166,14 @@ async function exportClassToExcel(sid){
     seq1++; zebra=!zebra;
     const att=cd.attendance[idx]||{};
     let ma=0,noma=0;
-    const dateCells=cd.dates.map(d=>{ const v=att[d]||0; if(v===1){ma++;return'มา';} if(v===2){noma++;return'ลา';} return''; });
+    const dateCells=cd.dates.map(d=>{
+      const v=att[d]||0;
+      if(v===1){ma++;return'มา';}
+      if(v===2){noma++;return'ขาด';}    // ✗ = ขาด (teacher-recorded absent)
+      if(v===3){noma++;return'ลาป่วย';} // 🤒 sick leave
+      if(v===4){noma++;return'ลากิจ';} // 📋 personal leave
+      return'';
+    });
     const rec=ma+noma, p=rec>0?ma/rec:null;
     const rowData=[seq1,name,...dateCells,ma,noma,p];
     const r=ws1.addRow(rowData);
@@ -1205,7 +1222,7 @@ async function exportClassToExcel(sid){
   ws2.addRow([]);
 
   // ── header ──
-  const s2h=ws2.addRow(['แผนก / กลุ่มเรียน','จำนวนนักเรียน','% มาเรียน','% ลา','% ขาด','สถานะ','แผนภูมิ % มา']);
+  const s2h=ws2.addRow(['แผนก / กลุ่มเรียน','จำนวนนักเรียน','% มาเรียน','% ขาด/ลา','% ว่าง','สถานะ','แผนภูมิ % มา']);
   s2h.height=24;
   s2h.eachCell(cell=>{ setHdr(cell,cell.value); cell.border={bottom:{style:'medium',color:{argb:'FF4CAF8A'}}}; });
   s2h.getCell(1).alignment={horizontal:'left',vertical:'middle'};
@@ -1294,16 +1311,16 @@ async function exportClassToExcel(sid){
   ch0.getCell(1).font={italic:true,size:10,color:{argb:'FF6080A0'}};
   ch0.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF060B18'}};
 
-  const chh=ws2.addRow(['แผนก','% มาเรียน','% ขาด']);
+  const chh=ws2.addRow(['แผนก','% มาเรียน','% ขาด/ลา']);
   chh.eachCell((cell,ci)=>{ if(ci<=3) setHdr(cell,cell.value,'FF1A3040'); });
   deptStats.forEach(dept=>{
-    const {pm:pm2,pk:pk2}=deptPct(dept);
-    const cr=ws2.addRow([dept.name,pm2,pk2]);
+    const {pm:pm2,pn:pn2}=deptPct(dept);
+    const cr=ws2.addRow([dept.name,pm2,pn2]);
     cr.getCell(2).numFmt='0.0%'; cr.getCell(3).numFmt='0.0%';
     [2,3].forEach(ci=>cr.getCell(ci).alignment={horizontal:'center'});
   });
   // total line
-  const ctr=ws2.addRow(['รวม',tpm,tpk]);
+  const ctr=ws2.addRow(['รวม',tpm,tpn]);
   ctr.eachCell(cell=>{ cell.font={bold:true}; });
   ctr.getCell(2).numFmt='0.0%'; ctr.getCell(3).numFmt='0.0%';
 
