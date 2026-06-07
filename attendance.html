@@ -3299,7 +3299,6 @@ async function openBarcodeScanner(sid, w=0){
 
     // ตรวจว่าเป็น ultrawide (ไม่มีโฟกัส) → แจ้งเตือน
     const hasFocus = caps.focusMode?.some(m=>['continuous','single-shot','auto','manual'].includes(m));
-    if(!hasFocus) setBarcodeStatus('⚠️ เลนส์นี้โฟกัสไม่ได้ — กด 🔄 เปลี่ยนเลนส์');
 
     const video = document.getElementById('barcode-video');
     video.srcObject = barcodeStream;
@@ -3313,11 +3312,16 @@ async function openBarcodeScanner(sid, w=0){
       await applyCloseFocus(track, caps, x, y);
     };
 
-    if(hasFocus){
-      setBarcodeStatus('⏳ กำลังโฟกัส...');
-      await new Promise(r=>setTimeout(r,400));
+    if(!hasFocus && _barcodeDevices.length > 1){
+      // ultrawide → เปลี่ยนเลนส์อัตโนมัติ
+      setBarcodeStatus('⚠️ ตรวจพบ ultrawide — กำลังเปลี่ยนเลนส์หลักอัตโนมัติ...');
+      await new Promise(r=>setTimeout(r,300));
+      await switchBarcodeLens();
+    } else {
+      if(hasFocus){ setBarcodeStatus('⏳ กำลังโฟกัส...'); await new Promise(r=>setTimeout(r,400)); }
+      else setBarcodeStatus('⚠️ เลนส์นี้โฟกัสไม่ได้ — กด 🔄 เปลี่ยนเลนส์');
+      await startBarcodeDetection(video, sid);
     }
-    await startBarcodeDetection(video, sid);
 
   }catch(e){
     setBarcodeStatus('❌ ไม่สามารถเปิดกล้องได้: '+e.message);
@@ -3331,22 +3335,33 @@ async function startBarcodeDetection(video, sid){
     let _alive = true;
     window._barcodeScanStop = ()=>{ _alive=false; };
     let _lastVal='', _lastTime=0, _tick=0;
+    let _consecVal='', _consecCount=0;   // ต้อง detect ค่าเดิม 2 ครั้งติดกัน
+    const CONFIRM=2;
     const _spin=['◐','◓','◑','◒'];
-    // async loop — รอ detect() เสร็จก่อน (ไม่ซ้อน), กัน double-scan
+    // async loop — รอ detect() เสร็จก่อน (ไม่ซ้อน), กัน false positive
     (async()=>{
       while(_alive && barcodeStream){
         try{
           const codes = await barcodeDetector.detect(video);
           if(codes.length && codes[0].rawValue){
-            const val=codes[0].rawValue, now=Date.now();
-            // กัน double-scan บัตรเดิมภายใน 3 วิ
-            if(val!==_lastVal || now-_lastTime>3000){
-              _lastVal=val; _lastTime=now;
-              handleBarcodeDetected(val, sid);
+            const val=codes[0].rawValue;
+            // นับจำนวนครั้งที่ detect ค่าเดิมติดต่อกัน
+            if(val===_consecVal){ _consecCount++; } else { _consecVal=val; _consecCount=1; }
+            if(_consecCount>=CONFIRM){
+              const now=Date.now();
+              // กัน double-scan บัตรเดิมภายใน 3 วิ
+              if(val!==_lastVal || now-_lastTime>3000){
+                _lastVal=val; _lastTime=now;
+                handleBarcodeDetected(val, sid);
+              }
+              _consecVal=''; _consecCount=0;
+              await new Promise(r=>setTimeout(r,2000)); // cooldown หลัง scan สำเร็จ
+            } else {
+              setBarcodeStatus('🔍 ยืนยัน... ('+_consecCount+'/'+CONFIRM+')');
+              await new Promise(r=>setTimeout(r,200));
             }
-            await new Promise(r=>setTimeout(r,2000)); // cooldown หลัง scan สำเร็จ
           } else {
-            // แสดงว่า scan กำลังทำงาน (spinner)
+            _consecVal=''; _consecCount=0;
             if(!pendingBarcode){
               _tick=(_tick+1)%4;
               setBarcodeStatus(_spin[_tick]+' ส่องบาร์โค้ดหลังบัตรให้อยู่ในกรอบ');
@@ -3567,42 +3582,56 @@ function closeBarcodeScanner(){
   barcodeSubject=null; barcodeWeek=0; pendingBarcode=null;
 }
 
-// เปลี่ยนเลนส์ (multi-lens phones เช่น ultrawide → main)
+// เปลี่ยนเลนส์ (multi-lens phones) — ข้ามกล้องหน้าและ ultrawide อัตโนมัติ
 async function switchBarcodeLens(){
   if(_barcodeDevices.length <= 1){ setBarcodeStatus('ℹ️ ไม่พบกล้องอื่นในเครื่อง'); return; }
   // หยุด scan loop + stream เดิม
   if(window._barcodeScanStop){ window._barcodeScanStop(); window._barcodeScanStop=null; }
   if(barcodeStream){ barcodeStream.getTracks().forEach(t=>t.stop()); barcodeStream=null; }
-  // เปลี่ยน index
-  _barcodeDevIdx = (_barcodeDevIdx+1) % _barcodeDevices.length;
-  const dev = _barcodeDevices[_barcodeDevIdx];
-  const lensName = dev.label ? dev.label.replace(/\(.*\)/,'').trim() : ('กล้อง '+(_barcodeDevIdx+1));
-  setBarcodeStatus('🔄 กำลังเปลี่ยนเป็น '+lensName+'...');
-  try{
-    barcodeStream = await navigator.mediaDevices.getUserMedia({
-      video:{ deviceId:{exact:dev.deviceId}, width:{ideal:640}, height:{ideal:480} }
-    });
-    const track = barcodeStream.getVideoTracks()[0];
-    const caps  = track.getCapabilities();
-    await applyCloseFocus(track, caps);
 
-    const video = document.getElementById('barcode-video');
-    video.srcObject = barcodeStream;
-    await video.play();
-    video.onclick = async(ev)=>{
-      const rect=video.getBoundingClientRect();
-      const x=(ev.clientX-rect.left)/rect.width;
-      const y=(ev.clientY-rect.top)/rect.height;
-      await applyCloseFocus(track, caps, x, y);
-    };
+  // ลองหากล้องหลังที่มีโฟกัส — วนสูงสุดรอบเดียว
+  for(let attempt=0; attempt<_barcodeDevices.length; attempt++){
+    _barcodeDevIdx = (_barcodeDevIdx+1) % _barcodeDevices.length;
+    const dev = _barcodeDevices[_barcodeDevIdx];
+    const lbl = (dev.label||'').toLowerCase();
+    // ข้ามกล้องหน้า (ตาม label)
+    if(lbl.includes('front')||lbl.includes('selfie')||lbl.includes('user')||lbl.includes('หน้า')) continue;
 
-    const hasFocus = caps.focusMode?.some(m=>['continuous','single-shot','auto','manual'].includes(m));
-    setBarcodeStatus(hasFocus ? '✅ '+lensName+' (มีโฟกัส)' : '⚠️ '+lensName+' (ไม่มีโฟกัส) — กด 🔄 อีกครั้ง');
-    await new Promise(r=>setTimeout(r,400));
-    await startBarcodeDetection(video, barcodeSubject);
-  }catch(e){
-    setBarcodeStatus('❌ เปลี่ยนกล้องไม่ได้: '+e.message);
+    const lensName = dev.label ? dev.label.replace(/\s*\(.*\)/,'').trim() : ('กล้อง '+(_barcodeDevIdx+1));
+    setBarcodeStatus('🔄 กำลังเปลี่ยนเป็น '+lensName+'...');
+    try{
+      barcodeStream = await navigator.mediaDevices.getUserMedia({
+        video:{ deviceId:{exact:dev.deviceId}, width:{ideal:640}, height:{ideal:480} }
+      });
+      const track = barcodeStream.getVideoTracks()[0];
+      const settings = track.getSettings();
+      // ข้ามถ้าเป็นกล้องหน้าจริงๆ (facingMode=user)
+      if(settings.facingMode==='user'){
+        barcodeStream.getTracks().forEach(t=>t.stop()); barcodeStream=null; continue;
+      }
+      const caps = track.getCapabilities();
+      await applyCloseFocus(track, caps);
+
+      const video = document.getElementById('barcode-video');
+      video.srcObject = barcodeStream;
+      await video.play();
+      video.onclick = async(ev)=>{
+        const rect=video.getBoundingClientRect();
+        const x=(ev.clientX-rect.left)/rect.width;
+        const y=(ev.clientY-rect.top)/rect.height;
+        await applyCloseFocus(track, caps, x, y);
+      };
+
+      const hasFocus = caps.focusMode?.some(m=>['continuous','single-shot','auto','manual'].includes(m));
+      setBarcodeStatus(hasFocus ? '✅ '+lensName+' (มีโฟกัส)' : '⚠️ '+lensName+' (ไม่มีโฟกัส) — กด 🔄 อีกครั้ง');
+      await new Promise(r=>setTimeout(r,400));
+      await startBarcodeDetection(video, barcodeSubject);
+      return; // สำเร็จ
+    }catch(e){
+      if(barcodeStream){ barcodeStream.getTracks().forEach(t=>t.stop()); barcodeStream=null; }
+    }
   }
+  setBarcodeStatus('⚠️ ไม่พบเลนส์หลังที่ดีกว่า');
 }
 
 async function openFaceModalClass(sid) {
