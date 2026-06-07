@@ -3170,6 +3170,8 @@ let barcodeInterval = null;
 let barcodeDetector = null;
 let pendingBarcode = null;      // barcode value รอผูกกับนักเรียน
 let barcodeTargetDate = '';     // วันที่ที่เลือกจะบันทึก
+let _barcodeDevices = [];       // กล้องทั้งหมดที่มี (multi-lens)
+let _barcodeDevIdx  = 0;        // index กล้องที่ใช้อยู่
 
 function setBarcodeStatus(msg){ const el=document.getElementById('barcode-status'); if(el) el.textContent=msg; }
 function addBarcodeLog(msg, cls=''){
@@ -3267,22 +3269,40 @@ async function openBarcodeScanner(sid, w=0){
   populateBarcodeDate(dates);
   setBarcodeStatus('🔍 กำลังเปิดกล้อง...');
   try{
-    // ใช้ความละเอียดต่ำ → หลีกเลี่ยงเลนส์ telephoto/ultrawide
-    // เลนส์หลัก (main) โฟกัสระยะใกล้ได้ดีกว่า
-    barcodeStream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'environment', width:{ideal:640}, height:{ideal:480} }
-    });
+    // เปิดกล้อง environment ก่อน (เพื่อขอ permission)
+    let videoConstraint = _barcodeDevices.length > 0
+      ? { deviceId:{exact:_barcodeDevices[_barcodeDevIdx].deviceId}, width:{ideal:640}, height:{ideal:480} }
+      : { facingMode:'environment', width:{ideal:640}, height:{ideal:480} };
+
+    barcodeStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraint });
+
+    // enumerate กล้องทั้งหมด (ทำได้หลังได้ permission)
+    if(_barcodeDevices.length === 0){
+      const allDev = await navigator.mediaDevices.enumerateDevices();
+      _barcodeDevices = allDev.filter(d=>d.kind==='videoinput' && d.deviceId && d.deviceId!=='default');
+      const curId = barcodeStream.getVideoTracks()[0]?.getSettings()?.deviceId;
+      _barcodeDevIdx = _barcodeDevices.findIndex(d=>d.deviceId===curId);
+      if(_barcodeDevIdx<0) _barcodeDevIdx=0;
+    }
+    // แสดงปุ่มเปลี่ยนเลนส์ถ้ามีกล้องมากกว่า 1
+    const lenBtn = document.getElementById('lens-switch-btn');
+    if(lenBtn) lenBtn.style.display = _barcodeDevices.length > 1 ? '' : 'none';
+
     const track = barcodeStream.getVideoTracks()[0];
     const caps  = track.getCapabilities();
 
-    // ── บังคับโฟกัสระยะใกล้ ──────────────────────────────
+    // ตั้ง continuous autofocus
     await applyCloseFocus(track, caps);
+
+    // ตรวจว่าเป็น ultrawide (ไม่มีโฟกัส) → แจ้งเตือน
+    const hasFocus = caps.focusMode?.some(m=>['continuous','single-shot','auto','manual'].includes(m));
+    if(!hasFocus) setBarcodeStatus('⚠️ เลนส์นี้โฟกัสไม่ได้ — กด 🔄 เปลี่ยนเลนส์');
 
     const video = document.getElementById('barcode-video');
     video.srcObject = barcodeStream;
     await video.play();
 
-    // แตะภาพ = single-shot focus ตรงนั้น แล้วกลับ continuous
+    // แตะภาพ = โฟกัสตรงจุดที่แตะ
     video.onclick = async(ev)=>{
       const rect=video.getBoundingClientRect();
       const x=(ev.clientX-rect.left)/rect.width;
@@ -3290,8 +3310,10 @@ async function openBarcodeScanner(sid, w=0){
       await applyCloseFocus(track, caps, x, y);
     };
 
-    setBarcodeStatus('⏳ กำลังโฟกัส...');
-    await new Promise(r=>setTimeout(r,400)); // รอกล้องเสถียร
+    if(hasFocus){
+      setBarcodeStatus('⏳ กำลังโฟกัส...');
+      await new Promise(r=>setTimeout(r,400));
+    }
     await startBarcodeDetection(video, sid);
 
   }catch(e){
@@ -3540,6 +3562,44 @@ function closeBarcodeScanner(){
   document.getElementById('barcode-overlay').classList.remove('active');
   const video=document.getElementById('barcode-video'); if(video) video.srcObject=null;
   barcodeSubject=null; barcodeWeek=0; pendingBarcode=null;
+}
+
+// เปลี่ยนเลนส์ (multi-lens phones เช่น ultrawide → main)
+async function switchBarcodeLens(){
+  if(_barcodeDevices.length <= 1){ setBarcodeStatus('ℹ️ ไม่พบกล้องอื่นในเครื่อง'); return; }
+  // หยุด scan loop + stream เดิม
+  if(window._barcodeScanStop){ window._barcodeScanStop(); window._barcodeScanStop=null; }
+  if(barcodeStream){ barcodeStream.getTracks().forEach(t=>t.stop()); barcodeStream=null; }
+  // เปลี่ยน index
+  _barcodeDevIdx = (_barcodeDevIdx+1) % _barcodeDevices.length;
+  const dev = _barcodeDevices[_barcodeDevIdx];
+  const lensName = dev.label ? dev.label.replace(/\(.*\)/,'').trim() : ('กล้อง '+(_barcodeDevIdx+1));
+  setBarcodeStatus('🔄 กำลังเปลี่ยนเป็น '+lensName+'...');
+  try{
+    barcodeStream = await navigator.mediaDevices.getUserMedia({
+      video:{ deviceId:{exact:dev.deviceId}, width:{ideal:640}, height:{ideal:480} }
+    });
+    const track = barcodeStream.getVideoTracks()[0];
+    const caps  = track.getCapabilities();
+    await applyCloseFocus(track, caps);
+
+    const video = document.getElementById('barcode-video');
+    video.srcObject = barcodeStream;
+    await video.play();
+    video.onclick = async(ev)=>{
+      const rect=video.getBoundingClientRect();
+      const x=(ev.clientX-rect.left)/rect.width;
+      const y=(ev.clientY-rect.top)/rect.height;
+      await applyCloseFocus(track, caps, x, y);
+    };
+
+    const hasFocus = caps.focusMode?.some(m=>['continuous','single-shot','auto','manual'].includes(m));
+    setBarcodeStatus(hasFocus ? '✅ '+lensName+' (มีโฟกัส)' : '⚠️ '+lensName+' (ไม่มีโฟกัส) — กด 🔄 อีกครั้ง');
+    await new Promise(r=>setTimeout(r,400));
+    await startBarcodeDetection(video, barcodeSubject);
+  }catch(e){
+    setBarcodeStatus('❌ เปลี่ยนกล้องไม่ได้: '+e.message);
+  }
 }
 
 async function openFaceModalClass(sid) {
@@ -3962,6 +4022,7 @@ init();
     <button class="btn" onclick="closeBarcodeScanner()" style="background:rgba(255,255,255,.08);">✕ ปิด</button>
     <button class="btn" onclick="manualRefocus()" style="background:#1a2a10;border-color:#4caf8a55;color:#4caf8a;">🔍 โฟกัส</button>
     <button class="btn" id="torch-btn" onclick="toggleTorch()" style="background:#2a2010;border-color:#c9a84c44;">🔦 ไฟฉาย</button>
+    <button class="btn" id="lens-switch-btn" onclick="switchBarcodeLens()" style="display:none;background:#1a2535;border-color:#4a8abf55;color:#7ab8e8;">🔄 เปลี่ยนเลนส์</button>
     <button class="btn" onclick="openStudentPickerForBarcode()" id="barcode-pick-btn" style="display:none;background:linear-gradient(135deg,#1a3a5c,#0d2240);">👤 เลือกนักเรียน</button>
   </div>
   <input type="file" id="barcode-file-input" accept="image/*" capture="environment" style="display:none" onchange="barcodeProcessFile(event)">
