@@ -2110,8 +2110,10 @@ function updateUndoBtn() {
 // ── SCAN UNDO TOAST — โผล่หลังสแกนสำเร็จทุกครั้ง ──────────────
 let _undoToastTimer = null;
 let _undoToastCountdown = null;
+let _undoToastIdx = null; // index นักเรียนที่เพิ่ง scan (สำหรับกัน re-detect หลัง undo)
 
-function showScanUndoToast(name){
+function showScanUndoToast(name, idx=null){
+  _undoToastIdx = idx;
   // บันทึก state ก่อนเสมอ
   pushUndo(name);
   // แสดง toast
@@ -2140,10 +2142,14 @@ function hideScanUndoToast(){
 }
 
 function undoLastScanAction(){
+  const savedIdx = _undoToastIdx;
   hideScanUndoToast();
-  undo(); // ใช้ระบบ undo เดิม — restore weekData+classData แล้ว save
-  // ล้าง faceMarked ด้วยเพื่อให้สแกนหน้าเดิมซ้ำได้
-  faceMarked = {}; updateFaceCount?.();
+  undo(); // restore weekData+classData แล้ว save
+  // ล้าง faceMarked — แต่ใส่คนที่เพิ่ง undo กลับเข้าไป
+  // เพื่อกัน face detection re-scan ซ้ำทันทีขณะหน้ายังอยู่ในกล้อง
+  faceMarked = {};
+  if(savedIdx !== null) faceMarked[savedIdx] = true; // กล้องข้ามคนนี้ไปก่อน
+  if(typeof updateFaceCount === 'function') updateFaceCount();
   speakName('ยกเลิก');
 }
 
@@ -3193,7 +3199,7 @@ async function markFaceAttend(idx, date) {
     addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
     setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
     updateFaceCount();
-    showScanUndoToast(students[idx]); // toast undo
+    showScanUndoToast(students[idx], idx); // toast undo
     await saveToFirebase();
     // reverse sync → เขียนกลับไปห้องต้นทาง (เฉพาะหน้ารวม)
     if(MERGE_SOURCES.length) writeBackToSource(students[idx], faceSubject, date, 1, cd.timestamps?.[idx]?.[date]||'').catch(()=>{});
@@ -3219,7 +3225,7 @@ async function markFaceAttend(idx, date) {
   addFaceLog('✓ ' + students[idx] + ' (' + date + ')', 'log-ok');
   setFaceStatus('⏳ กำลังบันทึก ' + students[idx] + '...');
   updateFaceCount();
-  showScanUndoToast(students[idx]); // toast undo
+  showScanUndoToast(students[idx], idx); // toast undo
   await saveToFirebase();
   playPing();
   speakName(students[idx]);
@@ -3522,7 +3528,7 @@ function handleBarcodeDetected(val, sid){
     renderClass(sid);
     addBarcodeLog('✓ '+students[idx]+' ('+today+')','barcode-log-ok');
     setBarcodeStatus('✅ '+students[idx]);
-    showScanUndoToast(students[idx]); // toast undo
+    showScanUndoToast(students[idx], idx); // toast undo
     saveClassCell(sid, idx, today, 1);
     if(MERGE_SOURCES.length) writeBackToSource(students[idx], sid, today, 1, cd.timestamps[idx][today]).catch(()=>{});
     playPing();
@@ -3558,7 +3564,7 @@ function handleBarcodeWeek(val, w){
     renderWeek(w);
     addBarcodeLog('✓ '+students[idx]+' ('+today+')','barcode-log-ok');
     setBarcodeStatus('✅ '+students[idx]);
-    showScanUndoToast(students[idx]); // toast undo
+    showScanUndoToast(students[idx], idx); // toast undo
     saveAttendanceCell(w, idx, today, 1, wd.timestamps[idx][today]);
     if(MERGE_SOURCES.length) writeBackToSource(students[idx], null, today, 1, wd.timestamps[idx][today]).catch(()=>{});
     playPing();
