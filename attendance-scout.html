@@ -1298,6 +1298,24 @@ async function mergeStudentsFromSources(silent=false){
       classData[sid].attendance = remapAtt(classData[sid].attendance);
       classData[sid].timestamps = remapAtt(classData[sid].timestamps);
     }
+
+    // ── remap facePhotos (รูปหน้า) ─────────────────────────
+    const newFP = {};
+    Object.keys(facePhotos).forEach(k=>{
+      const name = oldIdxToName[Number(k)];
+      const ni   = name !== undefined ? newNameToIdx[name] : undefined;
+      if(ni !== undefined) newFP[ni] = facePhotos[Number(k)];
+    });
+    facePhotos = newFP;
+
+    // ── remap faceDescriptors (ข้อมูลสแกนหน้า) ────────────
+    const newFD = {};
+    Object.keys(faceDescriptors).forEach(k=>{
+      const name = oldIdxToName[Number(k)];
+      const ni   = name !== undefined ? newNameToIdx[name] : undefined;
+      if(ni !== undefined) newFD[ni] = faceDescriptors[Number(k)];
+    });
+    faceDescriptors = newFD;
   }
 
   students = merged;
