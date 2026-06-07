@@ -967,8 +967,11 @@ function renderClass(sid) {
   if(!cd) return;
 
   let html = '<div class="subject-header">';
+  html += '<div style="display:flex;flex-direction:column;gap:2px;">';
   html += '<span class="subject-title">' + subj.full + '</span>';
   html += '<span class="subject-meta">📅 ' + subj.day + ' &nbsp;|&nbsp; 👤 ' + subj.teacher + '</span>';
+  html += '</div>';
+  html += '<button class="btn no-print" onclick="exportClassToExcel(\'' + sid + '\')" style="background:linear-gradient(135deg,#1a3d1a,#0d2a10);border-color:#4caf8a66;color:#4caf8a;white-space:nowrap;" title="ส่งออกเป็น Excel (.xlsx)">📊 Export Excel</button>';
   html += '</div>';
 
   // date controls
@@ -1025,6 +1028,95 @@ function renderClass(sid) {
     html += '</tbody></table></div>';
   }
   panel.innerHTML = html;
+}
+
+// ===== EXCEL EXPORT =====
+async function exportClassToExcel(sid){
+  const subj = getAllSubjects().find(s=>s.id===sid);
+  const cd = classData[sid];
+  if(!cd || !subj){ showStatus('❌ ไม่พบข้อมูลวิชา','#e05555'); return; }
+  if(cd.dates.length===0){ showStatus('⚠️ ยังไม่มีวันที่ — เพิ่มวันที่ก่อน','#c9a84c'); return; }
+
+  // โหลด SheetJS แบบ lazy (ครั้งเดียว)
+  if(!window.XLSX){
+    showStatus('⏳ กำลังโหลด SheetJS...','#c9a84c');
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    }).catch(()=>{ showStatus('❌ โหลด SheetJS ไม่ได้ — ตรวจสอบ internet','#e05555'); return null; });
+    if(!window.XLSX) return;
+  }
+
+  const ib = getInfoBar();
+  const rows = [];
+
+  // ── แถวหัวเอกสาร ──
+  rows.push([subj.full || subj.name]);
+  rows.push([
+    (subj.day?'วัน'+subj.day+' | ':'') + 'ครู: '+(subj.teacher||ib.teacher)
+  ]);
+  rows.push([
+    'ภาคเรียน '+ib.term+'/'+ib.year +
+    (ib.cls?' | กลุ่มเรียน: '+ib.cls:'') +
+    (ib.teacher?' | ครูที่ปรึกษา: '+ib.teacher:'')
+  ]);
+  rows.push([]); // เว้นบรรทัด
+
+  // ── แถว header คอลัมน์ ──
+  rows.push(['ลำดับ','ชื่อ – สกุล',...cd.dates,'มา','ลา','%']);
+
+  // ── แถวนักเรียน ──
+  let seq=0;
+  students.forEach((name,idx)=>{
+    if(hiddenStudents.has(idx)) return;
+    if(isGroupHeader(name)){
+      rows.push(['','◆ '+groupLabel(name)]); // group header
+      return;
+    }
+    seq++;
+    const att = cd.attendance[idx]||{};
+    let ma=0, noma=0;
+    const dateCells = cd.dates.map(d=>{
+      const v=att[d]||0;
+      if(v===1){ ma++; return 'มา'; }
+      if(v===2){ noma++; return 'ลา'; }
+      return '';
+    });
+    const recorded=ma+noma;
+    const pct = recorded>0 ? Math.round(ma/recorded*100) : null;
+    rows.push([seq, name, ...dateCells, ma, noma, pct!==null ? pct+'%' : '—']);
+  });
+
+  // ── สร้าง Workbook ──
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // กำหนดความกว้างคอลัมน์
+  ws['!cols'] = [
+    {wch:6}, {wch:32},
+    ...cd.dates.map(()=>({wch:11})),
+    {wch:6},{wch:6},{wch:8}
+  ];
+
+  // Merge cell แถวหัวเอกสาร (A1:ไปถึงคอลัมน์สุดท้าย)
+  const lastCol = 2 + cd.dates.length + 2; // 0-indexed
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:lastCol}},
+    {s:{r:1,c:0},e:{r:1,c:lastCol}},
+    {s:{r:2,c:0},e:{r:2,c:lastCol}},
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, subj.name.slice(0,31));
+
+  // ชื่อไฟล์
+  const today = new Date();
+  const dd = [today.getDate(),today.getMonth()+1,today.getFullYear()%100].map(n=>String(n).padStart(2,'0')).join('');
+  const fname = (subj.name+'_'+(ib.cls||'')+'_'+dd).replace(/[^\w฀-๿]/g,'_')+'.xlsx';
+
+  XLSX.writeFile(wb, fname);
+  showStatus('✅ บันทึก Excel แล้ว: '+fname,'#4caf8a');
 }
 
 function classSymbol(s, ts) {
