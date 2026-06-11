@@ -1940,14 +1940,15 @@ async function syncAttendanceFromSources(){
     // sync extraSubjects จาก source page → เพิ่มวิชาใหม่ที่สร้างจากห้องเรียนก่อน
     // (ต้องทำก่อน classData sync เพื่อให้ getAllSubjects() รู้จักวิชานั้นแล้ว)
     if(raw.extraSubjects && Array.isArray(raw.extraSubjects)){
+      let exAdded = false;
       raw.extraSubjects.forEach(s => {
         if(s.id && s.name && !getAllSubjects().find(sub=>sub.id===s.id)){
           extraSubjects.push(s);
           if(!classData[s.id]) classData[s.id]={dates:[],attendance:{},timestamps:{}};
-          changed = true;
+          exAdded = true; changed = true;
         }
       });
-      if(changed){ buildClassTabs(); buildClassPanels(); }
+      if(exAdded){ buildClassTabs(); buildClassPanels(); }
     }
 
     srcStudents.forEach((name,srcIdx)=>{
@@ -4503,29 +4504,31 @@ async function init(){
       }}
 
       // sync รูปใบหน้า (fp) จาก cloud — เพิ่มเฉพาะคนที่ยังไม่มีรูปใน local
-      const cfp = data.fp || (data.students !== undefined ? data.fp : null);
+      const cfp = data.fp || null;
       if(cfp){
+        let photoChanged = false;
         for(const k in cfp){
           const n=Number(k), cv=cfp[k];
           if(!cv) continue;
           if(!facePhotos[n] || facePhotos[n].length === 0){
             facePhotos[n] = Array.isArray(cv) ? cv : [cv];
-            changed = true;
+            photoChanged = true; changed = true;
           }
         }
-        if(changed) renderStudentChips();
+        if(photoChanged) renderStudentChips();
       }
 
       // sync extraSubjects จาก cloud — เพิ่มห้องที่ยังไม่มีใน local
       if(cex && Array.isArray(cex)){
+        let exChanged = false;
         cex.forEach(s => {
           if(s.id && s.name && !extraSubjects.find(e=>e.id===s.id)){
             extraSubjects.push(s);
             if(!classData[s.id]) classData[s.id]={dates:[],attendance:{},timestamps:{}};
-            changed = true;
+            exChanged = true; changed = true;
           }
         });
-        if(changed) { buildClassTabs(); buildClassPanels(); }
+        if(exChanged) { buildClassTabs(); buildClassPanels(); }
       }
 
       // sync attendance จาก source pages (เฉพาะหน้ารวม)
