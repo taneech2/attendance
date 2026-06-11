@@ -185,8 +185,13 @@ td.num{color:#c9a84c;font-weight:600;}
 .student-manager{background:rgba(201,168,76,.04);border:1px solid #c9a84c44;border-radius:6px;padding:16px;margin-bottom:16px;}
 .student-manager h4{color:#c9a84c;font-size:14px;margin-bottom:10px;}
 .student-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
-.student-chip{background:#1a2540;border:1px solid #c9a84c44;color:#d4c4a0;padding:4px 8px 4px 4px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:6px;}
+.student-chip{background:#1a2540;border:1px solid #c9a84c44;color:#d4c4a0;padding:4px 8px 4px 4px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:6px;transition:border-color .15s,box-shadow .15s;}
 .student-chip button{background:none;border:none;color:#e05555;cursor:pointer;font-size:12px;padding:0;line-height:1;}
+.chip-drag-handle{cursor:grab;opacity:.4;padding:0 2px;font-size:14px;line-height:1;user-select:none;flex-shrink:0;}
+.chip-drag-handle:hover{opacity:.9;}
+.chip-drag-handle:active{cursor:grabbing;}
+.student-chip.drag-over{border-color:#c9a84c!important;box-shadow:0 0 0 2px #c9a84c55;background:#1e2d48;}
+.student-chip.chip-dragging{opacity:.35;border-style:dashed;}
 .face-thumb{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #4caf8a;flex-shrink:0;}
 .face-thumb-none{width:32px;height:32px;border-radius:50%;background:#0d1530;border:2px dashed #c9a84c44;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#555;}
 .add-student-row{display:flex;gap:8px;}
@@ -1546,6 +1551,53 @@ function toggleHideStudent(i){
 }
 
 // ===== STUDENT MANAGEMENT =====
+let _chipDragIdx = null; // index ที่กำลังลาก
+
+function moveStudent(fromIdx, toIdx){
+  if(!requireUnlock()) return;
+  if(fromIdx === toIdx) return;
+  // สร้าง permutation ใหม่ — order[newIdx] = oldIdx
+  const order = students.map((_,i) => i);
+  const [moved] = order.splice(fromIdx, 1);
+  order.splice(toIdx, 0, moved);
+
+  // helper: remap object keyed by student index
+  const remap = obj => {
+    const out = {};
+    order.forEach((oi,ni) => { if(obj[oi] !== undefined) out[ni] = obj[oi]; });
+    return out;
+  };
+
+  students = order.map(oi => students[oi]);
+
+  // remap weekData
+  for(let w=1; w<=TOTAL_WEEKS; w++){
+    if(!weekData[w]) continue;
+    weekData[w].attendance = remap(weekData[w].attendance || {});
+    weekData[w].timestamps = remap(weekData[w].timestamps || {});
+  }
+  // remap classData (วิชาเสริม + ลูกเสือ ฯลฯ)
+  getAllSubjects().forEach(subj => {
+    const cd = classData[subj.id];
+    if(!cd) return;
+    cd.attendance = remap(cd.attendance || {});
+    if(cd.timestamps) cd.timestamps = remap(cd.timestamps);
+  });
+  // remap hiddenStudents
+  const newHidden = new Set();
+  order.forEach((oi,ni) => { if(hiddenStudents.has(oi)) newHidden.add(ni); });
+  hiddenStudents = newHidden;
+  // remap face + barcode
+  facePhotos      = remap(facePhotos || {});
+  faceDescriptors = remap(faceDescriptors || {});
+  studentBarcodes = remap(studentBarcodes || {});
+
+  renderStudentChips();
+  renderWeek(currentWeek > 0 ? currentWeek : 1);
+  saveToFirebase();
+  showStatus('✅ เรียงลำดับใหม่แล้ว — บันทึกแล้ว','#4caf8a');
+}
+
 function renderStudentChips(){
   const wrap=document.getElementById('student-chips');
   wrap.innerHTML='';
@@ -1579,7 +1631,31 @@ function renderStudentChips(){
     const editBtn = `<button class="btn-hide" onclick="editStudent(${i})" title="แก้ชื่อ-นามสกุล">✏️</button>`;
     const bcVal = studentBarcodes[i];
     const bcBadge = `<span class="chip-barcode ${bcVal?'has-id':''}" onclick="promptBarcode(${i})" title="${bcVal?'บัตร: '+bcVal:'คลิกผูกบัตร'}">${bcVal?'🪪':'＋🪪'}</span>`;
-    chip.innerHTML = `${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}${bcBadge}${editBtn}${hideBtn}${!isHidden?`<button onclick="removeStudent(${i})" title="ลบ">✕</button>`:''}`;
+    const dragHandle = `<span class="chip-drag-handle" title="ลากเพื่อเรียงลำดับ">⠿</span>`;
+    chip.innerHTML = `${dragHandle}${thumbHtml}<span>${i+1}. ${name}</span>${cntBadge}${bcBadge}${editBtn}${hideBtn}${!isHidden?`<button onclick="removeStudent(${i})" title="ลบ">✕</button>`:''}`;
+
+    // drag-and-drop reorder
+    chip.setAttribute('draggable','true');
+    chip.addEventListener('dragstart', e => {
+      _chipDragIdx = i;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => chip.classList.add('chip-dragging'), 0);
+    });
+    chip.addEventListener('dragend', () => {
+      chip.classList.remove('chip-dragging');
+      _chipDragIdx = null;
+      document.querySelectorAll('.student-chip').forEach(c => c.classList.remove('drag-over'));
+    });
+    chip.addEventListener('dragover', e => {
+      e.preventDefault();
+      if(_chipDragIdx !== null && _chipDragIdx !== i) chip.classList.add('drag-over');
+    });
+    chip.addEventListener('dragleave', () => chip.classList.remove('drag-over'));
+    chip.addEventListener('drop', e => {
+      e.preventDefault();
+      chip.classList.remove('drag-over');
+      if(_chipDragIdx !== null && _chipDragIdx !== i) moveStudent(_chipDragIdx, i);
+    });
     wrap.appendChild(chip);
   };
 
