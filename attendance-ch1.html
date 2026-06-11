@@ -1507,6 +1507,7 @@ function editStudent(i){
   const neu = prompt(`แก้ชื่อนักเรียนลำดับที่ ${i+1}:`, old);
   if(!neu || neu.trim() === old) return;
   students[i] = neu.trim();
+  _studentsLocalDirty = Date.now();
   renderStudentChips();
   renderWeek(currentWeek>0?currentWeek:1);
   saveToFirebase();
@@ -1548,6 +1549,7 @@ function toggleHideStudent(i){
 
 // ===== STUDENT MANAGEMENT =====
 let _chipDragIdx = null; // index ที่กำลังลาก
+let _studentsLocalDirty = 0; // timestamp ของการแก้ไข students ล่าสุด (ป้องกัน auto-sync ทับ)
 
 function moveStudent(fromIdx, toIdx){
   if(!requireUnlock()) return;
@@ -1588,6 +1590,7 @@ function moveStudent(fromIdx, toIdx){
   faceDescriptors = remap(faceDescriptors || {});
   studentBarcodes = remap(studentBarcodes || {});
 
+  _studentsLocalDirty = Date.now();
   renderStudentChips();
   renderWeek(currentWeek > 0 ? currentWeek : 1);
   saveToFirebase();
@@ -1678,6 +1681,7 @@ function addStudent(){
     weekData[w].dates.forEach(d=>weekData[w].attendance[i][d]=0);
   }
   inp.value='';
+  _studentsLocalDirty = Date.now();
   renderStudentChips();
   renderWeek(currentWeek>0?currentWeek:1);
   saveToFirebase();
@@ -1719,6 +1723,7 @@ function removeStudent(idx){
   faceDescriptors = remap(faceDescriptors||{});
   studentBarcodes = remap(studentBarcodes||{});
 
+  _studentsLocalDirty = Date.now();
   renderStudentChips();
   renderWeek(currentWeek>0?currentWeek:1);
   saveToFirebase();
@@ -4445,7 +4450,8 @@ async function init(){
       if(data.students && JSON.stringify(data.students) !== JSON.stringify(students)) {
         const localHasGroups = MERGE_SOURCES.length > 0 && students.some(n=>isGroupHeader(n));
         const cloudHasGroups = data.students.some(n=>isGroupHeader(n));
-        if(!localHasGroups || cloudHasGroups) {
+        const recentlyEdited = Date.now() - _studentsLocalDirty < 15000;
+        if(!recentlyEdited && (!localHasGroups || cloudHasGroups)) {
           students = data.students;
           changed = true;
         }
