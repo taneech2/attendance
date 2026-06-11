@@ -1119,9 +1119,9 @@ async function exportClassToExcel(sid){
   // ══════════════════════════════════════════════════════════
   const ws1 = wb.addWorksheet('รายชื่อนักเรียน');
   ws1.properties.defaultRowHeight=18;
-  ws1.columns=[{width:6},{width:32},...cd.dates.map(()=>({width:10})),{width:7},{width:7},{width:9}];
+  ws1.columns=[{width:6},{width:32},{width:16},...cd.dates.map(()=>({width:10})),{width:7},{width:7},{width:9}];
 
-  const nc = 2+daysCount+3; // total columns
+  const nc = 3+daysCount+3; // total columns (เพิ่มคอลัมน์รหัสนักศึกษา)
   // title
   const r1a=ws1.addRow([subj.full||subj.name]);
   r1a.height=26; ws1.mergeCells(r1a.number,1,r1a.number,nc);
@@ -1138,14 +1138,14 @@ async function exportClassToExcel(sid){
   ws1.addRow([]);
 
   // header row
-  const h1=ws1.addRow(['ลำดับ','ชื่อ – สกุล',...cd.dates,'มา','ขาด/ลา','%']);
+  const h1=ws1.addRow(['ลำดับ','ชื่อ – สกุล','รหัสนักศึกษา',...cd.dates,'มา','ขาด/ลา','%']);
   h1.height=22;
   h1.eachCell((cell,ci)=>{
     setHdr(cell,cell.value);
     cell.border={bottom:{style:'medium',color:{argb:'FF4CAF8A'}}};
-    if(ci===2) cell.alignment={horizontal:'left',vertical:'middle'};
+    if(ci===2||ci===3) cell.alignment={horizontal:'left',vertical:'middle'};
   });
-  ws1.views=[{state:'frozen',ySplit:5,xSplit:2}];
+  ws1.views=[{state:'frozen',ySplit:5,xSplit:3}];
 
   // data rows
   let seq1=0, zebra=false;
@@ -1174,13 +1174,15 @@ async function exportClassToExcel(sid){
       return'';
     });
     const rec=ma+noma, p=rec>0?ma/rec:null;
-    const rowData=[seq1,name,...dateCells,ma,noma,p];
+    const rowData=[seq1,name,studentBarcodes[idx]||'',...dateCells,ma,noma,p];
     const r=ws1.addRow(rowData);
     const bg=zebra?'FF0D1530':'FF0A1020';
     r.eachCell(cell=>{ cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; cell.font={color:{argb:'FFD4C4A0'}}; });
     r.getCell(1).font={color:{argb:'FF8090A8'}}; // ลำดับ — สีเทา
     r.getCell(2).font={bold:true,color:{argb:'FFD4C4A0'}}; // ชื่อ — ครีมตัวหนา
     r.getCell(2).alignment={horizontal:'left'};
+    r.getCell(3).font={color:{argb:'FF89C4E1'}}; // รหัสนักศึกษา — ฟ้าอ่อน
+    r.getCell(3).alignment={horizontal:'left'};
     if(p!==null){
       const pc=r.getCell(nc); pc.numFmt='0%';
       pc.font={bold:true,color:{argb:fgOf(p)}};
@@ -1188,7 +1190,7 @@ async function exportClassToExcel(sid){
     // color date cells
     cd.dates.forEach((d,di)=>{
       const v=att[d]||0;
-      const c=r.getCell(3+di);
+      const c=r.getCell(4+di);
       c.alignment={horizontal:'center'};
       if(v===1) c.font={color:{argb:'FF4CAF8A'}};
       else if(v===2) c.font={color:{argb:'FFE8C84A'}};
