@@ -197,6 +197,19 @@ td.num{color:#c9a84c;font-weight:600;}
 .bulk-bc-inp:focus{outline:none;border-color:#c9a84c99;}
 .bulk-bc-inp.has-val{border-color:#4caf8a66;color:#4caf8a;}
 .bulk-bc-paste-hint{color:#6a7fa0;font-size:11px;margin-bottom:8px;line-height:1.5;}
+/* QR CODE MODAL */
+.qr-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:4px;}
+.qr-card{background:#fff;color:#111;border-radius:8px;padding:10px 8px 8px;text-align:center;width:120px;display:flex;flex-direction:column;align-items:center;gap:3px;box-shadow:0 2px 8px #0004;}
+.qr-card canvas{border-radius:3px;}
+.qr-name{font-size:9.5px;font-weight:700;color:#111;line-height:1.3;max-width:108px;word-break:break-word;}
+.qr-id{font-size:9px;color:#555;font-family:'Courier New',monospace;letter-spacing:.5px;}
+.qr-seq{font-size:9px;color:#999;margin-bottom:1px;}
+@media print{
+  .qr-print-only{display:block!important;}
+  .qr-no-print{display:none!important;}
+  body > *:not(#qr-print-area){display:none!important;}
+  #qr-print-area{display:flex!important;flex-wrap:wrap;gap:8px;padding:8px;background:#fff;}
+}
 .face-thumb{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #4caf8a;flex-shrink:0;}
 .face-thumb-none{width:32px;height:32px;border-radius:50%;background:#0d1530;border:2px dashed #c9a84c44;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#555;}
 .add-student-row{display:flex;gap:8px;}
@@ -496,6 +509,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
       <button class="btn btn-green" onclick="addStudent()">+ เพิ่มนักเรียน</button>
       <button class="btn" onclick="importStudents()">📋 วางรายชื่อทีเดียว</button>
       <button class="btn" onclick="openBulkBarcode()" title="ผูกเลขบัตรนักศึกษา/ประชาชนทีละหลายคน">🪪 ผูกบัตรหลายคน</button>
+      <button class="btn" onclick="openQrModal()" title="สร้าง QR Code จากรหัสนักศึกษาเพื่อพิมพ์">🔲 พิมพ์ QR Code</button>
     </div>
     <div id="merge-row" style="display:none;margin-top:10px;align-items:center;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-green" onclick="mergeStudentsFromSources()">🔄 ดึงรายชื่อจากทุกห้อง</button>
@@ -4553,6 +4567,63 @@ async function init(){
   }, 30000); // 30s
 }
 
+// ===== QR CODE GENERATOR =====
+function loadQrLib(cb){
+  if(window.QRCode){ cb(); return; }
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+  s.onload=cb; document.head.appendChild(s);
+}
+
+async function openQrModal(){
+  const hasBarcodes = Object.keys(studentBarcodes).length > 0;
+  if(!hasBarcodes){
+    showStatus('ยังไม่มีรหัสนักศึกษา — กด 🪪 ผูกบัตรหลายคน ก่อนครับ','#e8c84a');
+    return;
+  }
+  document.getElementById('qr-overlay').style.display='flex';
+  const wrap = document.getElementById('qr-grid-wrap');
+  wrap.innerHTML = '<span style="color:#6a7fa0">⏳ กำลังสร้าง QR Code...</span>';
+  loadQrLib(async ()=>{
+    wrap.innerHTML='';
+    const entries = students.map((name,i)=>({name,i}))
+      .filter(({name,i})=> !isGroupHeader(name) && !hiddenStudents.has(i) && studentBarcodes[i]);
+    for(const {name,i} of entries){
+      const id = studentBarcodes[i];
+      const card = document.createElement('div');
+      card.className='qr-card';
+      const canvas = document.createElement('canvas');
+      await QRCode.toCanvas(canvas, id, {width:100,margin:1,color:{dark:'#000',light:'#fff'}});
+      const seq = document.createElement('div');
+      seq.className='qr-seq'; seq.textContent=`#${i+1}`;
+      const nameEl = document.createElement('div');
+      nameEl.className='qr-name'; nameEl.textContent=name;
+      const idEl = document.createElement('div');
+      idEl.className='qr-id'; idEl.textContent=id;
+      card.append(seq,canvas,nameEl,idEl);
+      wrap.appendChild(card);
+    }
+    if(!wrap.children.length)
+      wrap.innerHTML='<span style="color:#6a7fa0">ไม่มีนักเรียนที่ผูกรหัสไว้</span>';
+  });
+}
+
+function closeQrModal(){
+  document.getElementById('qr-overlay').style.display='none';
+}
+
+function printQrCodes(){
+  const src = document.getElementById('qr-grid-wrap');
+  const area = document.getElementById('qr-print-area');
+  area.innerHTML = src.innerHTML;
+  area.style.display='flex';
+  setTimeout(()=>{
+    window.print();
+    area.style.display='none';
+    area.innerHTML='';
+  }, 200);
+}
+
 // ===== BULK BARCODE ENTRY =====
 function openBulkBarcode(){
   if(!requireUnlock()) return;
@@ -4642,6 +4713,28 @@ init();
     </div>
   </div>
 </div>
+
+<!-- QR CODE MODAL -->
+<div id="qr-overlay" onclick="if(event.target===this)closeQrModal()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:8500;
+         align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
+  <div style="background:linear-gradient(160deg,#0d1530,#0a1020);border:2px solid #c9a84c;
+              border-radius:14px;padding:20px;width:100%;max-width:680px;margin:auto;">
+    <div class="qr-no-print" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <h3 style="color:#c9a84c;margin:0;font-size:16px;">🔲 QR Code นักเรียน</h3>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeQrModal()">ปิด</button>
+        <button class="btn btn-green" onclick="printQrCodes()">🖨️ พิมพ์</button>
+      </div>
+    </div>
+    <p class="qr-no-print" style="color:#6a7fa0;font-size:11px;margin:0 0 12px;">
+      แสดงเฉพาะนักเรียนที่ผูกรหัสไว้แล้ว — กด <strong style="color:#c9a84c">🖨️ พิมพ์</strong> เพื่อพิมพ์ใส่กระดาษ
+    </p>
+    <div id="qr-grid-wrap" class="qr-grid"></div>
+  </div>
+</div>
+<!-- hidden print area -->
+<div id="qr-print-area" style="display:none;position:fixed;inset:0;background:#fff;z-index:99999;padding:10px;"></div>
 
 <!-- ADD SUBJECT MODAL -->
 <div id="addroom-overlay"
