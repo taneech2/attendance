@@ -187,6 +187,15 @@ td.num{color:#c9a84c;font-weight:600;}
 .chip-drag-handle:active{cursor:grabbing;}
 .student-chip.drag-over{border-color:#c9a84c!important;box-shadow:0 0 0 2px #c9a84c55;background:#1e2d48;}
 .student-chip.chip-dragging{opacity:.35;border-style:dashed;}
+/* BULK BARCODE MODAL */
+.bulk-bc-table{width:100%;border-collapse:collapse;font-size:13px;}
+.bulk-bc-table th{background:#0d1530;color:#c9a84c;padding:7px 10px;text-align:left;font-weight:700;border-bottom:1px solid #c9a84c33;position:sticky;top:0;}
+.bulk-bc-table td{padding:5px 8px;border-bottom:1px solid #ffffff08;vertical-align:middle;}
+.bulk-bc-table tr:hover td{background:#ffffff07;}
+.bulk-bc-inp{width:100%;background:#060d1e;border:1px solid #c9a84c44;color:#d4c4a0;padding:5px 8px;border-radius:5px;font-family:'Sarabun',sans-serif;font-size:13px;font-family:'Courier New',monospace;}
+.bulk-bc-inp:focus{outline:none;border-color:#c9a84c99;}
+.bulk-bc-inp.has-val{border-color:#4caf8a66;color:#4caf8a;}
+.bulk-bc-paste-hint{color:#6a7fa0;font-size:11px;margin-bottom:8px;line-height:1.5;}
 .face-thumb{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #4caf8a;flex-shrink:0;}
 .face-thumb-none{width:32px;height:32px;border-radius:50%;background:#0d1530;border:2px dashed #c9a84c44;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#555;}
 .add-student-row{display:flex;gap:8px;}
@@ -485,6 +494,7 @@ body.hide-names .student-chip span{color:transparent!important;background:#1e2d4
       <input id="inp-student" placeholder="ชื่อ-สกุล นักเรียน เช่น นายสมชาย ใจดี" onkeydown="if(event.key==='Enter')addStudent()">
       <button class="btn btn-green" onclick="addStudent()">+ เพิ่มนักเรียน</button>
       <button class="btn" onclick="importStudents()">📋 วางรายชื่อทีเดียว</button>
+      <button class="btn" onclick="openBulkBarcode()" title="ผูกเลขบัตรนักศึกษา/ประชาชนทีละหลายคน">🪪 ผูกบัตรหลายคน</button>
     </div>
     <div id="merge-row" style="display:none;margin-top:10px;align-items:center;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-green" onclick="mergeStudentsFromSources()">🔄 ดึงรายชื่อจากทุกห้อง</button>
@@ -4557,8 +4567,100 @@ async function init(){
   }, 30000); // 30s
 }
 
+// ===== BULK BARCODE ENTRY =====
+function openBulkBarcode(){
+  if(!requireUnlock()) return;
+  const tbody = document.getElementById('bulk-bc-tbody');
+  tbody.innerHTML = '';
+  students.forEach((name, i) => {
+    if(isGroupHeader(name)) return;
+    const cur = studentBarcodes[i] || '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:#6a7fa0;text-align:center">${i+1}</td>
+      <td style="color:#d4c4a0">${name}</td>
+      <td><input class="bulk-bc-inp${cur?' has-val':''}" data-idx="${i}"
+            value="${cur}" placeholder="ยังไม่ผูก"
+            oninput="this.classList.toggle('has-val',this.value.trim()!=='')"
+            onpaste="bulkBcPaste(event,${i})"></td>`;
+    tbody.appendChild(tr);
+  });
+  const ov = document.getElementById('bulk-bc-overlay');
+  ov.style.display = 'flex';
+  // focus ช่องแรก
+  const first = tbody.querySelector('.bulk-bc-inp');
+  if(first) setTimeout(()=>first.focus(), 80);
+}
+
+function closeBulkBarcode(){
+  document.getElementById('bulk-bc-overlay').style.display = 'none';
+}
+
+function saveBulkBarcode(){
+  document.querySelectorAll('#bulk-bc-tbody .bulk-bc-inp').forEach(inp => {
+    const idx = Number(inp.dataset.idx);
+    const v = inp.value.trim();
+    if(v) studentBarcodes[idx] = v;
+    else delete studentBarcodes[idx];
+  });
+  renderStudentChips();
+  saveToFirebase();
+  closeBulkBarcode();
+  showStatus('✅ บันทึกเลขบัตรแล้ว', '#4caf8a');
+}
+
+// Paste ทีเดียวจาก Excel (บรรทัดละ 1 เลข) → ใส่ลงตามลำดับนักเรียน
+function bulkBcPaste(e, startIdx){
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  const lines = text.split(/[\r\n\t]+/).map(s=>s.trim()).filter(Boolean);
+  if(lines.length <= 1) return; // paste เลขเดียวไม่ interrupt
+  e.preventDefault();
+  const inputs = Array.from(document.querySelectorAll('#bulk-bc-tbody .bulk-bc-inp'));
+  const startPos = inputs.findIndex(inp => Number(inp.dataset.idx) === startIdx);
+  lines.forEach((val, offset) => {
+    const inp = inputs[startPos + offset];
+    if(!inp) return;
+    inp.value = val;
+    inp.classList.toggle('has-val', val !== '');
+  });
+}
+
+// ปิด modal เมื่อกดพื้นหลัง
+document.getElementById('bulk-bc-overlay').addEventListener('click', e => {
+  if(e.target === e.currentTarget) closeBulkBarcode();
+});
+
 init();
 </script>
+
+<!-- BULK BARCODE MODAL -->
+<div id="bulk-bc-overlay"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:8500;
+         align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
+  <div style="background:linear-gradient(160deg,#0d1530,#0a1020);border:2px solid #c9a84c;
+              border-radius:14px;padding:20px;width:100%;max-width:520px;margin:auto;">
+    <h3 style="color:#c9a84c;margin:0 0 6px;font-size:16px;">🪪 ผูกบัตรนักศึกษา / บัตรประชาชน</h3>
+    <p class="bulk-bc-paste-hint">
+      พิมพ์หรือวาง (Paste) เลขบัตรในช่องด้านขวา<br>
+      หรือ <strong style="color:#c9a84c">วางทีเดียวจาก Excel</strong>:
+      คัดลอก 1 คอลัมน์ → คลิกช่องแรก → กด Ctrl+V
+    </p>
+    <div style="max-height:55vh;overflow-y:auto;border-radius:8px;border:1px solid #c9a84c22;">
+      <table class="bulk-bc-table">
+        <thead><tr>
+          <th style="width:36px">#</th>
+          <th>ชื่อ – สกุล</th>
+          <th style="width:180px">เลขบัตร</th>
+        </tr></thead>
+        <tbody id="bulk-bc-tbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">
+      <button class="btn" onclick="closeBulkBarcode()">ยกเลิก</button>
+      <button class="btn btn-green" onclick="saveBulkBarcode()">💾 บันทึกทั้งหมด</button>
+    </div>
+  </div>
+</div>
 
 <!-- ADD SUBJECT MODAL -->
 <div id="addroom-overlay"
