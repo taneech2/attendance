@@ -4609,23 +4609,25 @@ async function openQrModal(){
     wrap.innerHTML='';
     const entries = students.map((name,i)=>({name,i}))
       .filter(({name,i})=> !isGroupHeader(name) && !hiddenStudents.has(i) && studentBarcodes[i]);
-    for(const {name,i} of entries){
+    if(!entries.length){
+      wrap.innerHTML='<span style="color:#6a7fa0">ไม่มีนักเรียนที่ผูกรหัสไว้</span>';
+      return;
+    }
+    const opts = {width:100,margin:1,errorCorrectionLevel:'L',color:{dark:'#000000',light:'#ffffff'}};
+    const cards = await Promise.all(entries.map(async ({name,i})=>{
       const id = studentBarcodes[i];
+      const url = await QRCode.toDataURL(id, opts);
+      return {name,i,id,url};
+    }));
+    cards.forEach(({name,i,id,url})=>{
       const card = document.createElement('div');
       card.className='qr-card';
-      const canvas = document.createElement('canvas');
-      await QRCode.toCanvas(canvas, id, {width:100,margin:1,color:{dark:'#000',light:'#fff'}});
-      const seq = document.createElement('div');
-      seq.className='qr-seq'; seq.textContent=`#${i+1}`;
-      const nameEl = document.createElement('div');
-      nameEl.className='qr-name'; nameEl.textContent=name;
-      const idEl = document.createElement('div');
-      idEl.className='qr-id'; idEl.textContent=id;
-      card.append(seq,canvas,nameEl,idEl);
+      card.innerHTML=`<div class="qr-seq">#${i+1}</div>
+        <img src="${url}" width="100" height="100" style="border-radius:3px">
+        <div class="qr-name">${name}</div>
+        <div class="qr-id">${id}</div>`;
       wrap.appendChild(card);
-    }
-    if(!wrap.children.length)
-      wrap.innerHTML='<span style="color:#6a7fa0">ไม่มีนักเรียนที่ผูกรหัสไว้</span>';
+    });
   });
 }
 
