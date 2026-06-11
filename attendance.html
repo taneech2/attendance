@@ -4625,16 +4625,11 @@ function bulkBcPaste(e, startIdx){
   });
 }
 
-// ปิด modal เมื่อกดพื้นหลัง
-document.getElementById('bulk-bc-overlay').addEventListener('click', e => {
-  if(e.target === e.currentTarget) closeBulkBarcode();
-});
-
 init();
 </script>
 
 <!-- BULK BARCODE MODAL -->
-<div id="bulk-bc-overlay"
+<div id="bulk-bc-overlay" onclick="if(event.target===this)closeBulkBarcode()"
   style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:8500;
          align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
   <div style="background:linear-gradient(160deg,#0d1530,#0a1020);border:2px solid #c9a84c;
