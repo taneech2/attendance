@@ -1686,16 +1686,39 @@ function addStudent(){
 function removeStudent(idx){
   if(!requireUnlock())return;
   if(!confirm(`ลบ "${students[idx]}" ออกจากทุกสัปดาห์?`))return;
-  students.splice(idx,1);
-  // rebuild attendance index for all weeks
+
+  // order[newIdx] = oldIdx (ข้ามตัวที่ถูกลบ)
+  const order = students.map((_,i)=>i).filter(i=>i!==idx);
+  const remap = obj => {
+    const out={};
+    order.forEach((oi,ni)=>{ if(obj[oi]!==undefined) out[ni]=obj[oi]; });
+    return out;
+  };
+
+  students = order.map(oi=>students[oi]);
+
+  // remap weekData (attendance + timestamps)
   for(let w=1;w<=TOTAL_WEEKS;w++){
-    const newAtt={};
-    students.forEach((_,newI)=>{
-      const oldI=newI>=idx?newI+1:newI;
-      newAtt[newI]=weekData[w].attendance[oldI]||{};
-    });
-    weekData[w].attendance=newAtt;
+    if(!weekData[w]) continue;
+    weekData[w].attendance = remap(weekData[w].attendance||{});
+    weekData[w].timestamps = remap(weekData[w].timestamps||{});
   }
+  // remap classData (วิชาเสริม / ลูกเสือ)
+  getAllSubjects().forEach(subj=>{
+    const cd=classData[subj.id];
+    if(!cd) return;
+    cd.attendance = remap(cd.attendance||{});
+    if(cd.timestamps) cd.timestamps = remap(cd.timestamps);
+  });
+  // remap hiddenStudents
+  const newHidden=new Set();
+  order.forEach((oi,ni)=>{ if(hiddenStudents.has(oi)) newHidden.add(ni); });
+  hiddenStudents=newHidden;
+  // remap face + barcode
+  facePhotos      = remap(facePhotos||{});
+  faceDescriptors = remap(faceDescriptors||{});
+  studentBarcodes = remap(studentBarcodes||{});
+
   renderStudentChips();
   renderWeek(currentWeek>0?currentWeek:1);
   saveToFirebase();
