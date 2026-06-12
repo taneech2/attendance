@@ -4581,58 +4581,46 @@ async function init(){
 }
 
 // ===== QR CODE GENERATOR =====
-function loadQrLib(cb){
-  if(window.QRCode){ cb(); return; }
-  const s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
-  s.onload=cb; document.head.appendChild(s);
-}
-
-async function openQrModal(){
-  const hasBarcodes = Object.keys(studentBarcodes).length > 0;
-  if(!hasBarcodes){
+function openQrModal(){
+  const entries = students.map((name,i)=>({name,i}))
+    .filter(({name,i})=> !isGroupHeader(name) && !hiddenStudents.has(i) && studentBarcodes[i]);
+  if(!entries.length){
     showStatus('ยังไม่มีรหัสนักศึกษา — กด 🪪 ผูกบัตรหลายคน ก่อนครับ','#e8c84a');
     return;
   }
   document.getElementById('qr-overlay').style.display='flex';
   const wrap = document.getElementById('qr-grid-wrap');
-  wrap.innerHTML = '<span style="color:#6a7fa0">⏳ กำลังสร้าง QR Code...</span>';
-  loadQrLib(async ()=>{
-    const entries = students.map((name,i)=>({name,i}))
-      .filter(({name,i})=> !isGroupHeader(name) && !hiddenStudents.has(i) && studentBarcodes[i]);
-    if(!entries.length){
-      wrap.innerHTML='<span style="color:#6a7fa0">ไม่มีนักเรียนที่ผูกรหัสไว้</span>';
-      return;
-    }
-    const total = entries.length;
-    let done = 0;
-    // แสดง progress bar ก่อน
-    wrap.innerHTML=`
-      <div id="qr-prog-wrap" style="width:100%;padding:8px 0;text-align:center;">
-        <div id="qr-prog-txt" style="color:#c9a84c;font-size:13px;margin-bottom:8px">🔲 กำลังสร้าง QR... 0 / ${total}</div>
-        <div style="background:#0d1530;border-radius:8px;height:8px;overflow:hidden;width:240px;margin:0 auto;">
-          <div id="qr-prog-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#4caf8a,#c9a84c);border-radius:8px;transition:width .2s;"></div>
-        </div>
-      </div>`;
-    const opts={width:100,margin:1,errorCorrectionLevel:'L',color:{dark:'#000000',light:'#ffffff'}};
-    await Promise.all(entries.map(async ({name,i})=>{
-      const id=studentBarcodes[i];
-      const url=await QRCode.toDataURL(id,opts);
-      done++;
-      const pct=Math.round(done/total*100);
-      const pt=document.getElementById('qr-prog-txt');
-      const pb=document.getElementById('qr-prog-bar');
-      if(pt) pt.textContent=`🔲 กำลังสร้าง QR... ${done} / ${total}`;
-      if(pb) pb.style.width=pct+'%';
-      const card=document.createElement('div');
-      card.className='qr-card';
-      card.innerHTML=`<div class="qr-seq">#${i+1}</div>
-        <img src="${url}" width="100" height="100" style="border-radius:3px">
-        <div class="qr-name">${name}</div>
-        <div class="qr-id">${id}</div>`;
-      wrap.appendChild(card);
-    }));
-    document.getElementById('qr-prog-wrap')?.remove();
+  let loaded=0;
+  const total=entries.length;
+  wrap.innerHTML=`
+    <div id="qr-prog-wrap" style="width:100%;padding:8px 0;text-align:center;">
+      <div id="qr-prog-txt" style="color:#c9a84c;font-size:13px;margin-bottom:8px">🔲 กำลังโหลด QR... 0 / ${total}</div>
+      <div style="background:#0d1530;border-radius:8px;height:8px;overflow:hidden;width:240px;margin:0 auto;">
+        <div id="qr-prog-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#4caf8a,#c9a84c);border-radius:8px;transition:width .3s;"></div>
+      </div>
+    </div>`;
+  function onImgLoad(){
+    loaded++;
+    const pct=Math.round(loaded/total*100);
+    const pt=document.getElementById('qr-prog-txt');
+    const pb=document.getElementById('qr-prog-bar');
+    if(pt) pt.textContent=`🔲 กำลังโหลด QR... ${loaded} / ${total}`;
+    if(pb) pb.style.width=pct+'%';
+    if(loaded>=total) document.getElementById('qr-prog-wrap')?.remove();
+  }
+  entries.forEach(({name,i})=>{
+    const id=studentBarcodes[i];
+    const qrUrl=`https://chart.googleapis.com/chart?cht=qr&chs=100x100&chl=${encodeURIComponent(id)}&choe=UTF-8`;
+    const card=document.createElement('div');
+    card.className='qr-card';
+    const img=document.createElement('img');
+    img.width=100; img.height=100; img.style.borderRadius='3px';
+    img.onload=img.onerror=onImgLoad;
+    img.src=qrUrl;
+    card.innerHTML=`<div class="qr-seq">#${i+1}</div>`;
+    card.appendChild(img);
+    card.innerHTML+=`<div class="qr-name">${name}</div><div class="qr-id">${id}</div>`;
+    wrap.appendChild(card);
   });
 }
 
