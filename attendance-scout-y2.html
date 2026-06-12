@@ -1383,7 +1383,7 @@ function cycleClass(sid, idx, date) {
 }
 
 async function saveClassCell(sid, idx, date, status){
-  localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  saveToLS();
   const attFull = Object.assign({}, classData[sid]?.attendance?.[idx] || {});
   if(status !== 0) attFull[date] = status; else delete attFull[date];
   const delays = [0, 2000, 4000];
@@ -2789,6 +2789,26 @@ function getPayload(includeFacePhotos=true){
 
 // payload เบา — ไม่มีรูปใบหน้า ใช้สำหรับ sync ข้อมูลการเช็คชื่อ
 function getLightPayload(){ return getPayload(false); }
+
+// บันทึก localStorage แบบปลอดภัย — ไม่เก็บรูปใบหน้า + ตัดสัปดาห์เก่าถ้าข้อมูลใหญ่เกิน 3MB
+function saveToLS(){
+  try{
+    const light = getLightPayload();
+    let json = JSON.stringify(light);
+    if(json.length > 3*1024*1024){
+      // ตัดเฉพาะ weekData เก่าออก เก็บแค่ 20 สัปดาห์ล่าสุด
+      const weeks = Object.keys(light.weekData).sort((a,b)=>Number(a)-Number(b));
+      const keep = weeks.slice(-20);
+      const trimmed = {};
+      keep.forEach(w=>trimmed[w]=light.weekData[w]);
+      light.weekData = trimmed;
+      json = JSON.stringify(light);
+      console.log('🧹 Auto-cleanup: เก็บแค่', keep.length, 'สัปดาห์ล่าสุด ขนาด:', (json.length/1024).toFixed(0)+'KB');
+    }
+    localStorage.setItem(LS_KEY, json);
+  }catch(e){ console.warn('saveToLS failed:', e); }
+}
+
 const LS_KEY = 'attendanceData_scout_y2_v2';
 // รายชื่อ source สำหรับหน้า รวม (override ใน build.py สำหรับ scout-รวม)
 const MERGE_SOURCES = [];
@@ -2858,8 +2878,8 @@ function applyData(parsed){
 }
 
 async function saveToFirebase(){
-  const payload = getPayload(); // เต็ม (มีรูป thumbnail) → localStorage + Firebase
-  localStorage.setItem(LS_KEY, JSON.stringify(payload));
+  const payload = getPayload(); // เต็ม (มีรูป thumbnail) → Firebase
+  saveToLS(); // บันทึก localStorage แบบเบา (ไม่มีรูป)
   try{
     const res = await fetch(DB_URL, {
       method:'PUT', headers:{'Content-Type':'application/json'},
@@ -2872,7 +2892,7 @@ async function saveToFirebase(){
 
 // บันทึกเฉพาะ student ที่เปลี่ยน — ใช้ PUT (cell-level save) + retry 3 ครั้ง
 async function saveAttendanceCell(w, i, d, status, ts){
-  localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  saveToLS();
   const base = `${DB_BASE}/weekData/${w}`;
   const attFull = Object.assign({}, weekData[w]?.attendance?.[i] || {});
   if(status !== 0) attFull[d] = status; else delete attFull[d];
@@ -3045,7 +3065,7 @@ async function forceSaveAll(){
   if(!requireUnlock()) return;
   toolsLog('💾 กำลังบันทึก...');
   try{
-    localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+    saveToLS();
     toolsLog('✅ บันทึก Local แล้ว ('+ (JSON.stringify(getPayload()).length/1024).toFixed(1) +' KB)', true);
     const light = getLightPayload();
     const body = JSON.stringify(light);
@@ -3160,7 +3180,7 @@ function uploadBackup(ev){
       toolsLog('📤 อ่านไฟล์: ' + file.name + ' ('+ (file.size/1024).toFixed(1) +' KB)');
       if(applyParsed(parsed)){
         toolsLog('✅ กู้คืนข้อมูลใน Local แล้ว', true);
-        localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+        saveToLS();
         refreshAllTabPct();
         if(appMode==='class') renderClass(currentSubject);
         else if(currentWeek===-1) renderLeaderboard();
@@ -3275,7 +3295,7 @@ function saveDateEdits(){
     });
   }
 
-  localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  saveToLS();
   if(isClass) renderClass(sid); else if(currentWeek>0) renderWeek(week);
   const dels=toDelete.size, rens=Object.keys(renames).length;
   toolsLog(`✅ บันทึกแล้ว${rens?' — เปลี่ยน '+rens+' วัน':''}${dels?' — ลบ '+dels+' วัน':''}`, true);
@@ -3393,7 +3413,7 @@ async function migrateFacePhotos() {
   }
   if(changed) {
     // บันทึก thumbnail ใหม่ลง localStorage ทันที (ไม่ต้องรอ save cycle)
-    localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+    saveToLS();
   }
   return changed;
 }
@@ -4414,7 +4434,7 @@ async function init(){
   }
 
   if(needsSave) {
-    localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+    saveToLS();
     saveToFirebase(); // ดันขึ้น Cloud อัตโนมัติหลังทำความสะอาด
   }
 
