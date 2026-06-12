@@ -1405,17 +1405,26 @@ function cycleClass(sid, idx, date) {
 
 async function saveClassCell(sid, idx, date, status){
   localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
-  try{
-    // PUT ทั้ง record ของนักเรียนคนนี้ (key ไม่มีจุด → Firebase รับได้ ✅)
-    const attFull = Object.assign({}, classData[sid]?.attendance?.[idx] || {});
-    if(status !== 0) attFull[date] = status; else delete attFull[date];
-    const [r1] = await Promise.all([
-      fetch(`${DB_BASE}/classData/${sid}/attendance/${idx}.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(attFull)}),
-      fetch(DB_URL, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({savedAt:Date.now()})}),
-    ]);
-    if(r1.ok) showStatus('☁️ บันทึกแล้ว');
-    else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
-  }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
+  const attFull = Object.assign({}, classData[sid]?.attendance?.[idx] || {});
+  if(status !== 0) attFull[date] = status; else delete attFull[date];
+  const delays = [0, 2000, 4000];
+  for(let attempt = 0; attempt < 3; attempt++){
+    try{
+      if(delays[attempt]) await new Promise(r=>setTimeout(r, delays[attempt]));
+      const [r1] = await Promise.all([
+        fetch(`${DB_BASE}/classData/${sid}/attendance/${idx}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(attFull)}),
+        fetch(DB_URL,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({savedAt:Date.now()})}),
+      ]);
+      if(r1.ok){
+        hideSaveErrorBanner();
+        if(attempt > 0) showStatus(`☁️ บันทึก Cloud สำเร็จ (ลอง ${attempt+1} ครั้ง)`,'#4caf8a');
+        else showStatus('☁️ บันทึกแล้ว');
+        return;
+      }
+    }catch(e){}
+    if(attempt < 2) showStatus(`⚠️ Cloud ขัดข้อง — กำลังลองใหม่... (${attempt+1}/3)`,'#e67e22');
+  }
+  showSaveErrorBanner();
 }
 
 function addClassDate(sid) {
@@ -2882,24 +2891,63 @@ async function saveToFirebase(){
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
-// บันทึกเฉพาะ student ที่เปลี่ยน — ใช้ PUT (cell-level save)
+// บันทึกเฉพาะ student ที่เปลี่ยน — ใช้ PUT (cell-level save) + retry 3 ครั้ง
 async function saveAttendanceCell(w, i, d, status, ts){
   localStorage.setItem(LS_KEY, JSON.stringify(getPayload()));
+  const base = `${DB_BASE}/weekData/${w}`;
+  const attFull = Object.assign({}, weekData[w]?.attendance?.[i] || {});
+  if(status !== 0) attFull[d] = status; else delete attFull[d];
+  const tsFull  = Object.assign({}, weekData[w]?.timestamps?.[i]  || {});
+  if(ts) tsFull[d] = ts; else delete tsFull[d];
+  const delays = [0, 2000, 4000];
+  for(let attempt = 0; attempt < 3; attempt++){
+    try{
+      if(delays[attempt]) await new Promise(r=>setTimeout(r, delays[attempt]));
+      const [r1] = await Promise.all([
+        fetch(`${base}/attendance/${i}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(attFull)}),
+        fetch(`${base}/timestamps/${i}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(tsFull)}),
+        fetch(DB_URL,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({savedAt:Date.now()})}),
+      ]);
+      if(r1.ok){
+        hideSaveErrorBanner();
+        if(attempt > 0) showStatus(`☁️ บันทึก Cloud สำเร็จ (ลอง ${attempt+1} ครั้ง)`,'#4caf8a');
+        else showStatus('☁️ บันทึกแล้ว');
+        return;
+      }
+    }catch(e){}
+    if(attempt < 2) showStatus(`⚠️ Cloud ขัดข้อง — กำลังลองใหม่... (${attempt+1}/3)`,'#e67e22');
+  }
+  showSaveErrorBanner();
+}
+
+function showSaveErrorBanner(){
+  let el = document.getElementById('save-error-banner');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'save-error-banner';
+    el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:#fff;padding:14px 16px;font-size:15px;font-family:Sarabun,sans-serif;z-index:10000;text-align:center;line-height:1.6;';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = '⚠️ <b>บันทึก Cloud ไม่สำเร็จ</b> — ข้อมูลอยู่ใน Local เท่านั้น<br>'
+    + '<small>📱 ข้อมูลนี้จะรอด <b>ถ้ารีเฟรชจากเครื่องเดิม</b> — แต่ถ้าเปิดหน้าใหม่/เครื่องอื่นอาจหาย</small><br>'
+    + '<button onclick="retryPendingSync()" style="margin-top:6px;padding:4px 14px;border:none;border-radius:4px;background:#fff;color:#c0392b;font-size:14px;cursor:pointer;">🔄 ลอง Sync อีกครั้ง</button>'
+    + '  <button onclick="hideSaveErrorBanner()" style="margin-top:6px;padding:4px 14px;border:none;border-radius:4px;background:rgba(255,255,255,0.2);color:#fff;font-size:14px;cursor:pointer;">✕ ปิด</button>';
+  el.style.display = 'block';
+}
+
+function hideSaveErrorBanner(){
+  const el = document.getElementById('save-error-banner');
+  if(el) el.style.display = 'none';
+}
+
+async function retryPendingSync(){
+  hideSaveErrorBanner();
+  showStatus('⏳ กำลัง Sync...','#c9a84c');
   try{
-    const base = `${DB_BASE}/weekData/${w}`;
-    // PUT ทั้ง record ของนักเรียนคนนี้ (key ไม่มีจุด → Firebase รับได้ ✅)
-    const attFull = Object.assign({}, weekData[w]?.attendance?.[i] || {});
-    if(status !== 0) attFull[d] = status; else delete attFull[d];
-    const tsFull  = Object.assign({}, weekData[w]?.timestamps?.[i]  || {});
-    if(ts) tsFull[d] = ts; else delete tsFull[d];
-    const [r1] = await Promise.all([
-      fetch(`${base}/attendance/${i}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(attFull)}),
-      fetch(`${base}/timestamps/${i}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(tsFull)}),
-      fetch(DB_URL,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({savedAt:Date.now()})}),
-    ]);
-    if(r1.ok) showStatus('☁️ บันทึกแล้ว');
-    else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
-  }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
+    const res = await fetch(DB_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(getPayload())});
+    if(res.ok){ showStatus('☁️ Sync สำเร็จแล้ว!','#4caf8a'); }
+    else{ showSaveErrorBanner(); showStatus('⚠️ Sync ยังไม่สำเร็จ','#e67e22'); }
+  }catch(e){ showSaveErrorBanner(); showStatus('⚠️ ยังไม่มีสัญญาณ','#e67e22'); }
 }
 
 // แปลงวันที่เก่า "19-พ.ค.-69" → "19-พค-69" (Firebase ห้ามใช้จุดใน key)
@@ -4343,7 +4391,7 @@ async function captureDescriptor() {
 }
 
 async function init(){
-  await loadFromFirebase(true);
+  await loadFromFirebase(false);
   // กวาดล้างจุดและวันที่ซ้ำซ้อนในเครื่องอัตโนมัติทุกครั้งที่เปิดเว็บ
   let needsSave = false;
   function nukeDots(obj) {
