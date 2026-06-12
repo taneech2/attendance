@@ -4644,7 +4644,18 @@ async function init(){
 }
 
 // ===== QR CODE GENERATOR =====
-function openQrModal(){
+// โหลด qrcode-generator library (MIT, kazuhikoarase) — สร้าง data URL ไม่ต้องเรียก API ภายนอก
+function _loadQrLib(){
+  return new Promise((res,rej)=>{
+    if(window.qrcode){ res(); return; }
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+    s.onload=res; s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function openQrModal(){
   const entries = students.map((name,i)=>({name,i}))
     .filter(({name,i})=> !isGroupHeader(name) && !hiddenStudents.has(i) && studentBarcodes[i]);
   if(!entries.length){
@@ -4653,37 +4664,32 @@ function openQrModal(){
   }
   document.getElementById('qr-overlay').style.display='flex';
   const wrap = document.getElementById('qr-grid-wrap');
-  let loaded=0;
-  const total=entries.length;
-  wrap.innerHTML=`
-    <div id="qr-prog-wrap" style="width:100%;padding:8px 0;text-align:center;">
-      <div id="qr-prog-txt" style="color:#c9a84c;font-size:13px;margin-bottom:8px">🔲 กำลังโหลด QR... 0 / ${total}</div>
-      <div style="background:#0d1530;border-radius:8px;height:8px;overflow:hidden;width:240px;margin:0 auto;">
-        <div id="qr-prog-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#4caf8a,#c9a84c);border-radius:8px;transition:width .3s;"></div>
-      </div>
-    </div>`;
-  function onImgLoad(){
-    loaded++;
-    const pct=Math.round(loaded/total*100);
-    const pt=document.getElementById('qr-prog-txt');
-    const pb=document.getElementById('qr-prog-bar');
-    if(pt) pt.textContent=`🔲 กำลังโหลด QR... ${loaded} / ${total}`;
-    if(pb) pb.style.width=pct+'%';
-    if(loaded>=total) document.getElementById('qr-prog-wrap')?.remove();
+  wrap.innerHTML=`<div style="color:#c9a84c;font-size:14px;padding:20px;text-align:center;">⏳ กำลังสร้าง QR...</div>`;
+  try{
+    await _loadQrLib();
+  }catch(e){
+    wrap.innerHTML=`<div style="color:#e05555;padding:20px;text-align:center;">❌ โหลด QR library ไม่ได้ — กรุณาตรวจสอบ internet แล้วลองใหม่</div>`;
+    return;
   }
+  wrap.innerHTML='';
   entries.forEach(({name,i})=>{
     const id=studentBarcodes[i];
-    const qrUrl=`https://chart.googleapis.com/chart?cht=qr&chs=100x100&chl=${encodeURIComponent(id)}&choe=UTF-8`;
-    const card=document.createElement('div');
-    card.className='qr-card';
-    const img=document.createElement('img');
-    img.width=100; img.height=100; img.style.borderRadius='3px';
-    img.onload=img.onerror=onImgLoad;
-    img.src=qrUrl;
-    card.innerHTML=`<div class="qr-seq">#${i+1}</div>`;
-    card.appendChild(img);
-    card.innerHTML+=`<div class="qr-name">${name}</div><div class="qr-id">${id}</div>`;
-    wrap.appendChild(card);
+    try{
+      // typeNumber=0 → auto-detect, errorCorrectionLevel='M'
+      const qr=qrcode(0,'M');
+      qr.addData(id);
+      qr.make();
+      // createDataURL(cellSize, margin) → base64 PNG data URL
+      const dataUrl=qr.createDataURL(3,4);
+      const card=document.createElement('div');
+      card.className='qr-card';
+      card.innerHTML=`<div class="qr-seq">#${i+1}</div>
+        <img src="${dataUrl}" width="104" height="104" style="border-radius:3px;display:block;margin:0 auto;">
+        <div class="qr-name">${name}</div><div class="qr-id">${id}</div>`;
+      wrap.appendChild(card);
+    }catch(e){
+      console.warn('QR gen failed:',id,e);
+    }
   });
 }
 
