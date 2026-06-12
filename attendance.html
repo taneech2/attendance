@@ -4113,7 +4113,8 @@ function handleBarcodeDetected(val, sid){
   if(barcodeWeek > 0){ handleBarcodeWeek(val, barcodeWeek); return; }
   // ── class mode ─────────────────────────────────────────
   const cd = classData[sid];
-  const today = barcodeTargetDate || cd?.dates?.[cd.dates.length-1]||'';
+  const _td1 = todayThaiDate();
+  const today = barcodeTargetDate || (cd?.dates?.includes(_td1) ? _td1 : cd?.dates?.[cd.dates.length-1]||'');
   // หานักเรียนจาก barcode
   const idxStr = findStudentByBarcode(val);
   if(idxStr!==undefined){
@@ -4150,7 +4151,8 @@ function handleBarcodeDetected(val, sid){
 
 function handleBarcodeWeek(val, w){
   const wd = weekData[w];
-  const today = barcodeTargetDate || wd?.dates?.[wd.dates.length-1]||'';
+  const _td2 = todayThaiDate();
+  const today = barcodeTargetDate || (wd?.dates?.includes(_td2) ? _td2 : wd?.dates?.[wd.dates.length-1]||'');
   const idxStr = findStudentByBarcode(val);
   if(idxStr !== undefined){
     const idx = Number(idxStr);
