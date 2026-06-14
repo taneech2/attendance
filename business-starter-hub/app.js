@@ -4,6 +4,14 @@ const stepsData = [
         desc: "สำรวจความพร้อมและรูปแบบการทำธุรกิจของคุณ",
         html: `
             <div class="input-group">
+                <label>ประเภทธุรกิจ (ตามเกณฑ์ศูนย์บ่มเพาะฯ อาชีวะ)</label>
+                <select id="ovec-type" name="ovec-type">
+                    <option value="ธุรกิจใหม่ / นวัตกรรม (เน้นความแปลกใหม่ แก้ปัญหาได้จริง)">ธุรกิจใหม่ / นวัตกรรม (เน้นความแปลกใหม่ แก้ปัญหาได้จริง)</option>
+                    <option value="ธุรกิจขายดี / สุดยอดนักขาย (เน้นเทคนิคนำเสนอที่ดึงดูด)">ธุรกิจขายดี / สุดยอดนักขาย (เน้นเทคนิคนำเสนอที่ดึงดูด)</option>
+                    <option value="ธุรกิจร่วมทุน (เน้นจับมือกับพันธมิตรภายนอก)">ธุรกิจร่วมทุน (เน้นจับมือกับพันธมิตรภายนอก)</option>
+                </select>
+            </div>
+            <div class="input-group">
                 <label>เป้าหมายการเริ่มต้นธุรกิจของคุณคืออะไร?</label>
                 <div class="radio-grid">
                     <label class="radio-card">
@@ -210,23 +218,38 @@ const finishBtn = document.getElementById('finish-btn');
 const restartBtn = document.getElementById('restart-btn');
 const printBtn = document.getElementById('print-btn');
 const btnTabBmc = document.getElementById('btn-tab-bmc');
+const btnTabPitch = document.getElementById('btn-tab-pitch');
 const btnTabBank = document.getElementById('btn-tab-bank');
 const tabBmc = document.getElementById('tab-bmc');
+const tabPitch = document.getElementById('tab-pitch');
 const tabBank = document.getElementById('tab-bank');
 
 // Event Listeners
 btnTabBmc.addEventListener('click', () => {
     btnTabBmc.classList.add('active');
+    btnTabPitch.classList.remove('active');
     btnTabBank.classList.remove('active');
     tabBmc.classList.remove('hidden');
+    tabPitch.classList.add('hidden');
+    tabBank.classList.add('hidden');
+});
+
+btnTabPitch.addEventListener('click', () => {
+    btnTabPitch.classList.add('active');
+    btnTabBmc.classList.remove('active');
+    btnTabBank.classList.remove('active');
+    tabPitch.classList.remove('hidden');
+    tabBmc.classList.add('hidden');
     tabBank.classList.add('hidden');
 });
 
 btnTabBank.addEventListener('click', () => {
     btnTabBank.classList.add('active');
     btnTabBmc.classList.remove('active');
+    btnTabPitch.classList.remove('active');
     tabBank.classList.remove('hidden');
     tabBmc.classList.add('hidden');
+    tabPitch.classList.add('hidden');
 });
 
 startBtn.addEventListener('click', () => {
@@ -366,8 +389,10 @@ function generateBlueprint(includeBank) {
         btnTabBank.classList.add('hidden');
         btnTabBmc.classList.add('active');
         btnTabBank.classList.remove('active');
+        btnTabPitch.classList.remove('active');
         tabBmc.classList.remove('hidden');
         tabBank.classList.add('hidden');
+        tabPitch.classList.add('hidden');
     } else {
         btnTabBank.classList.remove('hidden');
     }
@@ -460,6 +485,44 @@ function generateBlueprint(includeBank) {
     `;
 
     document.getElementById('tab-bmc').innerHTML = bmcHTML;
+
+    // --- Generate Pitch Proposal ---
+    const ovecType = userAnswers['ovec-type'] || 'ไม่ระบุ';
+    const pitchHTML = `
+        <div class="plan-section">
+            <h3><i class="fa-solid fa-microphone-lines"></i> บทพูด Pitching (5-10 นาที)</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">สคริปต์นี้เรียบเรียงตามหลัก Storytelling สำหรับการประกวดแผนธุรกิจศูนย์บ่มเพาะฯ (ประเภท: <strong style="color: var(--primary-light);">${ovecType}</strong>)</p>
+            
+            <div class="financial-grid" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="finance-box" style="text-align: left; padding: 1.2rem;">
+                    <h4 style="color: var(--primary-light); font-size: 1.1rem; margin-bottom: 0.8rem;">1. ทักทาย & แนะนำตัว (Hook)</h4>
+                    <p>เรียนคณะกรรมการที่เคารพ พวกเราคือทีมผู้พัฒนา "${product}" ธุรกิจที่สร้างสรรค์ขึ้นมาเพื่อแก้ปัญหา "${painpoint}" ให้กับ "${audience}" ครับ/ค่ะ</p>
+                </div>
+                <div class="finance-box" style="text-align: left; padding: 1.2rem;">
+                    <h4 style="color: var(--primary-light); font-size: 1.1rem; margin-bottom: 0.8rem;">2. ปัญหาและโอกาส (Problem & Opportunity)</h4>
+                    <p>คุณเคยเจอปัญหาแบบนี้ไหมครับ? ... นั่นคือเหตุผลที่เราทำโปรเจกต์นี้ขึ้นมา เพื่อเป็นทางออกที่ดีที่สุดสำหรับผู้ที่เจอปัญหานี้</p>
+                </div>
+                <div class="finance-box" style="text-align: left; padding: 1.2rem;">
+                    <h4 style="color: var(--primary-light); font-size: 1.1rem; margin-bottom: 0.8rem;">3. สินค้าของเราคืออะไร & ดีกว่าคู่แข่งอย่างไร? (Solution & Value)</h4>
+                    <p>"${product}" ของเราทำงานโดยการ ${revenueType} ซึ่งโดดเด่นกว่าในตลาด เพราะ "${differentiation}" และนี่คือไม้ตายของเราที่ทำให้ลูกค้าต้องเลือกเรา</p>
+                </div>
+                <div class="finance-box" style="text-align: left; padding: 1.2rem;">
+                    <h4 style="color: var(--primary-light); font-size: 1.1rem; margin-bottom: 0.8rem;">4. เราจะขายใคร & ขายอย่างไร? (Market & Channels)</h4>
+                    <p>กลุ่มลูกค้าหลักของเราคือ ${audience} โดยเราจะเข้าถึงพวกเขาผ่านช่องทาง "${channels}" เป็นหลัก</p>
+                </div>
+                <div class="finance-box" style="text-align: left; padding: 1.2rem;">
+                    <h4 style="color: var(--primary-light); font-size: 1.1rem; margin-bottom: 0.8rem;">5. แผนการเงิน & อนาคต (Financials & Goal)</h4>
+                    <p>เป้าหมายใน 3 เดือนแรกของเราคือ สร้างรายได้ ${userAnswers['goal-revenue'] || '0'} บาท และมีลูกค้า ${userAnswers['goal-customers'] || '0'} ราย ซึ่งโมเดลธุรกิจของเรามีอัตราการเติบโตและจุดคุ้มทุนที่ชัดเจน</p>
+                </div>
+                <div class="finance-box" style="text-align: left; padding: 1.2rem;">
+                    <h4 style="color: var(--primary-light); font-size: 1.1rem; margin-bottom: 0.8rem;">6. ปิดท้าย (Call to Action)</h4>
+                    <p>ขอบคุณคณะกรรมการทุกท่านที่ให้โอกาส "${product}" จากทีมของเรา... เราพร้อมและมั่นใจที่จะทำธุรกิจนี้ให้เกิดขึ้นจริง ขอบคุณครับ/ค่ะ!</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('tab-pitch').innerHTML = pitchHTML;
 
     if (includeBank) {
         // --- Generate Bank Proposal ---
