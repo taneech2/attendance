@@ -71,7 +71,6 @@
             </div>
         </section>
 
-        <!-- Final Blueprint Section -->
         <section id="blueprint-section" class="hidden-section">
             <div class="blueprint-header">
                 <h2><i class="fa-solid fa-file-invoice"></i> My Business Blueprint</h2>
@@ -79,8 +78,16 @@
                     <button id="print-btn" class="btn-primary"><i class="fa-solid fa-print"></i> พิมพ์ / บันทึก PDF</button>
                 </div>
             </div>
+
+            <div class="blueprint-tabs">
+                <button class="tab-btn active" id="btn-tab-bmc"><i class="fa-solid fa-chart-pie"></i> โมเดลธุรกิจ (BMC)</button>
+                <button class="tab-btn" id="btn-tab-bank"><i class="fa-solid fa-building-columns"></i> แผนเสนอธนาคาร</button>
+            </div>
             
-            <div id="printable-blueprint" class="blueprint-content">
+            <div id="tab-bmc" class="blueprint-content tab-pane active">
+                <!-- Injected via JS -->
+            </div>
+            <div id="tab-bank" class="blueprint-content tab-pane hidden">
                 <!-- Injected via JS -->
             </div>
         </section>
