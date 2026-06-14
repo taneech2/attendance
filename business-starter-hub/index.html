@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Starter Hub - แผนธุรกิจพร้อมลงมือทำ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-elements">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <header class="glass-header">
+        <div class="logo">
+            <i class="fa-solid fa-rocket"></i> Business Starter Hub
+        </div>
+        <nav>
+            <button id="restart-btn" class="btn-outline"><i class="fa-solid fa-rotate-left"></i> เริ่มใหม่</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Landing Section -->
+        <section id="landing-section" class="active-section glass-panel">
+            <div class="hero-content">
+                <span class="badge">9 Principles Framework</span>
+                <h1>เปลี่ยนไอเดียให้เป็น<br><span class="highlight">ธุรกิจที่ทำได้จริง</span></h1>
+                <p>สร้างโครงร่างธุรกิจ (Business Blueprint) ของคุณด้วยหลักการบริหารธุรกิจ 9 บท<br>พร้อมใช้งานจริง นำไปพรีเซนต์ประกวด หรือเริ่มหารายได้ได้ทันที</p>
+                <button id="start-journey-btn" class="btn-primary btn-large">เริ่มสร้างแผนธุรกิจ <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fa-solid fa-brain"></i>
+                    <h3>Mindset & Strategy</h3>
+                    <p>เริ่มต้นด้วยแนวคิดแบบนวัตกรและการวิเคราะห์สภาพแวดล้อม (SWOT/PESTEL)</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fa-solid fa-bullseye"></i>
+                    <h3>Customer Centric</h3>
+                    <p>เจาะลึกกลุ่มเป้าหมาย (STP) และสร้างคุณค่าที่แท้จริง (Value Proposition)</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <h3>Business Model Canvas</h3>
+                    <p>จำลองโมเดลธุรกิจ 9 ช่อง เพื่อเตรียมความพร้อมในการลงมือทำ</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Form Section -->
+        <section id="app-section" class="hidden-section">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="step-indicator" id="step-indicator">ขั้นตอนที่ 1 / 9 : Mindset</div>
+
+            <div id="step-container" class="glass-panel form-panel">
+                <!-- Content injected via JS -->
+            </div>
+
+            <div class="form-navigation">
+                <button id="prev-btn" class="btn-outline hidden"><i class="fa-solid fa-arrow-left"></i> ย้อนกลับ</button>
+                <button id="next-btn" class="btn-primary">ถัดไป <i class="fa-solid fa-arrow-right"></i></button>
+                <button id="finish-btn" class="btn-success hidden">สร้าง Blueprint <i class="fa-solid fa-check"></i></button>
+            </div>
+        </section>
+
+        <!-- Final Blueprint Section -->
+        <section id="blueprint-section" class="hidden-section">
+            <div class="blueprint-header">
+                <h2><i class="fa-solid fa-file-invoice"></i> My Business Blueprint</h2>
+                <div class="action-buttons">
+                    <button id="print-btn" class="btn-primary"><i class="fa-solid fa-print"></i> พิมพ์ / บันทึก PDF</button>
+                </div>
+            </div>
+            
+            <div id="printable-blueprint" class="blueprint-content">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+    </main>
+
+    <footer style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 2rem;">
+        <p>&copy; ลิขสิทธ์ ธานี ชมสุข วิทยาลัยการอาชีพบุรีรัมย์<br>จัดทำโดย ทีมช่างเชื่อม เพื่ออาชีวะไทย</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
