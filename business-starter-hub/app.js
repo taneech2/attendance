@@ -205,6 +205,7 @@ const progressBar = document.getElementById('progress-bar');
 const startBtn = document.getElementById('start-journey-btn');
 const prevBtn = document.getElementById('prev-btn');
 const nextBtn = document.getElementById('next-btn');
+const finishBasicBtn = document.getElementById('finish-basic-btn');
 const finishBtn = document.getElementById('finish-btn');
 const restartBtn = document.getElementById('restart-btn');
 const printBtn = document.getElementById('print-btn');
@@ -251,9 +252,14 @@ prevBtn.addEventListener('click', () => {
     }
 });
 
+finishBasicBtn.addEventListener('click', () => {
+    saveCurrentStepData();
+    generateBlueprint(false);
+});
+
 finishBtn.addEventListener('click', () => {
     saveCurrentStepData();
-    generateBlueprint();
+    generateBlueprint(true);
 });
 
 restartBtn.addEventListener('click', () => {
@@ -306,11 +312,20 @@ function renderStep() {
         prevBtn.classList.remove('hidden');
     }
 
-    if (currentStep === stepsData.length - 1) {
+    if (currentStep === 8) { // Step 9
+        nextBtn.classList.remove('hidden');
+        nextBtn.innerHTML = 'ถัดไป (ทำแผนการเงิน) <i class="fa-solid fa-arrow-right"></i>';
+        finishBasicBtn.classList.remove('hidden');
+        finishBtn.classList.add('hidden');
+    } else if (currentStep === stepsData.length - 1) { // Step 12
         nextBtn.classList.add('hidden');
+        nextBtn.innerHTML = 'ถัดไป <i class="fa-solid fa-arrow-right"></i>';
+        finishBasicBtn.classList.add('hidden');
         finishBtn.classList.remove('hidden');
     } else {
         nextBtn.classList.remove('hidden');
+        nextBtn.innerHTML = 'ถัดไป <i class="fa-solid fa-arrow-right"></i>';
+        finishBasicBtn.classList.add('hidden');
         finishBtn.classList.add('hidden');
     }
 }
@@ -341,11 +356,21 @@ function restoreStepData() {
 }
 
 // Generate the final BMC and Blueprint
-function generateBlueprint() {
+function generateBlueprint(includeBank) {
     appSection.classList.remove('active-section');
     appSection.classList.add('hidden-section');
     blueprintSection.classList.remove('hidden-section');
     blueprintSection.classList.add('active-section');
+
+    if (!includeBank) {
+        btnTabBank.classList.add('hidden');
+        btnTabBmc.classList.add('active');
+        btnTabBank.classList.remove('active');
+        tabBmc.classList.remove('hidden');
+        tabBank.classList.add('hidden');
+    } else {
+        btnTabBank.classList.remove('hidden');
+    }
 
     const product = userAnswers.product || "ธุรกิจใหม่";
     const painpoint = userAnswers.painpoint || "ปัญหาของลูกค้า";
@@ -436,66 +461,70 @@ function generateBlueprint() {
 
     document.getElementById('tab-bmc').innerHTML = bmcHTML;
 
-    // --- Generate Bank Proposal ---
-    const loanAmount = parseInt(userAnswers['loan-amount']) || 0;
-    const price = parseInt(userAnswers['price-per-unit']) || 0;
-    const variableCost = parseInt(userAnswers['cost-per-unit']) || 0;
-    const fixedCost = parseInt(userAnswers['fixed-cost']) || 0;
-    
-    let grossMargin = price - variableCost;
-    let breakEvenUnits = grossMargin > 0 ? Math.ceil(fixedCost / grossMargin) : 0;
-    let breakEvenRevenue = breakEvenUnits * price;
+    if (includeBank) {
+        // --- Generate Bank Proposal ---
+        const loanAmount = parseInt(userAnswers['loan-amount']) || 0;
+        const price = parseInt(userAnswers['price-per-unit']) || 0;
+        const variableCost = parseInt(userAnswers['cost-per-unit']) || 0;
+        const fixedCost = parseInt(userAnswers['fixed-cost']) || 0;
+        
+        let grossMargin = price - variableCost;
+        let breakEvenUnits = grossMargin > 0 ? Math.ceil(fixedCost / grossMargin) : 0;
+        let breakEvenRevenue = breakEvenUnits * price;
 
-    const bankHTML = `
-        <div class="plan-section">
-            <h3><i class="fa-solid fa-file-signature"></i> บทสรุปผู้บริหาร (Executive Summary)</h3>
-            <p><strong>โครงการ:</strong> ${product}</p>
-            <p><strong>โมเดลรายได้:</strong> ${revenueType.toUpperCase()}</p>
-            <p><strong>กลุ่มลูกค้าเป้าหมาย:</strong> ${audience.toUpperCase()}</p>
-            <p>ธุรกิจนี้มุ่งเน้นการแก้ปัญหา "${painpoint}" ด้วยจุดเด่น "${differentiation}" โดยคาดหวังรายได้ที่ ${userAnswers['goal-revenue'] || '0'} บาทใน 3 เดือนแรก</p>
-        </div>
+        const bankHTML = `
+            <div class="plan-section">
+                <h3><i class="fa-solid fa-file-signature"></i> บทสรุปผู้บริหาร (Executive Summary)</h3>
+                <p><strong>โครงการ:</strong> ${product}</p>
+                <p><strong>โมเดลรายได้:</strong> ${revenueType.toUpperCase()}</p>
+                <p><strong>กลุ่มลูกค้าเป้าหมาย:</strong> ${audience.toUpperCase()}</p>
+                <p>ธุรกิจนี้มุ่งเน้นการแก้ปัญหา "${painpoint}" ด้วยจุดเด่น "${differentiation}" โดยคาดหวังรายได้ที่ ${userAnswers['goal-revenue'] || '0'} บาทใน 3 เดือนแรก</p>
+            </div>
 
-        <div class="plan-section">
-            <h3><i class="fa-solid fa-sack-dollar"></i> ความต้องการสินเชื่อ (Loan Request)</h3>
-            <div class="financial-grid">
-                <div class="finance-box">
-                    <h4>วงเงินที่ต้องการกู้</h4>
-                    <div class="amount">${loanAmount.toLocaleString()} บาท</div>
-                </div>
-                <div class="finance-box">
-                    <h4>วัตถุประสงค์</h4>
-                    <div class="amount neutral">${userAnswers['loan-purpose'] === 'working-capital' ? 'เงินทุนหมุนเวียน' : userAnswers['loan-purpose'] === 'equipment' ? 'ซื้อเครื่องจักร/อุปกรณ์' : 'ปรับปรุงสถานที่'}</div>
-                </div>
-                <div class="finance-box">
-                    <h4>การค้ำประกัน</h4>
-                    <div class="amount neutral">${userAnswers['collateral'] === 'none' ? 'บสย. ค้ำประกัน' : userAnswers['collateral'] === 'personal' ? 'บุคคลค้ำประกัน' : 'หลักทรัพย์ค้ำประกัน'}</div>
+            <div class="plan-section">
+                <h3><i class="fa-solid fa-sack-dollar"></i> ความต้องการสินเชื่อ (Loan Request)</h3>
+                <div class="financial-grid">
+                    <div class="finance-box">
+                        <h4>วงเงินที่ต้องการกู้</h4>
+                        <div class="amount">${loanAmount.toLocaleString()} บาท</div>
+                    </div>
+                    <div class="finance-box">
+                        <h4>วัตถุประสงค์</h4>
+                        <div class="amount neutral">${userAnswers['loan-purpose'] === 'working-capital' ? 'เงินทุนหมุนเวียน' : userAnswers['loan-purpose'] === 'equipment' ? 'ซื้อเครื่องจักร/อุปกรณ์' : 'ปรับปรุงสถานที่'}</div>
+                    </div>
+                    <div class="finance-box">
+                        <h4>การค้ำประกัน</h4>
+                        <div class="amount neutral">${userAnswers['collateral'] === 'none' ? 'บสย. ค้ำประกัน' : userAnswers['collateral'] === 'personal' ? 'บุคคลค้ำประกัน' : 'หลักทรัพย์ค้ำประกัน'}</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="plan-section">
-            <h3><i class="fa-solid fa-calculator"></i> การวิเคราะห์จุดคุ้มทุน (Break-even Analysis)</h3>
-            <div class="financial-grid">
-                <div class="finance-box">
-                    <h4>กำไรต่อหน่วย (Gross Margin)</h4>
-                    <div class="amount">${grossMargin.toLocaleString()} บาท</div>
+            <div class="plan-section">
+                <h3><i class="fa-solid fa-calculator"></i> การวิเคราะห์จุดคุ้มทุน (Break-even Analysis)</h3>
+                <div class="financial-grid">
+                    <div class="finance-box">
+                        <h4>กำไรต่อหน่วย (Gross Margin)</h4>
+                        <div class="amount">${grossMargin.toLocaleString()} บาท</div>
+                    </div>
+                    <div class="finance-box">
+                        <h4>ต้นทุนคงที่ต่อเดือน (Fixed Cost)</h4>
+                        <div class="amount expense">${fixedCost.toLocaleString()} บาท</div>
+                    </div>
+                    <div class="finance-box">
+                        <h4>จุดคุ้มทุน (Break-even)</h4>
+                        <div class="amount neutral">${breakEvenUnits.toLocaleString()} ยูนิต/เดือน</div>
+                        <p style="font-size: 0.8rem; color: #94A3B8; margin-top: 5px;">(ยอดขาย ${breakEvenRevenue.toLocaleString()} บาท)</p>
+                    </div>
                 </div>
-                <div class="finance-box">
-                    <h4>ต้นทุนคงที่ต่อเดือน (Fixed Cost)</h4>
-                    <div class="amount expense">${fixedCost.toLocaleString()} บาท</div>
-                </div>
-                <div class="finance-box">
-                    <h4>จุดคุ้มทุน (Break-even)</h4>
-                    <div class="amount neutral">${breakEvenUnits.toLocaleString()} ยูนิต/เดือน</div>
-                    <p style="font-size: 0.8rem; color: #94A3B8; margin-top: 5px;">(ยอดขาย ${breakEvenRevenue.toLocaleString()} บาท)</p>
-                </div>
+                <p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.95rem;">
+                    * หมายเหตุ: หากยอดขายต่อเดือนต่ำกว่า ${breakEvenUnits.toLocaleString()} ยูนิต ธุรกิจจะขาดทุน และหากขายได้มากกว่า ${breakEvenUnits.toLocaleString()} ยูนิต ส่วนต่างที่เพิ่มขึ้นคือกำไรสุทธิ (ก่อนหักภาษีและดอกเบี้ย)
+                </p>
             </div>
-            <p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.95rem;">
-                * หมายเหตุ: หากยอดขายต่อเดือนต่ำกว่า ${breakEvenUnits.toLocaleString()} ยูนิต ธุรกิจจะขาดทุน และหากขายได้มากกว่า ${breakEvenUnits.toLocaleString()} ยูนิต ส่วนต่างที่เพิ่มขึ้นคือกำไรสุทธิ (ก่อนหักภาษีและดอกเบี้ย)
-            </p>
-        </div>
-    `;
+        `;
 
-    document.getElementById('tab-bank').innerHTML = bankHTML;
+        document.getElementById('tab-bank').innerHTML = bankHTML;
+    } else {
+        document.getElementById('tab-bank').innerHTML = "";
+    }
 }
 
