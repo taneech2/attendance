@@ -3615,6 +3615,7 @@ function clearAllFacePhotos() {
   faceDescriptors = {};
   renderStudentChips();
   saveToFirebase();
+  fetch(FP_URL, {method:'DELETE'}); // ลบรูปออกจาก Firebase path แยกด้วย
   toolsLog(`🗑️ ลบรูปใบหน้าทุกคน (${total} คน) เรียบร้อย — ข้อมูลเช็คชื่อยังอยู่ครบ`);
 }
 
