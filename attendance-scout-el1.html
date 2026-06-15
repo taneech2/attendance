@@ -1635,8 +1635,8 @@ function renderStudentChips(){
     const firstPhoto = Array.isArray(photos) ? photos[0] : photos;
     const photoCount = faceDescriptors[i]?.length || 0;
     const thumbHtml = firstPhoto
-      ? `<img class="face-thumb" src="${firstPhoto}" title="ใบหน้า: ${name} (${photoCount} รูป)">`
-      : `<div class="face-thumb-none" title="ยังไม่ได้ลงทะเบียนใบหน้า">👤</div>`;
+      ? `<img class="face-thumb" src="${firstPhoto}" title="ใบหน้า: ${name} (${photoCount} รูป)" onclick="uploadFacePhotoFromFile(${i})" style="cursor:pointer;">`
+      : `<div class="face-thumb-none" title="อัปโหลดรูปจากไฟล์" onclick="uploadFacePhotoFromFile(${i})" style="cursor:pointer;">📁</div>`;
     const cntBadge = photoCount > 0
       ? `<span style="font-size:10px;color:${photoCount>=3?'#4caf8a':'#e8c84a'};background:${photoCount>=3?'#1a3a2a':'#2a2010'};border-radius:8px;padding:1px 5px;margin-right:2px">${photoCount}📸</span>`
       : '';
@@ -3577,6 +3577,28 @@ function updateRegPhotoPreview() {
   // ซ่อนปุ่มถ่ายถ้าครบแล้ว
   const capBtn = document.getElementById('btn-capture');
   if(capBtn) capBtn.style.opacity = done ? '0.35' : '1';
+}
+
+function uploadFacePhotoFromFile(idx) {
+  if(!requireUnlock()) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async e => {
+      const thumb = await resizeToThumb(e.target.result, 64);
+      if(!facePhotos[idx]) facePhotos[idx] = [];
+      facePhotos[idx] = [thumb]; // ใส่รูปใหม่แทนที่รูปเดิม
+      renderStudentChips();
+      saveToFirebase();
+      toolsLog(`✅ อัปโหลดรูป ${students[idx]} เรียบร้อย`);
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
 }
 
 function clearAllFacePhotos() {
