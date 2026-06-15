@@ -2763,6 +2763,7 @@ function requireUnlock(){
 // ===== FIREBASE =====
 const DB_URL  = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-el1.json';
 const DB_BASE = DB_URL.slice(0,-5); // ใช้สำหรับ PATCH เฉพาะ cell (ตัด .json ออก)
+const FP_URL  = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendanceFP.json'; // รูปใบหน้า path แยก ป้องกันโดน PUT ทับ
 
 // แปลง Firebase array กลับเป็น object (Firebase แปลง numeric keys → array อัตโนมัติ)
 function fixArr(src){
@@ -2878,8 +2879,8 @@ function applyData(parsed){
 }
 
 async function saveToFirebase(){
-  const payload = getPayload(); // เต็ม (มีรูป thumbnail) → Firebase
-  saveToLS(); // บันทึก localStorage แบบเบา (ไม่มีรูป)
+  const payload = getPayload(false); // ไม่รวมรูปในก้อนหลัก ป้องกันรูปโดน PUT ทับ
+  saveToLS();
   try{
     const res = await fetch(DB_URL, {
       method:'PUT', headers:{'Content-Type':'application/json'},
@@ -2887,6 +2888,10 @@ async function saveToFirebase(){
     });
     if(res.ok) showStatus('☁️ บันทึกแล้ว');
     else showStatus('⚠️ บันทึก cloud ไม่สำเร็จ (มีใน local)','#e67e22');
+    // บันทึกรูปใบหน้าที่ path แยก (ไม่โดน PUT ทับ)
+    if(Object.keys(facePhotos).length){
+      fetch(FP_URL, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(facePhotos)});
+    }
   }catch(e){ showStatus('📱 บันทึก local แล้ว (offline)','#e67e22'); }
 }
 
@@ -3023,20 +3028,24 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   if(cloudParsed && (forceCloud || cloudTs >= localTs) && !(cloudEmpty && localNewer)){
     if(applyParsed(cloudParsed)){
       showStatus('✅ โหลดจาก Cloud');
-      // รูปภาพ: cloud มีแล้ว (fp ส่งขึ้น Firebase ตั้งแต่เวอร์ชั่นนี้)
-      // backward compat: ถ้า cloud ยังไม่มีรูปของคนไหน → ดึง local มาเสริม
-      if(localParsed && localParsed.fp){
+      // โหลดรูปจาก path แยก (attendanceFP)
+      try{
+        const fpRes = await fetch(FP_URL, {cache:'no-store'});
+        const fpData = await fpRes.json();
+        if(fpData && typeof fpData === 'object') deserializeFP(fpData);
+      }catch(e){}
+      // backward compat: ถ้ายังไม่มีรูป → ดึงจาก local เสริม
+      if(!Object.keys(facePhotos).length && localParsed && localParsed.fp){
         for(const k in localParsed.fp){
           const n = Number(k), lv = localParsed.fp[k];
           if(!lv) continue;
-          if(!facePhotos[n] || facePhotos[n].length === 0)
-            facePhotos[n] = Array.isArray(lv) ? lv : [lv];
+          facePhotos[n] = Array.isArray(lv) ? lv : [lv];
         }
       }
-      // fd: cloud มี fd แล้ว แต่ถ้าไม่มีให้เสริมจาก local (backward compat)
+      // fd: ถ้าไม่มีให้เสริมจาก local
       if(localParsed && localParsed.fd && !Object.keys(faceDescriptors).length)
         deserializeFD(localParsed.fd);
-      if(needMigrate && !skipMigrate){ saveToFirebase(); } // migrate format เก่า → ใหม่ทันที
+      if(needMigrate && !skipMigrate){ saveToFirebase(); }
       return;
     }
   }
