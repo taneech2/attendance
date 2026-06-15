@@ -2763,7 +2763,7 @@ function requireUnlock(){
 // ===== FIREBASE =====
 const DB_URL  = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendance-me1a.json';
 const DB_BASE = DB_URL.slice(0,-5); // ใช้สำหรับ PATCH เฉพาะ cell (ตัด .json ออก)
-const FP_URL  = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/attendanceFP.json'; // รูปใบหน้า path แยก ป้องกันโดน PUT ทับ
+const FP_URL  = DB_URL.replace('.json', 'FP.json'); // รูปใบหน้า path แยกต่อห้อง ป้องกันโดน PUT ทับ
 
 // แปลง Firebase array กลับเป็น object (Firebase แปลง numeric keys → array อัตโนมัติ)
 function fixArr(src){
