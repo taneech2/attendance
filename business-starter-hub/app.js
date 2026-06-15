@@ -433,41 +433,41 @@ function generateBlueprint(includeBank) {
             <h3><i class="fa-solid fa-table-cells-large"></i> Business Model Canvas</h3>
             <div class="bmc-grid">
                 <div class="bmc-box bmc-kp">
-                    <h4>Key Partners <i class="fa-solid fa-handshake"></i></h4>
+                    <h4>8. Key Partners <i class="fa-solid fa-handshake"></i></h4>
                     <p>ซัพพลายเออร์, แพลตฟอร์มออนไลน์, เครือข่ายที่เกี่ยวข้องกับ ${product}</p>
                 </div>
                 <div class="bmc-box bmc-ka">
-                    <h4>Key Activities <i class="fa-solid fa-clipboard-list"></i></h4>
+                    <h4>7. Key Activities <i class="fa-solid fa-clipboard-list"></i></h4>
                     <p>${keyActivities}</p>
                 </div>
                 <div class="bmc-box bmc-kr">
-                    <h4>Key Resources <i class="fa-solid fa-box-open"></i></h4>
+                    <h4>6. Key Resources <i class="fa-solid fa-box-open"></i></h4>
                     <p>${keyResources}</p>
                 </div>
                 <div class="bmc-box bmc-vp">
-                    <h4>Value Propositions <i class="fa-solid fa-gift"></i></h4>
+                    <h4>2. Value Propositions <i class="fa-solid fa-gift"></i></h4>
                     <p><strong>${product}</strong></p>
                     <p>ช่วยแก้ปัญหา: ${painpoint}</p>
                     <p>จุดเด่น: ${differentiation}</p>
                 </div>
                 <div class="bmc-box bmc-cr">
-                    <h4>Customer Relationships <i class="fa-solid fa-heart"></i></h4>
+                    <h4>4. Customer Relationships <i class="fa-solid fa-heart"></i></h4>
                     <p>บริการอย่างใส่ใจ, การทำ CRM, ให้คำปรึกษา</p>
                 </div>
                 <div class="bmc-box bmc-ch">
-                    <h4>Channels <i class="fa-solid fa-truck"></i></h4>
+                    <h4>3. Channels <i class="fa-solid fa-truck"></i></h4>
                     <p>${channels}</p>
                 </div>
                 <div class="bmc-box bmc-cs">
-                    <h4>Customer Segments <i class="fa-solid fa-users"></i></h4>
+                    <h4>1. Customer Segments <i class="fa-solid fa-users"></i></h4>
                     <p>${audience.toUpperCase()}</p>
                 </div>
                 <div class="bmc-box bmc-cost">
-                    <h4>Cost Structure <i class="fa-solid fa-money-bill-wave"></i></h4>
+                    <h4>9. Cost Structure <i class="fa-solid fa-money-bill-wave"></i></h4>
                     <p>${costStructure}</p>
                 </div>
                 <div class="bmc-box bmc-rev">
-                    <h4>Revenue Streams <i class="fa-solid fa-coins"></i></h4>
+                    <h4>5. Revenue Streams <i class="fa-solid fa-coins"></i></h4>
                     <p>รายได้จาก: ${revenueType}</p>
                 </div>
             </div>
