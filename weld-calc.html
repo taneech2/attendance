@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeldCalc — คำนวณงานเหล็กครบวงจร</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080d18;--bg2:#0d1428;--bg3:#0a1020;--bg4:#111827;
+  --card:#0f1a2e;--card2:#0a1220;
+  --gold:#c9a84c;--gold2:#f0d060;
+  --green:#22c55e;--green2:#86efac;
+  --red:#ef4444;--red2:#fca5a5;
+  --blue:#3b82f6;--blue2:#93c5fd;
+  --or:#f97316;--or2:#fdba74;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --border:rgba(255,255,255,.07);
+  --radius:10px;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+input,select,textarea,button{font-family:'Sarabun',sans-serif;}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+
+/* ── HEADER ── */
+.app-header{
+  background:linear-gradient(135deg,#0f172a,#1e1b4b);
+  border-bottom:1px solid rgba(99,102,241,.25);
+  padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:100;
+}
+.app-logo{font-size:20px;font-weight:800;color:#a5b4fc;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.app-sub{font-size:11px;color:var(--text3);letter-spacing:.5px;}
+.app-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;}
+.tab-btn{
+  padding:7px 16px;border-radius:20px;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;transition:all .2s;background:rgba(255,255,255,.05);color:var(--text3);
+}
+.tab-btn:hover{color:var(--text2);background:rgba(255,255,255,.08);}
+.tab-btn.active{background:rgba(99,102,241,.2);color:#a5b4fc;border:1px solid rgba(99,102,241,.4);}
+
+/* ── PANELS ── */
+.panel{display:none;padding:20px;max-width:1100px;margin:0 auto;animation:fadeIn .3s ease;}
+.panel.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+/* ── SECTION TITLES ── */
+.sec-title{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+  font-size:16px;font-weight:700;
+}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;}
+.badge.blue{background:rgba(59,130,246,.15);color:var(--blue2);}
+.badge.green{background:rgba(34,197,94,.15);color:var(--green2);}
+.badge.or{background:rgba(249,115,22,.15);color:var(--or2);}
+.badge.red{background:rgba(239,68,68,.15);color:var(--red2);}
+.badge.gold{background:rgba(201,168,76,.15);color:var(--gold2);}
+
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--bg2);color:var(--text2);padding:8px 10px;border:1px solid var(--border);text-align:left;white-space:nowrap;font-weight:600;}
+.tbl td{padding:6px 8px;border:1px solid var(--border);vertical-align:middle;}
+.tbl tr:hover td{background:rgba(255,255,255,.02);}
+.tbl-inp{
+  width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:6px;padding:5px 8px;color:var(--text);font-size:13px;outline:none;
+}
+.tbl-inp:focus{border-color:var(--blue);background:rgba(59,130,246,.08);}
+.price-inp{
+  background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.25);
+  border-radius:6px;padding:5px 8px;color:var(--gold2);font-size:13px;
+  font-family:'JetBrains Mono',monospace;font-weight:600;outline:none;width:110px;
+}
+.price-inp:focus{border-color:var(--gold);}
+
+/* ── BTN ── */
+.btn{
+  padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;
+  font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-blue{background:rgba(59,130,246,.2);color:var(--blue2);border:1px solid rgba(59,130,246,.3);}
+.btn-blue:hover{background:rgba(59,130,246,.35);}
+.btn-green{background:rgba(34,197,94,.2);color:var(--green2);border:1px solid rgba(34,197,94,.3);}
+.btn-green:hover{background:rgba(34,197,94,.35);}
+.btn-or{background:rgba(249,115,22,.2);color:var(--or2);border:1px solid rgba(249,115,22,.3);}
+.btn-or:hover{background:rgba(249,115,22,.35);}
+.btn-red{background:rgba(239,68,68,.15);color:var(--red2);border:1px solid rgba(239,68,68,.2);}
+.btn-red:hover{background:rgba(239,68,68,.25);}
+.btn-gold{background:rgba(201,168,76,.2);color:var(--gold2);border:1px solid rgba(201,168,76,.3);}
+.btn-gold:hover{background:rgba(201,168,76,.35);}
+.btn-sm{padding:4px 10px;font-size:12px;}
+
+/* ── GRID ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+@media(max-width:700px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+/* ── STAT BOX ── */
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.stat-val{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1;}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:4px;letter-spacing:.5px;}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:3px;}
+
+/* ── CUT PLANNER ── */
+.cut-row{
+  display:flex;gap:8px;align-items:center;padding:8px 10px;
+  background:var(--card2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;
+}
+.cut-result-bar{
+  background:var(--bg2);border-radius:8px;padding:14px;margin-top:12px;
+}
+.bar-vis{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:8px 0;border:1px solid var(--border);}
+.bar-seg-used{background:linear-gradient(90deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;}
+.bar-seg-waste{background:rgba(239,68,68,.3);border-left:1px solid rgba(239,68,68,.4);}
+.bar-seg-kerf{background:rgba(249,115,22,.35);border-left:1px solid rgba(249,115,22,.5);}
+.cut-list{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;}
+.cut-chip{font-size:11px;padding:2px 8px;border-radius:6px;background:rgba(59,130,246,.15);color:var(--blue2);font-family:'JetBrains Mono',monospace;}
+
+/* ── QUOTE ── */
+.quote-row{
+  display:grid;grid-template-columns:2fr 1fr 80px 90px 90px 36px;gap:6px;
+  align-items:center;padding:8px;background:var(--card2);
+  border:1px solid var(--border);border-radius:8px;margin-bottom:6px;
+}
+.quote-total-box{
+  background:linear-gradient(135deg,#0f172a,#1e1b4b);
+  border:1px solid rgba(99,102,241,.3);border-radius:var(--radius);padding:20px;
+}
+
+/* ── STRENGTH ── */
+.beam-viz{
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:16px;margin:12px 0;position:relative;
+}
+svg.beam-svg{width:100%;height:120px;overflow:visible;}
+.result-ok{color:var(--green2);font-weight:700;}
+.result-warn{color:var(--or2);font-weight:700;}
+.result-fail{color:var(--red2);font-weight:700;}
+.formula-box{
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:8px;padding:12px 14px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--text2);line-height:1.8;
+}
+
+/* ── MISC ── */
+.inp{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;
+}
+.inp:focus{border-color:var(--blue);}
+.sel{
+  background:var(--card);border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;
+}
+.lbl{font-size:12px;color:var(--text3);margin-bottom:4px;display:block;}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+.mono{font-family:'JetBrains Mono',monospace;}
+.text-green{color:var(--green2);}
+.text-red{color:var(--red2);}
+.text-gold{color:var(--gold2);}
+.text-blue{color:var(--blue2);}
+.text-or{color:var(--or2);}
+.small{font-size:11px;color:var(--text3);}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div>
+    <div class="app-logo">⚙️ WeldCalc</div>
+    <div class="app-sub">คำนวณงานเหล็กครบวงจร · วอศ.บุรีรัมย์</div>
+  </div>
+  <div class="app-tabs">
+    <button class="tab-btn active" onclick="switchTab('prices')">💰 ราคาวัสดุ</button>
+    <button class="tab-btn" onclick="switchTab('cut')">✂️ วางแผนตัด</button>
+    <button class="tab-btn" onclick="switchTab('quote')">📋 ใบเสนอราคา</button>
+    <button class="tab-btn" onclick="switchTab('strength')">🔩 ความแข็งแรง</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 1: MATERIAL PRICES
+══════════════════════════════════════════ -->
+<div id="panel-prices" class="panel active">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+    <div>
+      <div style="font-size:18px;font-weight:800;">💰 ราคาวัสดุ</div>
+      <div class="small">อัปเดตราคาได้ทุกเมื่อ — บันทึกอัตโนมัติใน Browser</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="savePrices()">💾 บันทึก</button>
+      <button class="btn btn-blue" onclick="resetPrices()">↺ ค่าเริ่มต้น</button>
+    </div>
+  </div>
+
+  <!-- เหล็กกล่อง -->
+  <div class="card">
+    <div class="sec-title"><span class="badge blue">RHS/SHS</span> เหล็กกล่องสี่เหลี่ยม (ราคา / เส้น 6 เมตร)</div>
+    <div style="overflow-x:auto;">
+    <table class="tbl" id="tbl-rhs">
+      <thead><tr><th>ขนาด (มม.)</th><th>ความหนา</th><th>น้ำหนัก (kg/m)</th><th>ราคา/เส้น (฿)</th><th>ราคา/kg (฿)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- เหล็กฉาก -->
+  <div class="card">
+    <div class="sec-title"><span class="badge green">L-BAR</span> เหล็กฉาก (ราคา / เส้น 6 เมตร)</div>
+    <div style="overflow-x:auto;">
+    <table class="tbl" id="tbl-angle">
+      <thead><tr><th>ขนาด (มม.)</th><th>ความหนา</th><th>น้ำหนัก (kg/m)</th><th>ราคา/เส้น (฿)</th><th>ราคา/kg (฿)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- เหล็กแบน -->
+  <div class="card">
+    <div class="sec-title"><span class="badge or">FLAT BAR</span> เหล็กแบน (ราคา / เส้น 6 เมตร)</div>
+    <div style="overflow-x:auto;">
+    <table class="tbl" id="tbl-flat">
+      <thead><tr><th>ขนาด (มม.)</th><th>ความหนา</th><th>น้ำหนัก (kg/m)</th><th>ราคา/เส้น (฿)</th><th>ราคา/kg (฿)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- แผ่นเหล็ก -->
+  <div class="card">
+    <div class="sec-title"><span class="badge gold">PLATE</span> แผ่นเหล็ก (ราคา / แผ่น 1.2×2.4 ม.)</div>
+    <div style="overflow-x:auto;">
+    <table class="tbl" id="tbl-plate">
+      <thead><tr><th>ความหนา (มม.)</th><th>น้ำหนัก (kg/แผ่น)</th><th>ราคา/แผ่น (฿)</th><th>ราคา/kg (฿)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- ท่อกลม -->
+  <div class="card">
+    <div class="sec-title"><span class="badge blue">PIPE</span> ท่อกลม ERW (ราคา / เส้น 6 เมตร)</div>
+    <div style="overflow-x:auto;">
+    <table class="tbl" id="tbl-pipe">
+      <thead><tr><th>ขนาด</th><th>OD (มม.)</th><th>ความหนา</th><th>น้ำหนัก (kg/m)</th><th>ราคา/เส้น (฿)</th><th>ราคา/kg (฿)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- ค่าแรงและอื่นๆ -->
+  <div class="card">
+    <div class="sec-title"><span class="badge red">ค่าแรง & ค่าใช้จ่าย</span></div>
+    <div class="grid-3" style="gap:10px;" id="labor-grid"></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 2: CUT PLANNER
+══════════════════════════════════════════ -->
+<div id="panel-cut" class="panel">
+
+  <div style="font-size:18px;font-weight:800;margin-bottom:4px;">✂️ วางแผนการตัด</div>
+  <div class="small" style="margin-bottom:16px;">คำนวณจำนวนเหล็กที่ต้องซื้อ และ Pattern การตัดที่ประหยัดที่สุด</div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="sec-title"><span class="badge blue">ตั้งค่า</span></div>
+      <div class="row">
+        <div style="flex:1;">
+          <label class="lbl">ชนิดเหล็ก</label>
+          <select class="sel" id="cut-material" style="width:100%;" onchange="updateCutMaterialLabel()">
+            <option value="">-- เลือกชนิด --</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div style="flex:1;">
+          <label class="lbl">ความยาวเส้นมาตรฐาน (มม.)</label>
+          <input class="inp" id="cut-bar-len" type="number" value="6000" style="width:100%;">
+        </div>
+        <div style="flex:1;">
+          <label class="lbl">ปล่อง / kerf (มม.)</label>
+          <input class="inp" id="cut-kerf" type="number" value="3" style="width:100%;">
+        </div>
+      </div>
+      <div class="small">ปล่อง = ความกว้างของรอยตัด (ใบเจียร ~3มม., Plasma ~5มม.)</div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title"><span class="badge green">เพิ่มรายการตัด</span></div>
+      <div class="row">
+        <div style="flex:1;">
+          <label class="lbl">ความยาวชิ้น (มม.)</label>
+          <input class="inp" id="cut-len" type="number" placeholder="เช่น 800" style="width:100%;">
+        </div>
+        <div>
+          <label class="lbl">จำนวน (ชิ้น)</label>
+          <input class="inp" id="cut-qty" type="number" value="1" style="width:80px;">
+        </div>
+        <div style="margin-top:20px;">
+          <button class="btn btn-green" onclick="addCutItem()">+ เพิ่ม</button>
+        </div>
+      </div>
+      <div id="cut-items-list" style="margin-top:4px;max-height:150px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <button class="btn btn-blue" onclick="calcCut()">⚡ คำนวณ</button>
+    <button class="btn btn-red btn-sm" onclick="clearCutItems()">ล้างทั้งหมด</button>
+  </div>
+
+  <div id="cut-results"></div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 3: QUOTE BUILDER
+══════════════════════════════════════════ -->
+<div id="panel-quote" class="panel">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+    <div>
+      <div style="font-size:18px;font-weight:800;">📋 ใบเสนอราคางาน</div>
+      <div class="small">เพิ่มรายการ → ระบบคำนวณต้นทุน + กำไรให้อัตโนมัติ</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-green" onclick="printQuote()">🖨️ พิมพ์/PDF</button>
+      <button class="btn btn-red btn-sm" onclick="clearQuote()">ล้างรายการ</button>
+    </div>
+  </div>
+
+  <!-- ข้อมูลงาน -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="grid-2">
+      <div>
+        <label class="lbl">ชื่อลูกค้า / โปรเจกต์</label>
+        <input class="inp" id="q-customer" placeholder="เช่น คุณสมชาย — ประตูเหล็ก" style="width:100%;">
+      </div>
+      <div>
+        <label class="lbl">วันที่เสนอราคา</label>
+        <input class="inp" id="q-date" type="date" style="width:100%;">
+      </div>
+    </div>
+  </div>
+
+  <!-- Add row -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="sec-title"><span class="badge blue">เพิ่มรายการ</span></div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 90px 90px auto;gap:8px;align-items:end;flex-wrap:wrap;">
+      <div>
+        <label class="lbl">รายการ</label>
+        <input class="inp" id="qi-name" placeholder="เช่น เหล็กกล่อง 40x40 ยาว 3.2m" style="width:100%;">
+      </div>
+      <div>
+        <label class="lbl">วัสดุ (เลือก)</label>
+        <select class="sel" id="qi-mat" style="width:100%;" onchange="autoFillMatPrice()">
+          <option value="">-- ไม่ระบุ --</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">จำนวน</label>
+        <input class="inp" id="qi-qty" type="number" value="1" style="width:100%;">
+      </div>
+      <div>
+        <label class="lbl">ราคา/หน่วย (฿)</label>
+        <input class="inp" id="qi-price" type="number" placeholder="0" style="width:100%;">
+      </div>
+      <div>
+        <label class="lbl">&nbsp;</label>
+        <button class="btn btn-blue" onclick="addQuoteItem()">+ เพิ่ม</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quote table -->
+  <div class="card" style="margin-bottom:14px;">
+    <div style="overflow-x:auto;">
+    <table class="tbl" id="quote-table">
+      <thead>
+        <tr>
+          <th>#</th><th>รายการ</th><th>จำนวน</th><th>ราคา/หน่วย</th><th>รวม</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="quote-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Quote summary -->
+  <div class="quote-total-box">
+    <div class="grid-2" style="gap:20px;align-items:start;">
+      <div>
+        <div class="lbl" style="margin-bottom:8px;">การตั้งราคา</div>
+        <div class="row">
+          <label class="lbl" style="min-width:160px;margin:0;">% เผื่อของเสีย/waste</label>
+          <input class="inp" id="q-waste" type="number" value="10" style="width:70px;"> <span class="small">%</span>
+        </div>
+        <div class="row">
+          <label class="lbl" style="min-width:160px;margin:0;">ค่าแรงรวม (฿)</label>
+          <input class="inp" id="q-labor" type="number" value="0" placeholder="0" style="width:100px;">
+        </div>
+        <div class="row">
+          <label class="lbl" style="min-width:160px;margin:0;">ค่าขนส่ง/อื่นๆ (฿)</label>
+          <input class="inp" id="q-extra" type="number" value="0" placeholder="0" style="width:100px;">
+        </div>
+        <div class="row">
+          <label class="lbl" style="min-width:160px;margin:0;">กำไรที่ต้องการ</label>
+          <input class="inp" id="q-margin" type="number" value="25" style="width:70px;"> <span class="small">%</span>
+        </div>
+        <button class="btn btn-gold" style="margin-top:8px;" onclick="calcQuote()">⚡ คำนวณ</button>
+      </div>
+      <div id="quote-summary">
+        <div class="small" style="text-align:center;padding:30px;">กด "คำนวณ" เพื่อดูสรุป</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 4: STRUCTURAL STRENGTH
+══════════════════════════════════════════ -->
+<div id="panel-strength" class="panel">
+
+  <div style="font-size:18px;font-weight:800;margin-bottom:4px;">🔩 ตรวจสอบความแข็งแรง</div>
+  <div class="small" style="margin-bottom:16px;">คำนวณ Bending Stress และ Deflection สำหรับคาน-เสา-โครงสร้างเบื้องต้น</div>
+
+  <div class="grid-2">
+    <!-- Input -->
+    <div>
+      <div class="card">
+        <div class="sec-title"><span class="badge blue">หน้าตัดเหล็ก</span></div>
+        <div class="row">
+          <label class="lbl" style="min-width:130px;margin:0;">ชนิด</label>
+          <select class="sel" id="str-type" style="flex:1;" onchange="updateSectionOptions()">
+            <option value="rhs">เหล็กกล่อง (RHS/SHS)</option>
+            <option value="angle">เหล็กฉาก (Angle)</option>
+            <option value="flat">เหล็กแบน (Flat Bar)</option>
+            <option value="pipe">ท่อกลม (Round Tube/Pipe)</option>
+            <option value="round">เหล็กกลม Solid (Round Bar)</option>
+            <option value="custom">กำหนดเอง (Custom)</option>
+          </select>
+        </div>
+        <div class="row">
+          <label class="lbl" style="min-width:130px;margin:0;">ขนาดสำเร็จรูป</label>
+          <select class="sel" id="str-section" style="flex:1;" onchange="fillSectionProps()">
+          </select>
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:10px;">คุณสมบัติหน้าตัด (แก้ได้)</div>
+        <div class="grid-2" style="gap:8px;">
+          <div>
+            <label class="lbl">Ix (cm⁴)</label>
+            <input class="inp" id="str-Ix" type="number" style="width:100%;">
+          </div>
+          <div>
+            <label class="lbl">Zx (cm³)</label>
+            <input class="inp" id="str-Zx" type="number" style="width:100%;">
+          </div>
+          <div>
+            <label class="lbl">A (cm²)</label>
+            <input class="inp" id="str-A" type="number" style="width:100%;">
+          </div>
+          <div>
+            <label class="lbl">fy (MPa) ความแข็งแรง</label>
+            <input class="inp" id="str-fy" type="number" value="250">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-title"><span class="badge green">เงื่อนไขการรับแรง</span></div>
+        <div class="row">
+          <label class="lbl" style="min-width:130px;margin:0;">ประเภทการรับแรง</label>
+          <select class="sel" id="str-loadtype" style="flex:1;" onchange="calcStrength()">
+            <option value="ss-udl">คานช่วงเดียว — น้ำหนักกระจาย (UDL)</option>
+            <option value="ss-point">คานช่วงเดียว — น้ำหนักจุดกลาง</option>
+            <option value="cant-udl">คานยื่น (Cantilever) — น้ำหนักกระจาย</option>
+            <option value="cant-point">คานยื่น — น้ำหนักปลาย</option>
+            <option value="column">เสารับแรงกด (Euler Buckling)</option>
+          </select>
+        </div>
+        <div class="grid-2" style="gap:8px;">
+          <div>
+            <label class="lbl">ช่วงความยาว L (mm)</label>
+            <input class="inp" id="str-L" type="number" value="2000" style="width:100%;" oninput="calcStrength()">
+          </div>
+          <div>
+            <label class="lbl" id="load-lbl">น้ำหนัก w (kg/m)</label>
+            <input class="inp" id="str-load" type="number" value="50" style="width:100%;" oninput="calcStrength()">
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Safety Factor ที่ต้องการ</label>
+          <input class="inp" id="str-sf" type="number" value="1.67" style="width:100px;" oninput="calcStrength()">
+          <span class="small" style="margin-left:8px;">มาตรฐาน AISC ใช้ 1.67</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div>
+      <div class="card">
+        <div class="sec-title"><span class="badge gold">ผลการคำนวณ</span></div>
+        <div id="str-results">
+          <div class="small" style="text-align:center;padding:30px;">กรอกข้อมูลเพื่อดูผล</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-title"><span class="badge blue">สูตรที่ใช้</span></div>
+        <div class="formula-box" id="str-formula">
+          E (ค่าความยืดหยุ่น) = 200,000 MPa (เหล็กทุกชนิด)<br>
+          fy = ความแข็งแรงจุดคราก (A36 = 250 MPa)<br>
+          Allowable stress = fy / SF<br>
+          <br>
+          <span style="color:var(--blue2);">SS-UDL:</span> Mmax = wL²/8 · δmax = 5wL⁴/384EI<br>
+          <span style="color:var(--green2);">SS-Point:</span> Mmax = PL/4 · δmax = PL³/48EI<br>
+          <span style="color:var(--or2);">Cantilever:</span> Mmax = wL²/2 · δmax = wL⁴/8EI
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// DATA — MATERIAL DATABASE
+// ════════════════════════════════════════════════
+
+const DEFAULT_PRICES = {
+  rhs:[
+    {size:'20×20',t:1.5,wpm:0.87,price:180},
+    {size:'25×25',t:1.5,wpm:1.11,price:220},
+    {size:'30×30',t:1.8,wpm:1.59,price:290},
+    {size:'40×40',t:2.0,wpm:2.36,price:390},
+    {size:'50×50',t:2.3,wpm:3.40,price:550},
+    {size:'60×60',t:2.3,wpm:4.13,price:660},
+    {size:'75×75',t:2.3,wpm:5.22,price:830},
+    {size:'100×100',t:3.2,wpm:9.54,price:1500},
+    {size:'40×20',t:1.6,wpm:1.59,price:290},
+    {size:'60×40',t:2.0,wpm:2.96,price:490},
+    {size:'80×40',t:2.3,wpm:4.22,price:680},
+    {size:'100×50',t:3.0,wpm:6.71,price:1050},
+  ],
+  angle:[
+    {size:'20×20',t:3,wpm:0.89,price:185},
+    {size:'25×25',t:3,wpm:1.12,price:225},
+    {size:'30×30',t:3,wpm:1.36,price:265},
+    {size:'40×40',t:4,wpm:2.42,price:420},
+    {size:'50×50',t:5,wpm:3.77,price:650},
+    {size:'60×60',t:6,wpm:5.42,price:910},
+    {size:'75×75',t:7,wpm:8.00,price:1300},
+    {size:'100×100',t:10,wpm:14.20,price:2250},
+  ],
+  flat:[
+    {size:'20×3',t:3,wpm:0.47,price:100},
+    {size:'25×4',t:4,wpm:0.79,price:160},
+    {size:'30×4',t:4,wpm:0.94,price:188},
+    {size:'40×5',t:5,wpm:1.57,price:300},
+    {size:'50×5',t:5,wpm:1.96,price:370},
+    {size:'60×6',t:6,wpm:2.83,price:530},
+    {size:'75×8',t:8,wpm:4.71,price:870},
+    {size:'100×10',t:10,wpm:7.85,price:1450},
+  ],
+  plate:[
+    {t:1.2,wpm:9.42,price:520},
+    {t:1.5,wpm:11.78,price:640},
+    {t:2.0,wpm:15.70,price:850},
+    {t:3.0,wpm:23.55,price:1280},
+    {t:4.0,wpm:31.41,price:1700},
+    {t:5.0,wpm:39.26,price:2100},
+    {t:6.0,wpm:47.11,price:2520},
+    {t:9.0,wpm:70.67,price:3800},
+  ],
+  pipe:[
+    {size:'1/2"',od:21.3,t:2.0,wpm:0.95,price:170},
+    {size:'3/4"',od:26.9,t:2.3,wpm:1.41,price:230},
+    {size:'1"',  od:33.7,t:2.6,wpm:2.00,price:320},
+    {size:'1¼"', od:42.4,t:2.6,wpm:2.55,price:400},
+    {size:'1½"', od:48.3,t:2.9,wpm:3.24,price:500},
+    {size:'2"',  od:60.3,t:2.9,wpm:4.10,price:640},
+    {size:'2½"', od:76.1,t:3.2,wpm:5.76,price:890},
+    {size:'3"',  od:88.9,t:3.2,wpm:6.77,price:1050},
+    {size:'4"',  od:114.3,t:3.6,wpm:9.83,price:1500},
+  ],
+  labor:{
+    weld_hr:350,
+    grind_hr:200,
+    paint_m2:80,
+    delivery:500,
+    gas_day:120,
+    electrode_kg:180,
+  }
+};
+
+let PRICES = JSON.parse(localStorage.getItem('weld-prices') || 'null') || JSON.parse(JSON.stringify(DEFAULT_PRICES));
+let _priceLastUpdated = null; // จาก steel-prices.json
+
+// ── SECTION PROPERTIES (Ix cm⁴, Zx cm³, A cm²) ──
+const SECTION_PROPS = {
+  rhs:{
+    '20×20×1.5':{Ix:0.37,Zx:0.37,A:1.10},'25×25×1.5':{Ix:0.74,Zx:0.59,A:1.41},
+    '30×30×1.8':{Ix:1.53,Zx:1.02,A:1.95},'40×40×2.0':{Ix:4.42,Zx:2.21,A:2.95},
+    '50×50×2.3':{Ix:10.7,Zx:4.28,A:4.38},'60×60×2.3':{Ix:19.3,Zx:6.44,A:5.29},
+    '75×75×2.3':{Ix:46.8,Zx:12.5,A:6.70},'100×100×3.2':{Ix:171,Zx:34.2,A:12.3},
+    '40×20×1.6':{Ix:2.38,Zx:1.19,A:1.78},'60×40×2.0':{Ix:12.5,Zx:4.16,A:3.76},
+    '80×40×2.3':{Ix:34.3,Zx:8.58,A:5.27},'100×50×3.0':{Ix:101,Zx:20.2,A:8.41},
+  },
+  angle:{
+    '20×20×3':{Ix:0.40,Zx:0.28,A:1.13},'25×25×3':{Ix:0.80,Zx:0.45,A:1.42},
+    '30×30×3':{Ix:1.39,Zx:0.65,A:1.73},'40×40×4':{Ix:4.47,Zx:1.55,A:3.08},
+    '50×50×5':{Ix:11.0,Zx:3.05,A:4.80},'60×60×6':{Ix:22.8,Zx:5.25,A:6.91},
+    '75×75×7':{Ix:55.8,Zx:10.1,A:10.2},'100×100×10':{Ix:176,Zx:24.0,A:19.2},
+  },
+  flat:{
+    '20×3×3':{Ix:0.045,Zx:0.045,A:0.60},'25×4×4':{Ix:0.133,Zx:0.107,A:1.00},
+    '30×4×4':{Ix:0.160,Zx:0.107,A:1.20},'40×5×5':{Ix:0.417,Zx:0.208,A:2.00},
+    '50×5×5':{Ix:0.521,Zx:0.208,A:2.50},'60×6×6':{Ix:1.08,Zx:0.360,A:3.60},
+    '75×8×8':{Ix:2.81,Zx:0.750,A:6.00},'100×10×10':{Ix:8.33,Zx:1.67,A:10.0},
+  },
+  round:{
+    'Ø12':{Ix:0.102,Zx:0.170,A:1.131},'Ø16':{Ix:0.322,Zx:0.402,A:2.011},
+    'Ø20':{Ix:0.785,Zx:0.785,A:3.142},'Ø25':{Ix:1.917,Zx:1.534,A:4.909},
+    'Ø32':{Ix:5.147,Zx:3.217,A:8.042},'Ø40':{Ix:12.57,Zx:6.283,A:12.57},
+    'Ø50':{Ix:30.68,Zx:12.27,A:19.63},'Ø63':{Ix:77.55,Zx:24.62,A:31.17},
+  },
+  pipe:{
+    // Ix = π(D⁴-d⁴)/64 cm⁴ · Zx = 2Ix/D cm³ · A = π(D²-d²)/4 cm²
+    '1/2" OD21.3×2.0':{Ix:0.356,Zx:0.334,A:1.193},
+    '3/4" OD26.9×2.3':{Ix:0.922,Zx:0.686,A:1.766},
+    '1" OD33.7×2.6':{Ix:2.301,Zx:1.366,A:2.534},
+    '1¼" OD42.4×2.6':{Ix:5.870,Zx:2.769,A:3.231},
+    '1½" OD48.3×2.9':{Ix:9.878,Zx:4.091,A:4.093},
+    '2" OD60.3×2.9':{Ix:24.52,Zx:8.131,A:5.194},
+    '2½" OD76.1×3.2':{Ix:61.92,Zx:16.28,A:7.338},
+    '3" OD88.9×3.2':{Ix:113.1,Zx:25.45,A:8.604},
+    '4" OD114.3×3.6':{Ix:302.1,Zx:52.88,A:12.55},
+  }
+};
+
+// ════════════════════════════════════════════════
+// RENDER PRICE TABLES
+// ════════════════════════════════════════════════
+function renderPrices() {
+  // RHS
+  renderMatTable('tbl-rhs', PRICES.rhs, 'rhs', (r,i) =>
+    `<td>${r.size}</td><td>${r.t} mm</td>
+     <td class="mono">${r.wpm.toFixed(2)}</td>
+     <td><input class="price-inp" type="number" value="${r.price}" onchange="PRICES.rhs[${i}].price=+this.value;updateKgPrice('rhs',${i})"></td>
+     <td class="mono text-gold" id="rhs-kg-${i}">${(r.price/(r.wpm*6)).toFixed(0)}</td>`
+  );
+  // Angle
+  renderMatTable('tbl-angle', PRICES.angle, 'angle', (r,i) =>
+    `<td>${r.size}</td><td>${r.t} mm</td>
+     <td class="mono">${r.wpm.toFixed(2)}</td>
+     <td><input class="price-inp" type="number" value="${r.price}" onchange="PRICES.angle[${i}].price=+this.value;updateKgPrice('angle',${i})"></td>
+     <td class="mono text-gold" id="angle-kg-${i}">${(r.price/(r.wpm*6)).toFixed(0)}</td>`
+  );
+  // Flat
+  renderMatTable('tbl-flat', PRICES.flat, 'flat', (r,i) =>
+    `<td>${r.size}</td><td>${r.t} mm</td>
+     <td class="mono">${r.wpm.toFixed(2)}</td>
+     <td><input class="price-inp" type="number" value="${r.price}" onchange="PRICES.flat[${i}].price=+this.value;updateKgPrice('flat',${i})"></td>
+     <td class="mono text-gold" id="flat-kg-${i}">${(r.price/(r.wpm*6)).toFixed(0)}</td>`
+  );
+  // Pipe
+  renderMatTable('tbl-pipe', PRICES.pipe, 'pipe', (r,i) =>
+    `<td class="mono">${r.size}</td><td class="mono">${r.od}</td><td>${r.t} mm</td>
+     <td class="mono">${r.wpm.toFixed(2)}</td>
+     <td><input class="price-inp" type="number" value="${r.price}" onchange="PRICES.pipe[${i}].price=+this.value;updateKgPrice('pipe',${i})"></td>
+     <td class="mono text-gold" id="pipe-kg-${i}">${(r.price/(r.wpm*6)).toFixed(0)}</td>`
+  );
+  // Plate
+  const pb = document.querySelector('#tbl-plate tbody');
+  pb.innerHTML = PRICES.plate.map((r,i) =>
+    `<tr><td>${r.t} mm</td>
+     <td class="mono">${r.wpm.toFixed(1)} kg</td>
+     <td><input class="price-inp" type="number" value="${r.price}" onchange="PRICES.plate[${i}].price=+this.value;document.getElementById('plate-kg-${i}').textContent=(this.value/r.wpm).toFixed(0)"></td>
+     <td class="mono text-gold" id="plate-kg-${i}">${(r.price/r.wpm).toFixed(0)}</td></tr>`
+  ).join('');
+  // Labor
+  const lg = document.getElementById('labor-grid');
+  const fields = [
+    {k:'weld_hr',lbl:'ค่าแรงเชื่อม (฿/ชั่วโมง)'},
+    {k:'grind_hr',lbl:'ค่าแรงเจียร (฿/ชั่วโมง)'},
+    {k:'paint_m2',lbl:'ค่าทาสี (฿/ตร.ม.)'},
+    {k:'delivery',lbl:'ค่าขนส่ง (฿/เที่ยว)'},
+    {k:'gas_day',lbl:'ค่าแก๊ส (฿/วัน)'},
+    {k:'electrode_kg',lbl:'ลวดเชื่อม (฿/kg)'},
+  ];
+  lg.innerHTML = fields.map(f =>
+    `<div class="stat-box">
+      <div class="lbl">${f.lbl}</div>
+      <input class="price-inp" type="number" value="${PRICES.labor[f.k]}"
+        onchange="PRICES.labor['${f.k}']=+this.value" style="width:100%;font-size:16px;padding:8px;">
+    </div>`
+  ).join('');
+  populateSelects();
+}
+
+function renderMatTable(id, data, type, rowFn) {
+  document.querySelector('#'+id+' tbody').innerHTML =
+    data.map((r,i) => `<tr>${rowFn(r,i)}</tr>`).join('');
+}
+
+function updateKgPrice(type, i) {
+  const r = PRICES[type][i];
+  const el = document.getElementById(`${type}-kg-${i}`);
+  if(el) el.textContent = (r.price/(r.wpm*6)).toFixed(0);
+}
+
+function savePrices() {
+  localStorage.setItem('weld-prices', JSON.stringify(PRICES));
+  showToast('💾 บันทึกราคาแล้ว!');
+}
+
+function resetPrices() {
+  if(!confirm('รีเซ็ตราคาทั้งหมดกลับค่าเริ่มต้น?')) return;
+  PRICES = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+  localStorage.removeItem('weld-prices');
+  renderPrices();
+  showToast('↺ รีเซ็ตแล้ว');
+}
+
+// ════════════════════════════════════════════════
+// POPULATE SELECTS
+// ════════════════════════════════════════════════
+function populateSelects() {
+  const allMats = [
+    ...PRICES.rhs.map(r => ({label:`กล่อง ${r.size}×${r.t} (${r.price}฿/เส้น)`, price:r.price, key:`rhs-${r.size}`})),
+    ...PRICES.angle.map(r => ({label:`ฉาก ${r.size}×${r.t} (${r.price}฿/เส้น)`, price:r.price, key:`angle-${r.size}`})),
+    ...PRICES.flat.map(r => ({label:`แบน ${r.size}×${r.t} (${r.price}฿/เส้น)`, price:r.price, key:`flat-${r.size}`})),
+    ...PRICES.pipe.map(r => ({label:`ท่อกลม ${r.size} OD${r.od}×${r.t} (${r.price}฿/เส้น)`, price:r.price, key:`pipe-${r.size}`})),
+    ...PRICES.plate.map(r => ({label:`แผ่น ${r.t}mm (${r.price}฿/แผ่น)`, price:r.price, key:`plate-${r.t}`})),
+  ];
+  const selCut = document.getElementById('cut-material');
+  const selQi = document.getElementById('qi-mat');
+  const opts = allMats.map(m => `<option value="${m.price}" data-key="${m.key}">${m.label}</option>`).join('');
+  selCut.innerHTML = '<option value="">-- เลือกชนิด --</option>' + opts;
+  selQi.innerHTML = '<option value="">-- ไม่ระบุ --</option>' + opts;
+}
+
+// ════════════════════════════════════════════════
+// CUT PLANNER
+// ════════════════════════════════════════════════
+let cutItems = [];
+
+function addCutItem() {
+  const len = +document.getElementById('cut-len').value;
+  const qty = +document.getElementById('cut-qty').value;
+  if(!len || len <= 0) return alert('กรุณาใส่ความยาวชิ้น');
+  cutItems.push({len, qty});
+  document.getElementById('cut-len').value = '';
+  document.getElementById('cut-qty').value = 1;
+  renderCutItemsList();
+}
+
+function renderCutItemsList() {
+  const el = document.getElementById('cut-items-list');
+  if(!cutItems.length){el.innerHTML='<div class="small" style="padding:8px;text-align:center;">ยังไม่มีรายการ</div>';return;}
+  el.innerHTML = cutItems.map((c,i) =>
+    `<div class="cut-row">
+      <span class="mono text-blue">${c.len} mm</span>
+      <span class="small">×</span>
+      <span class="mono">${c.qty} ชิ้น</span>
+      <span class="small text-or">= ${(c.len*c.qty).toLocaleString()} mm</span>
+      <button class="btn btn-red btn-sm" style="margin-left:auto;" onclick="cutItems.splice(${i},1);renderCutItemsList()">✕</button>
+    </div>`
+  ).join('');
+}
+
+function clearCutItems(){cutItems=[];renderCutItemsList();document.getElementById('cut-results').innerHTML='';}
+
+function calcCut() {
+  if(!cutItems.length) return alert('กรุณาเพิ่มรายการตัดก่อน');
+  const barLen = +document.getElementById('cut-bar-len').value || 6000;
+  const kerf = +document.getElementById('cut-kerf').value || 3;
+  const matPrice = +document.getElementById('cut-material').value || 0;
+
+  // Expand: create list of all pieces needed
+  let pieces = [];
+  cutItems.forEach(c => { for(let i=0;i<c.qty;i++) pieces.push(c.len); });
+  pieces.sort((a,b) => b-a); // sort descending (First Fit Decreasing)
+
+  // Check feasibility
+  const maxPiece = Math.max(...pieces);
+  if(maxPiece > barLen) {
+    document.getElementById('cut-results').innerHTML =
+      `<div class="card" style="border-color:rgba(239,68,68,.3);">
+        <span class="text-red">⚠️ ชิ้น ${maxPiece}mm ยาวกว่าเส้น ${barLen}mm — ไม่สามารถตัดได้</span>
+      </div>`;
+    return;
+  }
+
+  // Bin packing (First Fit Decreasing)
+  let bars = [];
+  pieces.forEach(p => {
+    let placed = false;
+    for(let b of bars) {
+      // remaining after last cut already accounts for previous kerfs
+      if(b.remaining >= p + (b.cuts.length > 0 ? kerf : 0)) {
+        const kUsed = b.cuts.length > 0 ? kerf : 0;
+        b.remaining -= (p + kUsed);
+        b.kerfUsed += kUsed;
+        b.cuts.push(p);
+        placed = true; break;
+      }
+    }
+    if(!placed) {
+      bars.push({cuts:[p], remaining: barLen - p, kerfUsed: 0});
+    }
+  });
+
+  const totalBars = bars.length;
+  const totalUsed = pieces.reduce((s,p)=>s+p,0);
+  const totalKerf = bars.reduce((s,b)=>s+b.kerfUsed,0);
+  const totalWaste = totalBars * barLen - totalUsed - totalKerf;
+  const wastePercent = (totalWaste / (totalBars * barLen) * 100).toFixed(1);
+  const totalCost = matPrice * totalBars;
+
+  let html = `
+  <div class="grid-4" style="margin-bottom:14px;">
+    <div class="stat-box"><div class="stat-val text-blue">${totalBars}</div><div class="stat-lbl">เส้นที่ต้องซื้อ</div></div>
+    <div class="stat-box"><div class="stat-val text-green">${pieces.length}</div><div class="stat-lbl">จำนวนชิ้น</div></div>
+    <div class="stat-box"><div class="stat-val text-or">${wastePercent}%</div><div class="stat-lbl">ของเสีย/waste</div></div>
+    <div class="stat-box"><div class="stat-val text-gold">${totalCost > 0 ? totalCost.toLocaleString()+'฿' : 'N/A'}</div><div class="stat-lbl">ค่าวัสดุรวม</div></div>
+  </div>`;
+
+  bars.forEach((b,i) => {
+    const usedPct = (b.cuts.reduce((s,c)=>s+c,0) / barLen * 100).toFixed(0);
+    const kerfPct = (b.kerfUsed / barLen * 100).toFixed(1);
+    const wastePct = (b.remaining / barLen * 100).toFixed(1);
+    html += `
+    <div class="cut-result-bar">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span class="text-blue" style="font-weight:700;font-size:13px;">เส้นที่ ${i+1}</span>
+        <span class="small">ใช้ ${usedPct}% · ปล่อง ${kerfPct}% · เหลือ ${parseFloat(wastePct).toFixed(1)}% (${b.remaining}mm)</span>
+      </div>
+      <div class="bar-vis">
+        ${b.cuts.map((c,ci) => {
+          const w = (c/barLen*100).toFixed(1);
+          const kw = (ci<b.cuts.length-1 ? kerf/barLen*100 : 0).toFixed(2);
+          return `<div class="bar-seg-used" style="width:${w}%" title="${c}mm">${c}</div>`
+               + (ci < b.cuts.length-1 ? `<div class="bar-seg-kerf" style="width:${kw}%" title="kerf ${kerf}mm"></div>` : '');
+        }).join('')}
+        ${b.remaining > 0 ? `<div class="bar-seg-waste" style="flex:1;" title="เหลือ ${b.remaining}mm"></div>` : ''}
+      </div>
+      <div class="cut-list">
+        ${b.cuts.map(c=>`<span class="cut-chip">${c}mm</span>`).join('')}
+        ${b.remaining > 0 ? `<span class="cut-chip" style="background:rgba(239,68,68,.1);color:var(--red2);">เหลือ ${b.remaining}mm</span>` : ''}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('cut-results').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════
+// QUOTE BUILDER
+// ════════════════════════════════════════════════
+let quoteItems = [];
+document.getElementById('q-date').value = new Date().toISOString().split('T')[0];
+
+function autoFillMatPrice() {
+  const sel = document.getElementById('qi-mat');
+  const price = sel.value;
+  if(price) document.getElementById('qi-price').value = price;
+}
+
+function addQuoteItem() {
+  const name = document.getElementById('qi-name').value.trim();
+  const qty = +document.getElementById('qi-qty').value || 1;
+  const price = +document.getElementById('qi-price').value || 0;
+  if(!name) return alert('กรุณาใส่ชื่อรายการ');
+  quoteItems.push({name, qty, price});
+  document.getElementById('qi-name').value = '';
+  document.getElementById('qi-price').value = '';
+  document.getElementById('qi-qty').value = 1;
+  document.getElementById('qi-mat').value = '';
+  renderQuoteTable();
+}
+
+function renderQuoteTable() {
+  const tbody = document.getElementById('quote-tbody');
+  if(!quoteItems.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3);">ยังไม่มีรายการ</td></tr>';
+    return;
+  }
+  tbody.innerHTML = quoteItems.map((item,i) =>
+    `<tr>
+      <td class="mono" style="color:var(--text3)">${i+1}</td>
+      <td>${item.name}</td>
+      <td class="mono" style="text-align:center">${item.qty}</td>
+      <td class="mono text-gold">${item.price.toLocaleString()}</td>
+      <td class="mono text-green">${(item.qty*item.price).toLocaleString()}</td>
+      <td><button class="btn btn-red btn-sm" onclick="quoteItems.splice(${i},1);renderQuoteTable()">✕</button></td>
+    </tr>`
+  ).join('');
+}
+
+function calcQuote() {
+  const matTotal = quoteItems.reduce((s,i)=>s+i.qty*i.price, 0);
+  const waste = +document.getElementById('q-waste').value / 100;
+  const labor = +document.getElementById('q-labor').value;
+  const extra = +document.getElementById('q-extra').value;
+  const margin = +document.getElementById('q-margin').value / 100;
+
+  const costWithWaste = matTotal * (1 + waste);
+  const totalCost = costWithWaste + labor + extra;
+  const sellPrice = totalCost / (1 - margin);
+  const profit = sellPrice - totalCost;
+
+  document.getElementById('quote-summary').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">สรุปต้นทุนและราคาขาย</div>
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;">
+        <span class="small">วัสดุรวม</span><span class="mono">${matTotal.toLocaleString()}฿</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span class="small">+ เผื่อของเสีย ${(waste*100).toFixed(0)}%</span><span class="mono text-or">+${(matTotal*waste).toLocaleString()}฿</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span class="small">+ ค่าแรง</span><span class="mono">+${labor.toLocaleString()}฿</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;">
+        <span class="small">+ ค่าขนส่ง/อื่นๆ</span><span class="mono">+${extra.toLocaleString()}฿</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;">
+        <span>ต้นทุนรวม</span><span class="mono">${Math.round(totalCost).toLocaleString()}฿</span>
+      </div>
+      <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:12px;margin-top:4px;">
+        <div class="small" style="margin-bottom:4px;">ราคาเสนอ (กำไร ${(margin*100).toFixed(0)}%)</div>
+        <div style="font-size:28px;font-weight:800;color:var(--green2);font-family:'JetBrains Mono',monospace;">${Math.round(sellPrice).toLocaleString()}฿</div>
+        <div class="small" style="margin-top:4px;">กำไร: <span class="text-green">${Math.round(profit).toLocaleString()}฿</span></div>
+      </div>
+    </div>`;
+}
+
+function clearQuote(){
+  if(!confirm('ล้างรายการทั้งหมด?')) return;
+  quoteItems=[];renderQuoteTable();
+  document.getElementById('quote-summary').innerHTML='<div class="small" style="text-align:center;padding:30px;">กด "คำนวณ" เพื่อดูสรุป</div>';
+}
+
+function printQuote() {
+  const customer = document.getElementById('q-customer').value || 'ลูกค้า';
+  const date = document.getElementById('q-date').value;
+  const rows = quoteItems.map((item,i) =>
+    `<tr><td>${i+1}</td><td>${item.name}</td><td>${item.qty}</td><td>${item.price.toLocaleString()}</td><td>${(item.qty*item.price).toLocaleString()}</td></tr>`
+  ).join('');
+  const matTotal = quoteItems.reduce((s,i)=>s+i.qty*i.price,0);
+  const waste = +document.getElementById('q-waste').value/100;
+  const labor = +document.getElementById('q-labor').value;
+  const extra = +document.getElementById('q-extra').value;
+  const margin = +document.getElementById('q-margin').value/100;
+  const totalCost = matTotal*(1+waste)+labor+extra;
+  const sellPrice = Math.round(totalCost/(1-margin));
+
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>ใบเสนอราคา — ${customer}</title>
+  <style>body{font-family:Sarabun,sans-serif;padding:30px;font-size:14px;}
+  h2{margin-bottom:4px;}table{width:100%;border-collapse:collapse;margin:16px 0;}
+  th,td{border:1px solid #ddd;padding:8px 10px;}th{background:#f5f5f5;}
+  .total{font-size:22px;font-weight:700;color:#16a34a;}</style></head>
+  <body>
+  <h2>ใบเสนอราคา</h2>
+  <p>ลูกค้า: <b>${customer}</b> · วันที่: ${date}</p>
+  <p>วิทยาลัยการอาชีพบุรีรัมย์ · แผนกช่างเชื่อม · ครูธานี ชมสุข</p>
+  <table><thead><tr><th>#</th><th>รายการ</th><th>จำนวน</th><th>ราคา/หน่วย</th><th>รวม</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <p>ราคาเสนอทั้งสิ้น: <span class="total">${sellPrice.toLocaleString()} บาท</span></p>
+  <p style="font-size:12px;color:#666;">หมายเหตุ: ราคารวมค่าวัสดุ ค่าแรง และค่าดำเนินการแล้ว</p>
+  <script>window.print();<\/script></body></html>`);
+}
+
+// ════════════════════════════════════════════════
+// STRUCTURAL STRENGTH
+// ════════════════════════════════════════════════
+function updateSectionOptions() {
+  const type = document.getElementById('str-type').value;
+  const sel = document.getElementById('str-section');
+  if(type === 'custom') { sel.innerHTML='<option>กำหนดเอง</option>'; return; }
+  const props = SECTION_PROPS[type] || {};
+  sel.innerHTML = Object.keys(props).map(k=>`<option value="${k}">${k}</option>`).join('');
+  fillSectionProps();
+}
+
+function fillSectionProps() {
+  const type = document.getElementById('str-type').value;
+  const sec = document.getElementById('str-section').value;
+  const props = (SECTION_PROPS[type]||{})[sec];
+  if(!props) return;
+  document.getElementById('str-Ix').value = props.Ix;
+  document.getElementById('str-Zx').value = props.Zx;
+  document.getElementById('str-A').value = props.A;
+  calcStrength();
+}
+
+function calcStrength() {
+  const E = 200000; // MPa
+  const Ix = +document.getElementById('str-Ix').value; // cm⁴
+  const Zx = +document.getElementById('str-Zx').value; // cm³
+  const fy = +document.getElementById('str-fy').value || 250;
+  const L = +document.getElementById('str-L').value; // mm
+  const load = +document.getElementById('str-load').value;
+  const SF = +document.getElementById('str-sf').value || 1.67;
+  const loadtype = document.getElementById('str-loadtype').value;
+
+  if(!Ix||!Zx||!L||!load) return;
+
+  const Ix_mm4 = Ix * 10000; // cm⁴ → mm⁴
+  const Zx_mm3 = Zx * 1000;  // cm³ → mm³
+  const A_mm2 = +document.getElementById('str-A').value * 100; // cm² → mm²
+
+  let Mmax=0, deflMax=0, Pcr=0;
+  const lbl = document.getElementById('load-lbl');
+
+  if(loadtype.includes('column')) {
+    lbl.textContent = 'แรงกด P (kN)';
+    const P = load * 1000; // kN → N
+    Pcr = (Math.PI**2 * E * Ix_mm4) / (L**2); // Euler critical load (N)
+    const Pcr_kN = Pcr/1000;
+    const safety = Pcr / P;
+    const fc = P / A_mm2; // axial stress MPa
+    const ok = safety >= SF;
+    document.getElementById('str-results').innerHTML = `
+      <div class="grid-2" style="gap:10px;margin-bottom:12px;">
+        <div class="stat-box"><div class="stat-val text-blue">${(Pcr_kN).toFixed(1)} kN</div><div class="stat-lbl">Euler Critical Load (Pcr)</div></div>
+        <div class="stat-box"><div class="stat-val ${ok?'text-green':'text-red'}">${safety.toFixed(2)}</div><div class="stat-lbl">Safety Factor (ต้องการ ≥${SF})</div></div>
+        <div class="stat-box"><div class="stat-val">${fc.toFixed(1)} MPa</div><div class="stat-lbl">Axial Stress</div></div>
+        <div class="stat-box"><div class="stat-val ${ok?'text-green':'text-red'}">${ok?'✅ ปลอดภัย':'❌ ไม่ปลอดภัย'}</div><div class="stat-lbl">ผลการตรวจสอบ</div></div>
+      </div>
+      <div class="${ok?'result-ok':'result-fail'}" style="font-size:14px;padding:10px;background:${ok?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)'};border-radius:8px;">
+        ${ok ? `เสารับแรงได้ปลอดภัย (SF=${safety.toFixed(2)} ≥ ${SF})` : `⚠️ เสาอาจโก่งเดาะ! ต้องเพิ่มขนาดหรือลดความยาว`}
+      </div>`;
+    return;
+  }
+
+  lbl.textContent = loadtype.includes('udl') ? 'น้ำหนักกระจาย w (N/mm)' : 'น้ำหนักจุด P (N)';
+
+  if(loadtype === 'ss-udl') {
+    const w = load; // N/mm
+    Mmax = w * L**2 / 8;
+    deflMax = 5 * w * L**4 / (384 * E * Ix_mm4);
+  } else if(loadtype === 'ss-point') {
+    const P = load; // N
+    Mmax = P * L / 4;
+    deflMax = P * L**3 / (48 * E * Ix_mm4);
+  } else if(loadtype === 'cant-udl') {
+    const w = load;
+    Mmax = w * L**2 / 2;
+    deflMax = w * L**4 / (8 * E * Ix_mm4);
+  } else if(loadtype === 'cant-point') {
+    const P = load;
+    Mmax = P * L;
+    deflMax = P * L**3 / (3 * E * Ix_mm4);
+  }
+
+  const sigma = Mmax / Zx_mm3; // MPa = N/mm² / mm³ → N·mm / mm³
+  const allowable = fy / SF;
+  const deflLimit = L / 300; // L/300 serviceability
+  const stressOk = sigma <= allowable;
+  const deflOk = deflMax <= deflLimit;
+  const allOk = stressOk && deflOk;
+
+  document.getElementById('str-results').innerHTML = `
+    <div class="grid-2" style="gap:10px;margin-bottom:12px;">
+      <div class="stat-box">
+        <div class="stat-val">${(Mmax/1000000).toFixed(2)} kN·m</div>
+        <div class="stat-lbl">Moment สูงสุด (Mmax)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val ${stressOk?'text-green':'text-red'}">${sigma.toFixed(1)} MPa</div>
+        <div class="stat-lbl">Bending Stress σ (≤${allowable.toFixed(0)} MPa)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val ${deflOk?'text-green':'text-or'}">${deflMax.toFixed(1)} mm</div>
+        <div class="stat-lbl">Deflection (≤L/300 = ${deflLimit.toFixed(1)}mm)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val ${stressOk?'text-green':'text-red'}">${(allowable/sigma).toFixed(2)}</div>
+        <div class="stat-lbl">Safety Factor จริง</div>
+      </div>
+    </div>
+    <div class="${allOk?'result-ok':stressOk&&!deflOk?'result-warn':'result-fail'}" style="font-size:14px;padding:12px;background:${allOk?'rgba(34,197,94,.08)':stressOk?'rgba(249,115,22,.08)':'rgba(239,68,68,.08)'};border-radius:8px;">
+      ${allOk ? '✅ แข็งแรงและแนวโก่งผ่านมาตรฐาน' :
+        !stressOk ? `❌ Stress เกิน! (${sigma.toFixed(0)} > ${allowable.toFixed(0)} MPa) — ต้องเพิ่มขนาดหน้าตัด` :
+        `⚠️ Stress OK แต่การโก่งตัวมากเกิน (${deflMax.toFixed(1)} > ${deflLimit.toFixed(1)}mm) — เพิ่ม Zx หรือลด Span`}
+    </div>`;
+}
+
+// ════════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';
+    t.style.cssText='position:fixed;bottom:20px;right:20px;background:#1e293b;border:1px solid rgba(99,102,241,.4);color:#a5b4fc;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;transition:opacity .3s;';
+    document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity=1;
+  setTimeout(()=>t.style.opacity=0, 2500);
+}
+
+// ════════════════════════════════════════════════
+// LOAD PRICES FROM steel-prices.json (auto-updated weekly)
+// ════════════════════════════════════════════════
+async function loadJsonPrices() {
+  try {
+    const res = await fetch('steel-prices.json?t=' + Date.now());
+    if(!res.ok) return;
+    const json = await res.json();
+    if(!json.rhs || !json.angle) return;
+    // ถ้า user ยังไม่ได้แก้ราคาใน localStorage → ใช้ JSON
+    if(!localStorage.getItem('weld-prices')) {
+      PRICES = json;
+      _priceLastUpdated = json.updated || null;
+      renderPrices();
+      showPriceBadge(json.updated, json.source_note);
+    } else {
+      // แจ้งว่ามีราคาใหม่ แต่ user ใช้ราคาที่บันทึกเองอยู่
+      if(json.updated) showPriceBadge(json.updated, json.source_note, true);
+    }
+  } catch(e) { /* ไม่มี JSON = ใช้ค่า default */ }
+}
+
+function showPriceBadge(date, note, userOverride=false) {
+  const existing = document.getElementById('price-badge');
+  if(existing) existing.remove();
+  const badge = document.createElement('div');
+  badge.id = 'price-badge';
+  badge.style.cssText = `
+    position:fixed;bottom:16px;left:16px;z-index:999;
+    background:#0f1a2e;border:1px solid rgba(201,168,76,.4);border-radius:10px;
+    padding:8px 14px;font-size:11px;color:#94a3b8;max-width:280px;
+    box-shadow:0 4px 20px rgba(0,0,0,.4);
+  `;
+  badge.innerHTML = userOverride
+    ? `<span style="color:#c9a84c;font-weight:700;">📡 ราคาอัปเดต ${date}</span><br>คุณใช้ราคาที่บันทึกเองอยู่<br>
+       <button onclick="useJsonPrices()" style="margin-top:4px;cursor:pointer;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);color:#f0d060;border-radius:6px;padding:3px 8px;font-size:11px;">ใช้ราคาใหม่แทน</button>`
+    : `<span style="color:#c9a84c;font-weight:700;">📡 ราคาอัปเดต ${date}</span><br>${note||'ราคาตลาดล่าสุด'}`;
+  document.body.appendChild(badge);
+  if(!userOverride) setTimeout(()=>badge.remove(), 6000);
+}
+
+window._jsonPrices = null;
+async function useJsonPrices() {
+  try {
+    const res = await fetch('steel-prices.json');
+    const json = await res.json();
+    PRICES = json;
+    localStorage.removeItem('weld-prices');
+    renderPrices();
+    document.getElementById('price-badge')?.remove();
+    showToast('✅ โหลดราคาตลาดล่าสุดแล้ว');
+  } catch(e) { showToast('❌ โหลดไม่ได้'); }
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+renderPrices();
+renderCutItemsList();
+renderQuoteTable();
+updateSectionOptions();
+loadJsonPrices();
+</script>
+</body>
+</html>
