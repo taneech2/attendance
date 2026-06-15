@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Starter Hub — วิทยาลัยการอาชีพบุรีรัมย์</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --gold:#c9a84c;--gold2:#f0d060;--gold3:#e8c84a;
+  --bg:#080d18;--bg2:#0d1428;--bg3:#0a1020;
+  --card:#0d1a35;--card2:#0a1428;
+  --text:#d4c4a0;--text2:#a89060;--text3:#6a7fa0;
+  --green:#4caf8a;--red:#e05555;--blue:#4a8fd4;
+  --radius:14px;
+}
+
+html{scroll-behavior:smooth;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:40px 20px;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,#1a2540,var(--bg));
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a84c' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);
+  color:var(--gold);font-size:12px;font-weight:700;letter-spacing:2px;
+  padding:6px 16px;border-radius:20px;margin-bottom:24px;
+  animation:fadeDown .6s ease both;
+}
+.hero h1{
+  font-size:clamp(32px,6vw,64px);font-weight:800;line-height:1.1;margin-bottom:16px;
+  background:linear-gradient(135deg,var(--gold2),var(--gold),var(--gold3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:fadeDown .7s ease .1s both;
+}
+.hero-sub{
+  font-size:clamp(14px,2.5vw,20px);color:var(--text2);max-width:600px;line-height:1.7;
+  margin-bottom:40px;animation:fadeDown .8s ease .2s both;
+}
+.hero-cta{
+  display:flex;gap:14px;flex-wrap:wrap;justify-content:center;
+  animation:fadeDown .9s ease .3s both;
+}
+.btn{
+  padding:14px 32px;border-radius:50px;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;border:none;transition:all .25s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#a07830);color:#0a0f1e;box-shadow:0 4px 20px rgba(201,168,76,.4);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(201,168,76,.5);}
+.btn-outline{background:transparent;border:1px solid rgba(201,168,76,.4);color:var(--gold);}
+.btn-outline:hover{border-color:var(--gold);background:rgba(201,168,76,.1);}
+
+.hero-stats{
+  display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-top:60px;
+  animation:fadeUp .9s ease .4s both;
+}
+.stat{text-align:center;}
+.stat-num{font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--gold2),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat-lbl{font-size:12px;color:var(--text3);letter-spacing:.5px;margin-top:2px;}
+
+/* ── QUIZ SECTION ── */
+.section{padding:80px 20px;max-width:1100px;margin:0 auto;}
+.section-label{
+  display:flex;align-items:center;gap:10px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:2px;
+  margin-bottom:12px;
+}
+.section-label::before{content:'';width:24px;height:2px;background:var(--gold);}
+.section h2{font-size:clamp(24px,4vw,40px);font-weight:800;margin-bottom:12px;line-height:1.2;}
+.section-desc{color:var(--text2);font-size:15px;line-height:1.7;margin-bottom:40px;}
+
+/* QUIZ CARD */
+.quiz-wrapper{background:linear-gradient(160deg,#0d1a35,#0a1020);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:32px;}
+.quiz-step{display:none;}
+.quiz-step.active{display:block;animation:fadeIn .4s ease;}
+.quiz-title{font-size:20px;font-weight:700;margin-bottom:8px;}
+.quiz-sub{color:var(--text3);font-size:14px;margin-bottom:24px;}
+.quiz-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.quiz-opt{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;
+  padding:16px 20px;cursor:pointer;transition:all .2s;text-align:left;
+}
+.quiz-opt:hover,.quiz-opt.selected{border-color:var(--gold);background:rgba(201,168,76,.08);}
+.quiz-opt.selected{box-shadow:0 0 0 1px var(--gold);}
+.quiz-opt-icon{font-size:24px;margin-bottom:6px;}
+.quiz-opt-text{font-size:14px;font-weight:600;}
+.quiz-opt-desc{font-size:11px;color:var(--text3);margin-top:3px;}
+.quiz-nav{display:flex;justify-content:space-between;align-items:center;margin-top:24px;}
+.quiz-progress{display:flex;gap:6px;}
+.quiz-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s;}
+.quiz-dot.done{background:var(--gold);}
+.quiz-dot.active{background:var(--gold2);width:20px;border-radius:4px;}
+
+/* ── BUSINESS CARDS ── */
+#results-section{display:none;}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:32px;}
+.biz-card{
+  background:linear-gradient(160deg,var(--card),var(--card2));
+  border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);
+  padding:24px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+}
+.biz-card::before{
+  content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s;
+  background:radial-gradient(ellipse at top left,rgba(201,168,76,.12),transparent 60%);
+  pointer-events:none;
+}
+.biz-card:hover{border-color:rgba(201,168,76,.4);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.4);}
+.biz-card:hover::before{opacity:1;}
+.biz-card.featured{border-color:rgba(201,168,76,.35);}
+.card-match{
+  position:absolute;top:14px;right:14px;
+  font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;
+  background:rgba(76,175,138,.15);color:var(--green);border:1px solid rgba(76,175,138,.3);
+}
+.card-match.high{background:rgba(76,175,138,.2);color:#6de8b0;}
+.card-icon{font-size:36px;margin-bottom:12px;}
+.card-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+.card-type{font-size:11px;color:var(--text3);letter-spacing:.5px;margin-bottom:12px;text-transform:uppercase;}
+.card-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px;}
+.card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.tag{font-size:10px;font-weight:600;padding:3px 10px;border-radius:8px;
+  background:rgba(255,255,255,.05);color:var(--text3);border:1px solid rgba(255,255,255,.08);}
+.card-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.metric{background:rgba(255,255,255,.04);border-radius:8px;padding:8px 10px;text-align:center;}
+.metric-val{font-size:13px;font-weight:700;color:var(--gold2);}
+.metric-key{font-size:9px;color:var(--text3);margin-top:2px;}
+.card-btn{
+  width:100%;padding:10px;border-radius:8px;border:1px solid rgba(201,168,76,.4);
+  background:transparent;color:var(--gold);font-family:'Sarabun',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:block;
+  list-style:none;text-align:center;
+}
+.card-btn:hover{background:rgba(201,168,76,.1);}
+.card-btn::-webkit-details-marker{display:none;}
+.biz-plan-details{margin-top:10px;}
+.biz-plan-body{margin-top:12px;padding:16px;background:rgba(0,0,0,.3);border-radius:12px;border:1px solid rgba(201,168,76,.2);}
+
+/* ── BIZ DETAIL (inline <details>) ── */
+.bmc-title{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:1px;margin:20px 0 12px;}
+.bmc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.bmc-grid.three{grid-template-columns:1fr 1fr 1fr;}
+.bmc-grid.five{grid-template-columns:repeat(5,1fr);}
+.bmc-block{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;padding:14px;
+}
+.bmc-block-title{font-size:10px;font-weight:700;color:var(--gold2);letter-spacing:.5px;margin-bottom:8px;}
+.bmc-block ul{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.bmc-block ul li{font-size:12px;color:var(--text2);padding-left:14px;position:relative;line-height:1.5;}
+.bmc-block ul li::before{content:'▸';position:absolute;left:0;color:var(--gold);font-size:10px;}
+.roadmap{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
+.road-step{display:flex;gap:14px;align-items:flex-start;}
+.road-num{
+  min-width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),#a07830);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;color:#0a0f1e;flex-shrink:0;
+}
+.road-content{flex:1;}
+.road-week{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.5px;}
+.road-task{font-size:13px;font-weight:600;margin-top:2px;}
+.road-detail{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5;}
+.income-bar{
+  background:rgba(255,255,255,.05);border-radius:8px;padding:14px;margin-top:8px;
+}
+.income-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;}
+.income-row+.income-row{border-top:1px solid rgba(255,255,255,.05);}
+.income-label{font-size:12px;color:var(--text2);}
+.income-val{font-size:13px;font-weight:700;color:var(--gold2);}
+.income-val.green{color:var(--green);}
+
+/* ── ALL IDEAS SECTION ── */
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;}
+.filter-btn{
+  padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,.1);
+  background:transparent;color:var(--text3);font-family:'Sarabun',sans-serif;font-size:13px;
+  cursor:pointer;transition:all .2s;
+}
+.filter-btn:hover,.filter-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.08);}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:40px 20px;color:var(--text3);font-size:12px;border-top:1px solid rgba(255,255,255,.05);}
+footer a{color:var(--gold);text-decoration:none;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes zoomIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .hero-stats{gap:24px;}
+  .quiz-options{grid-template-columns:1fr 1fr;}
+  .bmc-grid,.bmc-grid.three,.bmc-grid.five{grid-template-columns:1fr 1fr;}
+  .modal{border-radius:14px;}
+}
+
+/* ── WHY SECTION ── */
+.why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:32px;}
+.why-card{
+  background:linear-gradient(160deg,#0d1a35,#0a1020);
+  border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:24px;
+}
+.why-num{font-size:40px;font-weight:800;
+  background:linear-gradient(135deg,var(--red),#ff8855);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;margin-bottom:8px;}
+.why-label{font-size:13px;font-weight:700;margin-bottom:6px;}
+.why-desc{font-size:12px;color:var(--text3);line-height:1.6;}
+.why-card.green .why-num{background:linear-gradient(135deg,var(--green),#6de8b0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.alert-box{
+  background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.25);
+  border-radius:12px;padding:20px 24px;margin-top:24px;
+  display:flex;gap:16px;align-items:flex-start;
+}
+.alert-icon{font-size:28px;flex-shrink:0;}
+.alert-text{font-size:14px;line-height:1.7;color:var(--text2);}
+.alert-text strong{color:var(--text);}
+
+/* ── CALCULATOR ── */
+.calc-box{
+  background:linear-gradient(160deg,#0d1a35,#0a1020);
+  border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:32px;
+}
+.calc-row{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+.calc-label{font-size:14px;font-weight:600;min-width:160px;color:var(--text2);}
+.calc-slider{flex:1;min-width:200px;-webkit-appearance:none;appearance:none;height:6px;
+  border-radius:3px;background:rgba(255,255,255,.1);outline:none;}
+.calc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
+  border-radius:50%;background:var(--gold);cursor:pointer;}
+.calc-val{font-size:18px;font-weight:700;color:var(--gold2);min-width:80px;text-align:right;}
+.calc-result{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:24px;
+}
+.result-box{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;padding:16px;text-align:center;
+}
+.result-amount{font-size:24px;font-weight:800;color:var(--gold2);}
+.result-key{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* ── JOURNEY ── */
+.journey{display:flex;gap:0;overflow-x:auto;padding-bottom:8px;}
+.journey-step{
+  flex:1;min-width:180px;padding:24px 20px;position:relative;
+  background:linear-gradient(160deg,#0d1a35,#0a1020);
+  border-top:3px solid transparent;
+  transition:all .3s;
+}
+.journey-step:nth-child(1){border-color:#4a8fd4;}
+.journey-step:nth-child(2){border-color:var(--gold);}
+.journey-step:nth-child(3){border-color:var(--green);}
+.journey-step:nth-child(4){border-color:#9b59b6;}
+.journey-step+.journey-step{border-left:1px solid rgba(255,255,255,.06);}
+.j-phase{font-size:10px;font-weight:700;letter-spacing:1.5px;margin-bottom:8px;}
+.journey-step:nth-child(1) .j-phase{color:#4a8fd4;}
+.journey-step:nth-child(2) .j-phase{color:var(--gold);}
+.journey-step:nth-child(3) .j-phase{color:var(--green);}
+.journey-step:nth-child(4) .j-phase{color:#9b59b6;}
+.j-title{font-size:15px;font-weight:700;margin-bottom:6px;}
+.j-time{font-size:11px;color:var(--text3);margin-bottom:10px;}
+.j-items{display:flex;flex-direction:column;gap:5px;}
+.j-item{font-size:12px;color:var(--text2);padding-left:14px;position:relative;}
+.j-item::before{content:'▸';position:absolute;left:0;color:var(--gold);font-size:10px;}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:14px 24px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(8,13,24,.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(201,168,76,.1);
+}
+.nav-brand{font-size:16px;font-weight:800;
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-links{display:flex;gap:6px;}
+.nav-link{
+  padding:6px 14px;border-radius:20px;font-size:13px;color:var(--text3);text-decoration:none;
+  transition:all .2s;cursor:pointer;background:none;border:none;font-family:'Sarabun',sans-serif;
+}
+.nav-link:hover{color:var(--gold);}
+
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(30px);transition:all .6s ease;}
+.reveal.visible{opacity:1;transform:none;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">🚀 Business Hub</div>
+  <div class="nav-links">
+    <button class="nav-link" onclick="navTo('quiz-anchor')">เริ่มต้น</button>
+    <button class="nav-link" onclick="navTo('all-anchor')">ไอเดียทั้งหมด</button>
+    <a class="nav-link" href="home.html">🏫 เช็คชื่อ</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero" style="padding-top:80px;">
+  <div class="hero-badge">💼 BURIRAM VOCATIONAL — AI BUSINESS STARTER</div>
+  <h1>เริ่มธุรกิจ<br>ของคุณวันนี้</h1>
+  <p class="hero-sub">ค้นหาไอเดียธุรกิจที่ใช่สำหรับคุณ — ด้วยทักษะที่มี งบที่เป็นจริง และแผนลงมือทำได้ทันที</p>
+  <div class="hero-cta">
+    <button class="btn btn-primary" onclick="navTo('quiz-anchor')">🎯 หาธุรกิจของฉัน</button>
+    <button class="btn btn-outline" onclick="navTo('all-anchor')">ดูไอเดียทั้งหมด →</button>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">20+</div><div class="stat-lbl">ไอเดียธุรกิจ</div></div>
+    <div class="stat"><div class="stat-num">0฿</div><div class="stat-lbl">ค่าใช้จ่ายในการเริ่ม (บางอย่าง)</div></div>
+    <div class="stat"><div class="stat-num">4 สัปดาห์</div><div class="stat-lbl">ถึงลูกค้าแรก</div></div>
+    <div class="stat"><div class="stat-num">BMC</div><div class="stat-lbl">แผนธุรกิจฟรี</div></div>
+  </div>
+</div>
+
+<!-- ── WHY SECTION ── -->
+<div style="background:linear-gradient(180deg,var(--bg) 0%,var(--bg3) 100%);padding:80px 20px 60px;">
+<div style="max-width:1000px;margin:0 auto;" class="reveal">
+  <div class="section-label">WAKE UP CALL</div>
+  <h2 style="font-size:clamp(22px,4vw,38px);font-weight:800;margin-bottom:10px;">ทำไมต้องมีรายได้<br>ตอนที่ยังเรียนอยู่?</h2>
+  <p style="color:var(--text2);font-size:15px;line-height:1.7;margin-bottom:8px;">ตัวเลขเหล่านี้มาจากข้อมูลจริงของนักเรียนอาชีวศึกษาทั่วประเทศ — ไม่ใช่แค่ทฤษฎี</p>
+
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-num">38%</div>
+      <div class="why-label">ออกกลางคันเพราะปัญหาการเงิน</div>
+      <div class="why-desc">สาเหตุอันดับ 1 ที่นักเรียนอาชีวะหยุดเรียน คือ ไม่มีเงินจ่ายค่าใช้จ่าย ไม่ใช่เรียนไม่ไหว</div>
+    </div>
+    <div class="why-card">
+      <div class="why-num">2–3</div>
+      <div class="why-label">ปีที่ใช้หาประสบการณ์หลังเรียนจบ</div>
+      <div class="why-desc">เด็กที่เริ่มทำธุรกิจตอนเรียนมีข้อได้เปรียบ 2–3 ปีเหนือเพื่อนที่รอจบแล้วค่อยเริ่ม</div>
+    </div>
+    <div class="why-card">
+      <div class="why-num">78%</div>
+      <div class="why-label">ของนายจ้างต้องการคนที่ "ทำได้จริง"</div>
+      <div class="why-desc">ประสบการณ์ธุรกิจขณะเรียนมีค่ามากกว่าเกรดสำหรับนายจ้างในยุค AI</div>
+    </div>
+    <div class="why-card green">
+      <div class="why-num">5 ชม.</div>
+      <div class="why-label">ต่อสัปดาห์ก็เพียงพอ</div>
+      <div class="why-desc">ธุรกิจออนไลน์บางประเภทเริ่มสร้างรายได้ได้จากเวลาแค่ 5 ชั่วโมงต่อสัปดาห์</div>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <div class="alert-icon">⚠️</div>
+    <div class="alert-text">
+      <strong>นักเรียนที่ไม่มีรายได้เสริมมีความเสี่ยงออกกลางคันสูงกว่า 3 เท่า</strong> — แต่นักเรียนที่มีรายได้จากทักษะที่เรียนอยู่ มีแรงจูงใจที่จะเรียนต่อจนจบมากกว่ามาก เพราะพวกเขาเห็น <strong>"คุณค่าของทักษะที่ตัวเองกำลังพัฒนา"</strong> ทุกวัน
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── INCOME CALCULATOR ── -->
+<div style="background:var(--bg3);padding:60px 20px;">
+<div style="max-width:800px;margin:0 auto;" class="reveal">
+  <div class="section-label">INCOME SIMULATOR</div>
+  <h2 style="font-size:clamp(20px,3.5vw,34px);font-weight:800;margin-bottom:10px;">ลองคำนวณรายได้ของคุณ</h2>
+  <p style="color:var(--text2);font-size:14px;margin-bottom:28px;">ปรับตัวเลขตามความเป็นจริงของคุณ — เห็นผลทันที</p>
+
+  <div class="calc-box">
+    <div class="calc-row">
+      <div class="calc-label">⏱ เวลาต่อสัปดาห์</div>
+      <input type="range" class="calc-slider" id="sl-time" min="2" max="20" value="5" oninput="calcUpdate()">
+      <div class="calc-val" id="vl-time">5 ชม.</div>
+    </div>
+    <div class="calc-row">
+      <div class="calc-label">💰 ราคาต่อชิ้น/งาน</div>
+      <input type="range" class="calc-slider" id="sl-price" min="50" max="3000" step="50" value="300" oninput="calcUpdate()">
+      <div class="calc-val" id="vl-price">300฿</div>
+    </div>
+    <div class="calc-row">
+      <div class="calc-label">📦 จำนวนขาย/งาน/เดือน</div>
+      <input type="range" class="calc-slider" id="sl-qty" min="1" max="60" value="10" oninput="calcUpdate()">
+      <div class="calc-val" id="vl-qty">10 ครั้ง</div>
+    </div>
+    <div class="calc-result">
+      <div class="result-box">
+        <div class="result-amount" id="r-gross">3,000฿</div>
+        <div class="result-key">รายได้ต่อเดือน</div>
+      </div>
+      <div class="result-box">
+        <div class="result-amount" id="r-cost">750฿</div>
+        <div class="result-key">ต้นทุนโดยประมาณ (25%)</div>
+      </div>
+      <div class="result-box" style="border-color:rgba(76,175,138,.3);">
+        <div class="result-amount" id="r-net" style="color:var(--green)">2,250฿</div>
+        <div class="result-key">กำไรสุทธิ/เดือน</div>
+      </div>
+      <div class="result-box">
+        <div class="result-amount" id="r-year" style="color:var(--gold2)">27,000฿</div>
+        <div class="result-key">รายได้ 1 ปีการศึกษา</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px 16px;background:rgba(201,168,76,.07);border-radius:8px;font-size:12px;color:var(--text3);line-height:1.7;">
+      💡 <strong style="color:var(--text2)">เริ่มต้นเล็กๆ ก่อนเสมอ</strong> — นักเรียนส่วนใหญ่เริ่มจาก 2–3 ชั่วโมง/สัปดาห์ แล้วค่อยขยายเมื่อมั่นใจ ตัวเลขนี้เป็นเพียงประมาณการ ขึ้นอยู่กับประเภทธุรกิจ
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── JOURNEY SECTION ── -->
+<div style="background:linear-gradient(180deg,var(--bg3),var(--bg));padding:60px 20px 80px;">
+<div style="max-width:1000px;margin:0 auto;" class="reveal">
+  <div class="section-label">YOUR ROADMAP</div>
+  <h2 style="font-size:clamp(20px,3.5vw,34px);font-weight:800;margin-bottom:10px;">เส้นทาง 4 ระยะ<br>จากนักเรียนสู่นักธุรกิจ</h2>
+  <p style="color:var(--text2);font-size:14px;margin-bottom:28px;">ไม่ต้องรอจบก่อน — เริ่มระยะที่ 1 ได้ตั้งแต่ปวช.1 เทอมแรก</p>
+
+  <div class="journey">
+    <div class="journey-step">
+      <div class="j-phase">PHASE 1 — เรียนรู้</div>
+      <div class="j-title">สำรวจ & ทดลอง</div>
+      <div class="j-time">ปวช.1 เทอม 1–2 | 2–5 ชม./สัปดาห์</div>
+      <div class="j-items">
+        <div class="j-item">เลือกไอเดียที่ใช่จาก Quiz</div>
+        <div class="j-item">ทดลองทำ 1 ครั้ง ดูผลลัพธ์</div>
+        <div class="j-item">สร้าง Social Media Page</div>
+        <div class="j-item">รายได้เป้า: 500–2,000฿/เดือน</div>
+      </div>
+    </div>
+    <div class="journey-step">
+      <div class="j-phase">PHASE 2 — ลงมือจริง</div>
+      <div class="j-title">รับลูกค้าแรก</div>
+      <div class="j-time">ปวช.1 เทอม 2 – ปวช.2 | 5–10 ชม./สัปดาห์</div>
+      <div class="j-items">
+        <div class="j-item">ส่งงานแรก รับเงินจริง</div>
+        <div class="j-item">สะสม Review / Portfolio</div>
+        <div class="j-item">ขยายช่องทางขาย</div>
+        <div class="j-item">รายได้เป้า: 2,000–8,000฿/เดือน</div>
+      </div>
+    </div>
+    <div class="journey-step">
+      <div class="j-phase">PHASE 3 — เติบโต</div>
+      <div class="j-title">ลูกค้าประจำ & Scale</div>
+      <div class="j-time">ปวช.2–3 | 10–15 ชม./สัปดาห์</div>
+      <div class="j-items">
+        <div class="j-item">ระบบรับออเดอร์อัตโนมัติ</div>
+        <div class="j-item">ชวนเพื่อนร่วมทำ</div>
+        <div class="j-item">ทำซ้ำสิ่งที่ work</div>
+        <div class="j-item">รายได้เป้า: 8,000–20,000฿/เดือน</div>
+      </div>
+    </div>
+    <div class="journey-step">
+      <div class="j-phase">PHASE 4 — อิสรภาพ</div>
+      <div class="j-title">ธุรกิจจริง</div>
+      <div class="j-time">หลังจบ ปวช. หรือก่อนหน้า</div>
+      <div class="j-items">
+        <div class="j-item">จดทะเบียนธุรกิจ</div>
+        <div class="j-item">จ้างพนักงาน</div>
+        <div class="j-item">ขยายสาขา / ออนไลน์</div>
+        <div class="j-item">รายได้เป้า: 20,000฿+ /เดือน</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:center;margin-top:32px;">
+    <button class="btn btn-primary" onclick="navTo('quiz-anchor')" style="font-size:16px;padding:16px 40px;">
+      🎯 เริ่ม Phase 1 ตอนนี้เลย
+    </button>
+  </div>
+</div>
+</div>
+
+<!-- ROADMAP 5 ขั้นตอน -->
+<div class="section reveal" style="margin-top:80px;">
+  <div class="section-label">STEP 00 — ROADMAP</div>
+  <h2>5 ขั้นตอนสู่ความสำเร็จ</h2>
+  <p class="section-desc">จากห้องเรียนสู่ธุรกิจจริง — ฉบับเร่งรัด</p>
+
+  <div style="display:grid;gap:16px;margin-top:32px;">
+
+    <!-- Phase 1 header -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:16px;padding:8px 20px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:22px;">💡</span>
+        <div><div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;">PHASE 1</div>
+        <div style="font-size:14px;font-weight:700;">ระยะเตรียมตัวและสร้างสรรค์ไอเดีย</div></div>
+      </div>
+      <div style="background:rgba(100,160,255,.08);border:1px solid rgba(100,160,255,.25);border-radius:16px;padding:8px 20px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:22px;">📋</span>
+        <div><div style="font-size:11px;color:#64a0ff;font-weight:700;letter-spacing:1px;">PHASE 2</div>
+        <div style="font-size:14px;font-weight:700;">การวางแผนและการลงมือทำ</div></div>
+      </div>
+    </div>
+
+    <!-- Steps grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;border-left:3px solid var(--gold);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;background:var(--gold);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;">1</div>
+          <div style="font-size:14px;font-weight:700;">ตะลุยอบรมออนไลน์ผ่าน OVEC Cloud</div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6;margin:0;">อบรมครบ <strong style="color:var(--gold);">15 ชม.</strong> และสอบผ่านแบบทดสอบท้าย EP เพื่อรับสิทธิ์ทำแผนธุรกิจ</p>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;border-left:3px solid var(--gold);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;background:var(--gold);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;">2</div>
+          <div style="font-size:14px;font-weight:700;">เลือกประเภทธุรกิจ + หลัก 5W1H</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+          <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text2);">🚀 ธุรกิจใหม่/นวัตกรรม</div>
+          <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text2);">🛒 ธุรกิจขายดี</div>
+          <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text2);">🎤 สุดยอดนักขาย</div>
+          <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text2);">🤝 ธุรกิจร่วมทุน</div>
+        </div>
+        <p style="font-size:12px;color:var(--gold);margin:0;">⚡ เคล็ดลับ: ต่อยอดจากโครงงานเดิมในวิชาเรียน ประหยัดเวลามาก!</p>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;border-left:3px solid #64a0ff;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;background:#64a0ff;color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;">3</div>
+          <div style="font-size:14px;font-weight:700;">ออกแบบแผนด้วย BMC 9 ช่อง + SWOT</div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6;margin:0;">เจาะกลุ่มลูกค้าเฉพาะ (Niche Market) และหา <strong style="color:#64a0ff;">"อาวุธหลัก"</strong> ที่คู่แข่งทำไม่ได้</p>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;border-left:3px solid #64a0ff;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;background:#64a0ff;color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;">4</div>
+          <div style="font-size:14px;font-weight:700;">เตรียม Prototype + ซ้อม Pitching</div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6;margin:0;">นำเสนอแบบ <strong style="color:#64a0ff;">Storytelling 5–10 นาที</strong> พร้อมชิ้นงานจริงที่กรรมการสัมผัสได้</p>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;border-left:3px solid #4caf50;grid-column:span 1;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;background:#4caf50;color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;">5</div>
+          <div style="font-size:14px;font-weight:700;">ลงมือทำจริง + บัญชีอย่างเป็นระบบ</div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6;margin:0 0 8px;">บันทึกรายรับ-รายจ่ายทุกวัน และใช้หลัก <strong style="color:#4caf50;">PDCA</strong> พัฒนาธุรกิจต่อเนื่อง</p>
+      </div>
+
+    </div>
+
+    <!-- ตารางประเภทการประกวด -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:4px;">
+      <div class="bmc-title" style="margin:0 0 14px;">🏆 ประเภทการประกวด 4 รูปแบบ — ศูนย์บ่มเพาะฯ</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px 16px;">
+          <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px;">🚀 ธุรกิจใหม่ / นวัตกรรม</div>
+          <div style="font-size:12px;color:var(--text2);">ของแปลกใหม่ แก้ปัญหาได้จริง</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px 16px;">
+          <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px;">🛒 ธุรกิจขายดี</div>
+          <div style="font-size:12px;color:var(--text2);">ทำได้ดี มีเทคนิคนำเสนอที่ดึงดูด</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px 16px;">
+          <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px;">🎤 สุดยอดนักขาย</div>
+          <div style="font-size:12px;color:var(--text2);">ทักษะการขาย การสื่อสาร การโน้มน้าว</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px 16px;">
+          <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px;">🤝 ธุรกิจร่วมทุน</div>
+          <div style="font-size:12px;color:var(--text2);">เน้นการจับมือกับพันธมิตรภายนอก</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz-anchor" style="padding-top:1px;"></div>
+<div style="background:linear-gradient(180deg,var(--bg) 0%,var(--bg3) 100%);padding:80px 20px;">
+<div style="max-width:700px;margin:0 auto;" class="reveal">
+  <div class="section-label">STEP 01 — QUIZ</div>
+  <h2>ตอบ 3 คำถาม<br>รับแผนธุรกิจส่วนตัว</h2>
+  <p class="section-desc">เราจะแนะนำธุรกิจที่เหมาะกับคุณที่สุด — โดยดูจากทักษะ งบประมาณ และเวลาที่มี</p>
+
+  <div class="quiz-wrapper">
+    <!-- STEP 1 -->
+    <div class="quiz-step active" id="step1">
+      <div class="quiz-title">คุณถนัดด้านไหน?</div>
+      <div class="quiz-sub">เลือกทักษะหรือสาขาที่คุณเรียนอยู่</div>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="selectQuiz(this,'skill','weld')">
+          <div class="quiz-opt-icon">🔥</div>
+          <div class="quiz-opt-text">ช่างเชื่อมโลหะ</div>
+          <div class="quiz-opt-desc">งานเหล็ก โลหะ โครงสร้าง</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'skill','auto')">
+          <div class="quiz-opt-icon">🔧</div>
+          <div class="quiz-opt-text">ช่างยนต์</div>
+          <div class="quiz-opt-desc">ซ่อมรถ เครื่องยนต์</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'skill','elec')">
+          <div class="quiz-opt-icon">⚡</div>
+          <div class="quiz-opt-text">ช่างไฟฟ้า</div>
+          <div class="quiz-opt-desc">ไฟฟ้า อิเล็กทรอนิกส์</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'skill','mach')">
+          <div class="quiz-opt-icon">⚙️</div>
+          <div class="quiz-opt-text">ช่างกลโรงงาน</div>
+          <div class="quiz-opt-desc">CNC กลึง ผลิตชิ้นส่วน</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'skill','it')">
+          <div class="quiz-opt-icon">💻</div>
+          <div class="quiz-opt-text">คอมพิวเตอร์</div>
+          <div class="quiz-opt-desc">ดิจิทัล ออนไลน์</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'skill','biz')">
+          <div class="quiz-opt-icon">📊</div>
+          <div class="quiz-opt-text">บัญชี / ธุรกิจ</div>
+          <div class="quiz-opt-desc">การเงิน บริการ</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'skill','creative')">
+          <div class="quiz-opt-icon">🎨</div>
+          <div class="quiz-opt-text">สร้างสรรค์ / Content</div>
+          <div class="quiz-opt-desc">วิดีโอ โซเชียล ออกแบบ</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'skill','food')">
+          <div class="quiz-opt-icon">🍳</div>
+          <div class="quiz-opt-text">อาหาร / การค้า</div>
+          <div class="quiz-opt-desc">ขายของ อาหาร</div>
+        </div>
+      </div>
+      <div class="quiz-nav">
+        <div></div>
+        <div class="quiz-progress">
+          <div class="quiz-dot active"></div>
+          <div class="quiz-dot"></div>
+          <div class="quiz-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="quiz-step" id="step2">
+      <div class="quiz-title">งบเริ่มต้นของคุณ?</div>
+      <div class="quiz-sub">เงินทุนที่พร้อมลงทุนในตอนนี้</div>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="selectQuiz(this,'budget','zero')">
+          <div class="quiz-opt-icon">🤲</div>
+          <div class="quiz-opt-text">0 — 500 บาท</div>
+          <div class="quiz-opt-desc">เริ่มด้วยสิ่งที่มีอยู่</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'budget','low')">
+          <div class="quiz-opt-icon">💰</div>
+          <div class="quiz-opt-text">500 — 5,000 บาท</div>
+          <div class="quiz-opt-desc">ลงทุนขั้นต่ำ</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'budget','mid')">
+          <div class="quiz-opt-icon">💳</div>
+          <div class="quiz-opt-text">5,000 — 30,000 บาท</div>
+          <div class="quiz-opt-desc">มีทุนพอสมควร</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'budget','high')">
+          <div class="quiz-opt-icon">🏦</div>
+          <div class="quiz-opt-text">30,000 บาทขึ้นไป</div>
+          <div class="quiz-opt-desc">พร้อมลงทุนจริงจัง</div>
+        </div>
+      </div>
+      <div class="quiz-nav">
+        <button class="btn btn-outline" onclick="prevStep()" style="padding:8px 20px;font-size:13px;">← ย้อนกลับ</button>
+        <div class="quiz-progress">
+          <div class="quiz-dot done"></div>
+          <div class="quiz-dot active"></div>
+          <div class="quiz-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="quiz-step" id="step3">
+      <div class="quiz-title">มีเวลาทำธุรกิจเท่าไหร่?</div>
+      <div class="quiz-sub">เวลาต่อสัปดาห์ที่สามารถทุ่มเทได้</div>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="selectQuiz(this,'time','mini')">
+          <div class="quiz-opt-icon">⏰</div>
+          <div class="quiz-opt-text">1 — 5 ชั่วโมง/สัปดาห์</div>
+          <div class="quiz-opt-desc">ทำควบคู่เรียน</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'time','part')">
+          <div class="quiz-opt-icon">🕐</div>
+          <div class="quiz-opt-text">5 — 15 ชั่วโมง/สัปดาห์</div>
+          <div class="quiz-opt-desc">Part-time จริงจัง</div>
+        </div>
+        <div class="quiz-opt" onclick="selectQuiz(this,'time','full')">
+          <div class="quiz-opt-icon">💪</div>
+          <div class="quiz-opt-text">15+ ชั่วโมง/สัปดาห์</div>
+          <div class="quiz-opt-desc">ทุ่มเทเต็มที่</div>
+        </div>
+      </div>
+      <div class="quiz-nav">
+        <button class="btn btn-outline" onclick="prevStep()" style="padding:8px 20px;font-size:13px;">← ย้อนกลับ</button>
+        <div class="quiz-progress">
+          <div class="quiz-dot done"></div>
+          <div class="quiz-dot done"></div>
+          <div class="quiz-dot active"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- QUIZ RESULTS -->
+<div id="results-section" style="padding:60px 20px 0;max-width:1100px;margin:0 auto;">
+  <div class="section-label">ผลลัพธ์ของคุณ</div>
+  <h2 id="results-title">ธุรกิจที่เหมาะกับคุณ</h2>
+  <p class="section-desc" id="results-desc">กดการ์ดเพื่อดูแผนธุรกิจฉบับเต็ม (Business Model Canvas)</p>
+  <div class="results-grid" id="results-grid"></div>
+</div>
+
+<!-- ALL IDEAS -->
+<div id="all-anchor" style="padding-top:1px;"></div>
+<div class="section reveal" style="margin-top:80px;">
+  <div class="section-label">STEP 02 — EXPLORE</div>
+  <h2>ไอเดียธุรกิจทั้งหมด</h2>
+  <p class="section-desc">เลือกดูตามประเภทที่สนใจ หรือกดการ์ดเพื่อดูแผนธุรกิจทันที</p>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterAll(this,'all')">ทั้งหมด</button>
+    <button class="filter-btn" onclick="filterAll(this,'ช่าง')">🔧 ช่าง</button>
+    <button class="filter-btn" onclick="filterAll(this,'ออนไลน์')">💻 ออนไลน์</button>
+    <button class="filter-btn" onclick="filterAll(this,'อาหาร')">🍳 อาหาร</button>
+    <button class="filter-btn" onclick="filterAll(this,'บริการ')">🤝 บริการ</button>
+    <button class="filter-btn" onclick="filterAll(this,'0฿')">🆓 ไม่มีทุน</button>
+  </div>
+
+  <div class="results-grid" id="all-grid"></div>
+</div>
+
+
+<button onclick="togglePlan(document.querySelector('.card-btn'),'shopee')" style="position:fixed;top:70px;left:12px;z-index:99999;background:red;color:white;padding:12px 20px;font-size:16px;border:none;border-radius:10px;cursor:pointer;">🧪 TEST</button>
+
+<div style="position:fixed;bottom:12px;right:12px;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);color:var(--gold);font-size:11px;padding:4px 10px;border-radius:20px;z-index:9998;font-family:monospace;">v3.4 · <span id="card-count">?</span> cards</div>
+
+<footer>
+  <p style="margin-bottom:6px;">🚀 Business Starter Hub — วิทยาลัยการอาชีพบุรีรัมย์</p>
+  <p>พัฒนาโดย ธานี ชมสุข · ทีมช่างเชื่อม เพื่อ อาชีวะไทย · <a href="home.html">ระบบเช็คชื่อ</a></p>
+</footer>
+
+<script>
+// ── DATA ──
+const BIZ = [
+  {
+    id:'shopee',icon:'🛒',title:'Shopee Affiliate',type:'ออนไลน์',
+    desc:'รีวิวสินค้าผ่าน TikTok/Facebook แล้วแปะลิงก์ Shopee รับค่าคอมสูงสุด 10%',
+    tags:['ออนไลน์','0฿','TikTok','Shopee'],
+    budget:'zero',time:'mini',skills:['creative','it','biz'],
+    metrics:{invest:'0฿',income:'2,000–15,000฿/เดือน',time:'2–4 สัปดาห์'},
+    bmc:{
+      kp:['ผู้ผลิตสินค้าใน Shopee','แพลตฟอร์ม Shopee Affiliate'],
+      ka:['สร้างคอนเทนต์รีวิว','โพสต์ TikTok/Facebook/Reels','วิเคราะห์สินค้าขายดี'],
+      vp:['รีวิวตรงไปตรงมา','ช่วยผู้ซื้อตัดสินใจ','ลิงก์ซื้อสะดวก'],
+      cr:['ติดตาม Social Media','กลุ่ม Facebook','TikTok FYP'],
+      ch:['TikTok','Facebook Page','Instagram Reels','YouTube Shorts'],
+      cs:['วัยรุ่น 15–30 ปี','แม่บ้าน','คนชอบของถูก'],
+      cost:['ค่าอินเทอร์เน็ต','โทรศัพท์มือถือ (มีอยู่แล้ว)'],
+      rev:['ค่าคอมมิชชัน 3–10% ต่อออเดอร์','Bonus ยอดขายรายเดือน']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1',task:'สมัคร Shopee Affiliate',detail:'สมัครที่ affiliate.shopee.co.th → รอ 2–3 วัน → เริ่มเลือกสินค้า'},
+      {week:'สัปดาห์ที่ 2',task:'สร้างคอนเทนต์แรก 5 คลิป',detail:'รีวิวของที่ใช้จริงในบ้าน เน้นความจริง พูดเป็นธรรมชาติ'},
+      {week:'สัปดาห์ที่ 3',task:'โพสต์ทุกวัน + วิเคราะห์ยอด',detail:'ดูว่าคลิปไหนวิวดี → ทำแบบนั้นให้มากขึ้น'},
+      {week:'สัปดาห์ที่ 4',task:'รับเงินแรก!',detail:'ถอนเงินได้เมื่อยอดถึง 300฿ → โอนเข้าธนาคาร'}
+    ],
+    income:{'คอมฯ ขายได้ 50 ชิ้น/เดือน @150฿':'7,500฿','ค่าใช้จ่าย':'(500฿)','กำไรสุทธิ':'7,000฿/เดือน'}
+  },
+  {
+    id:'weld-fab',icon:'🏗️',title:'รับงานเชื่อมโลหะครบวงจร',type:'ช่าง',
+    desc:'ออกแบบ → เขียนแบบ → วัด → ตัด → ประกอบ → เชื่อม → ตกแต่ง → ส่งมอบ ครบทุกขั้นตอน กำไรสูง',
+    tags:['ช่าง','เชื่อม','โลหะกรรม','5,000฿+'],
+    budget:'low',time:'part',skills:['weld'],
+    metrics:{invest:'5,000–15,000฿',income:'15,000–60,000฿/เดือน',time:'1–2 สัปดาห์'},
+    bmc:{
+      kp:['ร้านขายเหล็ก/โลหะ','ร้านตัดเลเซอร์','ซัพพลายเออร์สี/เคลือบ'],
+      ka:['ออกแบบและเขียนแบบ (CAD/สเกตช์)','ตัด-ประกอบ-เชื่อม','ตกแต่งผิว (ทำสี/ชุบ)','ส่งมอบตามเวลา'],
+      vp:['บริการครบจบที่เดียว','มี Drawing ให้ลูกค้าอนุมัติก่อน','ส่งงานตรงเวลา รับประกัน'],
+      cr:['Facebook Page + Portfolio','ปากต่อปากจากลูกค้าเก่า','LINE Official'],
+      ch:['Facebook','LINE','Wokers.co.th','อีเมล B2B'],
+      cs:['โรงงาน SME','ผู้รับเหมาก่อสร้าง','ร้านค้า','หน่วยงานราชการ'],
+      cost:['เหล็ก/โลหะ (40%)','ลวดเชื่อม แก็ส สี (15%)','ค่าไฟ (5%)'],
+      rev:['ค่าออกแบบ + ค่าผลิต','กำไร 35–55% ต่อโปรเจกต์']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1',task:'สร้าง Portfolio + เปิด Facebook Page',detail:'ถ่ายรูปงานที่เคยทำ → ลงพร้อม spec (ขนาด วัสดุ ราคา) → เน้นภาพ Before/After'},
+      {week:'สัปดาห์ที่ 2',task:'ทำตัวอย่างงานพร้อม Drawing',detail:'เลือก 2–3 ชิ้น ทำพร้อมแบบสเกตช์ → แสดงกระบวนการทุกขั้นตอน ถ่ายวิดีโอ Reel'},
+      {week:'สัปดาห์ที่ 3',task:'ยื่นใบเสนอราคา B2B',detail:'ติดต่อโรงงาน/ผู้รับเหมาในพื้นที่ 5 ราย → เสนอรับงาน Outsource ราคาต่ำกว่าตลาด 10%'},
+      {week:'สัปดาห์ที่ 4',task:'รับงานแรก → ส่งมอบครบขั้นตอน',detail:'มัดจำ 50% → ส่ง Drawing ให้อนุมัติ → ผลิต → ตกแต่ง → ส่งมอบ → รับส่วนที่เหลือ'}
+    ],
+    income:{'งาน 2 โปรเจกต์/เดือน @15,000฿':'30,000฿','ค่าวัสดุ (60%)':'(18,000฿)','กำไรสุทธิ':'12,000฿/เดือน'}
+  },
+  {
+    id:'carwash',icon:'🚿',title:'ล้างรถพรีเมียม',type:'บริการ',
+    desc:'เปิดบริการล้างรถแบบ Premium Detailing ที่บ้านลูกค้า หรือจุดบริการใกล้ตลาด',
+    tags:['บริการ','ช่างยนต์','1,500฿+'],
+    budget:'low',time:'part',skills:['auto'],
+    metrics:{invest:'1,500–5,000฿',income:'6,000–20,000฿/เดือน',time:'1 สัปดาห์'},
+    bmc:{
+      kp:['ซัพพลายเออร์น้ำยา','เครื่องฉีดน้ำ'],
+      ka:['ล้างรถแบบ Detailing','บริการถึงบ้าน','ถ่ายภาพ Before/After'],
+      vp:['สะอาดกว่าคาร์แวช','บริการถึงที่','ราคาสมเหตุสมผล'],
+      cr:['LINE Official','Facebook Group','Application นัดล้างรถ'],
+      ch:['ปากต่อปาก','Facebook','LINE'],
+      cs:['เจ้าของรถยนต์','ออฟฟิศ','หมู่บ้าน'],
+      cost:['น้ำยาล้างรถ','เครื่องมือ','ค่าเดินทาง'],
+      rev:['ค่าล้างรถ 150–500฿/คัน','แพ็กเกจรายเดือน']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1',task:'ซื้ออุปกรณ์ + ฝึกเทคนิค',detail:'เครื่องฉีดน้ำ + น้ำยา + ผ้า Microfiber → ฝึกล้างรถคนในบ้าน'},
+      {week:'สัปดาห์ที่ 2',task:'ล้างฟรี 5 คัน แลกรีวิว',detail:'ถ่ายภาพ Before/After ทุกคัน → โพสต์ Facebook'},
+      {week:'สัปดาห์ที่ 3',task:'เปิดรับออเดอร์จริง',detail:'ตั้งราคา 150–300฿/คัน → ล้างให้ได้วันละ 3–5 คัน'},
+      {week:'สัปดาห์ที่ 4',task:'สร้างลูกค้าประจำ',detail:'เสนอ Package 4 ครั้ง/เดือน ราคาพิเศษ → รายได้สม่ำเสมอ'}
+    ],
+    income:{'ล้างรถ 60 คัน/เดือน @250฿':'15,000฿','ค่าวัสดุ':'(3,000฿)','กำไรสุทธิ':'12,000฿/เดือน'}
+  },
+  {
+    id:'tiktok-cook',icon:'🎥',title:'TikTok สอนทำอาหาร',type:'ออนไลน์',
+    desc:'สร้าง TikTok สอนทำอาหารง่ายๆ สั้นๆ → ได้เงินจาก Creator Fund + ขายของ',
+    tags:['ออนไลน์','อาหาร','0฿','TikTok'],
+    budget:'zero',time:'mini',skills:['creative','food'],
+    metrics:{invest:'0฿',income:'1,000–20,000฿/เดือน',time:'1–3 เดือน'},
+    bmc:{
+      kp:['TikTok แพลตฟอร์ม','ผู้ผลิตสินค้าครัว'],
+      ka:['ถ่ายวิดีโอสอนทำอาหาร','ตัดต่อ','โพสต์สม่ำเสมอ'],
+      vp:['สอนง่ายจริง ทำได้จริง','วัตถุดิบหาง่ายในท้องถิ่น'],
+      cr:['TikTok FYP','YouTube Shorts','Facebook Reels'],
+      ch:['TikTok','YouTube','Facebook'],
+      cs:['วัยรุ่น','แม่บ้าน','คนทำงาน'],
+      cost:['วัตถุดิบ','ค่าไฟ','เวลา'],
+      rev:['TikTok Creator Fund','Affiliate สินค้าครัว','Live สด ขายของ']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1',task:'ตั้ง TikTok + โพสต์ 7 วิดีโอ',detail:'เมนูง่ายๆ ไม่เกิน 60 วินาที ถ่ายด้วยมือถือธรรมดา'},
+      {week:'สัปดาห์ที่ 2–3',task:'วิเคราะห์และเพิ่มความถี่',detail:'ดูว่าเมนูไหนวิวดี → ทำธีมนั้นต่อ → โพสต์ 2 คลิป/วัน'},
+      {week:'สัปดาห์ที่ 4',task:'สมัคร Creator Fund',detail:'เมื่อมี 10,000 followers → สมัคร TikTok Creator Program'},
+      {week:'เดือนที่ 2+',task:'เพิ่มรายได้จาก Affiliate',detail:'แปะลิงก์สินค้าที่ใช้จริง → รับค่าคอมฯ'}
+    ],
+    income:{'Creator Fund 1M views':'3,000฿','Affiliate คอมฯ':'2,000฿','รวมต่อเดือน':'5,000–20,000฿'}
+  },
+  {
+    id:'elec-repair',icon:'⚡',title:'ซ่อมเครื่องใช้ไฟฟ้า',type:'ช่าง',
+    desc:'รับซ่อมพัดลม หม้อหุงข้าว เครื่องซักผ้า ทีวี ที่บ้านหรือรับมาซ่อม',
+    tags:['ช่าง','ไฟฟ้า','บริการ','500฿+'],
+    budget:'zero',time:'part',skills:['elec'],
+    metrics:{invest:'500–2,000฿',income:'4,000–15,000฿/เดือน',time:'1 สัปดาห์'},
+    bmc:{
+      kp:['ร้านอะไหล่ไฟฟ้า','YouTube สอนซ่อม'],
+      ka:['วินิจฉัยและซ่อมเครื่องใช้ไฟฟ้า','รับ-ส่งที่บ้านลูกค้า'],
+      vp:['ถูกกว่าซื้อใหม่','สะดวก ไม่ต้องเดินทาง','รับประกันงาน 30 วัน'],
+      cr:['ปากต่อปาก','Facebook Group ในตำบล','LINE'],
+      ch:['ปากต่อปาก','Facebook','LINE Official'],
+      cs:['ครัวเรือน','ร้านค้า','สำนักงาน'],
+      cost:['อะไหล่','เครื่องมือ','ค่าเดินทาง'],
+      rev:['ค่าซ่อม 150–800฿/ชิ้น','ค่าแรง + อะไหล่']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1',task:'รับซ่อมในหมู่บ้านฟรี',detail:'ซ่อมพัดลมให้เพื่อนบ้าน → ถ่ายวิดีโอขั้นตอน → โพสต์ Facebook'},
+      {week:'สัปดาห์ที่ 2',task:'ตั้งราคา + รับออเดอร์',detail:'พัดลม 80–150฿, หม้อหุงข้าว 100–200฿, TV 300–600฿'},
+      {week:'สัปดาห์ที่ 3',task:'ขยายพื้นที่รับงาน',detail:'โพสต์ใน 5 กลุ่ม Facebook ของอำเภอ → รับรถมอเตอร์ไซค์รับ-ส่ง'},
+      {week:'สัปดาห์ที่ 4',task:'สร้าง Repeat Customer',detail:'แจกบัตร 10% ส่วนลดครั้งต่อไป → ลูกค้าประจำ'}
+    ],
+    income:{'ซ่อม 30 ชิ้น/เดือน @300฿':'9,000฿','ค่าอะไหล่':'(2,000฿)','กำไรสุทธิ':'7,000฿/เดือน'}
+  },
+  {
+    id:'online-store',icon:'📦',title:'ร้านค้าออนไลน์ Shopee',type:'ออนไลน์',
+    desc:'เปิดร้านบน Shopee ขายสินค้าจาก Dropshipping หรือสินค้า Clearance ในท้องถิ่น',
+    tags:['ออนไลน์','Shopee','500฿+'],
+    budget:'low',time:'mini',skills:['it','biz','creative'],
+    metrics:{invest:'500–3,000฿',income:'3,000–30,000฿/เดือน',time:'1–2 สัปดาห์'},
+    bmc:{
+      kp:['ซัพพลายเออร์ Dropship','ตลาดนัด Clearance'],
+      ka:['ถ่ายรูปสินค้า','ลงขาย','แพ็กและส่ง','ดูแล Chat'],
+      vp:['ราคาถูก','ส่งเร็ว','รีวิวดี'],
+      cr:['Shopee Search','โฆษณา Shopee Ads','TikTok พาไปร้าน'],
+      ch:['Shopee','Lazada','TikTok Shop'],
+      cs:['ผู้ซื้อออนไลน์ทั่วไป'],
+      cost:['สินค้า / Dropship','ค่าแพ็กเกจ','Shopee Ads'],
+      rev:['กำไรต่อชิ้น 20–50%','Shopee Voucher Subsidy']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1',task:'เลือกสินค้า + เปิดร้าน',detail:'หาสินค้า Niche ที่รู้จักดี → ถ่ายรูปสวยๆ → ลงขาย 10 รายการ'},
+      {week:'สัปดาห์ที่ 2',task:'เปิด Flash Sale + ส่ง Free',detail:'ราคาต่ำช่วงแรกเพื่อสะสม Rating → ขอรีวิว'},
+      {week:'สัปดาห์ที่ 3',task:'เพิ่มสินค้า + Ads เล็กน้อย',detail:'ลง Shopee Ads 50฿/วัน → วัด ROAS'},
+      {week:'สัปดาห์ที่ 4',task:'วิเคราะห์และ Scale',detail:'ดูสินค้าขายดี → เพิ่ม Stock → ลด SKU ที่ไม่ขาย'}
+    ],
+    income:{'ขาย 100 ชิ้น/เดือน @200฿ กำไร 40%':'8,000฿','ค่า Ads':'(1,500฿)','กำไรสุทธิ':'6,500฿/เดือน'}
+  },
+  {
+    id:'solar-install',icon:'☀️',title:'ติดตั้ง Solar Cell',type:'ช่าง',
+    desc:'ช่างไฟฟ้าสามารถรับงานติดตั้ง Solar ระบบเล็กสำหรับบ้านและฟาร์ม',
+    tags:['ช่าง','ไฟฟ้า','Solar','10,000฿+'],
+    budget:'mid',time:'full',skills:['elec'],
+    metrics:{invest:'10,000–30,000฿',income:'15,000–50,000฿/เดือน',time:'4–8 สัปดาห์'},
+    bmc:{
+      kp:['ตัวแทนจำหน่าย Solar Panel','วิศวกรไฟฟ้า (ที่ปรึกษา)'],
+      ka:['ประเมินและออกแบบระบบ','ติดตั้ง Wiring','ยื่นเอกสาร MEA/PEA'],
+      vp:['ลดค่าไฟ 50–80%','ช่างท้องถิ่น ราคายุติธรรม','ดูแลหลังการขาย'],
+      cr:['ปากต่อปาก','Facebook Group เกษตรกร','นายหน้าบ้านใหม่'],
+      ch:['Facebook','LINE','เว็บไซต์','นายหน้า'],
+      cs:['บ้านพักอาศัย','ฟาร์ม','โรงงานขนาดเล็ก'],
+      cost:['Solar Panel + Inverter','สายไฟ / อุปกรณ์','ค่าแรงติดตั้ง'],
+      rev:['ค่าติดตั้งโปรเจกต์ละ 15,000–80,000฿','ค่าบำรุงรักษารายปี']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1–2',task:'เรียนรู้ระบบ Solar + ใบรับรอง',detail:'คอร์สออนไลน์ Solar Installation + ขอ License ช่างไฟ'},
+      {week:'สัปดาห์ที่ 3',task:'ติดตั้งบ้านตัวเองหรือญาติ',detail:'ระบบ 3 kW → ถ่ายภาพผลงาน → วัดผล'},
+      {week:'สัปดาห์ที่ 4',task:'ติดต่อตัวแทน Solar',detail:'เซ็น MOU ขายติดตั้ง → ได้ Commission 15–25%'},
+      {week:'เดือนที่ 2',task:'รับโปรเจกต์แรก',detail:'Referral จากลูกค้าแรก → ขยายฐาน'}
+    ],
+    income:{'2 โปรเจกต์/เดือน @20,000฿':'40,000฿','ค่าวัสดุ':'(22,000฿)','กำไรสุทธิ':'18,000฿/เดือน'}
+  },
+  {
+    id:'food-delivery',icon:'🍱',title:'ข้าวกล่องส่งออฟฟิศ',type:'อาหาร',
+    desc:'ทำข้าวกล่องสั่งจองล่วงหน้า ส่งออฟฟิศ โรงงาน ราคา 40–60฿/กล่อง',
+    tags:['อาหาร','บริการ','500฿+'],
+    budget:'low',time:'part',skills:['food'],
+    metrics:{invest:'2,000–5,000฿',income:'6,000–20,000฿/เดือน',time:'1 สัปดาห์'},
+    bmc:{
+      kp:['ผู้จำหน่ายวัตถุดิบ','ลูกค้าประจำรายใหญ่'],
+      ka:['ปรุงอาหาร','จัดส่ง','รับออเดอร์ผ่าน LINE'],
+      vp:['อาหารสะอาด อร่อย ราคายุติธรรม','สั่งง่าย ส่งตรงเวลา'],
+      cr:['LINE Group ออฟฟิศ','Facebook','ปากต่อปาก'],
+      ch:['LINE','Facebook','โทรศัพท์'],
+      cs:['พนักงานออฟฟิศ','โรงงาน','โรงเรียน'],
+      cost:['วัตถุดิบ','กล่อง / บรรจุภัณฑ์','ค่าแก๊ส','ค่าขนส่ง'],
+      rev:['ราคากล่องละ 40–60฿','กำไร 15–25฿/กล่อง']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1',task:'ทำตัวอย่าง 20 กล่อง แจกฟรี',detail:'ให้พนักงานออฟฟิศใกล้บ้านลอง → ขอ Feedback + รีวิว'},
+      {week:'สัปดาห์ที่ 2',task:'เปิดรับจองผ่าน LINE',detail:'ตั้งราคา + เมนู 3–5 อย่างต่อวัน → รับออเดอร์ก่อน 8 โมงเช้า'},
+      {week:'สัปดาห์ที่ 3',task:'ขยายลูกค้าไป 2 ออฟฟิศ',detail:'ให้ลูกค้าเก่าแนะนำ → เสนอส่วนลดให้คนชวนเพื่อน'},
+      {week:'สัปดาห์ที่ 4',task:'ระบบสั่งประจำ + รายได้สม่ำเสมอ',detail:'Package 20 วัน/เดือน → รายได้คาดการณ์ได้'}
+    ],
+    income:{'50 กล่อง/วัน @50฿ กำไร 20฿':'1,000฿/วัน','25 วันทำงาน':'25,000฿','ค่าวัสดุ':'(15,000฿)','กำไรสุทธิ':'10,000฿/เดือน'}
+  },
+  {
+    id:'freelance-design',icon:'🎨',title:'Freelance กราฟิก/โลโก้',type:'ออนไลน์',
+    desc:'รับออกแบบโลโก้ บรรจุภัณฑ์ โปสเตอร์ ป้าย ผ่าน Canva หรือ Illustrator',
+    tags:['ออนไลน์','0฿','ดิจิทัล'],
+    budget:'zero',time:'mini',skills:['it','creative'],
+    metrics:{invest:'0฿',income:'3,000–20,000฿/เดือน',time:'1 สัปดาห์'},
+    bmc:{
+      kp:['Canva','Adobe Suite','Marketplace Freelance'],
+      ka:['ออกแบบงาน','สื่อสารกับลูกค้า','สร้าง Portfolio'],
+      vp:['ราคาเข้าถึงได้','ส่งเร็ว','ปรับแก้ฟรี 2 รอบ'],
+      cr:['Facebook Group SME','Fastwork.co','Fiverr'],
+      ch:['Fastwork','Facebook','Line','Fiverr'],
+      cs:['ธุรกิจ SME','ร้านค้าออนไลน์','Startup'],
+      cost:['Adobe CC (ถ้ามี)','ค่าอินเทอร์เน็ต'],
+      rev:['โลโก้ 500–3,000฿','Banner 200–800฿','Package 2,000–8,000฿']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1',task:'สร้าง Portfolio 5 ชิ้น',detail:'ออกแบบโลโก้สมมติ 5 แบบ → อัปโหลด Behance + Facebook'},
+      {week:'สัปดาห์ที่ 2',task:'สมัคร Fastwork + Fiverr',detail:'ตั้ง Gig ราคาเริ่ม 299฿ → รอ Order แรก'},
+      {week:'สัปดาห์ที่ 3',task:'รับงานฟรีแลกรีวิว 5 งาน',detail:'ขอรีวิว 5 ดาว → เพิ่มราคาได้เลย'},
+      {week:'สัปดาห์ที่ 4',task:'ขึ้นราคา + ขยาย Niche',detail:'ชำนาญสาขาใดสาขาหนึ่ง → รายได้สูงขึ้น'}
+    ],
+    income:{'โลโก้ 5 ชิ้น @1,500฿':'7,500฿','Banner 10 ชิ้น @400฿':'4,000฿','กำไรสุทธิ':'11,500฿/เดือน'}
+  },
+  {
+    id:'cnc-parts',icon:'⚙️',title:'รับจ้างผลิตชิ้นส่วน CNC',type:'ช่าง',
+    desc:'รับงานผลิตชิ้นส่วนโลหะ Prototype แม่พิมพ์ อุปกรณ์ ตามแบบลูกค้า',
+    tags:['ช่าง','CNC','โรงงาน','30,000฿+'],
+    budget:'high',time:'full',skills:['mach'],
+    metrics:{invest:'ขึ้นกับเครื่องจักรที่มี',income:'20,000–80,000฿/เดือน',time:'2–4 สัปดาห์'},
+    bmc:{
+      kp:['ซัพพลายเออร์วัตถุดิบโลหะ','โรงงานที่ Outsource งาน'],
+      ka:['ตีแบบ CAD/CAM','ตั้งเครื่อง CNC','QC ชิ้นงาน'],
+      vp:['ความเที่ยงตรงสูง','ส่งตรงเวลา','รับงานเล็กที่โรงงานใหญ่ไม่รับ'],
+      cr:['LinkedIn','เว็บไซต์','งานแสดงสินค้า'],
+      ch:['Direct Sales','อีเมล','Line'],
+      cs:['โรงงาน SME','วิศวกร R&D','Startup Hardware'],
+      cost:['วัตถุดิบ','ค่าไฟ','ค่าเสื่อมเครื่องจักร'],
+      rev:['ค่าผลิตต่อชิ้น','ค่า Setup','ส่วนลดออเดอร์ใหญ่']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1–2',task:'สร้าง Portfolio ชิ้นงานตัวอย่าง',detail:'ผลิตชิ้นงาน 5–10 แบบ → ถ่ายรูป + ระบุ tolerance'},
+      {week:'สัปดาห์ที่ 3',task:'ติดต่อโรงงาน SME ใกล้เคียง',detail:'เสนอรับงาน Outsource → ราคาต่ำกว่า Supplier เดิม 10–15%'},
+      {week:'สัปดาห์ที่ 4',task:'สมัคร Thailand SME Marketplace',detail:'อัปโหลด Capability Profile → รอ Inquiry'},
+      {week:'เดือนที่ 2',task:'รับงานแรก + ขยายกำลังผลิต',detail:'จ้างช่างเพิ่ม → รับงานได้มากขึ้น'}
+    ],
+    income:{'Batch งาน 3 ออเดอร์/เดือน @15,000฿':'45,000฿','ค่าวัสดุ+ค่าไฟ':'(20,000฿)','กำไรสุทธิ':'25,000฿/เดือน'}
+  },
+  {
+    id:'accounting',icon:'📊',title:'รับทำบัญชี / ยื่นภาษี',type:'บริการ',
+    desc:'รับทำบัญชีให้ร้านค้า SME ยื่น ภ.พ.30 / ภ.ง.ด.90 และที่ปรึกษาภาษี',
+    tags:['บริการ','บัญชี','0฿'],
+    budget:'zero',time:'mini',skills:['biz'],
+    metrics:{invest:'0฿',income:'5,000–25,000฿/เดือน',time:'2 สัปดาห์'},
+    bmc:{
+      kp:['กรมสรรพากร','โปรแกรมบัญชีออนไลน์','สมาคมบัญชี'],
+      ka:['บันทึกรายรับ-จ่าย','จัดทำงบ','ยื่นภาษีออนไลน์'],
+      vp:['ราคาถูกกว่าสำนักงานบัญชีใหญ่','ดูแลรายเดือน','ปรึกษาได้ตลอด'],
+      cr:['Facebook SME Group','ปากต่อปาก','LINE'],
+      ch:['LINE','Facebook','ปากต่อปาก'],
+      cs:['ร้านค้าออนไลน์','ร้านค้าปลีก','SME'],
+      cost:['โปรแกรมบัญชี (PEAK/FlowAccount)','ค่าอินเทอร์เน็ต'],
+      rev:['ค่าบริการรายเดือน 1,500–5,000฿/ราย','ค่ายื่นภาษี 500–2,000฿']
+    },
+    roadmap:[
+      {week:'สัปดาห์ที่ 1',task:'เปิดบัญชี PEAK Free + เรียนรู้',detail:'ทดลองทำบัญชีร้านจำลอง → ขอ Certificate ออนไลน์'},
+      {week:'สัปดาห์ที่ 2',task:'รับลูกค้าแรก ราคาพิเศษ',detail:'เสนอ 1,000฿/เดือน ช่วง 3 เดือนแรก → เก็บ Feedback'},
+      {week:'สัปดาห์ที่ 3',task:'โพสต์ใน Facebook Group SME',detail:'เสนอเช็ค VAT ฟรี → ดึงคนสนใจ → ปิดการขาย'},
+      {week:'สัปดาห์ที่ 4+',task:'5 ลูกค้าประจำ = รายได้คงที่',detail:'5 ราย x 2,000฿ = 10,000฿/เดือน Passive Income'}
+    ],
+    income:{'10 ลูกค้า @2,000฿/เดือน':'20,000฿','ค่าโปรแกรม':'(500฿)','กำไรสุทธิ':'19,500฿/เดือน'}
+  },
+];
+
+// ── STATE ──
+const answers = {skill:null,budget:null,time:null};
+let currentStep = 1;
+
+// ── QUIZ ──
+function selectQuiz(el, key, val) {
+  const parent = el.closest('.quiz-options');
+  parent.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[key] = val;
+  setTimeout(()=>nextStep(), 350);
+}
+
+function nextStep() {
+  if (currentStep < 3) {
+    document.getElementById('step'+currentStep).classList.remove('active');
+    currentStep++;
+    document.getElementById('step'+currentStep).classList.add('active');
+  } else {
+    showResults();
+  }
+}
+
+function prevStep() {
+  if (currentStep > 1) {
+    document.getElementById('step'+currentStep).classList.remove('active');
+    currentStep--;
+    document.getElementById('step'+currentStep).classList.add('active');
+  }
+}
+
+function showResults() {
+  const rs = document.getElementById('results-section');
+  rs.style.display = 'block';
+  rs.scrollIntoView({behavior:'smooth',block:'start'});
+
+  const scored = BIZ.map(b => {
+    let score = 0;
+    if (answers.skill && b.skills.includes(answers.skill)) score += 40;
+    if (answers.budget) {
+      const bi = ['zero','low','mid','high'].indexOf(b.budget);
+      const ui = ['zero','low','mid','high'].indexOf(answers.budget);
+      if (bi <= ui) score += 35;
+    }
+    if (answers.time) {
+      const ti = ['mini','part','full'].indexOf(b.time);
+      const ui = ['mini','part','full'].indexOf(answers.time);
+      if (ti <= ui) score += 25;
+    }
+    return {...b, score};
+  }).sort((a,b)=>b.score-a.score);
+
+  const grid = document.getElementById('results-grid');
+  grid.innerHTML = '';
+  scored.slice(0,6).forEach((b,i)=>{
+    grid.appendChild(makeBizCard(b, i < 3 ? 'high' : null));
+  });
+}
+
+
+// ── ALL GRID ──
+function renderAll() {
+  const grid = document.getElementById('all-grid');
+  grid.innerHTML = '';
+  BIZ.forEach(b => grid.appendChild(makeBizCard(b, null)));
+}
+
+function filterAll(btn, tag) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const grid = document.getElementById('all-grid');
+  grid.innerHTML = '';
+  const list = tag === 'all' ? BIZ : BIZ.filter(b=>b.tags.some(t=>t.includes(tag)));
+  list.forEach(b => grid.appendChild(makeBizCard(b, null)));
+}
+
+function makeBizCard(b, matchLevel) {
+  const div = document.createElement('div');
+  div.className = 'biz-card' + (matchLevel === 'high' ? ' featured' : '');
+  div.innerHTML = `
+    ${matchLevel === 'high' ? '<div class="card-match high">✦ แนะนำสำหรับคุณ</div>' : ''}
+    <div class="card-icon">${b.icon}</div>
+    <div class="card-title">${b.title}</div>
+    <div class="card-type">${b.type}</div>
+    <div class="card-desc">${b.desc}</div>
+    <div class="card-tags">${b.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    <div class="card-metrics">
+      <div class="metric"><div class="metric-val">${b.metrics.invest}</div><div class="metric-key">ลงทุน</div></div>
+      <div class="metric"><div class="metric-val" style="font-size:11px">${b.metrics.income}</div><div class="metric-key">รายได้</div></div>
+      <div class="metric"><div class="metric-val" style="font-size:11px">${b.metrics.time}</div><div class="metric-key">เริ่มได้ใน</div></div>
+    </div>
+    <button class="card-btn" data-plan-id="${b.id}">📋 ดูแผนธุรกิจ →</button>
+    <div class="biz-plan-body" id="plan-${b.id}" style="display:none;margin-top:12px;padding:16px;background:rgba(0,0,0,.3);border-radius:12px;border:1px solid rgba(201,168,76,.2);"></div>
+  `;
+  div.querySelector('#plan-' + b.id).innerHTML = buildPlanHTML(b);
+  const planBtn = div.querySelector('.card-btn');
+  planBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    togglePlan(planBtn, b.id);
+  });
+  return div;
+}
+
+function togglePlan(btn, id) {
+  const body = document.getElementById('plan-' + id);
+  const opening = body.style.display === 'none';
+  body.style.display = opening ? 'block' : 'none';
+  btn.textContent = opening ? '▲ ปิดแผนธุรกิจ' : '📋 ดูแผนธุรกิจ →';
+  if (opening) body.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function buildPlanHTML(b) {
+  const roadmapHTML = b.roadmap.map((r,i)=>`
+    <div class="road-step">
+      <div class="road-num">${i+1}</div>
+      <div class="road-content">
+        <div class="road-week">${r.week}</div>
+        <div class="road-task">${r.task}</div>
+        <div class="road-detail">${r.detail}</div>
+      </div>
+    </div>`).join('');
+  const incomeHTML = Object.entries(b.income).map(([k,v])=>`
+    <div class="income-row">
+      <span class="income-label">${k}</span>
+      <span class="income-val ${v.includes('กำไร')?'green':''}">${v}</span>
+    </div>`).join('');
+  return `
+    <div class="bmc-title">📋 BUSINESS MODEL CANVAS</div>
+    <div class="bmc-grid" style="margin-bottom:10px;">
+      <div class="bmc-block"><div class="bmc-block-title">🤝 พันธมิตรหลัก</div><ul>${b.bmc.kp.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="bmc-block"><div class="bmc-block-title">⚙️ กิจกรรมหลัก</div><ul>${b.bmc.ka.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    </div>
+    <div class="bmc-grid" style="margin-bottom:10px;">
+      <div class="bmc-block"><div class="bmc-block-title">💎 คุณค่าที่มอบให้</div><ul>${b.bmc.vp.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="bmc-block"><div class="bmc-block-title">💬 ความสัมพันธ์ลูกค้า</div><ul>${b.bmc.cr.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    </div>
+    <div class="bmc-grid" style="margin-bottom:10px;">
+      <div class="bmc-block"><div class="bmc-block-title">📣 ช่องทาง</div><ul>${b.bmc.ch.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="bmc-block"><div class="bmc-block-title">👥 กลุ่มลูกค้า</div><ul>${b.bmc.cs.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    </div>
+    <div class="bmc-grid">
+      <div class="bmc-block"><div class="bmc-block-title">💸 โครงสร้างต้นทุน</div><ul>${b.bmc.cost.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="bmc-block"><div class="bmc-block-title">💰 แหล่งรายได้</div><ul>${b.bmc.rev.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    </div>
+    <div class="bmc-title" style="margin-top:20px;">🗺️ ROADMAP 4 สัปดาห์</div>
+    <div class="roadmap">${roadmapHTML}</div>
+    <div class="bmc-title" style="margin-top:20px;">💵 ประมาณการรายได้</div>
+    <div class="income-bar">${incomeHTML}</div>`;
+}
+
+// ── DETAIL PANELS (เหลือไว้สำหรับ quiz results) ──
+function renderDetailPanels() {
+  const container = document.getElementById('biz-panels');
+  container.innerHTML = BIZ.map(b => {
+    const roadmapHTML = b.roadmap.map((r,i)=>`
+      <div class="road-step">
+        <div class="road-num">${i+1}</div>
+        <div class="road-content">
+          <div class="road-week">${r.week}</div>
+          <div class="road-task">${r.task}</div>
+          <div class="road-detail">${r.detail}</div>
+        </div>
+      </div>`).join('');
+    const incomeHTML = Object.entries(b.income).map(([k,v])=>`
+      <div class="income-row">
+        <span class="income-label">${k}</span>
+        <span class="income-val ${v.includes('กำไร')?'green':''}">${v}</span>
+      </div>`).join('');
+    return `
+    <div id="biz-${b.id}" class="biz-detail">
+      <div class="biz-detail-inner">
+        <div class="modal-head">
+          <div>
+            <div style="font-size:40px;margin-bottom:8px;">${b.icon}</div>
+            <div style="font-size:22px;font-weight:800;">${b.title}</div>
+            <div style="font-size:11px;color:var(--text3);letter-spacing:.5px;margin-top:4px;text-transform:uppercase;">${b.type} · ${b.metrics.invest} · ${b.metrics.income}</div>
+          </div>
+          <a class="modal-close" href="#">✕</a>
+        </div>
+        <div class="modal-body">
+          <div style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px;">${b.desc}</div>
+          <div class="bmc-title">📋 BUSINESS MODEL CANVAS</div>
+          <div class="bmc-grid" style="margin-bottom:10px;">
+            <div class="bmc-block"><div class="bmc-block-title">🤝 พันธมิตรหลัก</div><ul>${b.bmc.kp.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+            <div class="bmc-block"><div class="bmc-block-title">⚙️ กิจกรรมหลัก</div><ul>${b.bmc.ka.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+          </div>
+          <div class="bmc-grid" style="margin-bottom:10px;">
+            <div class="bmc-block"><div class="bmc-block-title">💎 คุณค่าที่มอบให้</div><ul>${b.bmc.vp.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+            <div class="bmc-block"><div class="bmc-block-title">💬 ความสัมพันธ์ลูกค้า</div><ul>${b.bmc.cr.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+          </div>
+          <div class="bmc-grid" style="margin-bottom:10px;">
+            <div class="bmc-block"><div class="bmc-block-title">📣 ช่องทาง</div><ul>${b.bmc.ch.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+            <div class="bmc-block"><div class="bmc-block-title">👥 กลุ่มลูกค้า</div><ul>${b.bmc.cs.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+          </div>
+          <div class="bmc-grid">
+            <div class="bmc-block"><div class="bmc-block-title">💸 โครงสร้างต้นทุน</div><ul>${b.bmc.cost.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+            <div class="bmc-block"><div class="bmc-block-title">💰 แหล่งรายได้</div><ul>${b.bmc.rev.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+          </div>
+          <div class="bmc-title" style="margin-top:24px;">🗺️ ROADMAP 4 สัปดาห์สู่ลูกค้าแรก</div>
+          <div class="roadmap">${roadmapHTML}</div>
+          <div class="bmc-title" style="margin-top:24px;">💵 ประมาณการรายได้</div>
+          <div class="income-bar">${incomeHTML}</div>
+          <a class="btn btn-primary" href="#" style="width:100%;margin-top:20px;justify-content:center;display:flex;">✅ เข้าใจแล้ว — เริ่มเลย!</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+// ── SCROLL REVEAL ──
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+function navTo(id) {
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth'});
+}
+
+// ── CALCULATOR ──
+function calcUpdate() {
+  const time = +document.getElementById('sl-time').value;
+  const price = +document.getElementById('sl-price').value;
+  const qty = +document.getElementById('sl-qty').value;
+  document.getElementById('vl-time').textContent = time + ' ชม.';
+  document.getElementById('vl-price').textContent = price.toLocaleString() + '฿';
+  document.getElementById('vl-qty').textContent = qty + ' ครั้ง';
+  const gross = price * qty;
+  const cost = Math.round(gross * 0.25);
+  const net = gross - cost;
+  const year = net * 10;
+  document.getElementById('r-gross').textContent = gross.toLocaleString() + '฿';
+  document.getElementById('r-cost').textContent = cost.toLocaleString() + '฿';
+  document.getElementById('r-net').textContent = net.toLocaleString() + '฿';
+  document.getElementById('r-year').textContent = year.toLocaleString() + '฿';
+}
+calcUpdate();
+
+// ── INIT ──
+renderAll();
+document.getElementById('card-count').textContent = document.querySelectorAll('.card-btn').length;
+
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-plan-id]');
+  if (!btn) return;
+  e.stopPropagation();
+  togglePlan(btn, btn.dataset.planId);
+}, true);
+</script>
+</body>
+</html>
