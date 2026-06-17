@@ -3033,36 +3033,38 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
     if(applyParsed(cloudParsed)){
       showStatus('✅ โหลดจาก Cloud');
       // โหลดรูปจาก path แยก (attendanceFP)
+      let fpLoaded = 0;
       try{
         const fpRes = await fetch(FP_URL, {cache:'no-store'});
-        const fpData = await fpRes.json();
-        if(fpData && typeof fpData === 'object') deserializeFP(fpData);
-      }catch(e){ console.warn('[FP] โหลดรูปจาก cloud ล้มเหลว'); }
+        if(fpRes.ok){
+          const fpText = await fpRes.text();
+          if(fpText && fpText.length > 2){
+            const fpData = JSON.parse(fpText);
+            if(fpData && typeof fpData === 'object'){ deserializeFP(fpData); fpLoaded = Object.keys(facePhotos).length; }
+          }
+        }
+      }catch(e){ showStatus('⚠️ โหลดรูปหน้าล้มเหลว: '+e.message,'#e67e22'); }
       // backward compat: ถ้ายังไม่มีรูป → ดึงจาก local เสริม แล้ว sync ขึ้น cloud
-      if(!Object.keys(facePhotos).length && localParsed && localParsed.fp){
+      if(!fpLoaded && localParsed && localParsed.fp){
         for(const k in localParsed.fp){
           const n = Number(k), lv = localParsed.fp[k];
           if(!lv) continue;
           facePhotos[n] = Array.isArray(lv) ? lv : [lv];
         }
-        if(Object.keys(facePhotos).length){
-          console.log('[FP] กู้รูปจาก local', Object.keys(facePhotos).length, 'คน → sync ขึ้น cloud');
-          fetch(FP_URL, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(facePhotos)}).catch(()=>{});
-        }
+        fpLoaded = Object.keys(facePhotos).length;
+        if(fpLoaded){ fetch(FP_URL, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(facePhotos)}).catch(()=>{}); }
       }
-      // backward compat: ถ้ายังไม่มีรูป → ดึงจาก cloud blob เก่า (fp ฝังในก้อนหลัก)
-      if(!Object.keys(facePhotos).length && cloudParsed && cloudParsed.fp){
+      // backward compat: ถ้ายังไม่มีรูป → ดึงจาก cloud blob เก่า
+      if(!fpLoaded && cloudParsed && cloudParsed.fp){
         deserializeFP(cloudParsed.fp);
-        if(Object.keys(facePhotos).length){
-          console.log('[FP] กู้รูปจาก cloud blob เก่า', Object.keys(facePhotos).length, 'คน → sync ไป FP path');
-          fetch(FP_URL, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(facePhotos)}).catch(()=>{});
-        }
+        fpLoaded = Object.keys(facePhotos).length;
+        if(fpLoaded){ fetch(FP_URL, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(facePhotos)}).catch(()=>{}); }
       }
       // fd: ถ้าไม่มีให้เสริมจาก local
       if(localParsed && localParsed.fd && !Object.keys(faceDescriptors).length)
         deserializeFD(localParsed.fd);
-      // render ใหม่หลังโหลดรูปเสร็จ
-      if(Object.keys(facePhotos).length) renderStudentChips();
+      // render ใหม่หลังโหลดรูปเสร็จ + แจ้ง status
+      if(fpLoaded){ renderStudentChips(); showStatus('✅ โหลดจาก Cloud (รูปหน้า '+fpLoaded+' คน)'); }
       if(needMigrate && !skipMigrate){ saveToFirebase(); }
       return;
     }
