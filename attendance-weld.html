@@ -3089,6 +3089,8 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
       // fd: ถ้าไม่มีให้เสริมจาก local
       if(localParsed && localParsed.fd && !Object.keys(faceDescriptors).length)
         deserializeFD(localParsed.fd);
+      // render ใหม่หลังโหลดรูปเสร็จ
+      if(Object.keys(facePhotos).length) renderStudentChips();
       if(needMigrate && !skipMigrate){ saveToFirebase(); }
       return;
     }
