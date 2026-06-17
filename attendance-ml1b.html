@@ -3072,10 +3072,26 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   if(localParsed){
     if(applyParsed(localParsed)){
       showStatus('📱 โหลดจาก Local (ใหม่กว่า Cloud)','#e67e22');
-      // sync รูปหน้าจาก local ขึ้น cloud ถ้ามี
       if(Object.keys(facePhotos).length){
+        // มีรูปใน local → sync ขึ้น cloud
         console.log('[FP] sync รูปจาก local ขึ้น cloud', Object.keys(facePhotos).length, 'คน');
         fetch(FP_URL, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(facePhotos)}).catch(()=>{});
+      } else {
+        // ไม่มีรูปใน local → ดึงจาก Firebase FP URL
+        try{
+          const fpRes = await fetch(FP_URL, {cache:'no-store'});
+          if(fpRes.ok){
+            const fpText = await fpRes.text();
+            if(fpText && fpText.length > 2){
+              const fpData = JSON.parse(fpText);
+              if(fpData && typeof fpData === 'object'){
+                deserializeFP(fpData);
+                const fpLoaded = Object.keys(facePhotos).length;
+                if(fpLoaded){ renderStudentChips(); showStatus('✅ โหลดจาก Local + รูปหน้า Cloud ('+fpLoaded+' คน)','#4caf8a'); }
+              }
+            }
+          }
+        }catch(e){ console.warn('[FP] local branch โหลด FP ล้มเหลว:', e.message); }
       }
       return;
     }
