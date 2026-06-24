@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สื่อการเรียนการสอน — ครูธานี ชมสุข | วอศ.บุรีรัมย์</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Sarabun','Noto Sans Thai',sans-serif;background:#f5f5f0;color:#1a1a1a;line-height:1.6}
+  .header{background:linear-gradient(135deg,#1e3a5f,#2c5f8a);color:#fff;padding:2rem 1.5rem;text-align:center}
+  .header h1{font-size:1.6rem;font-weight:700;margin-bottom:.3rem}
+  .header p{font-size:.95rem;opacity:.85}
+  .header .badge{display:inline-block;background:rgba(255,255,255,.15);padding:4px 14px;border-radius:20px;font-size:.8rem;margin-top:.5rem}
+  .container{max-width:800px;margin:0 auto;padding:1.5rem 1rem}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
+  .stat{background:#fff;border-radius:10px;padding:.8rem;text-align:center;border:1px solid #e8e8e0}
+  .stat-num{font-size:1.5rem;font-weight:700;color:#1e3a5f}
+  .stat-label{font-size:.75rem;color:#666}
+  .section{margin-bottom:1.5rem}
+  .section-title{font-size:1rem;font-weight:700;color:#1e3a5f;margin-bottom:.6rem;display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:2px solid #1e3a5f}
+  .card{background:#fff;border:1px solid #e8e8e0;border-radius:10px;padding:.8rem 1rem;margin-bottom:8px;text-decoration:none;color:inherit;display:flex;align-items:center;gap:12px;transition:all .15s}
+  .card:hover{border-color:#2c5f8a;box-shadow:0 2px 8px rgba(30,58,95,.1);transform:translateY(-1px)}
+  .card-icon{width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+  .card-body{flex:1;min-width:0}
+  .card-name{font-size:.9rem;font-weight:600;color:#1a1a1a}
+  .card-desc{font-size:.78rem;color:#666;margin-top:2px}
+  .card-url{font-size:.7rem;color:#2c5f8a;margin-top:2px;word-break:break-all}
+  .tag{font-size:.65rem;padding:3px 8px;border-radius:12px;font-weight:600;flex-shrink:0;white-space:nowrap}
+  .ic-weld{background:#fef3e6;color:#b45309}
+  .ic-measure{background:#e6f7ef;color:#0d7a4a}
+  .ic-guide{background:#eef0fb;color:#3b3f8a}
+  .ic-biz{background:#fce7ea;color:#a3293e}
+  .ic-admin{background:#e8f4fd;color:#1a6fb5}
+  .ic-cloud{background:#f0e6ff;color:#6b21a8}
+  .onedrive{background:linear-gradient(135deg,#0078d4,#005a9e);color:#fff;border:none}
+  .onedrive .card-name,.onedrive .card-desc,.onedrive .card-url{color:#fff}
+  .onedrive .card-desc{opacity:.85}
+  .onedrive:hover{box-shadow:0 4px 12px rgba(0,120,212,.3)}
+  .footer{text-align:center;padding:1.5rem;font-size:.75rem;color:#999;border-top:1px solid #e8e8e0;margin-top:1rem}
+  .footer strong{color:#666}
+  @media(max-width:500px){
+    .stats{grid-template-columns:repeat(3,1fr);gap:6px}
+    .header h1{font-size:1.3rem}
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="header">
+  <h1>สื่อการเรียนการสอน</h1>
+  <p>นายธานี ชมสุข — แผนกวิชาช่างเชื่อมโลหะ</p>
+  <div class="badge">วิทยาลัยการอาชีพบุรีรัมย์ | ภาคเรียนที่ 1/2569</div>
+</div>
+
+<div class="container">
+
+  <div class="stats">
+    <div class="stat"><div class="stat-num">12</div><div class="stat-label">สื่อทั้งหมด</div></div>
+    <div class="stat"><div class="stat-num">6</div><div class="stat-label">หมวดวิชา</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">แพลตฟอร์ม</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔥 งานเชื่อม / โลหะวิทยา</div>
+
+    <a class="card" href="https://taneech2.github.io/math1/" target="_blank">
+      <div class="card-icon ic-weld">📐</div>
+      <div class="card-body">
+        <div class="card-name">คณิตศาสตร์ช่างเชื่อม</div>
+        <div class="card-desc">สื่อ Interactive วิชาคณิตศาสตร์ช่างเชื่อม (20103-2010)</div>
+        <div class="card-url">taneech2.github.io/math1/</div>
+      </div>
+      <span class="tag ic-weld">คณิตช่างเชื่อม</span>
+    </a>
+
+    <a class="card" href="https://taneech2.github.io/attendance/weld-calc.html" target="_blank">
+      <div class="card-icon ic-weld">🧮</div>
+      <div class="card-body">
+        <div class="card-name">WeldCalc — คำนวณงานเหล็กครบวงจร</div>
+        <div class="card-desc">คำนวณน้ำหนัก ราคา ออกใบเสนอราคา</div>
+        <div class="card-url">taneech2.github.io/attendance/weld-calc.html</div>
+      </div>
+      <span class="tag ic-weld">งานเชื่อม</span>
+    </a>
+
+    <a class="card" href="https://taneech2.github.io/iron-carbon/" target="_blank">
+      <div class="card-icon ic-weld">⚗️</div>
+      <div class="card-body">
+        <div class="card-name">Iron-Carbon Diagram</div>
+        <div class="card-desc">แผนภูมิ Fe–Fe₃C เข้าใจง่าย ใช้ได้จริง</div>
+        <div class="card-url">taneech2.github.io/iron-carbon/</div>
+      </div>
+      <span class="tag ic-weld">โลหะวิทยา</span>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">💻 เขียนแบบ / คอมพิวเตอร์</div>
+
+    <a class="card" href="https://taneech2.github.io/autocad/" target="_blank">
+      <div class="card-icon" style="background:#eef0fb;color:#3b3f8a">💻</div>
+      <div class="card-body">
+        <div class="card-name">เขียนแบบงานเชื่อมด้วยคอมพิวเตอร์</div>
+        <div class="card-desc">สื่อ Interactive วิชาเขียนแบบด้วยคอมพิวเตอร์ (20103-2013)</div>
+        <div class="card-url">taneech2.github.io/autocad/</div>
+      </div>
+      <span class="tag" style="background:#eef0fb;color:#3b3f8a">เขียนแบบ</span>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📏 เครื่องมือวัด</div>
+
+    <a class="card" href="https://taneech2.github.io/Vernier-Caliper-and-Micrometer/" target="_blank">
+      <div class="card-icon ic-measure">📐</div>
+      <div class="card-body">
+        <div class="card-name">สื่อเครื่องมือวัดงานช่าง (ชุดรวม)</div>
+        <div class="card-desc">เวอร์เนียร์คาลิเปอร์ + ไมโครมิเตอร์ — ใช้ประกอบวิชางานฝึกฝีมือ / คณิตช่างเชื่อม / งานออกแบบผลิตภัณฑ์</div>
+        <div class="card-url">taneech2.github.io/Vernier-Caliper-and-Micrometer/</div>
+      </div>
+      <span class="tag ic-measure">หลายวิชา</span>
+    </a>
+
+    <a class="card" href="https://taneech2.github.io/attendance/vernier-caliper.html" target="_blank">
+      <div class="card-icon ic-measure">🔧</div>
+      <div class="card-body">
+        <div class="card-name">เวอร์เนียร์คาลิเปอร์ — สื่อ Interactive</div>
+        <div class="card-desc">ฝึกอ่านค่าเวอร์เนียร์แบบโต้ตอบ — ใช้ประกอบวิชางานฝึกฝีมือ / คณิตช่างเชื่อม / งานออกแบบผลิตภัณฑ์</div>
+        <div class="card-url">taneech2.github.io/attendance/vernier-caliper.html</div>
+      </div>
+      <span class="tag ic-measure">หลายวิชา</span>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🎯 แนะแนว / พัฒนาผู้เรียน</div>
+
+    <a class="card" href="https://taneech2.github.io/attendance/student-checklist.html" target="_blank">
+      <div class="card-icon ic-guide">✅</div>
+      <div class="card-body">
+        <div class="card-name">เช็คลิสต์อนาคต — ประเมินตัวเอง</div>
+        <div class="card-desc">นักเรียนประเมินความพร้อมด้านต่างๆ</div>
+        <div class="card-url">taneech2.github.io/attendance/student-checklist.html</div>
+      </div>
+      <span class="tag ic-guide">แนะแนว</span>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">💼 ศูนย์บ่มเพาะผู้ประกอบการ</div>
+
+    <a class="card" href="https://taneech2.github.io/attendance/business-hub.html" target="_blank">
+      <div class="card-icon ic-biz">🚀</div>
+      <div class="card-body">
+        <div class="card-name">Business Starter Hub</div>
+        <div class="card-desc">เปลี่ยนไอเดียเป็นธุรกิจ — นักเรียนทำตามได้</div>
+        <div class="card-url">taneech2.github.io/attendance/business-hub.html</div>
+      </div>
+      <span class="tag ic-biz">ศูนย์บ่มเพาะ</span>
+    </a>
+
+    <a class="card" href="https://taneech2.github.io/attendance/business-starter-hub/" target="_blank">
+      <div class="card-icon ic-biz">📋</div>
+      <div class="card-body">
+        <div class="card-name">Business Starter Hub v2</div>
+        <div class="card-desc">แผนธุรกิจพร้อมลงมือทำ</div>
+        <div class="card-url">taneech2.github.io/attendance/business-starter-hub/</div>
+      </div>
+      <span class="tag ic-biz">ศูนย์บ่มเพาะ</span>
+    </a>
+
+    <a class="card" href="https://taneech2.github.io/attendance/scout69/bom-pao.html" target="_blank">
+      <div class="card-icon ic-biz">📊</div>
+      <div class="card-body">
+        <div class="card-name">ศูนย์บ่มเพาะ — เตรียมประเมิน 2569</div>
+        <div class="card-desc">เช็คลิสต์ 5 หมวดเกณฑ์ประเมิน</div>
+        <div class="card-url">taneech2.github.io/attendance/scout69/bom-pao.html</div>
+      </div>
+      <span class="tag ic-biz">ศูนย์บ่มเพาะ</span>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📂 บริหารห้องเรียน</div>
+
+    <a class="card" href="https://taneech2.github.io/attendance/" target="_blank">
+      <div class="card-icon ic-admin">📱</div>
+      <div class="card-body">
+        <div class="card-name">ระบบเช็คชื่อออนไลน์ (20+ ห้องเรียน)</div>
+        <div class="card-desc">ชช.1 / ชช.2 / ลูกเสือ / ช่างเชื่อม / ช่างยนต์ / ช่างกล / ไฟฟ้า / คอม / แอร์</div>
+        <div class="card-url">taneech2.github.io/attendance/</div>
+      </div>
+      <span class="tag ic-admin">บริหาร</span>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">☁️ ไฟล์สื่อบน OneDrive</div>
+
+    <a class="card onedrive" href="https://1drv.ms/f/c/6a4079bc6ccd065e/IgBeBs1svHlAIIBqGSwBAAAAAS9XwMllyb8y71apoQg6MbQ?e=mxO4Na" target="_blank">
+      <div class="card-icon" style="background:rgba(255,255,255,.2);color:#fff">☁️</div>
+      <div class="card-body">
+        <div class="card-name">โฟลเดอร์สื่อการสอน — OneDrive</div>
+        <div class="card-desc">ไฟล์สื่อ เอกสาร ใบงาน สำหรับดาวน์โหลด</div>
+        <div class="card-url">1drv.ms/f/c/6a4079bc6ccd065e/...</div>
+      </div>
+      <span class="tag" style="background:rgba(255,255,255,.2);color:#fff">OneDrive</span>
+    </a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>นายธานี ชมสุข</strong> — แผนกวิชาช่างเชื่อมโลหะ<br>
+  วิทยาลัยการอาชีพบุรีรัมย์ | สำนักงานคณะกรรมการการอาชีวศึกษา<br>
+  จัดทำเพื่อรายงานฝ่ายสื่อการเรียนการสอน ภาคเรียนที่ 1/2569
+</div>
+
+</body>
+</html>
