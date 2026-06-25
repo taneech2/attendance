@@ -444,6 +444,170 @@ def save_trends(data):
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     log(f"💾 บันทึกแล้ว: {JSON_FILE}")
+    generate_viewer(data)
+
+VIEWER_HTML = os.path.join(SCRIPT_DIR, 'shopee-trends.html')
+
+def generate_viewer(data):
+    data_json = json.dumps(data, ensure_ascii=False)
+    html = """<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopee Trends — บริษัทชมสุข69</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sarabun',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
+.header{background:linear-gradient(135deg,#1e1b4b,#312e81);padding:30px 20px;text-align:center;}
+.header h1{font-size:28px;font-weight:700;margin-bottom:6px;}
+.header h1 span{color:#f97316;}
+.header .meta{font-size:14px;color:#94a3b8;margin-top:8px;}
+.status{display:inline-block;padding:4px 14px;border-radius:20px;font-size:13px;margin-top:10px;}
+.status.ok{background:#22c55e22;color:#4ade80;border:1px solid #22c55e44;}
+.status.warn{background:#f59e0b22;color:#fbbf24;border:1px solid #f59e0b44;}
+.container{max-width:900px;margin:0 auto;padding:20px;}
+.insights{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:20px;margin-bottom:24px;}
+.insights h2{font-size:18px;color:#f97316;margin-bottom:12px;}
+.insights li{font-size:14px;line-height:1.8;color:#cbd5e1;margin-bottom:6px;padding-left:8px;}
+.card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;margin-bottom:14px;transition:border-color .2s;}
+.card:hover{border-color:#6366f1;}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.rank{background:#6366f1;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}
+.card-info{flex:1;min-width:200px;}
+.card-info h3{font-size:16px;font-weight:600;margin-bottom:4px;line-height:1.4;}
+.card-info .shop{font-size:13px;color:#94a3b8;}
+.card-right{text-align:right;flex-shrink:0;}
+.price{font-size:20px;font-weight:700;color:#4ade80;}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.tag{font-size:12px;padding:3px 10px;border-radius:12px;border:1px solid #334155;}
+.tag.cat{background:#6366f122;color:#a5b4fc;border-color:#6366f144;}
+.tag.comm{background:#22c55e18;color:#4ade80;border-color:#22c55e44;}
+.tag.content{background:#f59e0b18;color:#fbbf24;border-color:#f59e0b44;}
+.tag.tiktok{background:#ff004422;color:#ff6b8a;border-color:#ff004444;}
+.tag.sold{background:#0ea5e918;color:#38bdf8;border-color:#0ea5e944;}
+.reason{font-size:13px;color:#94a3b8;margin-top:8px;line-height:1.6;}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.aff-link{display:inline-block;padding:8px 18px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;transition:transform .15s;border:none;cursor:pointer;}
+.aff-link:hover{transform:scale(1.03);}
+.copy-btn{display:inline-block;padding:8px 18px;background:#334155;color:#e2e8f0;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #475569;cursor:pointer;font-family:'Sarabun',sans-serif;transition:background .15s;}
+.copy-btn:hover{background:#475569;}
+.copy-btn.copied{background:#22c55e33;color:#4ade80;border-color:#22c55e66;}
+.cat-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px;}
+.cat-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;text-align:center;}
+.cat-card .cat-name{font-size:14px;color:#a5b4fc;margin-bottom:6px;}
+.cat-card .cat-num{font-size:24px;font-weight:700;color:#4ade80;}
+.cat-card .cat-comm{font-size:13px;color:#94a3b8;margin-top:2px;}
+.footer{text-align:center;padding:30px;color:#475569;font-size:13px;}
+@media(max-width:600px){
+  .card-top{flex-direction:column;}
+  .card-right{text-align:left;}
+  .price{font-size:18px;}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🛒 Shopee <span>Trends</span></h1>
+  <p style="color:#c4b5fd;font-size:15px;">สินค้า trending สำหรับ affiliate ครูช่างเชื่อม</p>
+  <div class="meta" id="meta"></div>
+  <div id="statusBadge"></div>
+</div>
+<div class="container">
+  <div id="catSummary" class="cat-summary"></div>
+  <div id="insights" class="insights" style="display:none;"></div>
+  <div id="products"></div>
+</div>
+<div class="footer">บริษัทชมสุข69 — AI-First Company | ข้อมูลอัปเดตอัตโนมัติทุกวัน</div>
+<script>
+const DATA = __DATA_JSON__;
+
+function copyLink(link, btn) {
+  navigator.clipboard.writeText(link).then(function() {
+    btn.textContent = '✅ คัดลอกแล้ว!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = '📋 คัดลอก Link'; btn.classList.remove('copied'); }, 2000);
+  }).catch(function() {
+    var t = document.createElement('textarea');
+    t.value = link; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+    btn.textContent = '✅ คัดลอกแล้ว!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = '📋 คัดลอก Link'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+(function render() {
+  var data = DATA;
+  document.getElementById('meta').innerHTML =
+    '📅 อัปเดตล่าสุด: <strong>' + (data.updated || '?') + '</strong> | แหล่งข้อมูล: ' + (data.source || '?');
+
+  var sb = document.getElementById('statusBadge');
+  var fs = data.feed_status || '';
+  if (fs.indexOf('✅') >= 0) sb.innerHTML = '<div class="status ok">' + fs + '</div>';
+  else if (fs) sb.innerHTML = '<div class="status warn">' + fs + '</div>';
+
+  var cats = data.categories_summary || {};
+  var catHtml = '';
+  for (var name in cats) {
+    var info = cats[name];
+    catHtml += '<div class="cat-card"><div class="cat-name">' + name + '</div>' +
+      '<div class="cat-num">' + (info.count || 0) + ' <small style="font-size:13px;color:#94a3b8;">สินค้า</small></div>' +
+      '<div class="cat-comm">commission เฉลี่ย ' + (info.avg_commission || 0).toFixed(1) + '%</div></div>';
+  }
+  document.getElementById('catSummary').innerHTML = catHtml;
+
+  var ins = data.insights || [];
+  if (ins.length) {
+    var insDiv = document.getElementById('insights');
+    insDiv.style.display = 'block';
+    insDiv.innerHTML = '<h2>💡 Insights</h2><ol>' + ins.map(function(i) { return '<li>' + i + '</li>'; }).join('') + '</ol>';
+  }
+
+  var products = data.products || [];
+  var prodHtml = products.map(function(p, idx) {
+    var stars = p.rating ? '⭐ ' + p.rating : '';
+    var priceText = p.price_min === p.price_max
+      ? '฿' + (p.price_min || 0).toLocaleString()
+      : '฿' + (p.price_min || 0).toLocaleString() + ' - ฿' + (p.price_max || 0).toLocaleString();
+
+    var tags = '';
+    if (p.category) tags += '<span class="tag cat">' + p.category + '</span>';
+    if (p.total_commission) tags += '<span class="tag comm">💰 ' + p.total_commission + '%</span>';
+    if (p.sales) tags += '<span class="tag sold">📦 ขาย ' + p.sales.toLocaleString() + '</span>';
+    if (p.content_type) tags += '<span class="tag content">🎬 ' + p.content_type + '</span>';
+    if (p.tiktok_trending) tags += '<span class="tag tiktok">🔥 TikTok</span>';
+
+    var btns = '';
+    if (p.affiliate_link) {
+      btns = '<div class="btn-row">' +
+        '<a href="' + p.affiliate_link + '" target="_blank" class="aff-link">🔗 เปิดสินค้า</a>' +
+        '<button class="copy-btn" onclick="copyLink(\\''+p.affiliate_link.replace(/'/g,"\\\\'")+'\\', this)">📋 คัดลอก Link</button>' +
+        '</div>';
+    }
+
+    return '<div class="card">' +
+      '<div class="card-top">' +
+        '<div class="rank">' + (p.rank || '') + '</div>' +
+        '<div class="card-info"><h3>' + (p.name || '') + '</h3>' +
+          '<div class="shop">' + (p.shop_name || '') + ' ' + stars + '</div></div>' +
+        '<div class="card-right"><div class="price">' + priceText + '</div></div>' +
+      '</div>' +
+      '<div class="tags">' + tags + '</div>' +
+      '<div class="reason">' + (p.reason || '') + '</div>' +
+      btns +
+    '</div>';
+  }).join('');
+
+  document.getElementById('products').innerHTML = prodHtml;
+})();
+</script>
+</body>
+</html>"""
+    html = html.replace('__DATA_JSON__', data_json)
+    with open(VIEWER_HTML, 'w', encoding='utf-8') as f:
+        f.write(html)
+    log(f"🌐 สร้าง Viewer: {VIEWER_HTML}")
 
 # ===== TASK SCHEDULER SETUP =====
 def setup_scheduler():

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopee Trends — บริษัทชมสุข69</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sarabun',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
+.header{background:linear-gradient(135deg,#1e1b4b,#312e81);padding:30px 20px;text-align:center;}
+.header h1{font-size:28px;font-weight:700;margin-bottom:6px;}
+.header h1 span{color:#f97316;}
+.header .meta{font-size:14px;color:#94a3b8;margin-top:8px;}
+.status{display:inline-block;padding:4px 14px;border-radius:20px;font-size:13px;margin-top:10px;}
+.status.ok{background:#22c55e22;color:#4ade80;border:1px solid #22c55e44;}
+.status.warn{background:#f59e0b22;color:#fbbf24;border:1px solid #f59e0b44;}
+.container{max-width:900px;margin:0 auto;padding:20px;}
+.insights{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:20px;margin-bottom:24px;}
+.insights h2{font-size:18px;color:#f97316;margin-bottom:12px;}
+.insights li{font-size:14px;line-height:1.8;color:#cbd5e1;margin-bottom:6px;padding-left:8px;}
+.card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;margin-bottom:14px;transition:border-color .2s;}
+.card:hover{border-color:#6366f1;}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.rank{background:#6366f1;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}
+.card-info{flex:1;min-width:200px;}
+.card-info h3{font-size:16px;font-weight:600;margin-bottom:4px;line-height:1.4;}
+.card-info .shop{font-size:13px;color:#94a3b8;}
+.card-right{text-align:right;flex-shrink:0;}
+.price{font-size:20px;font-weight:700;color:#4ade80;}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.tag{font-size:12px;padding:3px 10px;border-radius:12px;border:1px solid #334155;}
+.tag.cat{background:#6366f122;color:#a5b4fc;border-color:#6366f144;}
+.tag.comm{background:#22c55e18;color:#4ade80;border-color:#22c55e44;}
+.tag.content{background:#f59e0b18;color:#fbbf24;border-color:#f59e0b44;}
+.tag.tiktok{background:#ff004422;color:#ff6b8a;border-color:#ff004444;}
+.tag.sold{background:#0ea5e918;color:#38bdf8;border-color:#0ea5e944;}
+.reason{font-size:13px;color:#94a3b8;margin-top:8px;line-height:1.6;}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.aff-link{display:inline-block;padding:8px 18px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;transition:transform .15s;border:none;cursor:pointer;}
+.aff-link:hover{transform:scale(1.03);}
+.copy-btn{display:inline-block;padding:8px 18px;background:#334155;color:#e2e8f0;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #475569;cursor:pointer;font-family:'Sarabun',sans-serif;transition:background .15s;}
+.copy-btn:hover{background:#475569;}
+.copy-btn.copied{background:#22c55e33;color:#4ade80;border-color:#22c55e66;}
+.cat-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px;}
+.cat-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;text-align:center;}
+.cat-card .cat-name{font-size:14px;color:#a5b4fc;margin-bottom:6px;}
+.cat-card .cat-num{font-size:24px;font-weight:700;color:#4ade80;}
+.cat-card .cat-comm{font-size:13px;color:#94a3b8;margin-top:2px;}
+.footer{text-align:center;padding:30px;color:#475569;font-size:13px;}
+@media(max-width:600px){
+  .card-top{flex-direction:column;}
+  .card-right{text-align:left;}
+  .price{font-size:18px;}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🛒 Shopee <span>Trends</span></h1>
+  <p style="color:#c4b5fd;font-size:15px;">สินค้า trending สำหรับ affiliate ครูช่างเชื่อม</p>
+  <div class="meta" id="meta"></div>
+  <div id="statusBadge"></div>
+</div>
+<div class="container">
+  <div id="catSummary" class="cat-summary"></div>
+  <div id="insights" class="insights" style="display:none;"></div>
+  <div id="products"></div>
+</div>
+<div class="footer">บริษัทชมสุข69 — AI-First Company | ข้อมูลอัปเดตอัตโนมัติทุกวัน</div>
+<script>
+const DATA = {"products": [{"rank": 1, "name": "แว่นตาเชื่อมปรับแสงอัตโนมัติ ป้องกันแสงสะท้อน", "price_min": 104, "price_max": 104, "commission_rate": 5.0, "total_commission": 5.2, "sales": 102, "rating": 4.8, "shop_name": "feimeng2020.th", "category": "Tools & Home Improvement", "reason": "ยอดขายสูงสุด 102 ชิ้น ราคาต่ำ margin สูง ตรงใจช่างเชื่อม 100%", "content_type": "รีวิว, สาธิตใช้งาน", "tiktok_trending": true, "keyword_source": "แว่นตาเชื่อม, แว่นป้องกันแสง, หน้ากากเชื่อม", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F574471169%2F26833696108"}, {"rank": 2, "name": "หน้ากากเชื่อมปรับแสงอัตโนมัติ พับขึ้น-ลงได้ 180°", "price_min": 209, "price_max": 209, "commission_rate": 5.5, "total_commission": 6.0, "sales": 7, "rating": 5.0, "shop_name": "Seeiko", "category": "Tools & Home Improvement", "reason": "คะแนนเต็ม 5.0 ราคาเหมาะ งานเชื่อมต้องมี อุปกรณ์ขั้นต้นสำคัญ", "content_type": "สาธิตใช้งาน, How-to", "tiktok_trending": true, "keyword_source": "หน้ากากเชื่อม, หมวกเชื่อม, เครื่องเชื่อม", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F1548382248%2F40962527993"}, {"rank": 3, "name": "รองเท้าเซฟตี้ SAFETY GOODS หนังแท้ รุ่น PUA", "price_min": 489, "price_max": 489, "commission_rate": 5.5, "total_commission": 6.0, "sales": 17, "rating": 4.8, "shop_name": "SAFETY GOODS", "category": "Safety Footwear", "reason": "PPE ป้องกัน ช่างต้องมี commission 5-6% ยอดขายสม่ำเสมอ", "content_type": "รีวิว, เทียบสินค้า", "tiktok_trending": true, "keyword_source": "รองเท้าเซฟตี้, safety shoes, รองเท้าหัวเหล็ก", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F158278718%2F2359766356"}, {"rank": 4, "name": "Safety Jogger SAFETYRUN รองเท้าเซฟตี้หัวเหล็ก", "price_min": 650, "price_max": 650, "commission_rate": 6.0, "total_commission": 6.2, "sales": 25, "rating": 5.0, "shop_name": "smartsafetycenter", "category": "Safety Footwear", "reason": "Official shop ยอดขาย 25 ชิ้น สินค้า premium ที่ช่างไทยเชื่อถือ commission ดี", "content_type": "รีวิว, เทียบสินค้า", "tiktok_trending": true, "keyword_source": "Safety Jogger, รองเท้าเซฟตี้ premium, safety shoes ของแท้", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F53101186%2F3300514885"}, {"rank": 5, "name": "รองเท้าเซฟตี้ SAFETY JOGGER DAKAR S3 หัว+พื้นเหล็ก", "price_min": 1747, "price_max": 1747, "commission_rate": 5.5, "total_commission": 5.8, "sales": 13, "rating": 4.9, "shop_name": "Safety Jogger Thailand", "category": "Safety Footwear", "reason": "ราคาสูง commission หลัก ขอ 1 ครั้ง/อาทิตย์ก็มีรายได้ดีแล้ว", "content_type": "รีวิว, How-to", "tiktok_trending": false, "keyword_source": "รองเท้าเซฟตี้ premium, safety shoes professional", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F727983550%2F15970312544"}, {"rank": 6, "name": "รองเท้าเซฟตี้ HIO ทรงสปอร์ต หนังทนทาน", "price_min": 519, "price_max": 519, "commission_rate": 5.5, "total_commission": 6.2, "sales": 14, "rating": 4.7, "shop_name": "27th Shop - ตลิ่งชัน", "category": "Safety Footwear", "reason": "ราคากลาง ยอดขายสม่ำเสมอ ลบขี่มอเตอร์ไซค์ได้ appeal สำหรับช่างหนุ่ม", "content_type": "รีวิว, สาธิตใช้งาน", "tiktok_trending": true, "keyword_source": "รองเท้าเซฟตี้สปอร์ต, รองเท้าทน, safety shoes ทำงาน", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F241174049%2F24478138504"}, {"rank": 7, "name": "ปุ่มล็อคเครื่องเจียร แบบล็อคในตัว ทนทาน", "price_min": 73, "price_max": 73, "commission_rate": 4.5, "total_commission": 4.8, "sales": 17, "rating": 4.6, "shop_name": "eagle.th", "category": "Tools & Home Improvement", "reason": "ราคาต่ำ ช่างซื้อเป็นชุดหลายตัว ยอดขาย 17 ครั้ง อุปกรณ์ส่วนเล็กแต่ดีขาย", "content_type": "How-to, เทียบสินค้า", "tiktok_trending": false, "keyword_source": "ปุ่มล็อค, เครื่องเจียร, อุปกรณ์เครื่องมือ", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F61450715%2F20082925059"}, {"rank": 8, "name": "เครื่องเจียรไร้สาย MASARU 20V มอเตอร์บลัสเลส", "price_min": 844, "price_max": 844, "commission_rate": 4.5, "total_commission": 5.2, "sales": 6, "rating": 4.9, "shop_name": "มาซารุ เครื่องมือช่างของแท้", "category": "Tools & Home Improvement", "reason": "เครื่องมือไร้สายยุคใหม่ ราคา 800+ commission ดี ช่างหนุ่มสนใจ ห้องพื้นสูง", "content_type": "รีวิว, สาธิตใช้งาน, How-to", "tiktok_trending": true, "keyword_source": "เครื่องเจียรไร้สาย, เครื่องมือไร้สาย, เครื่องเจียร 20V", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F371836983%2F42505596466"}, {"rank": 9, "name": "เครื่องเจียรลม OKURA 4 นิ้ว OK-7319 ปรับรอบได้", "price_min": 1250, "price_max": 1250, "commission_rate": 4.0, "total_commission": 4.5, "sales": 2, "rating": 5.0, "shop_name": "HS HOME SHOP", "category": "Tools & Home Improvement", "reason": "เครื่องลมระดับช่างมืออาชีพ ราคา 1250 commission ~50 บาท/ครั้ง เหมาะ affiliate ระดับสูง", "content_type": "รีวิว, How-to, สาธิตใช้งาน", "tiktok_trending": false, "keyword_source": "เครื่องเจียรลม, OKURA, เครื่องลมเจียร", "affiliate_link": ""}, {"rank": 10, "name": "กระเป๋าเครื่องมือช่าง IN ขนาด 14-19 นิ้ว พลาสติกแข็ง", "price_min": 98, "price_max": 98, "commission_rate": 4.0, "total_commission": 4.8, "sales": 3, "rating": 4.8, "shop_name": "IN Tools", "category": "Tools & Home Improvement", "reason": "ราคาต่ำ ช่างใหม่เจริญหรือนักเรียนอาชีวะต้องซื้อ ส่วนประกอบครบสเต็ม", "content_type": "รีวิว, How-to", "tiktok_trending": false, "keyword_source": "กระเป๋าเครื่องมือ, กระเป๋าช่าง, toolbag", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F773513451%2F29851362038"}, {"rank": 11, "name": "ของเล่นเครื่องมือช่าง 351PCS สำหรับเด็ก เสริมพัฒนาการ", "price_min": 269, "price_max": 269, "commission_rate": 5.0, "total_commission": 5.8, "sales": 3, "rating": 5.0, "shop_name": "Fairy Tale Shop", "category": "Toys/Educational", "reason": "ครูช่างสามารถสร้างเนื้อหาศึกษา สำหรับลูกน้องหรือลูกหลาน cross-sell ได้ดี", "content_type": "How-to, สาธิตใช้งาน", "tiktok_trending": true, "keyword_source": "ของเล่นเครื่องมือ, ช่างจิ๋ว, ของเล่นเสริมพัฒนา", "affiliate_link": "https://shope.ee/an_redir?origin_link=https%3A%2F%2Fshopee.co.th%2Fproduct%2F509290124%2F24870001274"}], "insights": ["🔥 หมวด Safety Footwear (รองเท้าเซฟตี้) นำหนัก 40% ของลิสต์ ยอดขายรวม 69 ชิ้น commission 5.5-6% = รายได้เสถียร ช่างเชื่อมต้องสวมใส่ทุกวัน ตลาดเฉพาะ high-intent", "⚡ Tools & Home Improvement ที่ rakyat price (73-209 บาท) มีสต็อกมากมาย (10k+) ยอดขาย volume สูง 102+17 ชิ้น = ทำ affiliate ซ้ำๆ ดีถ้าทำ TikTok short form \"ชมพลอย\" แต่ margin ไม่มากต่อชิ้น ต้องขาย 10-20 ชิ้น/สัปดาห์", "💡 โอกาส Content: ช่างเชื่อมมี 3 โนด (1) PPE รีวิว ค่าซ่อม (2) DIY How-to มาก เช่น \"ล็อคหมวกเชื่อมหลวม\" (3) Trending TikTok \"ตั้งค่าแว่นปรับแสง\" ตอนเชื่อมสด ว่าไร ช่างรัง affiliate ได้ 6-8 ทีมในสัปดาห์"], "categories_summary": {"Safety Footwear": {"count": 5, "avg_commission": 5.74}, "Tools & Home Improvement": {"count": 5, "avg_commission": 4.96}, "Toys/Educational": {"count": 1, "avg_commission": 5.8}}, "updated": "2026-06-25", "source": "shopee_feed+tiktok_ddgs", "niche": "ครูช่างเชื่อม / อาชีวศึกษา", "feed_status": "✅ ใช้ข้อมูลจริงจาก Shopee Product Feed"};
+
+function copyLink(link, btn) {
+  navigator.clipboard.writeText(link).then(function() {
+    btn.textContent = '✅ คัดลอกแล้ว!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = '📋 คัดลอก Link'; btn.classList.remove('copied'); }, 2000);
+  }).catch(function() {
+    var t = document.createElement('textarea');
+    t.value = link; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+    btn.textContent = '✅ คัดลอกแล้ว!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = '📋 คัดลอก Link'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+(function render() {
+  var data = DATA;
+  document.getElementById('meta').innerHTML =
+    '📅 อัปเดตล่าสุด: <strong>' + (data.updated || '?') + '</strong> | แหล่งข้อมูล: ' + (data.source || '?');
+
+  var sb = document.getElementById('statusBadge');
+  var fs = data.feed_status || '';
+  if (fs.indexOf('✅') >= 0) sb.innerHTML = '<div class="status ok">' + fs + '</div>';
+  else if (fs) sb.innerHTML = '<div class="status warn">' + fs + '</div>';
+
+  var cats = data.categories_summary || {};
+  var catHtml = '';
+  for (var name in cats) {
+    var info = cats[name];
+    catHtml += '<div class="cat-card"><div class="cat-name">' + name + '</div>' +
+      '<div class="cat-num">' + (info.count || 0) + ' <small style="font-size:13px;color:#94a3b8;">สินค้า</small></div>' +
+      '<div class="cat-comm">commission เฉลี่ย ' + (info.avg_commission || 0).toFixed(1) + '%</div></div>';
+  }
+  document.getElementById('catSummary').innerHTML = catHtml;
+
+  var ins = data.insights || [];
+  if (ins.length) {
+    var insDiv = document.getElementById('insights');
+    insDiv.style.display = 'block';
+    insDiv.innerHTML = '<h2>💡 Insights</h2><ol>' + ins.map(function(i) { return '<li>' + i + '</li>'; }).join('') + '</ol>';
+  }
+
+  var products = data.products || [];
+  var prodHtml = products.map(function(p, idx) {
+    var stars = p.rating ? '⭐ ' + p.rating : '';
+    var priceText = p.price_min === p.price_max
+      ? '฿' + (p.price_min || 0).toLocaleString()
+      : '฿' + (p.price_min || 0).toLocaleString() + ' - ฿' + (p.price_max || 0).toLocaleString();
+
+    var tags = '';
+    if (p.category) tags += '<span class="tag cat">' + p.category + '</span>';
+    if (p.total_commission) tags += '<span class="tag comm">💰 ' + p.total_commission + '%</span>';
+    if (p.sales) tags += '<span class="tag sold">📦 ขาย ' + p.sales.toLocaleString() + '</span>';
+    if (p.content_type) tags += '<span class="tag content">🎬 ' + p.content_type + '</span>';
+    if (p.tiktok_trending) tags += '<span class="tag tiktok">🔥 TikTok</span>';
+
+    var btns = '';
+    if (p.affiliate_link) {
+      btns = '<div class="btn-row">' +
+        '<a href="' + p.affiliate_link + '" target="_blank" class="aff-link">🔗 เปิดสินค้า</a>' +
+        '<button class="copy-btn" onclick="copyLink(\''+p.affiliate_link.replace(/'/g,"\\'")+'\', this)">📋 คัดลอก Link</button>' +
+        '</div>';
+    }
+
+    return '<div class="card">' +
+      '<div class="card-top">' +
+        '<div class="rank">' + (p.rank || '') + '</div>' +
+        '<div class="card-info"><h3>' + (p.name || '') + '</h3>' +
+          '<div class="shop">' + (p.shop_name || '') + ' ' + stars + '</div></div>' +
+        '<div class="card-right"><div class="price">' + priceText + '</div></div>' +
+      '</div>' +
+      '<div class="tags">' + tags + '</div>' +
+      '<div class="reason">' + (p.reason || '') + '</div>' +
+      btns +
+    '</div>';
+  }).join('');
+
+  document.getElementById('products').innerHTML = prodHtml;
+})();
+</script>
+</body>
+</html>
