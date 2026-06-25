@@ -322,13 +322,13 @@ select:focus{outline:none;border-color:var(--accent)}
 
 <script>
 // ===== PATCH DATA =====
-const PATCH_CHANGES = {"murad": {"from": "A", "to": "S", "type": "buff"}, "hayate": {"from": "S", "to": "A", "type": "nerf"}, "ilumia": {"from": "B", "to": "A", "type": "buff"}, "lumburr": {"from": "B", "to": "S", "type": "buff"}};
-const PATCH_DATE = "05/06/2026 21:11";
+const PATCH_CHANGES = {"telAnnas": {"from": "S", "to": "A", "type": "nerf"}, "yorn": {"from": "A", "to": "B", "type": "nerf"}, "laville": {"from": "S", "to": "A", "type": "nerf"}, "hayate": {"from": "B", "to": "S", "type": "buff"}, "omen": {"from": "S", "to": "A", "type": "nerf"}, "ryoma": {"from": "B", "to": "A", "type": "buff"}, "tulen": {"from": "S", "to": "A", "type": "nerf"}, "ilumia": {"from": "A", "to": "B", "type": "nerf"}, "grakk": {"from": "S", "to": "B", "type": "nerf"}, "ormarr": {"from": "A", "to": "B", "type": "nerf"}, "omega": {"from": "A", "to": "B", "type": "nerf"}, "cresht": {"from": "B", "to": "A", "type": "buff"}, "lumburr": {"from": "A", "to": "B", "type": "nerf"}, "zip": {"from": "S", "to": "A", "type": "nerf"}, "xeniel": {"from": "A", "to": "B", "type": "nerf"}};
+const PATCH_DATE = "25/06/2026 12:24";
 
 // ===== HERO DATABASE =====
 const HEROES = {
-  // ⏰ อัปเดตล่าสุด: 2026-06-05 21:11
-  telAnnas:{name:"Tel'Annas",nameTH:"เทลอันนัส",emoji:"🏹",role:"marksman",tier:"S",
+  // ⏰ อัปเดตล่าสุด: 2026-06-25 12:24
+  telAnnas:{name:"Tel'Annas",nameTH:"เทลอันนัส",emoji:"🏹",role:"marksman",tier:"A",
     stats:{hp:3150,atk:185,armor:80,magRes:50,as:0.95,ms:360},
     power:{mobility:5,cc:3,burst:6,sustain:3,teamfight:8,split:4,early:5,late:9},
     dmgType:"physical",scaleStat:"atk",
@@ -370,7 +370,7 @@ const HEROES = {
     technique:"Farm ให้ถึง Lv4 ก่อนไฟต์ · Drone ต้องไม่โดน Kill · เล่น Late Game คือ Win",
     items:["clavesSancti","rankBreaker","omniArms","fenrirsTooh","azureKnife","ultrabane"]},
 
-  yorn:{name:"Yorn",nameTH:"ยอร์น",emoji:"🎸",role:"marksman",tier:"A",
+  yorn:{name:"Yorn",nameTH:"ยอร์น",emoji:"🎸",role:"marksman",tier:"B",
     stats:{hp:3050,atk:178,armor:78,magRes:50,as:0.9,ms:360},
     power:{mobility:4,cc:4,burst:7,sustain:3,teamfight:7,split:3,early:6,late:8},
     dmgType:"physical",scaleStat:"atk",
@@ -482,7 +482,7 @@ const HEROES = {
     technique:"Stun ด้วย Shriek → Burst ทันที · Jungle Control สำคัญ · Venom ลด Armor ก่อน Combo",
     items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
 
-  hayate:{name:"Hayate",nameTH:"ฮายาเตะ",emoji:"🌪",role:"assassin",tier:"B",
+  hayate:{name:"Hayate",nameTH:"ฮายาเตะ",emoji:"🌪",role:"assassin",tier:"S",
     stats:{hp:3050,atk:178,armor:79,magRes:51,as:1.1,ms:400},
     power:{mobility:10,cc:1,burst:7,sustain:2,teamfight:5,split:9,early:6,late:7},
     dmgType:"physical",scaleStat:"atk",
@@ -510,7 +510,7 @@ const HEROES = {
     technique:"Mark ด้วย Blossom → Dash Joust หลาย ๆ รอบ → Grand Duel ปิด · Split Push และ Duel มือ 1v1",
     items:["rankBreaker","omniArms","fenrirsTooh","soulReaver","atkItem","ultrabane"]},
 
-  omen:{name:"Omen",nameTH:"โอเมน",emoji:"🌑",role:"warrior",tier:"S",
+  omen:{name:"Omen",nameTH:"โอเมน",emoji:"🌑",role:"warrior",tier:"A",
     stats:{hp:3800,atk:185,armor:110,magRes:60,as:0.95,ms:380},
     power:{mobility:6,cc:6,burst:7,sustain:7,teamfight:9,split:6,early:7,late:9},
     dmgType:"physical",scaleStat:"atk",
@@ -566,7 +566,7 @@ const HEROES = {
     technique:"Engage ด้วย Fox Form + Pounce → Burst · เหมาะ Solo Lane และ Teamfight · Snowball เร็ว",
     items:["rankBreaker","soulReaver","omniArms","fenrirsTooh","atkItem","ultrabane"]},
 
-  ryoma:{name:"Ryoma",nameTH:"เรียวม่า",emoji:"🗡",role:"warrior",tier:"B",
+  ryoma:{name:"Ryoma",nameTH:"เรียวม่า",emoji:"🗡",role:"warrior",tier:"A",
     stats:{hp:3550,atk:184,armor:100,magRes:55,as:0.95,ms:375},
     power:{mobility:6,cc:4,burst:7,sustain:7,teamfight:7,split:7,early:7,late:7},
     dmgType:"physical",scaleStat:"atk",
@@ -594,7 +594,7 @@ const HEROES = {
     technique:"Ult เปิด Teamfight ด้วย Cyclone Staff · Clone ใช้หลอกเวลา HP ต่ำ",
     items:["rankBreaker","soulReaver","omniArms","fenrirsTooh","atkItem","ultrabane"]},
 
-  tulen:{name:"Tulen",nameTH:"ทูเลน",emoji:"🌩",role:"mage",tier:"S",
+  tulen:{name:"Tulen",nameTH:"ทูเลน",emoji:"🌩",role:"mage",tier:"A",
     stats:{hp:3050,atk:160,armor:75,magRes:52,as:0.85,ms:360},
     power:{mobility:8,cc:5,burst:10,sustain:2,teamfight:9,split:5,early:7,late:9},
     dmgType:"magic",scaleStat:"ap",
@@ -636,7 +636,7 @@ const HEROES = {
     technique:"Poke ด้วย Soul Orb · Ult Release ใช้จาก Bush ล่อ · ต้องมี Tank ปกป้อง",
     items:["staff","boomstick","violetHatchet","apocalypse","magicBoots","violetHatchet2"]},
 
-  ilumia:{name:"Ilumia",nameTH:"อิลูเมีย",emoji:"🌟",role:"mage",tier:"A",
+  ilumia:{name:"Ilumia",nameTH:"อิลูเมีย",emoji:"🌟",role:"mage",tier:"B",
     stats:{hp:3000,atk:163,armor:74,magRes:51,as:0.85,ms:355},
     power:{mobility:5,cc:8,burst:7,sustain:3,teamfight:10,split:3,early:5,late:8},
     dmgType:"magic",scaleStat:"ap",
@@ -664,7 +664,7 @@ const HEROES = {
     technique:"Ice Wall แบ่งทีมศัตรู → Blizzard ถล่มคนที่ถูกแยก · Zoning ได้ดี",
     items:["staff","boomstick","apocalypse","magicBoots","violetHatchet","violetHatchet2"]},
 
-  grakk:{name:"Grakk",nameTH:"แกรก",emoji:"🦑",role:"tank",tier:"S",
+  grakk:{name:"Grakk",nameTH:"แกรก",emoji:"🦑",role:"tank",tier:"B",
     stats:{hp:4200,atk:150,armor:140,magRes:80,as:0.8,ms:365},
     power:{mobility:6,cc:9,burst:5,sustain:6,teamfight:10,split:4,early:8,late:9},
     dmgType:"physical",scaleStat:"hp",
@@ -720,7 +720,7 @@ const HEROES = {
     technique:"Guard ให้ ADC · Excalibur ดัน Backline ออก · เน้น Peel มากกว่า Engage",
     items:["mail","spear","shield","trinketBoots","armor","hp"]},
 
-  ormarr:{name:"Ormarr",nameTH:"ออร์มาร์",emoji:"🪨",role:"tank",tier:"A",
+  ormarr:{name:"Ormarr",nameTH:"ออร์มาร์",emoji:"🪨",role:"tank",tier:"B",
     stats:{hp:4300,atk:148,armor:142,magRes:82,as:0.78,ms:360},
     power:{mobility:5,cc:9,burst:4,sustain:7,teamfight:9,split:3,early:8,late:8},
     dmgType:"physical",scaleStat:"hp",
@@ -734,7 +734,7 @@ const HEROES = {
     technique:"Tremor เปิด Teamfight · Spiked Armor ต้าน Assassin · เป็น Hard Engage Tank",
     items:["mail","spear","shield","trinketBoots","armor","hp"]},
 
-  lumburr:{name:"Lumburr",nameTH:"ลัมเบอร์",emoji:"🐺",role:"support",tier:"A",
+  lumburr:{name:"Lumburr",nameTH:"ลัมเบอร์",emoji:"🐺",role:"support",tier:"B",
     stats:{hp:3800,atk:142,armor:120,magRes:72,as:0.82,ms:365},
     power:{mobility:6,cc:9,burst:3,sustain:7,teamfight:9,split:3,early:7,late:8},
     dmgType:"physical",scaleStat:"hp",
@@ -748,7 +748,7 @@ const HEROES = {
     technique:"Entomb CC เดี่ยว → Groundswell AOE · Roam ช่วยทุก Lane ต้องมี Vision",
     items:["mail","spear","shield","trinketBoots","armor","hp"]},
 
-  zip:{name:"Zip",nameTH:"ซิป",emoji:"🎪",role:"support",tier:"S",
+  zip:{name:"Zip",nameTH:"ซิป",emoji:"🎪",role:"support",tier:"A",
     stats:{hp:3600,atk:138,armor:115,magRes:70,as:0.82,ms:360},
     power:{mobility:5,cc:8,burst:3,sustain:9,teamfight:9,split:2,early:7,late:8},
     dmgType:"physical",scaleStat:"hp",
@@ -833,7 +833,7 @@ const HEROES = {
     technique:"เน้น Sustain ไฟต์ยาว · Lifesteal สูงมาก ยิ่งต่ำยิ่งแข็ง · เหมาะ vs DOT team",
     items:["omniArms","soulReaver","rankBreaker","fenrirsTooh","atkItem","hp"]},
 
-  xeniel:{name:"Xeniel",nameTH:"ซีเนียล",emoji:"👼",role:"support",tier:"A",
+  xeniel:{name:"Xeniel",nameTH:"ซีเนียล",emoji:"👼",role:"support",tier:"B",
     stats:{hp:3700,atk:138,armor:118,magRes:74,as:0.8,ms:360},
     power:{mobility:5,cc:7,burst:3,sustain:10,teamfight:9,split:2,early:7,late:9},
     dmgType:"magic",scaleStat:"hp",
@@ -917,7 +917,7 @@ const HEROES = {
     technique:"Snipe ดาเมจไกลสูงมาก · Final Shot Execute ADC ที่ HP ต่ำ · ซ่อนใน Bush ก่อน Snipe",
     items:["soulReaver","rankBreaker","omniArms","clawsOfTalons","boots","atkItem"]},
 
-  omega:{name:"Omega",nameTH:"โอเมกา",emoji:"🤖",role:"tank",tier:"A",
+  omega:{name:"Omega",nameTH:"โอเมกา",emoji:"🤖",role:"tank",tier:"B",
     stats:{hp:4400,atk:150,armor:145,magRes:83,as:0.78,ms:355},
     power:{mobility:4,cc:8,burst:5,sustain:8,teamfight:9,split:3,early:8,late:9},
     dmgType:"physical",scaleStat:"hp",
@@ -931,7 +931,7 @@ const HEROES = {
     technique:"Shield Charge เปิดไฟต์ → Devastate ดัน → Reconstruct เมื่อ HP ต่ำ · แข็งมากปลายเกม",
     items:["mail","spear","shield","trinketBoots","armor","hp"]},
 
-  cresht:{name:"Cresht",nameTH:"เครสต์",emoji:"🦀",role:"tank",tier:"B",
+  cresht:{name:"Cresht",nameTH:"เครสต์",emoji:"🦀",role:"tank",tier:"A",
     stats:{hp:4250,atk:147,armor:140,magRes:80,as:0.8,ms:365},
     power:{mobility:6,cc:8,burst:4,sustain:6,teamfight:8,split:4,early:7,late:8},
     dmgType:"physical",scaleStat:"hp",
@@ -959,7 +959,7 @@ const HEROES = {
     technique:"Oil Spill ก่อน → Fire Breath จุดไฟ → Inferno ปิด Combo · Zoning ด้วย Oil Spill",
     items:["staff","boomstick","apocalypse","violetHatchet","magicBoots","violetHatchet2"]},
 
-  laville:{name:"Laville",nameTH:"ลาวีล",emoji:"🔫",role:"marksman",tier:"S",
+  laville:{name:"Laville",nameTH:"ลาวีล",emoji:"🔫",role:"marksman",tier:"A",
     stats:{hp:2980,atk:176,armor:74,magRes:50,as:1.05,ms:365},
     power:{mobility:6,cc:2,burst:9,sustain:2,teamfight:7,split:5,early:7,late:9},
     dmgType:"physical",scaleStat:"atk",
