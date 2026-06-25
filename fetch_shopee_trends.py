@@ -584,6 +584,11 @@ function copyLink(link, btn) {
         '<a href="' + p.affiliate_link + '" target="_blank" class="aff-link">🔗 เปิดสินค้า</a>' +
         '<button class="copy-btn" onclick="copyLink(\\''+p.affiliate_link.replace(/'/g,"\\\\'")+'\\', this)">📋 คัดลอก Link</button>' +
         '</div>';
+    } else {
+      var searchUrl = 'https://shopee.co.th/search?keyword=' + encodeURIComponent(p.name || '');
+      btns = '<div class="btn-row">' +
+        '<a href="' + searchUrl + '" target="_blank" class="aff-link" style="background:linear-gradient(135deg,#6366f1,#4f46e5);">🔍 ค้นหาใน Shopee</a>' +
+        '</div>';
     }
 
     return '<div class="card">' +
