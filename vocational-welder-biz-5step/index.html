@@ -25,16 +25,69 @@
         </div>
     </header>
 
+    <!-- Goal Dashboard -->
+    <div class="goal-dashboard hidden" id="goal-dashboard">
+        <div class="goal-inner">
+            <span class="goal-label">🎯 เป้าหมาย: <strong id="goal-name"></strong></span>
+            <div class="goal-progress"><div class="goal-bar" id="goal-bar"></div></div>
+            <span class="goal-amount"><span id="goal-current">0</span> / <span id="goal-target">0</span> บาท</span>
+        </div>
+    </div>
+
     <div class="app-container">
 
-        <div class="phase-banner phase-prep" id="phase-1-banner">
+        <!-- Stage 0: ตั้งเป้าหมาย -->
+        <section id="stage-0" class="stage active">
+            <h1 class="stage-title"><span class="day-badge" style="background:#b45309">ก่อนเริ่ม</span> ตั้งเป้าหมายรายได้ของคุณ</h1>
+            <p class="hint">ครูกำหนดเป้าหมาย หรือเลือกเอง — จะทำธุรกิจเพื่ออะไร?</p>
+
+            <div class="name-input-row">
+                <label for="student-name">ชื่อของคุณ:</label>
+                <input type="text" id="student-name" placeholder="พิมพ์ชื่อ..." maxlength="20" autocomplete="off">
+            </div>
+
+            <div class="goals-grid" id="goals-grid">
+                <div class="goal-card" onclick="pickGoal(100000,'เงินเก็บแสนแรก')">
+                    <div class="goal-icon">💰</div>
+                    <h3>100,000</h3>
+                    <p>เงินเก็บแสนแรก</p>
+                </div>
+                <div class="goal-card" onclick="pickGoal(1000000,'เงินล้านแรก')">
+                    <div class="goal-icon">🏆</div>
+                    <h3>1,000,000</h3>
+                    <p>เงินล้านแรก</p>
+                </div>
+                <div class="goal-card" onclick="pickGoal(5000000,'ทุนเปิดกิจการ')">
+                    <div class="goal-icon">🏗️</div>
+                    <h3>5,000,000</h3>
+                    <p>ทุนเปิดกิจการ</p>
+                </div>
+                <div class="goal-card" onclick="pickGoal(10000000,'ซื้อบ้าน+ที่ดิน')">
+                    <div class="goal-icon">🏠</div>
+                    <h3>10,000,000</h3>
+                    <p>ซื้อบ้าน+ที่ดิน</p>
+                </div>
+                <div class="goal-card" onclick="pickGoal(50000000,'อิสรภาพการเงิน')">
+                    <div class="goal-icon">🌴</div>
+                    <h3>50,000,000</h3>
+                    <p>อิสรภาพการเงิน</p>
+                </div>
+                <div class="goal-card" onclick="pickGoal(100000000,'มหาเศรษฐี')">
+                    <div class="goal-icon">👑</div>
+                    <h3>100,000,000</h3>
+                    <p>มหาเศรษฐี</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="phase-banner phase-prep hidden" id="phase-1-banner">
             <span class="phase-tag">ระยะที่ 1</span>
             <h2>ระยะเตรียมตัวและสร้างสรรค์ไอเดีย</h2>
             <p class="en">Preparation &amp; Ideation</p>
         </div>
 
         <!-- วันที่ 1 -->
-        <section id="stage-1" class="stage active">
+        <section id="stage-1" class="stage hidden">
             <h1 class="stage-title"><span class="day-badge">วันที่ 1</span> ลงทะเบียนออนไลน์ผ่าน OVEC Cloud</h1>
             <div class="content-panel">
                 <div class="panel-icon">☁️</div>
@@ -130,10 +183,11 @@
                 <div class="acc-row total"><span>กำไรสุทธิ:</span><span class="text-orange" id="profit-amount"></span></div>
             </div>
             <button class="btn btn-gold mt-20" id="earn-btn" onclick="earnMoney()">💰 บันทึกผลประกอบการ!</button>
+            <div id="round-counter" class="round-counter"></div>
             <div id="end-message" class="hidden mt-20">
-                <h2 class="text-green">สำเร็จ! ครบรอบ PDCA แล้ว!</h2>
-                <p>ทำซ้ำวงจร PDCA เพื่อขยายธุรกิจ ปรับปรุงงาน และเพิ่มกำไร!</p>
-                <button class="btn btn-outline" onclick="restartCycle()">🔄 ทำรอบ PDCA ถัดไป (รับงานเพิ่ม)</button>
+                <h2 class="text-green" id="end-heading"></h2>
+                <p id="end-sub"></p>
+                <button class="btn btn-outline mt-20" id="end-btn"></button>
             </div>
         </section>
 

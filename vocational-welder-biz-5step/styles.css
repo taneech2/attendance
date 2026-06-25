@@ -130,6 +130,42 @@ hr { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
 .type-card h4 { font-size: .85rem; margin-bottom: 4px; }
 .type-card p { font-size: .75rem; color: var(--text-sub); line-height: 1.4; }
 
+/* Goal Dashboard */
+.goal-dashboard {
+    background: linear-gradient(90deg, #1e3a5f, #2563eb);
+    padding: 12px 20px; position: sticky; top: 0; z-index: 50;
+}
+.goal-inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.goal-label { color: #fff; font-size: .85rem; white-space: nowrap; }
+.goal-label strong { color: #fbbf24; }
+.goal-progress { flex: 1; min-width: 120px; height: 14px; background: rgba(255,255,255,.15); border-radius: 10px; overflow: hidden; }
+.goal-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #f59e0b, #22c55e); transition: width .8s ease; border-radius: 10px; }
+.goal-amount { color: #fbbf24; font-size: .85rem; font-weight: 600; white-space: nowrap; }
+
+/* Goal Selection */
+.name-input-row {
+    display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 20px;
+}
+.name-input-row label { font-size: 1rem; font-weight: 500; color: var(--accent); white-space: nowrap; }
+.name-input-row input {
+    border: 2px solid var(--border); border-radius: 8px; padding: 10px 16px;
+    font-size: 1rem; font-family: inherit; width: 200px; transition: .2s;
+}
+.name-input-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 8px rgba(37,99,235,.2); }
+
+.goals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.goal-card {
+    background: var(--surface-alt); border: 2px solid var(--border); border-radius: 12px;
+    padding: 18px 10px; text-align: center; cursor: pointer; transition: .2s;
+}
+.goal-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+.goal-icon { font-size: 2rem; margin-bottom: 6px; }
+.goal-card h3 { font-size: 1.1rem; color: var(--accent); margin-bottom: 2px; }
+.goal-card p { font-size: .8rem; color: var(--text-sub); }
+
+/* Round Counter */
+.round-counter { text-align: center; font-size: .85rem; color: var(--text-sub); margin: 10px 0; }
+
 .site-footer { text-align: center; padding: 20px; font-size: .8rem; color: var(--text-sub); }
 .site-footer p { margin: 2px 0; }
 .site-footer .copyright { font-weight: 500; color: var(--text); }

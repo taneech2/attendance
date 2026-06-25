@@ -1,12 +1,5 @@
-const CONFIG = {
-    storyTextHtml: `
-        <strong>ขั้นตอนที่ 1 — สมัครเป็นผู้ประกอบการ EP</strong><br>
-        ลงทะเบียนที่เว็บไซต์ <strong>ศูนย์บ่มเพาะผู้ประกอบการอาชีวศึกษา</strong> ผ่านระบบ OVEC Cloud<br><br>
-        <strong>สิ่งที่ต้องเตรียม:</strong><br>
-        • ระบุรหัสสถานศึกษา 15 หลัก<br>
-        • กรอกข้อมูลส่วนตัวและแผนกวิชา<br>
-        • เลือกประเภทธุรกิจที่สนใจ
-    `,
+var CONFIG = {
+    storyTextHtml: '<strong>ขั้นตอนที่ 1 — สมัครเป็นผู้ประกอบการ EP</strong><br>ลงทะเบียนที่เว็บไซต์ <strong>ศูนย์บ่มเพาะผู้ประกอบการอาชีวศึกษา</strong> ผ่านระบบ OVEC Cloud<br><br><strong>สิ่งที่ต้องเตรียม:</strong><br>• ระบุรหัสสถานศึกษา 15 หลัก<br>• กรอกข้อมูลส่วนตัวและแผนกวิชา<br>• เลือกประเภทธุรกิจที่สนใจ',
     businessPaths: [
         { name: "รับจ้างเชื่อม/ซ่อมแซม", profit: 8000, type: "ธุรกิจเจ้าของคนเดียว", desc: "รับงานเชื่อม ซ่อมประตู รั้วเหล็ก ตะแกรง", image: "", icon: "🔧" },
         { name: "เฟอร์นิเจอร์เหล็กสไตล์ลอฟท์", profit: 12000, type: "ห้างหุ้นส่วน", desc: "ร่วมกับเพื่อนผลิตโต๊ะ ชั้นวาง ของแต่งร้าน", image: "assets/table.png", icon: "" },
@@ -19,46 +12,88 @@ const CONFIG = {
         "ชาวบ้านในชุมชน — ต้องการซ่อมแซมทั่วไป",
         "โรงงาน / ไซต์ก่อสร้าง — ต้องการช่างเชื่อม"
     ],
-    pitchTemplate: `
-        "สวัสดีครับ ผมนักเรียนช่างเชื่อมจากวิทยาลัยการอาชีพบุรีรัมย์
-        ผมอยากนำเสนอ <strong>[สินค้า]</strong> ที่ผมทำขึ้นมา<br><br>
-        <strong>ปัญหา:</strong> ลูกค้าหลายท่านหาช่างเชื่อมคุณภาพดี ราคาเป็นธรรมได้ยาก<br>
-        <strong>ทางออก:</strong> ผมใช้ทักษะจากห้องปฏิบัติการจริง รอยเชื่อมทุกจุดได้มาตรฐาน<br>
-        <strong>ข้อเสนอ:</strong> สั่งทำได้ตามแบบ ราคานักเรียน งานคุณภาพครับ"
-    `
+    pitchTemplate: '"สวัสดีครับ ผมนักเรียนช่างเชื่อมจากวิทยาลัยการอาชีพบุรีรัมย์ ผมอยากนำเสนอ <strong>[สินค้า]</strong> ที่ผมทำขึ้นมา<br><br><strong>ปัญหา:</strong> ลูกค้าหลายท่านหาช่างเชื่อมคุณภาพดี ราคาเป็นธรรมได้ยาก<br><strong>ทางออก:</strong> ผมใช้ทักษะจากห้องปฏิบัติการจริง รอยเชื่อมทุกจุดได้มาตรฐาน<br><strong>ข้อเสนอ:</strong> สั่งทำได้ตามแบบ ราคานักเรียน งานคุณภาพครับ"'
 };
 
-let state = { currentStage: 1, totalEarned: 0, bizName: '', bizImage: '', estimatedProfit: 0, targetCustomer: '' };
+var state = {
+    goalTarget: 0, goalName: '', currentFund: 0, round: 0,
+    playerName: '', bizName: '', bizImage: '', estimatedProfit: 0, targetCustomer: ''
+};
 
-function initGame() {
+function formatMoney(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' ล้าน';
+    return n.toLocaleString();
+}
+
+function pickGoal(amount, name) {
+    state.goalTarget = amount;
+    state.goalName = name;
+    state.currentFund = 0;
+    state.round = 0;
+    state.playerName = document.getElementById('student-name').value.trim() || 'นักเรียนช่าง';
+
+    document.getElementById('goal-dashboard').classList.remove('hidden');
+    document.getElementById('goal-name').innerText = name;
+    document.getElementById('goal-target').innerText = formatMoney(amount);
+    document.getElementById('goal-current').innerText = '0';
+    document.getElementById('goal-bar').style.width = '0%';
+
     document.getElementById('ui-story-text').innerHTML = CONFIG.storyTextHtml;
+    buildCards();
+    buildCustomers();
+    showStage(1);
+    document.getElementById('phase-1-banner').classList.remove('hidden');
+}
 
-    const grid = document.getElementById('ui-business-cards');
+function buildCards() {
+    var grid = document.getElementById('ui-business-cards');
     grid.innerHTML = '';
-    CONFIG.businessPaths.forEach(biz => {
-        const media = biz.icon ? `<div class="icon-placeholder">${biz.icon}</div>` : `<img src="${biz.image}" alt="${biz.name}">`;
-        grid.innerHTML += `<div class="biz-card" onclick="selectBiz('${biz.name.replace(/'/g,"\\'")}','${biz.image}',${biz.profit})">${media}<h3>${biz.name}</h3><p>${biz.type}: ${biz.desc}</p><small>คาดการณ์กำไร: ${biz.profit.toLocaleString()} บาท</small></div>`;
+    CONFIG.businessPaths.forEach(function(biz) {
+        var media = biz.icon ? '<div class="icon-placeholder">' + biz.icon + '</div>' : '<img src="' + biz.image + '" alt="' + biz.name + '">';
+        var div = document.createElement('div');
+        div.className = 'biz-card';
+        div.innerHTML = media + '<h3>' + biz.name + '</h3><p>' + biz.type + ': ' + biz.desc + '</p><small>คาดการณ์กำไร: ' + biz.profit.toLocaleString() + ' บาท</small>';
+        div.onclick = function() { selectBiz(biz.name, biz.image, biz.profit); };
+        grid.appendChild(div);
     });
+}
 
-    const list = document.getElementById('ui-customers-list');
+function buildCustomers() {
+    var list = document.getElementById('ui-customers-list');
     list.innerHTML = '';
-    CONFIG.customers.forEach(c => {
-        list.innerHTML += `<button class="btn btn-outline" onclick="selectTarget('${c.replace(/'/g,"\\'")}')">${c}</button>`;
+    CONFIG.customers.forEach(function(c) {
+        var btn = document.createElement('button');
+        btn.className = 'btn btn-outline';
+        btn.innerText = c;
+        btn.onclick = function() { selectTarget(c); };
+        list.appendChild(btn);
     });
+}
+
+function updateGoalUI() {
+    document.getElementById('goal-current').innerText = formatMoney(state.currentFund);
+    var pct = Math.min((state.currentFund / state.goalTarget) * 100, 100);
+    document.getElementById('goal-bar').style.width = pct + '%';
 }
 
 function updateTimeline(step) {
-    document.querySelectorAll('.tl-step').forEach(el => {
-        const s = +el.dataset.step;
+    document.querySelectorAll('.tl-step').forEach(function(el) {
+        var s = parseInt(el.dataset.step);
         el.classList.toggle('done', s < step);
         el.classList.toggle('active', s === step);
     });
-    document.querySelectorAll('.tl-line').forEach((line, i) => { line.classList.toggle('done', i < step - 1); });
+    document.querySelectorAll('.tl-line').forEach(function(line, i) {
+        line.classList.toggle('done', i < step - 1);
+    });
+}
+
+function showStage(n) {
+    document.querySelectorAll('.stage').forEach(function(s) { s.classList.add('hidden'); });
+    document.getElementById('stage-' + n).classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function nextStage(n) {
-    document.querySelectorAll('.stage').forEach(s => s.classList.add('hidden'));
-    document.getElementById('stage-' + n).classList.remove('hidden');
     document.getElementById('phase-1-banner').classList.toggle('hidden', n > 2);
     if (n >= 3) document.getElementById('phase-2-banner').classList.remove('hidden');
     else document.getElementById('phase-2-banner').classList.add('hidden');
@@ -70,14 +105,17 @@ function nextStage(n) {
         document.getElementById('ui-pitch-text').innerHTML = CONFIG.pitchTemplate.replace('[สินค้า]', state.bizName);
     }
     if (n === 5) {
-        var rev = state.estimatedProfit * 2, cost = state.estimatedProfit;
+        state.round++;
+        document.getElementById('round-counter').innerText = 'รอบ PDCA ที่ ' + state.round;
+        var rev = state.estimatedProfit * 2;
+        var cost = state.estimatedProfit;
         document.getElementById('revenue-amount').innerText = rev.toLocaleString();
         document.getElementById('cost-amount').innerText = cost.toLocaleString();
         document.getElementById('profit-amount').innerText = (rev - cost).toLocaleString() + ' บาท';
         document.getElementById('earn-btn').classList.remove('hidden');
         document.getElementById('end-message').classList.add('hidden');
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showStage(n);
 }
 
 function selectBiz(name, image, profit) {
@@ -85,12 +123,38 @@ function selectBiz(name, image, profit) {
     document.getElementById('chosen-biz').innerText = name;
     nextStage(3);
 }
-function selectTarget(target) { state.targetCustomer = target; nextStage(4); }
+
+function selectTarget(target) {
+    state.targetCustomer = target;
+    nextStage(4);
+}
+
 function earnMoney() {
-    state.totalEarned += state.estimatedProfit;
+    state.currentFund += state.estimatedProfit;
+    if (state.currentFund > state.goalTarget) state.currentFund = state.goalTarget;
+    updateGoalUI();
+
     document.getElementById('earn-btn').classList.add('hidden');
     document.getElementById('end-message').classList.remove('hidden');
-}
-function restartCycle() { nextStage(2); }
 
-initGame();
+    var heading = document.getElementById('end-heading');
+    var sub = document.getElementById('end-sub');
+    var btn = document.getElementById('end-btn');
+
+    if (state.currentFund >= state.goalTarget) {
+        heading.innerText = '🎉 สำเร็จ! บรรลุเป้าหมาย "' + state.goalName + '" แล้ว!';
+        heading.style.color = '#b45309';
+        sub.innerText = state.playerName + ' ใช้ ' + state.round + ' รอบ PDCA ทำเป้าหมาย ' + formatMoney(state.goalTarget) + ' บาทสำเร็จ!';
+        btn.innerText = '🔄 เล่นใหม่ เปลี่ยนเป้าหมาย';
+        btn.onclick = function() { location.reload(); };
+    } else {
+        var remain = state.goalTarget - state.currentFund;
+        heading.innerText = 'เยี่ยม! เข้าใกล้เป้าหมายอีกก้าว!';
+        heading.style.color = '#16a34a';
+        sub.innerText = 'เหลืออีก ' + formatMoney(remain) + ' บาท — ใช้ PDCA ปรับปรุงรอบต่อไป!';
+        btn.innerText = '⚡ รับงานรอบถัดไป (PDCA)';
+        btn.onclick = function() { nextStage(5); };
+    }
+}
+
+function restartCycle() { nextStage(5); }
