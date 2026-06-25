@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap สานฝัน ปวช.1</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Top Progress Bar -->
+    <div class="fund-dashboard hidden" id="fund-dashboard">
+        <div class="fund-info">
+            <img src="assets/fund.png" alt="เป้าหมาย" class="fund-icon">
+            <div class="fund-text">
+                <h3 id="ui-target-name">เป้าหมาย...</h3>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <p><span id="current-fund">0</span> / <span id="ui-target-price">0</span> บาท</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+
+        <!-- Stage 0: เลือกสถานการณ์ -->
+        <section id="stage-0" class="stage active">
+            <h1 class="metal-text glow-text">เลือกชะตาชีวิตของคุณ</h1>
+            <div class="name-input-box">
+                <label for="player-name">ชื่อของคุณ:</label>
+                <input type="text" id="player-name" placeholder="พิมพ์ชื่อเล่นของคุณ..." maxlength="20" autocomplete="off">
+            </div>
+            <p class="subtitle-glow">เลือกสถานการณ์ที่ท้าทายที่สุด!</p>
+            <div class="scenario-grid" id="scenario-grid"></div>
+        </section>
+
+        <!-- Stage 1: เรื่องราว -->
+        <section id="stage-1" class="stage hidden">
+            <div class="story-panel">
+                <img src="assets/student.png" alt="นักเรียนช่างเชื่อม" class="hero-image">
+                <div class="story-content">
+                    <h1 class="metal-text">ด่านที่ 1: ตั้งเป้าหมายชีวิต</h1>
+                    <div id="ui-story-text"></div>
+                    <button class="btn btn-primary mt-20" onclick="nextStage(2)">เริ่มวางแผนธุรกิจ (OVEC Cloud)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stage 2: เลือกธุรกิจ -->
+        <section id="stage-2" class="stage hidden">
+            <h1 class="metal-text">ด่านที่ 2: เลือกเส้นทางธุรกิจ (5W1H)</h1>
+            <p>ความสามารถที่มีอยู่ ทำอะไรเพื่อสร้างรายได้ดี?</p>
+            <div class="cards-grid" id="ui-business-cards"></div>
+        </section>
+
+        <!-- Stage 3: SWOT -->
+        <section id="stage-3" class="stage hidden">
+            <h1 class="metal-text">ด่านที่ 3: วิเคราะห์ธุรกิจ (SWOT & Niche)</h1>
+            <div class="story-panel">
+                <div class="story-content text-left">
+                    <p>สินค้าของเราคือ: <strong id="chosen-biz" class="highlight-orange"></strong></p>
+                    <p><strong>จุดแข็ง (Strengths):</strong> ฝีมือเชื่อมเนี้ยบ รอยต่อแข็งแรง</p>
+                    <p><strong>จุดอ่อน (Weaknesses):</strong> ขาดเงินทุนตั้งต้น</p>
+                    <hr>
+                    <h3>เจาะกลุ่มลูกค้าเป้าหมาย (Niche Market) ใครคือลูกค้าของเรา?</h3>
+                    <div class="options-list" id="ui-customers-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stage 4: Pitching -->
+        <section id="stage-4" class="stage hidden">
+            <h1 class="metal-text">ด่านที่ 4: นำเสนอผลงาน (Pitching)</h1>
+            <p>เตรียมตัวพูดคุยกับ <strong id="target-customer" class="highlight-blue"></strong> เพื่อปิดการขาย!</p>
+            <div class="pitch-container">
+                <img id="pitch-img" src="" alt="ผลงาน" class="prototype-img">
+                <div class="pitch-dialogue" id="ui-pitch-text"></div>
+            </div>
+            <button class="btn btn-primary mt-20" onclick="nextStage(5)">ลูกค้าตกลง! เริ่มลงมือทำ</button>
+        </section>
+
+        <!-- Stage 5: Execution -->
+        <section id="stage-5" class="stage hidden">
+            <h1 class="metal-text">ด่านที่ 5: ลงมือทำและทำบัญชี</h1>
+            <p id="stage5-intro">งานเสร็จเรียบร้อย! ต้องบันทึกรายรับ-รายจ่าย</p>
+
+            <!-- Event Popup (inline) -->
+            <div id="event-box" class="event-box hidden">
+                <div class="event-icon" id="event-icon"></div>
+                <h3 id="event-title"></h3>
+                <p id="event-desc"></p>
+                <p class="event-effect" id="event-effect"></p>
+            </div>
+
+            <div class="accounting-board">
+                <div class="acc-row">
+                    <span>รายรับจากลูกค้า:</span>
+                    <span class="text-green">+ <span id="revenue-amount"></span> บาท</span>
+                </div>
+                <div class="acc-row" id="event-cost-row" style="display:none">
+                    <span id="event-cost-label">เหตุการณ์พิเศษ:</span>
+                    <span id="event-cost-value"></span>
+                </div>
+                <div class="acc-row">
+                    <span>ต้นทุน/วัสดุ:</span>
+                    <span class="text-red">- <span id="cost-amount"></span> บาท</span>
+                </div>
+                <hr>
+                <div class="acc-row total">
+                    <span>กำไรสุทธิ:</span>
+                    <span class="text-orange" id="profit-amount"></span>
+                </div>
+            </div>
+
+            <div id="round-counter" class="round-counter"></div>
+
+            <button class="btn btn-gold mt-20" id="earn-btn" onclick="earnMoney()">💰 เก็บกำไรเข้าเป้าหมาย!</button>
+
+            <div id="end-message" class="hidden mt-20">
+                <h2 class="text-green" id="end-heading"></h2>
+                <p id="end-sub"></p>
+                <button class="btn btn-report" id="report-btn" onclick="sendReport()">📊 ส่งรายงานให้ครู</button>
+                <p id="report-status" class="report-status"></p>
+                <button class="btn btn-outline mt-20" id="end-btn"></button>
+            </div>
+        </section>
+    </div>
+
+    <footer style="text-align:center;padding:20px;font-size:.8rem;color:#8b949e;">
+        <p>ศูนย์บ่มเพาะผู้ประกอบการอาชีวศึกษา — วิทยาลัยการอาชีพบุรีรัมย์</p>
+        <p style="font-weight:500;color:#e6edf3;">&copy; 2026 ธานี ชมสุข — สงวนลิขสิทธิ์</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

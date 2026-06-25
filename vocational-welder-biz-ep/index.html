@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap ชีวิตช่าง: จากห้องเรียนสู่อิสรภาพทางการเงิน</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="hero">
+        <h1>Roadmap ชีวิตช่าง</h1>
+        <p class="hero-sub">จากห้องเรียน... สู่อิสรภาพทางการเงิน</p>
+        <p class="hero-age">วางแผนตั้งแต่ <strong>15 ปี</strong> ถึง <strong>100 ปี</strong></p>
+    </header>
+
+    <!-- Life Timeline Navigation -->
+    <nav class="life-nav" id="life-nav">
+        <button class="life-btn active" onclick="showPhase(0)"><span class="age-range">15–17</span><span class="phase-icon">🎓</span>เรียนรู้</button>
+        <button class="life-btn" onclick="showPhase(1)"><span class="age-range">18–22</span><span class="phase-icon">🔧</span>ฝึกฝีมือ</button>
+        <button class="life-btn" onclick="showPhase(2)"><span class="age-range">23–35</span><span class="phase-icon">🏗️</span>สร้างตัว</button>
+        <button class="life-btn" onclick="showPhase(3)"><span class="age-range">36–50</span><span class="phase-icon">🏠</span>มั่นคง</button>
+        <button class="life-btn" onclick="showPhase(4)"><span class="age-range">51–65</span><span class="phase-icon">👨‍🏫</span>ส่งต่อ</button>
+        <button class="life-btn" onclick="showPhase(5)"><span class="age-range">66–100</span><span class="phase-icon">🌅</span>สุขสบาย</button>
+    </nav>
+
+    <div class="app-container">
+
+        <!-- Phase 0: เรียนรู้ 15-17 -->
+        <section class="phase active" id="phase-0">
+            <div class="phase-header" style="--accent:#2563eb">
+                <span class="age-badge">อายุ 15–17 ปี</span>
+                <h2>🎓 เรียนรู้ & สร้างฐาน</h2>
+                <p class="en">Learn &amp; Build Foundation</p>
+            </div>
+            <div class="phase-body">
+                <div class="milestone-card">
+                    <h3>สิ่งที่ต้องทำตอนนี้</h3>
+                    <ul>
+                        <li>เรียน ปวช. ช่างเชื่อม — ฝึกฝีมือให้เต็มที่</li>
+                        <li>สมัคร <strong>ศูนย์บ่มเพาะ EP</strong> ผ่าน OVEC Cloud</li>
+                        <li>เลือกธุรกิจแรก: รับจ้างเชื่อม / ทำสินค้าเหล็ก</li>
+                        <li>เรียนรู้ <strong>5W1H, SWOT, BMC, PDCA</strong></li>
+                        <li>ฝึก Pitching — ขายของจริง</li>
+                    </ul>
+                </div>
+                <div class="money-box">
+                    <h3>💰 เป้าหมายการเงิน</h3>
+                    <div class="money-row"><span>รายได้เสริม/เดือน</span><span class="val">2,000–5,000 บาท</span></div>
+                    <div class="money-row"><span>เงินเก็บเมื่อจบ ปวช.</span><span class="val target">30,000–50,000 บาท</span></div>
+                </div>
+                <div class="life-tip">
+                    <strong>💡 กุญแจสำคัญ:</strong> ตอนนี้ <strong>ไม่มีค่าใช้จ่ายครอบครัว</strong> — ทุกบาทที่หาได้คือ "ทุนชีวิต" เก็บให้มากที่สุด!
+                </div>
+                <div class="quote-box">"อย่ารอให้พร้อม ลงมือทำตอนที่ยังไม่มีอะไรจะเสีย"</div>
+            </div>
+        </section>
+
+        <!-- Phase 1: ฝึกฝีมือ 18-22 -->
+        <section class="phase" id="phase-1">
+            <div class="phase-header" style="--accent:#0891b2">
+                <span class="age-badge">อายุ 18–22 ปี</span>
+                <h2>🔧 ฝึกฝีมือ & สะสมประสบการณ์</h2>
+                <p class="en">Skill Up &amp; Gain Experience</p>
+            </div>
+            <div class="phase-body">
+                <div class="choice-fork">
+                    <h3>ทางแยกชีวิต — เลือกเส้นทาง</h3>
+                    <div class="fork-grid">
+                        <div class="fork-card">
+                            <h4>🎓 เรียนต่อ ปวส.</h4>
+                            <p>เรียนเพิ่มอีก 2 ปี ได้วุฒิสูงขึ้น เงินเดือนเริ่มต้นสูงกว่า ทำธุรกิจ EP ควบคู่ได้</p>
+                        </div>
+                        <div class="fork-card">
+                            <h4>💼 ทำงานเลย</h4>
+                            <p>เข้าโรงงาน/อู่/ไซต์ก่อสร้าง ได้เงินเร็ว สะสมประสบการณ์จริง รับงานนอกเพิ่ม</p>
+                        </div>
+                        <div class="fork-card">
+                            <h4>🏪 เปิดร้านเลย</h4>
+                            <p>ใช้เงินเก็บจาก ปวช. เปิดร้านเล็กๆ เสี่ยงสูง แต่ถ้าสำเร็จ = ได้เร็ว</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="milestone-card">
+                    <h3>สิ่งที่ควรทำไม่ว่าเลือกทางไหน</h3>
+                    <ul>
+                        <li>สอบใบรับรอง <strong>มาตรฐานฝีมือแรงงาน</strong></li>
+                        <li>เรียนเชื่อม TIG / MIG / ใต้น้ำ เพิ่มทักษะพิเศษ</li>
+                        <li>เปิดบัญชีออมทรัพย์ + <strong>กองทุนสำรองเลี้ยงชีพ</strong></li>
+                        <li>สร้าง Portfolio ผลงานออนไลน์</li>
+                    </ul>
+                </div>
+                <div class="money-box">
+                    <h3>💰 เป้าหมายการเงิน</h3>
+                    <div class="money-row"><span>รายได้/เดือน</span><span class="val">12,000–25,000 บาท</span></div>
+                    <div class="money-row"><span>เงินเก็บสะสม</span><span class="val target">100,000–200,000 บาท</span></div>
+                </div>
+                <div class="life-tip">
+                    <strong>💡 กุญแจสำคัญ:</strong> <strong>ใบรับรองฝีมือแรงงาน</strong> = เงินเดือนเพิ่ม 20-50% ทันที สอบให้ได้!
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase 2: สร้างตัว 23-35 -->
+        <section class="phase" id="phase-2">
+            <div class="phase-header" style="--accent:#16a34a">
+                <span class="age-badge">อายุ 23–35 ปี</span>
+                <h2>🏗️ สร้างตัว & สร้างครอบครัว</h2>
+                <p class="en">Build Career &amp; Family</p>
+            </div>
+            <div class="phase-body">
+                <div class="milestone-card">
+                    <h3>เป้าหมายช่วงนี้</h3>
+                    <ul>
+                        <li><strong>เปิดกิจการของตัวเอง</strong> — ร้านเชื่อม / รับเหมา / ผลิตสินค้า</li>
+                        <li>จดทะเบียน <strong>ห้างหุ้นส่วน</strong> หรือ <strong>บริษัทจำกัด</strong></li>
+                        <li>จ้างลูกน้อง 2-5 คน ขยายกำลังผลิต</li>
+                        <li>แต่งงาน / สร้างครอบครัว</li>
+                        <li><strong>ซื้อที่ดิน / สร้างบ้าน</strong> (อย่าเช่าตลอดไป!)</li>
+                        <li>ทำประกันชีวิต + ประกันสุขภาพ</li>
+                    </ul>
+                </div>
+                <div class="money-box">
+                    <h3>💰 เป้าหมายการเงิน</h3>
+                    <div class="money-row"><span>รายได้/เดือน</span><span class="val">30,000–80,000 บาท</span></div>
+                    <div class="money-row"><span>ออมเงิน/เดือน</span><span class="val">อย่างน้อย 20%</span></div>
+                    <div class="money-row"><span>เงินเก็บรวม</span><span class="val target">500,000–2,000,000 บาท</span></div>
+                </div>
+                <div class="warning-box">
+                    <strong>⚠️ กับดักช่วงนี้:</strong> หนี้รถ + หนี้บ้าน + หนี้บัตรเครดิต พร้อมกัน = อันตราย! <strong>ซื้อสิ่งที่ "สร้างรายได้" ก่อนสิ่งที่ "สร้างหนี้"</strong>
+                </div>
+                <div class="life-tip">
+                    <strong>💡 กุญแจสำคัญ:</strong> ช่วงนี้ <strong>หาเงินได้มากที่สุด</strong> — ลงทุนในธุรกิจและทรัพย์สิน อย่าเอาไปซื้อของหรู
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase 3: มั่นคง 36-50 -->
+        <section class="phase" id="phase-3">
+            <div class="phase-header" style="--accent:#ea580c">
+                <span class="age-badge">อายุ 36–50 ปี</span>
+                <h2>🏠 มั่นคง & ขยายกิจการ</h2>
+                <p class="en">Stability &amp; Growth</p>
+            </div>
+            <div class="phase-body">
+                <div class="milestone-card">
+                    <h3>เป้าหมายช่วงนี้</h3>
+                    <ul>
+                        <li><strong>ขยายธุรกิจ</strong> — เพิ่มสาขา / รับงานใหญ่ขึ้น</li>
+                        <li>ลงทุนใน <strong>อสังหาริมทรัพย์</strong> ให้เช่า (สร้าง passive income)</li>
+                        <li>ส่งลูกเรียน — วางแผน <strong>ค่าเทอมล่วงหน้า</strong></li>
+                        <li>มีรายได้ <strong>หลายทาง</strong> (ธุรกิจ + ค่าเช่า + ลงทุน)</li>
+                        <li>ปลดหนี้บ้านให้หมด</li>
+                        <li>ตรวจสุขภาพประจำปี</li>
+                    </ul>
+                </div>
+                <div class="money-box">
+                    <h3>💰 เป้าหมายการเงิน</h3>
+                    <div class="money-row"><span>รายได้รวม/เดือน</span><span class="val">80,000–200,000+ บาท</span></div>
+                    <div class="money-row"><span>Passive Income</span><span class="val">อย่างน้อย 20,000/เดือน</span></div>
+                    <div class="money-row"><span>สินทรัพย์สุทธิ</span><span class="val target">5,000,000–15,000,000 บาท</span></div>
+                </div>
+                <div class="life-tip">
+                    <strong>💡 กุญแจสำคัญ:</strong> เริ่มสร้าง <strong>"เงินทำงานแทน"</strong> — ค่าเช่า, กองทุน, หุ้น เพื่อเตรียมเกษียณ
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase 4: ส่งต่อ 51-65 -->
+        <section class="phase" id="phase-4">
+            <div class="phase-header" style="--accent:#7c3aed">
+                <span class="age-badge">อายุ 51–65 ปี</span>
+                <h2>👨‍🏫 ส่งต่อ & วางมือ</h2>
+                <p class="en">Mentor &amp; Transition</p>
+            </div>
+            <div class="phase-body">
+                <div class="milestone-card">
+                    <h3>เป้าหมายช่วงนี้</h3>
+                    <ul>
+                        <li><strong>ส่งต่อธุรกิจ</strong> ให้ลูกหลาน หรือขายกิจการ</li>
+                        <li>เป็น <strong>ที่ปรึกษา / ครูสอนช่าง</strong> ส่งต่อความรู้</li>
+                        <li>ลดงานหนัก เน้นงานบริหาร/สอน</li>
+                        <li>ตรวจสอบ <strong>แผนเกษียณ</strong> — เงินพอไหม?</li>
+                        <li>ดูแลสุขภาพเป็นพิเศษ (ปอด ข้อ หลัง)</li>
+                        <li>ทำพินัยกรรม วางแผนมรดก</li>
+                    </ul>
+                </div>
+                <div class="money-box">
+                    <h3>💰 เป้าหมายการเงิน</h3>
+                    <div class="money-row"><span>Passive Income</span><span class="val">50,000+/เดือน</span></div>
+                    <div class="money-row"><span>หนี้สิน</span><span class="val" style="color:#16a34a">= 0 (ปลดหมด)</span></div>
+                    <div class="money-row"><span>เงินสำรองเกษียณ</span><span class="val target">10,000,000+ บาท</span></div>
+                </div>
+                <div class="life-tip">
+                    <strong>💡 กุญแจสำคัญ:</strong> ถ้าวางแผนดีตั้งแต่อายุ 15 <strong>ตอนนี้เกษียณได้แล้ว!</strong> ไม่ต้องรอ 60
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase 5: สุขสบาย 66-100 -->
+        <section class="phase" id="phase-5">
+            <div class="phase-header" style="--accent:#b45309">
+                <span class="age-badge">อายุ 66–100 ปี</span>
+                <h2>🌅 สุขสบาย & ส่งต่อมรดก</h2>
+                <p class="en">Enjoy Life &amp; Legacy</p>
+            </div>
+            <div class="phase-body">
+                <div class="milestone-card">
+                    <h3>ชีวิตที่สุขสบาย</h3>
+                    <ul>
+                        <li>ใช้ชีวิตกับครอบครัว ลูกหลาน</li>
+                        <li>ท่องเที่ยว ทำสิ่งที่รักโดยไม่ต้องห่วงเงิน</li>
+                        <li>เป็น <strong>ปราชญ์ชุมชน</strong> ถ่ายทอดประสบการณ์</li>
+                        <li>ดูแลสุขภาพ — ออกกำลังกาย กินอาหารดี</li>
+                        <li>ทำบุญ ช่วยเหลือสังคม ให้ทุนนักเรียน</li>
+                        <li>ส่งต่อ <strong>มรดกความรู้ + มรดกทรัพย์สิน</strong></li>
+                    </ul>
+                </div>
+                <div class="money-box">
+                    <h3>💰 สถานะการเงิน</h3>
+                    <div class="money-row"><span>รายได้ Passive</span><span class="val">เพียงพอตลอดชีวิต</span></div>
+                    <div class="money-row"><span>ค่ารักษาพยาบาล</span><span class="val">มีประกัน/สำรองไว้แล้ว</span></div>
+                    <div class="money-row"><span>มรดกให้ลูกหลาน</span><span class="val target">ทรัพย์สิน + ธุรกิจ + ความรู้</span></div>
+                </div>
+                <div class="life-tip good">
+                    <strong>🎉 ถ้าวางแผนดีตั้งแต่ ปวช.</strong> — ตอนอายุ 66 คุณจะมี: บ้านของตัวเอง, รายได้ passive, สุขภาพดี, ครอบครัวอบอุ่น, และเรื่องเล่าให้ลูกหลานฟังอีกเยอะ!
+                </div>
+                <div class="quote-box">"คนที่เริ่มต้นเร็ว ไม่จำเป็นต้องเก่งกว่าคนอื่น<br>แค่มีเวลามากกว่า"</div>
+            </div>
+        </section>
+
+        <!-- Summary: เปรียบเทียบ 2 ชีวิต -->
+        <section class="compare-section">
+            <h2>เปรียบเทียบ 2 ชีวิต</h2>
+            <p class="hint">คนเริ่มวางแผนตอน 15 vs คนเริ่มตอน 35</p>
+            <div class="compare-life">
+                <div class="life-col plan-early">
+                    <h3>🟢 เริ่มวางแผนตอน 15 ปี</h3>
+                    <div class="life-row"><span>อายุ 25</span><span>มีร้านเชื่อมของตัวเอง</span></div>
+                    <div class="life-row"><span>อายุ 30</span><span>ปลดหนี้บ้าน มีรายได้ 3 ทาง</span></div>
+                    <div class="life-row"><span>อายุ 40</span><span>มีพนักงาน 10 คน ลงทุนอสังหาฯ</span></div>
+                    <div class="life-row"><span>อายุ 50</span><span>เกษียณเร็วได้ มีเงิน 10 ล้าน+</span></div>
+                    <div class="life-row"><span>อายุ 65</span><span>สุขสบาย ส่งต่อธุรกิจให้ลูก</span></div>
+                    <div class="life-row last"><span>อายุ 80+</span><span>ใช้ชีวิตอย่างมีเกียรติ ไม่เป็นภาระ</span></div>
+                </div>
+                <div class="life-col plan-late">
+                    <h3>🔴 ไม่วางแผน เริ่มตอน 35 ปี</h3>
+                    <div class="life-row"><span>อายุ 25</span><span>ยังรับจ้างรายวัน ไม่มีเงินเก็บ</span></div>
+                    <div class="life-row"><span>อายุ 30</span><span>มีหนี้รถ + บัตรเครดิต</span></div>
+                    <div class="life-row"><span>อายุ 40</span><span>เพิ่งเริ่มคิดวางแผน แต่มีภาระเยอะ</span></div>
+                    <div class="life-row"><span>อายุ 50</span><span>ยังผ่อนบ้านอยู่ เงินเก็บน้อย</span></div>
+                    <div class="life-row"><span>อายุ 65</span><span>เกษียณแต่เงินไม่พอ ต้องทำงานต่อ</span></div>
+                    <div class="life-row last"><span>อายุ 80+</span><span>พึ่งลูกหลาน ไม่มีอิสรภาพ</span></div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="site-footer">
+        <p>ศูนย์บ่มเพาะผู้ประกอบการอาชีวศึกษา — วิทยาลัยการอาชีพบุรีรัมย์</p>
+        <p class="copyright">&copy; 2026 ธานี ชมสุข — สงวนลิขสิทธิ์</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

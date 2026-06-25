@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap 5 ขั้นตอนสู่ความสำเร็จ: จากห้องเรียนสู่ธุรกิจจริง</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="roadmap-header">
+        <h1 class="roadmap-title">Roadmap 5 ขั้นตอนสู่ความสำเร็จฉบับเร่งรัด</h1>
+        <p class="roadmap-subtitle">จากห้องเรียนสู่ธุรกิจจริง</p>
+        <div class="timeline" id="timeline">
+            <div class="tl-step active" data-step="1"><span class="tl-icon">☁️</span><span class="tl-label">วันที่ 1</span></div>
+            <div class="tl-line"></div>
+            <div class="tl-step" data-step="2"><span class="tl-icon">🔍</span><span class="tl-label">วันที่ 2</span></div>
+            <div class="tl-line"></div>
+            <div class="tl-step" data-step="3"><span class="tl-icon">⚙️</span><span class="tl-label">วันที่ 3</span></div>
+            <div class="tl-line"></div>
+            <div class="tl-step" data-step="4"><span class="tl-icon">💡</span><span class="tl-label">วันที่ 4</span></div>
+            <div class="tl-line"></div>
+            <div class="tl-step" data-step="5"><span class="tl-icon">🔄</span><span class="tl-label">วันที่ 5</span></div>
+        </div>
+    </header>
+
+    <div class="app-container">
+
+        <div class="phase-banner phase-prep" id="phase-1-banner">
+            <span class="phase-tag">ระยะที่ 1</span>
+            <h2>ระยะเตรียมตัวและสร้างสรรค์ไอเดีย</h2>
+            <p class="en">Preparation &amp; Ideation</p>
+        </div>
+
+        <!-- วันที่ 1 -->
+        <section id="stage-1" class="stage active">
+            <h1 class="stage-title"><span class="day-badge">วันที่ 1</span> ลงทะเบียนออนไลน์ผ่าน OVEC Cloud</h1>
+            <div class="content-panel">
+                <div class="panel-icon">☁️</div>
+                <div class="panel-body">
+                    <div id="ui-story-text"></div>
+                    <button class="btn btn-next" onclick="nextStage(2)">ลงทะเบียนเสร็จแล้ว → วันที่ 2</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- วันที่ 2 -->
+        <section id="stage-2" class="stage hidden">
+            <h1 class="stage-title"><span class="day-badge">วันที่ 2</span> เลือกประเภทธุรกิจที่ใช่ และใช้หลัก 5W1H</h1>
+            <div class="w5h1-tags">
+                <span class="tag">Who</span><span class="tag">What</span><span class="tag">Where</span>
+                <span class="tag">When</span><span class="tag">Why</span><span class="tag">How</span>
+            </div>
+            <p class="hint">เลือก 1 จาก 4 ประเภท (Niche Market) — ใช้ทักษะช่างที่มีอยู่สร้างรายได้</p>
+            <div class="cards-grid" id="ui-business-cards"></div>
+            <div class="tips-box">
+                <h3>💡 เคล็ดลับการจัดทำ</h3>
+                <p>เน้นใช้สิ่งที่มีในห้องปฏิบัติการและประสบการณ์ด้านความถนัด</p>
+            </div>
+        </section>
+
+        <div class="phase-banner phase-exec hidden" id="phase-2-banner">
+            <span class="phase-tag">ระยะที่ 2</span>
+            <h2>การวางแผนและการลงมือทำ</h2>
+            <p class="en">Planning &amp; Execution</p>
+        </div>
+
+        <!-- วันที่ 3 -->
+        <section id="stage-3" class="stage hidden">
+            <h1 class="stage-title"><span class="day-badge">วันที่ 3</span> ออกแบบแผนธุรกิจ (BMC 9 ช่อง + SWOT)</h1>
+            <div class="content-panel col">
+                <p>ธุรกิจที่เลือก: <strong id="chosen-biz" class="highlight-orange"></strong></p>
+                <div class="analysis-grid">
+                    <div class="analysis-card swot">
+                        <h3>📊 SWOT Analysis</h3>
+                        <p><strong>S — จุดแข็ง:</strong> ฝีมือช่างจากห้องปฏิบัติการ ทักษะเฉพาะทาง</p>
+                        <p><strong>W — จุดอ่อน:</strong> ขาดเงินทุนตั้งต้น ยังขาดประสบการณ์ตลาด</p>
+                        <p><strong>O — โอกาส:</strong> ตลาดต้องการงานช่างคุณภาพ ราคาย่อมเยา</p>
+                        <p><strong>T — อุปสรรค:</strong> การแข่งขันจากร้านเก่าแก่ในพื้นที่</p>
+                    </div>
+                    <div class="analysis-card bmc">
+                        <h3>📋 BMC 9 ช่อง (สรุปย่อ)</h3>
+                        <p><strong>คุณค่าที่นำเสนอ:</strong> งานคุณภาพ ราคานักเรียน</p>
+                        <p><strong>ช่องทาง:</strong> ออนไลน์ + ปากต่อปาก</p>
+                        <p><strong>รายได้:</strong> ค่าบริการ/ค่าสินค้า</p>
+                        <p><strong>ต้นทุนหลัก:</strong> วัสดุ + ค่าไฟฟ้า</p>
+                    </div>
+                </div>
+                <hr>
+                <h3>🎯 เจาะกลุ่มลูกค้าเป้าหมาย — ใครคือลูกค้าของเรา?</h3>
+                <div class="options-list" id="ui-customers-list"></div>
+            </div>
+        </section>
+
+        <!-- วันที่ 4 -->
+        <section id="stage-4" class="stage hidden">
+            <h1 class="stage-title"><span class="day-badge">วันที่ 4</span> เตรียมต้นแบบ (Prototype) และซ้อม Pitching</h1>
+            <p>นำเสนอต่อ <strong id="target-customer" class="highlight-blue"></strong> ด้วยแนวคิด Storytelling เวลา 5–10 นาที</p>
+            <div class="pitch-area">
+                <img id="pitch-img" src="" alt="ผลงาน" class="prototype-img">
+                <div class="pitch-dialogue" id="ui-pitch-text"></div>
+            </div>
+            <div class="tips-box">
+                <h3>📝 หลัก Storytelling ที่ดี</h3>
+                <ul>
+                    <li>เริ่มจากปัญหาของลูกค้า → นำเสนอทางออก</li>
+                    <li>โชว์ต้นแบบ (Prototype) ให้จับต้องได้</li>
+                    <li>จบด้วยข้อเสนอที่ชัดเจน ราคา + ระยะเวลา</li>
+                </ul>
+            </div>
+            <button class="btn btn-next mt-20" onclick="nextStage(5)">ลูกค้าตกลง! → วันที่ 5</button>
+        </section>
+
+        <!-- วันที่ 5 -->
+        <section id="stage-5" class="stage hidden">
+            <h1 class="stage-title"><span class="day-badge">วันที่ 5</span> ลงมือทำจริงและดำเนินธุรกิจอย่างเป็นระบบ</h1>
+            <p>ใช้วงจร PDCA ปรับปรุงงานอย่างต่อเนื่อง</p>
+            <div class="pdca-ring">
+                <div class="pdca plan"><h4>P — Plan</h4><p>วางแผนงาน กำหนดราคา</p></div>
+                <div class="pdca do"><h4>D — Do</h4><p>ลงมือผลิต/ให้บริการ</p></div>
+                <div class="pdca check"><h4>C — Check</h4><p>ตรวจสอบคุณภาพ ทำบัญชี</p></div>
+                <div class="pdca act"><h4>A — Act</h4><p>ปรับปรุงรอบถัดไป</p></div>
+            </div>
+            <div class="accounting-board">
+                <h3>📒 บัญชีรายรับ-รายจ่าย</h3>
+                <div class="acc-row"><span>รายรับจากลูกค้า:</span><span class="text-green">+&thinsp;<span id="revenue-amount"></span> บาท</span></div>
+                <div class="acc-row"><span>ต้นทุน/วัสดุ:</span><span class="text-red">-&thinsp;<span id="cost-amount"></span> บาท</span></div>
+                <hr>
+                <div class="acc-row total"><span>กำไรสุทธิ:</span><span class="text-orange" id="profit-amount"></span></div>
+            </div>
+            <button class="btn btn-gold mt-20" id="earn-btn" onclick="earnMoney()">💰 บันทึกผลประกอบการ!</button>
+            <div id="end-message" class="hidden mt-20">
+                <h2 class="text-green">สำเร็จ! ครบรอบ PDCA แล้ว!</h2>
+                <p>ทำซ้ำวงจร PDCA เพื่อขยายธุรกิจ ปรับปรุงงาน และเพิ่มกำไร!</p>
+                <button class="btn btn-outline" onclick="restartCycle()">🔄 ทำรอบ PDCA ถัดไป (รับงานเพิ่ม)</button>
+            </div>
+        </section>
+
+        <!-- ประเภทการประกอบการ 4 รูปแบบ -->
+        <div class="biz-types-ref" id="biz-types-ref">
+            <h2>ประเภทการประกอบการ 4 รูปแบบที่นิยมมากที่สุด</h2>
+            <p class="hint">แต่ละแบบต่างกันตรงไหน? เลือกให้เหมาะกับตัวเอง</p>
+            <div class="compare-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>👤 เจ้าของคนเดียว</th>
+                            <th>🤝 ห้างหุ้นส่วน</th>
+                            <th>🏢 บริษัทจำกัด</th>
+                            <th>🌱 วิสาหกิจชุมชน</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="row-label">คนทำ</td><td>คนเดียว</td><td>2 คนขึ้นไป</td><td>3 คนขึ้นไป (ผู้ถือหุ้น)</td><td>กลุ่มคนในชุมชน</td></tr>
+                        <tr><td class="row-label">เงินลงทุน</td><td>ใช้เงินตัวเอง</td><td>ลงขันกัน</td><td>ขายหุ้นระดมทุน</td><td>สมาชิกออกเงินร่วม</td></tr>
+                        <tr><td class="row-label">กำไร</td><td>ได้คนเดียวหมด</td><td>แบ่งตามสัดส่วน</td><td>แบ่งตามหุ้น (ปันผล)</td><td>แบ่งให้สมาชิกทุกคน</td></tr>
+                        <tr><td class="row-label">ความเสี่ยง</td><td>รับผิดไม่จำกัด</td><td>รับผิดร่วมกัน</td><td>รับผิดเท่าหุ้นที่ลง</td><td>รับผิดร่วมกัน</td></tr>
+                        <tr><td class="row-label">จดทะเบียน</td><td>ไม่ต้อง</td><td>จดหรือไม่จดก็ได้</td><td>ต้องจด (กระทรวงพาณิชย์)</td><td>จดที่เกษตรอำเภอ</td></tr>
+                        <tr><td class="row-label">ตัวอย่างงานช่าง</td><td class="example">รับเชื่อมประตู รั้ว ตามบ้าน</td><td class="example">เปิดร้านเหล็กดัดกับเพื่อน</td><td class="example">ตั้งบริษัทรับเหมางานโครงสร้าง</td><td class="example">กลุ่มช่างซ่อมเครื่องจักรเกษตร</td></tr>
+                        <tr><td class="row-label">เหมาะกับ</td><td class="fit">เริ่มต้นง่าย ทำคนเดียวได้</td><td class="fit">มีเพื่อนที่ไว้ใจ ถนัดคนละอย่าง</td><td class="fit">งานใหญ่ ต้องการความน่าเชื่อถือ</td><td class="fit">อยากช่วยชุมชน สร้างอาชีพร่วม</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="types-grid">
+                <div class="type-card"><span class="type-icon">👤</span><h4>ธุรกิจเจ้าของคนเดียว</h4><p>ง่ายสุด! ไม่ต้องจดทะเบียน เปิดร้านหรือรับงานได้เลย กำไรได้หมด แต่ถ้าขาดทุนก็รับเองทั้งหมด</p></div>
+                <div class="type-card"><span class="type-icon">🤝</span><h4>ห้างหุ้นส่วน</h4><p>ชวนเพื่อนมาลงขัน คนหนึ่งเก่งเชื่อม อีกคนเก่งขาย แบ่งงานตามถนัด แบ่งกำไรตามที่ตกลง</p></div>
+                <div class="type-card"><span class="type-icon">🏢</span><h4>บริษัทจำกัด</h4><p>เหมาะกับงานใหญ่ ต้องจดทะเบียน มีโครงสร้างชัดเจน ลูกค้าเชื่อถือง่าย ถ้าเจ๊งเสียแค่เงินที่ลงหุ้น</p></div>
+                <div class="type-card"><span class="type-icon">🌱</span><h4>วิสาหกิจชุมชน</h4><p>รวมกลุ่มคนในชุมชน ใช้ทักษะช่างช่วยเหลือกัน จดที่เกษตรอำเภอ ได้สิทธิ์สนับสนุนจากรัฐ</p></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p>ศูนย์บ่มเพาะผู้ประกอบการอาชีวศึกษา — วิทยาลัยการอาชีพบุรีรัมย์</p>
+        <p class="copyright">&copy; 2026 ธานี ชมสุข — สงวนลิขสิทธิ์</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
