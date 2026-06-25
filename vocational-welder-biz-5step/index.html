@@ -124,20 +124,79 @@
             <h1 class="stage-title"><span class="day-badge">วันที่ 3</span> ออกแบบแผนธุรกิจ (BMC 9 ช่อง + SWOT)</h1>
             <div class="content-panel col">
                 <p>ธุรกิจที่เลือก: <strong id="chosen-biz" class="highlight-orange"></strong></p>
-                <div class="analysis-grid">
-                    <div class="analysis-card swot">
-                        <h3>📊 SWOT Analysis</h3>
-                        <p><strong>S — จุดแข็ง:</strong> ฝีมือช่างจากห้องปฏิบัติการ ทักษะเฉพาะทาง</p>
-                        <p><strong>W — จุดอ่อน:</strong> ขาดเงินทุนตั้งต้น ยังขาดประสบการณ์ตลาด</p>
-                        <p><strong>O — โอกาส:</strong> ตลาดต้องการงานช่างคุณภาพ ราคาย่อมเยา</p>
-                        <p><strong>T — อุปสรรค:</strong> การแข่งขันจากร้านเก่าแก่ในพื้นที่</p>
+                <!-- SWOT -->
+                <div class="analysis-card swot">
+                    <h3>📊 SWOT Analysis</h3>
+                    <p><strong>S — จุดแข็ง:</strong> ฝีมือช่างจากห้องปฏิบัติการ ทักษะเฉพาะทาง</p>
+                    <p><strong>W — จุดอ่อน:</strong> ขาดเงินทุนตั้งต้น ยังขาดประสบการณ์ตลาด</p>
+                    <p><strong>O — โอกาส:</strong> ตลาดต้องการงานช่างคุณภาพ ราคาย่อมเยา</p>
+                    <p><strong>T — อุปสรรค:</strong> การแข่งขันจากร้านเก่าแก่ในพื้นที่</p>
+                </div>
+
+                <!-- BMC Toggle -->
+                <div class="bmc-section">
+                    <div class="bmc-header">
+                        <h3>📋 Business Model Canvas (BMC)</h3>
+                        <div class="bmc-toggle">
+                            <button class="toggle-btn active" onclick="toggleBMC('short',this)">สรุปย่อ</button>
+                            <button class="toggle-btn" onclick="toggleBMC('full',this)">เต็ม 9 ช่อง</button>
+                        </div>
                     </div>
-                    <div class="analysis-card bmc">
-                        <h3>📋 BMC 9 ช่อง (สรุปย่อ)</h3>
+
+                    <!-- สรุปย่อ -->
+                    <div id="bmc-short" class="analysis-card bmc">
                         <p><strong>คุณค่าที่นำเสนอ:</strong> งานคุณภาพ ราคานักเรียน</p>
                         <p><strong>ช่องทาง:</strong> ออนไลน์ + ปากต่อปาก</p>
                         <p><strong>รายได้:</strong> ค่าบริการ/ค่าสินค้า</p>
                         <p><strong>ต้นทุนหลัก:</strong> วัสดุ + ค่าไฟฟ้า</p>
+                    </div>
+
+                    <!-- เต็ม 9 ช่อง -->
+                    <div id="bmc-full" class="bmc-canvas hidden">
+                        <div class="bmc-row top">
+                            <div class="bmc-box partners">
+                                <div class="bmc-label">🤝 พันธมิตรหลัก<br><small>Key Partners</small></div>
+                                <div class="bmc-content" id="bmc-partners"></div>
+                            </div>
+                            <div class="bmc-col-mid">
+                                <div class="bmc-box activities">
+                                    <div class="bmc-label">⚙️ กิจกรรมหลัก<br><small>Key Activities</small></div>
+                                    <div class="bmc-content" id="bmc-activities"></div>
+                                </div>
+                                <div class="bmc-box resources">
+                                    <div class="bmc-label">🔧 ทรัพยากรหลัก<br><small>Key Resources</small></div>
+                                    <div class="bmc-content" id="bmc-resources"></div>
+                                </div>
+                            </div>
+                            <div class="bmc-box value">
+                                <div class="bmc-label">💎 คุณค่าที่นำเสนอ<br><small>Value Propositions</small></div>
+                                <div class="bmc-content" id="bmc-value"></div>
+                            </div>
+                            <div class="bmc-col-mid">
+                                <div class="bmc-box relations">
+                                    <div class="bmc-label">❤️ ความสัมพันธ์ลูกค้า<br><small>Customer Relations</small></div>
+                                    <div class="bmc-content" id="bmc-relations"></div>
+                                </div>
+                                <div class="bmc-box channels">
+                                    <div class="bmc-label">📢 ช่องทาง<br><small>Channels</small></div>
+                                    <div class="bmc-content" id="bmc-channels"></div>
+                                </div>
+                            </div>
+                            <div class="bmc-box customers">
+                                <div class="bmc-label">👥 กลุ่มลูกค้า<br><small>Customer Segments</small></div>
+                                <div class="bmc-content" id="bmc-customers"></div>
+                            </div>
+                        </div>
+                        <div class="bmc-row bottom">
+                            <div class="bmc-box costs">
+                                <div class="bmc-label">💸 โครงสร้างต้นทุน<br><small>Cost Structure</small></div>
+                                <div class="bmc-content" id="bmc-costs"></div>
+                            </div>
+                            <div class="bmc-box revenue">
+                                <div class="bmc-label">💰 กระแสรายได้<br><small>Revenue Streams</small></div>
+                                <div class="bmc-content" id="bmc-revenue"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <hr>
