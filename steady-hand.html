@@ -475,13 +475,38 @@ function drawScene() {
     ctx.setLineDash([]);
   }
 
-  // === จุดเชื่อม 1 จุด (ตรงนิ้ว/เมาส์) ===
+  // === จุดเชื่อม 1 จุด ===
   if (!finished && started && samples.length > 0) {
     var ls = samples[samples.length - 1];
     var onTrack = ls.dev <= pathWidth;
+    var sparkCol = onTrack ? 'rgba(46,160,67,0.7)' : 'rgba(248,81,73,0.7)';
+
+    if (isTouchDevice && drawing) {
+      var holdX = ls.x;
+      var holdY = ls.y - rodOffsetY;
+
+      // ลวดเชื่อม (เส้นจากด้ามจับถึงปลาย)
+      ctx.beginPath();
+      ctx.moveTo(holdX, holdY);
+      ctx.lineTo(ls.x, ls.y);
+      ctx.strokeStyle = '#777';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // ด้ามจับ (ตรงนิ้ว)
+      ctx.beginPath();
+      ctx.arc(holdX, holdY, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#444';
+      ctx.fill();
+      ctx.strokeStyle = '#666';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // ประกายไฟปลายลวด (จุดเชื่อม)
     ctx.beginPath();
     ctx.arc(ls.x, ls.y, 8, 0, Math.PI * 2);
-    ctx.fillStyle = onTrack ? 'rgba(46,160,67,0.7)' : 'rgba(248,81,73,0.7)';
+    ctx.fillStyle = sparkCol;
     ctx.fill();
     ctx.beginPath();
     ctx.arc(ls.x, ls.y, 3, 0, Math.PI * 2);
@@ -575,7 +600,8 @@ function handlePointer(e) {
     rawX = e.touches[0].clientX - rect.left;
     rawY = e.touches[0].clientY - rect.top;
     px = rawX;
-    py = rawY;
+    py = rawY + rodOffsetY;
+    if (py < 0) py = 0;
   } else {
     rawX = e.clientX - rect.left;
     rawY = e.clientY - rect.top;
