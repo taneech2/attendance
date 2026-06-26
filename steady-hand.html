@@ -141,19 +141,19 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
         </button>
       </div>
       <h3 style="margin-top:18px;font-size:1rem;color:#00e1ff">ความเร็วจุดนำทาง (Guide)</h3>
-      <p class="diff-sub" style="margin-bottom:12px">จุดฟ้าวิ่งนำ — ฝึกคุมความเร็วมือเหมือนเชื่อมจริง</p>
+      <p class="diff-sub" style="margin-bottom:12px">ความเร็วเดินลวดเชื่อมธูป SMAW จริง ≈ 150–250 mm/min</p>
       <div class="diff-btns speed-btns">
         <button class="diff-btn spd" onclick="pickSpeed('slow')" id="spd-slow">
           <div class="spd-icon">🐢</div>
-          <strong>ช้ามาก</strong><span>แนวใหญ่</span>
+          <strong>150 mm/min</strong><span>ช้า — แนวใหญ่</span>
         </button>
         <button class="diff-btn spd active-spd" onclick="pickSpeed('medium')" id="spd-medium">
           <div class="spd-icon">👌</div>
-          <strong>พอดี</strong><span>แนวสวย</span>
+          <strong>200 mm/min</strong><span>พอดี — แนวสวย</span>
         </button>
         <button class="diff-btn spd" onclick="pickSpeed('fast')" id="spd-fast">
           <div class="spd-icon">⚡</div>
-          <strong>เร็ว</strong><span>แนวเล็ก</span>
+          <strong>250 mm/min</strong><span>เร็ว — แนวเล็ก</span>
         </button>
         <button class="diff-btn spd" onclick="pickSpeed('none')" id="spd-none">
           <div class="spd-icon">🔓</div>
@@ -208,8 +208,8 @@ var pendingType = '';
 
 var DIFF_WIDTHS = { easy: 36, medium: 20, hard: 10, extreme: 4 };
 var DIFF_NAMES = { easy: 'ง่าย', medium: 'กลาง', hard: 'ยาก', extreme: 'นรก' };
-var SPEED_DURATIONS = { slow: 18, medium: 10, fast: 5, none: 0 };
-var SPEED_NAMES = { slow: 'ช้ามาก (แนวใหญ่)', medium: 'พอดี (แนวสวย)', fast: 'เร็ว (แนวเล็ก)', none: 'อิสระ' };
+var SPEED_DURATIONS = { slow: 20, medium: 15, fast: 12, none: 0 };
+var SPEED_NAMES = { slow: '150 mm/min (แนวใหญ่)', medium: '200 mm/min (แนวสวย)', fast: '250 mm/min (แนวเล็ก)', none: 'อิสระ' };
 var selectedSpeed = 'medium';
 
 function pickLevel(type, label) {
