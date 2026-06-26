@@ -53,6 +53,26 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 .btn-menu{background:#ff6b00;color:#000;border:none;padding:12px 30px;border-radius:8px;font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;margin-top:10px}
 .btn-menu:hover{background:#ff9900}
 
+/* Difficulty Picker */
+.diff-overlay{position:fixed;inset:0;background:rgba(15,17,21,.95);z-index:100;display:flex;align-items:center;justify-content:center}
+.diff-card{background:#21262d;border-radius:16px;padding:28px 24px;max-width:420px;width:90%;text-align:center}
+.diff-card h2{font-size:1.3rem;color:#ff6b00;margin-bottom:4px}
+.diff-sub{color:#8b949e;font-size:.9rem;margin-bottom:20px}
+.diff-btns{display:flex;gap:10px}
+.diff-btn{flex:1;background:#0d1117;border:2px solid #30363d;border-radius:12px;padding:14px 8px;cursor:pointer;transition:.2s;text-align:center;color:#e6edf3;font-family:inherit}
+.diff-btn:hover{transform:translateY(-3px)}
+.diff-btn.easy:hover{border-color:#2ea043;box-shadow:0 4px 15px rgba(46,160,67,.2)}
+.diff-btn.medium:hover{border-color:#ff9900;box-shadow:0 4px 15px rgba(255,153,0,.2)}
+.diff-btn.hard:hover{border-color:#f85149;box-shadow:0 4px 15px rgba(248,81,73,.2)}
+.diff-btn strong{display:block;font-size:1rem;margin-top:8px}
+.diff-btn span{font-size:.7rem;color:#8b949e}
+.diff-preview{height:50px;display:flex;align-items:center;justify-content:center}
+.diff-line{width:100%;height:2px;background:#ff6b00;position:relative}
+.diff-zone{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);background:rgba(255,107,0,.15);border-radius:4px}
+.easy-zone{height:40px}
+.medium-zone{height:22px}
+.hard-zone{height:10px}
+
 .footer-cr{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:.65rem;color:#30363d}
 </style>
 </head>
@@ -63,31 +83,54 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
   <h1>🔥 ฝึกมือนิ่ง</h1>
   <p class="sub">ช่างเชื่อมมือโปร ต้องมือนิ่ง — ฝึกลากตามรอยเชื่อม</p>
   <div class="levels">
-    <div class="level-card" onclick="startGame('straight')">
+    <div class="level-card" onclick="pickLevel('straight','เส้นตรง')">
       <div class="lv-icon">➖</div>
       <h3>เส้นตรง</h3>
       <p>รอยเชื่อมพื้นฐาน</p>
-      <div class="stars">ง่าย ★☆☆</div>
+      <div class="stars">★☆☆</div>
     </div>
-    <div class="level-card" onclick="startGame('curve')">
+    <div class="level-card" onclick="pickLevel('curve','เส้นโค้ง')">
       <div class="lv-icon">〰️</div>
       <h3>เส้นโค้ง</h3>
       <p>รอยเชื่อมตามแนวโค้ง</p>
-      <div class="stars">ปานกลาง ★★☆</div>
+      <div class="stars">★★☆</div>
     </div>
-    <div class="level-card" onclick="startGame('zigzag')">
+    <div class="level-card" onclick="pickLevel('zigzag','ซิกแซก (Weaving)')">
       <div class="lv-icon">⚡</div>
       <h3>ซิกแซก (Weaving)</h3>
       <p>เทคนิคเชื่อม Weaving</p>
-      <div class="stars">ยาก ★★★</div>
+      <div class="stars">★★★</div>
     </div>
-    <div class="level-card" onclick="startGame('circle')">
+    <div class="level-card" onclick="pickLevel('circle','วงกลม (ท่อ)')">
       <div class="lv-icon">⭕</div>
       <h3>วงกลม (ท่อ)</h3>
       <p>เชื่อมรอบท่อ 360°</p>
-      <div class="stars">ท้าทาย ★★★</div>
+      <div class="stars">★★★</div>
     </div>
   </div>
+  <!-- Difficulty Picker -->
+  <div id="diff-picker" class="diff-overlay" style="display:none">
+    <div class="diff-card">
+      <h2>เลือกความยาก</h2>
+      <p class="diff-sub" id="diff-type-label"></p>
+      <div class="diff-btns">
+        <button class="diff-btn easy" onclick="confirmDifficulty('easy')">
+          <div class="diff-preview"><div class="diff-line"><div class="diff-zone easy-zone"></div></div></div>
+          <strong>ง่าย</strong><span>ขอบกว้าง</span>
+        </button>
+        <button class="diff-btn medium" onclick="confirmDifficulty('medium')">
+          <div class="diff-preview"><div class="diff-line"><div class="diff-zone medium-zone"></div></div></div>
+          <strong>กลาง</strong><span>ขอบปานกลาง</span>
+        </button>
+        <button class="diff-btn hard" onclick="confirmDifficulty('hard')">
+          <div class="diff-preview"><div class="diff-line"><div class="diff-zone hard-zone"></div></div></div>
+          <strong>ยาก</strong><span>ขอบแคบมาก</span>
+        </button>
+      </div>
+      <button class="btn-back" onclick="closeDifficulty()" style="margin-top:16px">◀ กลับเลือกเส้น</button>
+    </div>
+  </div>
+
   <div class="footer-cr">&copy; 2026 ธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</div>
 </div>
 
@@ -124,9 +167,30 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 var cv = document.getElementById('cv');
 var ctx = cv.getContext('2d');
 var lastLevel = 'straight';
+var lastDifficulty = 'easy';
+var pendingType = '';
+
+var DIFF_WIDTHS = { easy: 36, medium: 20, hard: 10 };
+var DIFF_NAMES = { easy: 'ง่าย', medium: 'กลาง', hard: 'ยาก' };
+
+function pickLevel(type, label) {
+  pendingType = type;
+  document.getElementById('diff-type-label').innerText = 'รูปแบบ: ' + label;
+  document.getElementById('diff-picker').style.display = 'flex';
+}
+
+function confirmDifficulty(diff) {
+  lastDifficulty = diff;
+  document.getElementById('diff-picker').style.display = 'none';
+  startGame(pendingType);
+}
+
+function closeDifficulty() {
+  document.getElementById('diff-picker').style.display = 'none';
+}
 
 var path = [];
-var pathWidth = 24;
+var pathWidth = 36;
 var drawing = false;
 var started = false;
 var finished = false;
@@ -189,7 +253,8 @@ function startGame(type) {
   resizeCanvas();
 
   var isMobile = cv.width < 600;
-  pathWidth = isMobile ? 28 : 24;
+  var baseWidth = DIFF_WIDTHS[lastDifficulty] || 36;
+  pathWidth = isMobile ? baseWidth + 4 : baseWidth;
   captureRadius = isMobile ? 40 : 30;
 
   path = generatePath(type);
@@ -416,7 +481,7 @@ function finishGame() {
   document.getElementById('res-time').innerText = elapsed;
   document.getElementById('res-max-dev').innerText = Math.round(maxDev);
   var lvNames = { straight: 'เส้นตรง', curve: 'เส้นโค้ง', zigzag: 'ซิกแซก', circle: 'วงกลม' };
-  document.getElementById('res-level').innerText = lvNames[lastLevel] || lastLevel;
+  document.getElementById('res-level').innerText = (lvNames[lastLevel] || lastLevel) + ' / ' + (DIFF_NAMES[lastDifficulty] || '');
 
   setTimeout(function() { showScreen('result'); }, 600);
 }
