@@ -187,7 +187,7 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
     <div class="hud-item"><div class="hud-label">ระยะ</div><div class="hud-val" id="hud-progress">0%</div></div>
   </div>
   <canvas id="cv"></canvas>
-  <div class="start-hint" id="hint">แตะ/คลิกที่จุดเริ่มต้นแล้วลากตามเส้น</div>
+  <div class="start-hint" id="hint">แตะที่จุดเริ่มต้น (นิ้ว = ด้ามจับ, ปลายลวดอยู่เหนือนิ้ว)</div>
 </div>
 
 <!-- Result -->
@@ -268,6 +268,8 @@ var guideActive = false;
 var animFrame = null;
 var guideRadius = 60;
 var paceSamples = [];
+var isTouchDevice = false;
+var rodOffsetY = -80;
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
@@ -436,14 +438,50 @@ function drawScene() {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Accuracy indicator (border glow)
-    if (!finished) {
-      var lastSample = samples[samples.length - 1];
-      var glowColor = lastSample.dev <= pathWidth ? 'rgba(46,160,67,0.6)' : 'rgba(248,81,73,0.6)';
-      ctx.beginPath();
-      ctx.arc(lastSample.x, lastSample.y, beadW * 0.8, 0, Math.PI * 2);
-      ctx.fillStyle = glowColor;
-      ctx.fill();
+    // Welding rod + cursor
+    if (!finished && samples.length > 0) {
+      var lastS = samples[samples.length - 1];
+      var glowColor = lastS.dev <= pathWidth ? 'rgba(46,160,67,0.6)' : 'rgba(248,81,73,0.6)';
+
+      if (isTouchDevice && drawing) {
+        var tipX = lastS.x;
+        var tipY = lastS.y;
+        var holdX = lastS.x;
+        var holdY = lastS.y - rodOffsetY;
+
+        // Rod line (ลวดเชื่อม)
+        ctx.beginPath();
+        ctx.moveTo(holdX, holdY);
+        ctx.lineTo(tipX, tipY);
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Holder (ด้ามจับ)
+        ctx.beginPath();
+        ctx.arc(holdX, holdY, 12, 0, Math.PI * 2);
+        ctx.fillStyle = '#444';
+        ctx.fill();
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Welding tip spark (ประกายไฟปลายลวด)
+        ctx.beginPath();
+        ctx.arc(tipX, tipY, 6, 0, Math.PI * 2);
+        ctx.fillStyle = glowColor;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(tipX, tipY, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+      } else {
+        // Desktop — simple glow dot
+        ctx.beginPath();
+        ctx.arc(lastS.x, lastS.y, beadW * 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = glowColor;
+        ctx.fill();
+      }
     }
   }
 
@@ -604,15 +642,21 @@ function updateHUD() {
 function handlePointer(e) {
   e.preventDefault();
   var rect = cv.getBoundingClientRect();
-  var px, py;
+  var px, py, rawX, rawY;
   if (e.touches) {
-    px = e.touches[0].clientX - rect.left;
-    py = e.touches[0].clientY - rect.top;
+    isTouchDevice = true;
+    rawX = e.touches[0].clientX - rect.left;
+    rawY = e.touches[0].clientY - rect.top;
+    px = rawX;
+    py = rawY + rodOffsetY;
+    if (py < 0) py = 0;
   } else {
-    px = e.clientX - rect.left;
-    py = e.clientY - rect.top;
+    rawX = e.clientX - rect.left;
+    rawY = e.clientY - rect.top;
+    px = rawX;
+    py = rawY;
   }
-  return { x: px, y: py };
+  return { x: px, y: py, rawX: rawX, rawY: rawY };
 }
 
 function onStart(e) {
