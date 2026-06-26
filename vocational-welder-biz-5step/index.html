@@ -227,13 +227,66 @@
         <!-- วันที่ 5 -->
         <section id="stage-5" class="stage hidden">
             <h1 class="stage-title"><span class="day-badge">วันที่ 5</span> ลงมือทำจริงและดำเนินธุรกิจอย่างเป็นระบบ</h1>
-            <p>ใช้วงจร PDCA ปรับปรุงงานอย่างต่อเนื่อง</p>
-            <div class="pdca-ring">
-                <div class="pdca plan"><h4>P — Plan</h4><p>วางแผนงาน กำหนดราคา</p></div>
-                <div class="pdca do"><h4>D — Do</h4><p>ลงมือผลิต/ให้บริการ</p></div>
-                <div class="pdca check"><h4>C — Check</h4><p>ตรวจสอบคุณภาพ ทำบัญชี</p></div>
-                <div class="pdca act"><h4>A — Act</h4><p>ปรับปรุงรอบถัดไป</p></div>
+            <p>ใช้วงจร PDCA กับการผลิตจริง — ตัวอย่าง: <strong id="pdca-product-name">ที่เก็บขุมทรัพย์ (ถังขยะเหล็ก)</strong></p>
+
+            <!-- PDCA แบบรูปธรรม -->
+            <div class="pdca-real">
+                <div class="pdca-step plan-step">
+                    <div class="pdca-badge plan-bg">P — Plan วางแผน</div>
+                    <div class="pdca-detail" id="pdca-plan">
+                        <div class="checklist">
+                            <label><input type="checkbox"> เขียนแบบ/สเก็ตช์ชิ้นงาน กำหนดขนาด</label>
+                            <label><input type="checkbox"> คำนวณวัสดุ: เหล็กกี่เมตร, ลวดเชื่อมกี่กก.</label>
+                            <label><input type="checkbox"> คำนวณต้นทุน (วัสดุ + ค่าไฟ + ค่าแรง)</label>
+                            <label><input type="checkbox"> ตั้งราคาขาย (ต้นทุน + กำไร 30-50%)</label>
+                            <label><input type="checkbox"> กำหนดเวลาผลิต: ชิ้นละกี่ชั่วโมง</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pdca-step do-step">
+                    <div class="pdca-badge do-bg">D — Do ลงมือทำ</div>
+                    <div class="pdca-detail" id="pdca-do">
+                        <div class="checklist">
+                            <label><input type="checkbox"> ตัดเหล็กตามแบบ (เลื่อยตัด/เครื่องตัด)</label>
+                            <label><input type="checkbox"> จัดวางชิ้นงาน ยึดด้วยจิ๊ก/แม่เหล็ก</label>
+                            <label><input type="checkbox"> เชื่อมประกอบ (Tack → เชื่อมเต็ม)</label>
+                            <label><input type="checkbox"> เจียรรอยเชื่อม ขัดผิวให้เรียบ</label>
+                            <label><input type="checkbox"> พ่นสีกันสนิม / เคลือบผิว</label>
+                            <label><input type="checkbox"> ประกอบชิ้นส่วนเพิ่ม (ถ้ามี)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pdca-step check-step">
+                    <div class="pdca-badge check-bg">C — Check ตรวจสอบ</div>
+                    <div class="pdca-detail" id="pdca-check">
+                        <div class="checklist">
+                            <label><input type="checkbox"> ตรวจรอยเชื่อม — เนี้ยบ ไม่มี Undercut/Porosity</label>
+                            <label><input type="checkbox"> วัดขนาด — ตรงตามแบบ ±2mm</label>
+                            <label><input type="checkbox"> ทดสอบความแข็งแรง — รับน้ำหนักได้ตามกำหนด</label>
+                            <label><input type="checkbox"> ตรวจสี/ผิว — สวยงาม ไม่มีรอยขีดข่วน</label>
+                            <label><input type="checkbox"> บันทึกบัญชี — รายรับ-รายจ่ายครบ</label>
+                            <label><input type="checkbox"> ถ่ายรูปผลงาน — เก็บ Portfolio</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pdca-step act-step">
+                    <div class="pdca-badge act-bg">A — Act ปรับปรุง</div>
+                    <div class="pdca-detail" id="pdca-act">
+                        <div class="checklist">
+                            <label><input type="checkbox"> จดปัญหาที่เจอ → หาทางแก้รอบหน้า</label>
+                            <label><input type="checkbox"> ลดต้นทุน: ซื้อวัสดุที่ไหนถูกกว่า?</label>
+                            <label><input type="checkbox"> เพิ่มคุณภาพ: ปรับแบบให้แข็งแรงขึ้น?</label>
+                            <label><input type="checkbox"> เพิ่มความเร็ว: ทำขั้นตอนไหนเร็วขึ้นได้?</label>
+                            <label><input type="checkbox"> ถามลูกค้า: อยากให้ปรับอะไรบ้าง?</label>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- บัญชี -->
             <div class="accounting-board">
                 <h3>📒 บัญชีรายรับ-รายจ่าย</h3>
                 <div class="acc-row"><span>รายรับจากลูกค้า:</span><span class="text-green">+&thinsp;<span id="revenue-amount"></span> บาท</span></div>
