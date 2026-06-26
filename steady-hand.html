@@ -648,8 +648,7 @@ function handlePointer(e) {
     rawX = e.touches[0].clientX - rect.left;
     rawY = e.touches[0].clientY - rect.top;
     px = rawX;
-    py = rawY + rodOffsetY;
-    if (py < 0) py = 0;
+    py = rawY;
   } else {
     rawX = e.clientX - rect.left;
     rawY = e.clientY - rect.top;
