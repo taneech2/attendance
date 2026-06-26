@@ -173,6 +173,7 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
     <button class="btn-back" onclick="showMenu()">◀ กลับ</button>
     <div class="hud-item"><div class="hud-label">ความแม่น</div><div class="hud-val" id="hud-acc">--%</div></div>
     <div class="hud-item"><div class="hud-label">เวลา</div><div class="hud-val" id="hud-time">0.0s</div></div>
+    <div class="hud-item" id="hud-pace-wrap" style="display:none"><div class="hud-label">จังหวะ</div><div class="hud-val" id="hud-pace">--%</div></div>
     <div class="hud-item"><div class="hud-label">ระยะ</div><div class="hud-val" id="hud-progress">0%</div></div>
   </div>
   <canvas id="cv"></canvas>
@@ -189,6 +190,8 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
       <div class="r-stat"><div class="r-num" id="res-acc"></div><div class="r-label">ความแม่นยำ</div></div>
       <div class="r-stat"><div class="r-num" id="res-time"></div><div class="r-label">เวลา (วินาที)</div></div>
       <div class="r-stat"><div class="r-num" id="res-max-dev"></div><div class="r-label">เบี่ยงเบนสูงสุด (px)</div></div>
+      <div class="r-stat" id="res-pace-wrap" style="display:none"><div class="r-num" id="res-pace"></div><div class="r-label">จังหวะตาม Guide</div></div>
+      <div class="r-stat"><div class="r-num" id="res-total"></div><div class="r-label">คะแนนรวม</div></div>
       <div class="r-stat"><div class="r-num" id="res-level"></div><div class="r-label">ระดับ</div></div>
     </div>
     <button class="btn-menu" onclick="startGame(lastLevel)">🔄 เล่นอีกครั้ง</button>
@@ -245,6 +248,8 @@ var guideIdx = 0;
 var guideDuration = 10;
 var guideActive = false;
 var animFrame = null;
+var guideRadius = 60;
+var paceSamples = [];
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
@@ -315,6 +320,7 @@ function startGame(type) {
   guideIdx = 0;
   guideDuration = SPEED_DURATIONS[selectedSpeed] || 0;
   guideActive = selectedSpeed !== 'none';
+  paceSamples = [];
   if (animFrame) cancelAnimationFrame(animFrame);
 
   document.getElementById('hint').style.display = 'block';
@@ -322,6 +328,8 @@ function startGame(type) {
   document.getElementById('hud-acc').className = 'hud-val';
   document.getElementById('hud-time').innerText = '0.0s';
   document.getElementById('hud-progress').innerText = '0%';
+  document.getElementById('hud-pace-wrap').style.display = guideActive ? '' : 'none';
+  document.getElementById('hud-pace').innerText = '--%';
 
   drawScene();
 }
@@ -392,9 +400,43 @@ function drawScene() {
     ctx.fill();
   }
 
-  // Guide dot
+  // Guide dot + proximity ring
   if (guideActive && started && !finished && guideIdx < path.length) {
     var gp = path[Math.min(guideIdx, path.length - 1)];
+
+    // Proximity ring - changes color based on last sample distance
+    var lastPaceDist = 0;
+    if (paceSamples.length > 0) lastPaceDist = paceSamples[paceSamples.length - 1];
+    var ringColor, ringBg;
+    if (lastPaceDist <= guideRadius * 0.5) {
+      ringColor = 'rgba(46,160,67,0.6)'; ringBg = 'rgba(46,160,67,0.06)';
+    } else if (lastPaceDist <= guideRadius) {
+      ringColor = 'rgba(255,153,0,0.6)'; ringBg = 'rgba(255,153,0,0.06)';
+    } else {
+      ringColor = 'rgba(248,81,73,0.7)'; ringBg = 'rgba(248,81,73,0.08)';
+    }
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(gp.x, gp.y, guideRadius, 0, Math.PI * 2);
+    ctx.fillStyle = ringBg;
+    ctx.fill();
+    ctx.strokeStyle = ringColor;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Inner safe zone
+    ctx.beginPath();
+    ctx.arc(gp.x, gp.y, guideRadius * 0.5, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(46,160,67,0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Guide dot
     var pulse = 8 + Math.sin(Date.now() / 150) * 4;
     ctx.beginPath();
     ctx.arc(gp.x, gp.y, pulse, 0, Math.PI * 2);
@@ -479,6 +521,17 @@ function updateHUD() {
   accEl.className = 'hud-val ' + (acc >= 85 ? 'good' : acc >= 60 ? 'warn' : 'bad');
   document.getElementById('hud-time').innerText = elapsed + 's';
   document.getElementById('hud-progress').innerText = progress + '%';
+
+  if (guideActive && paceSamples.length > 0) {
+    var paceGood = 0;
+    for (var j = 0; j < paceSamples.length; j++) {
+      if (paceSamples[j] <= guideRadius) paceGood++;
+    }
+    var paceAcc = Math.round((paceGood / paceSamples.length) * 100);
+    var paceEl = document.getElementById('hud-pace');
+    paceEl.innerText = paceAcc + '%';
+    paceEl.className = 'hud-val ' + (paceAcc >= 80 ? 'good' : paceAcc >= 50 ? 'warn' : 'bad');
+  }
 }
 
 function handlePointer(e) {
@@ -519,6 +572,13 @@ function onMove(e) {
   var dev = getDeviation(p.x, p.y);
   samples.push({ x: p.x, y: p.y, dev: dev });
   advanceProgress(p.x, p.y);
+
+  if (guideActive && guideIdx < path.length) {
+    var gp = path[Math.min(guideIdx, path.length - 1)];
+    var dx = p.x - gp.x, dy = p.y - gp.y;
+    paceSamples.push(Math.sqrt(dx * dx + dy * dy));
+  }
+
   drawScene();
   updateHUD();
 
@@ -552,12 +612,23 @@ function finishGame() {
   var acc = Math.round((goodCount / samples.length) * 100);
   var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
+  var paceAcc = 100;
+  if (guideActive && paceSamples.length > 0) {
+    var paceGood = 0;
+    for (var j = 0; j < paceSamples.length; j++) {
+      if (paceSamples[j] <= guideRadius) paceGood++;
+    }
+    paceAcc = Math.round((paceGood / paceSamples.length) * 100);
+  }
+
+  var total = guideActive ? Math.round(acc * 0.6 + paceAcc * 0.4) : acc;
+
   var grade, title, sub;
-  if (acc >= 95) { grade = '🏆'; title = 'ช่างเชื่อมมือโปร!'; sub = 'รอยเชื่อมเนี้ยบเหมือนเครื่องเชื่อมอัตโนมัติ'; }
-  else if (acc >= 85) { grade = '🥇'; title = 'ฝีมือดีมาก!'; sub = 'รอยเชื่อมสม่ำเสมอ ผ่านมาตรฐาน'; }
-  else if (acc >= 70) { grade = '🥈'; title = 'พอใช้ได้!'; sub = 'ฝึกอีกนิด รอยเชื่อมจะเนี้ยบขึ้น'; }
-  else if (acc >= 50) { grade = '🥉'; title = 'ต้องฝึกเพิ่ม'; sub = 'ยังเบี่ยงเบนเยอะ ลองใหม่ช้าๆ'; }
-  else { grade = '💪'; title = 'เริ่มต้นดี!'; sub = 'ค่อยๆ ลาก อย่ารีบ แล้วจะดีขึ้น'; }
+  if (total >= 95) { grade = '🏆'; title = 'ช่างเชื่อมมือโปร!'; sub = 'รอยเชื่อมเนี้ยบ จังหวะมือสม่ำเสมอ'; }
+  else if (total >= 85) { grade = '🥇'; title = 'ฝีมือดีมาก!'; sub = 'แม่นยำดี ควบคุมจังหวะได้'; }
+  else if (total >= 70) { grade = '🥈'; title = 'พอใช้ได้!'; sub = 'ฝึกอีกนิด จะเนี้ยบขึ้น'; }
+  else if (total >= 50) { grade = '🥉'; title = 'ต้องฝึกเพิ่ม'; sub = 'คุมมือให้นิ่ง ตามจุดนำให้ทัน'; }
+  else { grade = '💪'; title = 'เริ่มต้นดี!'; sub = 'ค่อยๆ ลาก ตามจุดฟ้า อย่ารีบ'; }
 
   document.getElementById('res-grade').innerText = grade;
   document.getElementById('res-title').innerText = title;
@@ -565,6 +636,9 @@ function finishGame() {
   document.getElementById('res-acc').innerText = acc + '%';
   document.getElementById('res-time').innerText = elapsed;
   document.getElementById('res-max-dev').innerText = Math.round(maxDev);
+  document.getElementById('res-total').innerText = total + '%';
+  document.getElementById('res-pace-wrap').style.display = guideActive ? '' : 'none';
+  document.getElementById('res-pace').innerText = paceAcc + '%';
   var lvNames = { straight: 'เส้นตรง', curve: 'เส้นโค้ง', zigzag: 'ซิกแซก', circle: 'วงกลม' };
   var speedLabel = SPEED_NAMES[selectedSpeed] || '';
   document.getElementById('res-level').innerText = (lvNames[lastLevel] || lastLevel) + ' / ' + (DIFF_NAMES[lastDifficulty] || '') + (speedLabel ? '\n' + speedLabel : '');
