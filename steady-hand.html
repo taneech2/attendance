@@ -77,6 +77,11 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 .hard-zone{height:10px}
 .extreme-zone{height:4px;background:rgba(255,0,0,.25)}
 
+.speed-btns{margin-top:0}
+.spd .spd-icon{font-size:1.5rem;margin-bottom:4px}
+.diff-btn.spd.active-spd{border-color:#00e1ff;background:#0d1117;box-shadow:0 0 12px rgba(0,225,255,.2)}
+.diff-btn.spd.active-spd strong{color:#00e1ff}
+
 .footer-cr{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:.65rem;color:#30363d}
 </style>
 </head>
@@ -135,6 +140,26 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
           <strong>🔥 นรก</strong><span>แทบไม่มีขอบ</span>
         </button>
       </div>
+      <h3 style="margin-top:18px;font-size:1rem;color:#00e1ff">ความเร็วจุดนำทาง (Guide)</h3>
+      <p class="diff-sub" style="margin-bottom:12px">จุดฟ้าวิ่งนำ — ฝึกคุมความเร็วมือเหมือนเชื่อมจริง</p>
+      <div class="diff-btns speed-btns">
+        <button class="diff-btn spd" onclick="pickSpeed('slow')" id="spd-slow">
+          <div class="spd-icon">🐢</div>
+          <strong>ช้ามาก</strong><span>แนวใหญ่</span>
+        </button>
+        <button class="diff-btn spd active-spd" onclick="pickSpeed('medium')" id="spd-medium">
+          <div class="spd-icon">👌</div>
+          <strong>พอดี</strong><span>แนวสวย</span>
+        </button>
+        <button class="diff-btn spd" onclick="pickSpeed('fast')" id="spd-fast">
+          <div class="spd-icon">⚡</div>
+          <strong>เร็ว</strong><span>แนวเล็ก</span>
+        </button>
+        <button class="diff-btn spd" onclick="pickSpeed('none')" id="spd-none">
+          <div class="spd-icon">🔓</div>
+          <strong>อิสระ</strong><span>ไม่มี guide</span>
+        </button>
+      </div>
       <button class="btn-back" onclick="closeDifficulty()" style="margin-top:16px">◀ กลับเลือกเส้น</button>
     </div>
   </div>
@@ -180,6 +205,9 @@ var pendingType = '';
 
 var DIFF_WIDTHS = { easy: 36, medium: 20, hard: 10, extreme: 4 };
 var DIFF_NAMES = { easy: 'ง่าย', medium: 'กลาง', hard: 'ยาก', extreme: 'นรก' };
+var SPEED_DURATIONS = { slow: 18, medium: 10, fast: 5, none: 0 };
+var SPEED_NAMES = { slow: 'ช้ามาก (แนวใหญ่)', medium: 'พอดี (แนวสวย)', fast: 'เร็ว (แนวเล็ก)', none: 'อิสระ' };
+var selectedSpeed = 'medium';
 
 function pickLevel(type, label) {
   pendingType = type;
@@ -197,6 +225,13 @@ function closeDifficulty() {
   document.getElementById('diff-picker').style.display = 'none';
 }
 
+function pickSpeed(spd) {
+  selectedSpeed = spd;
+  ['slow','medium','fast','none'].forEach(function(s) {
+    document.getElementById('spd-' + s).classList.toggle('active-spd', s === spd);
+  });
+}
+
 var path = [];
 var pathWidth = 36;
 var drawing = false;
@@ -206,6 +241,10 @@ var samples = [];
 var startTime = 0;
 var nextPointIdx = 0;
 var captureRadius = 30;
+var guideIdx = 0;
+var guideDuration = 10;
+var guideActive = false;
+var animFrame = null;
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
@@ -272,6 +311,11 @@ function startGame(type) {
   samples = [];
   nextPointIdx = 0;
   startTime = 0;
+
+  guideIdx = 0;
+  guideDuration = SPEED_DURATIONS[selectedSpeed] || 0;
+  guideActive = selectedSpeed !== 'none';
+  if (animFrame) cancelAnimationFrame(animFrame);
 
   document.getElementById('hint').style.display = 'block';
   document.getElementById('hud-acc').innerText = '--%';
@@ -348,6 +392,20 @@ function drawScene() {
     ctx.fill();
   }
 
+  // Guide dot
+  if (guideActive && started && !finished && guideIdx < path.length) {
+    var gp = path[Math.min(guideIdx, path.length - 1)];
+    var pulse = 8 + Math.sin(Date.now() / 150) * 4;
+    ctx.beginPath();
+    ctx.arc(gp.x, gp.y, pulse, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,225,255,0.25)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(gp.x, gp.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#00e1ff';
+    ctx.fill();
+  }
+
   // End dot
   if (path.length > 0) {
     var end = path[path.length - 1];
@@ -356,6 +414,22 @@ function drawScene() {
     ctx.fillStyle = finished ? '#2ea043' : '#ff9900';
     ctx.fill();
   }
+}
+
+function gameLoop() {
+  if (!started || finished) return;
+
+  if (guideActive && guideDuration > 0) {
+    var elapsed = (Date.now() - startTime) / 1000;
+    guideIdx = Math.floor((elapsed / guideDuration) * path.length);
+    if (guideIdx >= path.length) {
+      guideIdx = path.length - 1;
+    }
+  }
+
+  drawScene();
+  updateHUD();
+  animFrame = requestAnimationFrame(gameLoop);
 }
 
 function distToSegment(px, py, ax, ay, bx, by) {
@@ -434,6 +508,8 @@ function onStart(e) {
     var dev = getDeviation(p.x, p.y);
     samples.push({ x: p.x, y: p.y, dev: dev });
     advanceProgress(p.x, p.y);
+    if (animFrame) cancelAnimationFrame(animFrame);
+    gameLoop();
   }
 }
 
@@ -464,6 +540,7 @@ function onEnd(e) {
 function finishGame() {
   finished = true;
   drawing = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
   drawScene();
 
   var goodCount = 0, maxDev = 0, totalDev = 0;
@@ -489,7 +566,8 @@ function finishGame() {
   document.getElementById('res-time').innerText = elapsed;
   document.getElementById('res-max-dev').innerText = Math.round(maxDev);
   var lvNames = { straight: 'เส้นตรง', curve: 'เส้นโค้ง', zigzag: 'ซิกแซก', circle: 'วงกลม' };
-  document.getElementById('res-level').innerText = (lvNames[lastLevel] || lastLevel) + ' / ' + (DIFF_NAMES[lastDifficulty] || '');
+  var speedLabel = SPEED_NAMES[selectedSpeed] || '';
+  document.getElementById('res-level').innerText = (lvNames[lastLevel] || lastLevel) + ' / ' + (DIFF_NAMES[lastDifficulty] || '') + (speedLabel ? '\n' + speedLabel : '');
 
   setTimeout(function() { showScreen('result'); }, 600);
 }
