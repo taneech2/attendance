@@ -438,61 +438,54 @@ function drawScene() {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Welding rod + cursor
-    if (!finished && samples.length > 0) {
-      var lastS = samples[samples.length - 1];
-      var glowColor = lastS.dev <= pathWidth ? 'rgba(46,160,67,0.6)' : 'rgba(248,81,73,0.6)';
-
-      // Welding spark dot
-      ctx.beginPath();
-      ctx.arc(lastS.x, lastS.y, 7, 0, Math.PI * 2);
-      ctx.fillStyle = glowColor;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(lastS.x, lastS.y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#fff';
-      ctx.fill();
-    }
   }
 
-  // Start dot
+  // === จุดเริ่มต้น (ก่อนเริ่มเล่น) ===
   if (!started && path.length > 0) {
     ctx.beginPath();
-    ctx.arc(path[0].x, path[0].y, 14, 0, Math.PI * 2);
-    ctx.fillStyle = '#00e1ff';
+    ctx.arc(path[0].x, path[0].y, 12, 0, Math.PI * 2);
+    ctx.fillStyle = '#2ea043';
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(path[0].x, path[0].y, 8, 0, Math.PI * 2);
+    ctx.arc(path[0].x, path[0].y, 5, 0, Math.PI * 2);
     ctx.fillStyle = '#fff';
     ctx.fill();
   }
 
+  // === จุดสิ้นสุด ===
+  if (path.length > 0) {
+    var end = path[path.length - 1];
+    ctx.beginPath();
+    ctx.arc(end.x, end.y, 10, 0, Math.PI * 2);
+    ctx.fillStyle = finished ? '#2ea043' : '#ff9900';
+    ctx.fill();
+  }
 
-  // Guide ring — moves along path at set speed (no separate dot)
+  // === วงจังหวะ (วิ่งตามเส้นที่ความเร็วกำหนด) ===
   if (guideActive && started && !finished && guideIdx < path.length) {
     var gp = path[Math.min(guideIdx, path.length - 1)];
-    var lastPaceDist = paceSamples.length > 0 ? paceSamples[paceSamples.length - 1] : 0;
-    var ringColor;
-    if (lastPaceDist <= guideRadius * 0.5) ringColor = 'rgba(46,160,67,0.5)';
-    else if (lastPaceDist <= guideRadius) ringColor = 'rgba(255,153,0,0.5)';
-    else ringColor = 'rgba(248,81,73,0.6)';
-
-    var pulse = guideRadius + Math.sin(Date.now() / 300) * 4;
+    var pd = paceSamples.length > 0 ? paceSamples[paceSamples.length - 1] : 0;
+    var rc = pd <= guideRadius * 0.5 ? 'rgba(46,160,67,0.5)' : pd <= guideRadius ? 'rgba(255,153,0,0.5)' : 'rgba(248,81,73,0.6)';
     ctx.beginPath();
-    ctx.arc(gp.x, gp.y, pulse, 0, Math.PI * 2);
-    ctx.strokeStyle = ringColor;
+    ctx.arc(gp.x, gp.y, guideRadius + Math.sin(Date.now() / 300) * 4, 0, Math.PI * 2);
+    ctx.strokeStyle = rc;
     ctx.lineWidth = 2.5;
     ctx.setLineDash([5, 5]);
     ctx.stroke();
     ctx.setLineDash([]);
   }
 
-  // End dot
-  if (path.length > 0) {
-    var end = path[path.length - 1];
+  // === จุดเชื่อม 1 จุด (ตรงนิ้ว/เมาส์) ===
+  if (!finished && started && samples.length > 0) {
+    var ls = samples[samples.length - 1];
+    var onTrack = ls.dev <= pathWidth;
     ctx.beginPath();
-    ctx.arc(end.x, end.y, 10, 0, Math.PI * 2);
-    ctx.fillStyle = finished ? '#2ea043' : '#ff9900';
+    ctx.arc(ls.x, ls.y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = onTrack ? 'rgba(46,160,67,0.7)' : 'rgba(248,81,73,0.7)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(ls.x, ls.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
     ctx.fill();
   }
 }
