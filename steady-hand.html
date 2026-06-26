@@ -443,24 +443,6 @@ function drawScene() {
       var lastS = samples[samples.length - 1];
       var glowColor = lastS.dev <= pathWidth ? 'rgba(46,160,67,0.6)' : 'rgba(248,81,73,0.6)';
 
-      // Pace ring around cursor (if guide active)
-      if (guideActive && paceSamples.length > 0) {
-        var paceDist = paceSamples[paceSamples.length - 1];
-        var ringCol;
-        if (paceDist <= guideRadius * 0.5) ringCol = 'rgba(46,160,67,0.5)';
-        else if (paceDist <= guideRadius) ringCol = 'rgba(255,153,0,0.5)';
-        else ringCol = 'rgba(248,81,73,0.6)';
-
-        var pulse = 20 + Math.sin(Date.now() / 200) * 4;
-        ctx.beginPath();
-        ctx.arc(lastS.x, lastS.y, pulse, 0, Math.PI * 2);
-        ctx.strokeStyle = ringCol;
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([4, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
       // Welding spark dot
       ctx.beginPath();
       ctx.arc(lastS.x, lastS.y, 7, 0, Math.PI * 2);
@@ -493,9 +475,23 @@ function drawScene() {
     ctx.fill();
   }
 
-  // Guide — hidden dot (scoring only), ring shows at user's cursor
+  // Guide ring — moves along path at set speed (no separate dot)
   if (guideActive && started && !finished && guideIdx < path.length) {
-    // Invisible guide for scoring — no separate dot drawn
+    var gp = path[Math.min(guideIdx, path.length - 1)];
+    var lastPaceDist = paceSamples.length > 0 ? paceSamples[paceSamples.length - 1] : 0;
+    var ringColor;
+    if (lastPaceDist <= guideRadius * 0.5) ringColor = 'rgba(46,160,67,0.5)';
+    else if (lastPaceDist <= guideRadius) ringColor = 'rgba(255,153,0,0.5)';
+    else ringColor = 'rgba(248,81,73,0.6)';
+
+    var pulse = guideRadius + Math.sin(Date.now() / 300) * 4;
+    ctx.beginPath();
+    ctx.arc(gp.x, gp.y, pulse, 0, Math.PI * 2);
+    ctx.strokeStyle = ringColor;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([5, 5]);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   // End dot
