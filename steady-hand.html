@@ -367,16 +367,65 @@ function drawScene() {
     ctx.setLineDash([]);
   }
 
-  // User trail
+  // User trail — weld bead
   if (samples.length > 1) {
+    var beadW = selectedSpeed === 'slow' ? 14 : selectedSpeed === 'fast' ? 6 : 10;
+    if (selectedSpeed === 'none') beadW = 10;
+
+    // Base bead (dark metal)
+    ctx.beginPath();
+    ctx.moveTo(samples[0].x, samples[0].y);
+    for (var i = 1; i < samples.length; i++) ctx.lineTo(samples[i].x, samples[i].y);
+    ctx.strokeStyle = '#3a3a3a';
+    ctx.lineWidth = beadW + 4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Bright bead center
+    ctx.beginPath();
+    ctx.moveTo(samples[0].x, samples[0].y);
+    for (var i = 1; i < samples.length; i++) ctx.lineTo(samples[i].x, samples[i].y);
+    ctx.strokeStyle = '#8a8a8a';
+    ctx.lineWidth = beadW;
+    ctx.stroke();
+
+    // Fish-scale ripples
+    var rippleSpacing = selectedSpeed === 'slow' ? 6 : selectedSpeed === 'fast' ? 14 : 9;
+    var dist = 0;
     for (var i = 1; i < samples.length; i++) {
+      var dx = samples[i].x - samples[i-1].x;
+      var dy = samples[i].y - samples[i-1].y;
+      var seg = Math.sqrt(dx * dx + dy * dy);
+      dist += seg;
+      if (dist >= rippleSpacing) {
+        dist = 0;
+        var angle = Math.atan2(dy, dx);
+        // Crescent arc
+        ctx.beginPath();
+        ctx.arc(samples[i].x, samples[i].y, beadW * 0.45, angle - Math.PI * 0.7, angle + Math.PI * 0.7);
+        ctx.strokeStyle = 'rgba(200,200,210,0.5)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+    }
+
+    // Highlight center line
+    ctx.beginPath();
+    ctx.moveTo(samples[0].x, samples[0].y);
+    for (var i = 1; i < samples.length; i++) ctx.lineTo(samples[i].x, samples[i].y);
+    ctx.strokeStyle = 'rgba(180,190,210,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Accuracy indicator (border glow)
+    if (!finished) {
+      var lastSample = samples[samples.length - 1];
+      var glowColor = lastSample.dev <= pathWidth ? 'rgba(46,160,67,0.6)' : 'rgba(248,81,73,0.6)';
       ctx.beginPath();
-      ctx.moveTo(samples[i - 1].x, samples[i - 1].y);
-      ctx.lineTo(samples[i].x, samples[i].y);
-      ctx.strokeStyle = samples[i].dev <= pathWidth ? '#2ea043' : '#f85149';
-      ctx.lineWidth = 4;
-      ctx.lineCap = 'round';
-      ctx.stroke();
+      ctx.arc(lastSample.x, lastSample.y, beadW * 0.8, 0, Math.PI * 2);
+      ctx.fillStyle = glowColor;
+      ctx.fill();
     }
   }
 
