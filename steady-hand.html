@@ -64,6 +64,9 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 .diff-btn.easy:hover{border-color:#2ea043;box-shadow:0 4px 15px rgba(46,160,67,.2)}
 .diff-btn.medium:hover{border-color:#ff9900;box-shadow:0 4px 15px rgba(255,153,0,.2)}
 .diff-btn.hard:hover{border-color:#f85149;box-shadow:0 4px 15px rgba(248,81,73,.2)}
+.diff-btn.extreme{border-color:#30363d;background:linear-gradient(135deg,#1a0000,#0d1117)}
+.diff-btn.extreme:hover{border-color:#ff0000;box-shadow:0 4px 20px rgba(255,0,0,.3);animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 .diff-btn strong{display:block;font-size:1rem;margin-top:8px}
 .diff-btn span{font-size:.7rem;color:#8b949e}
 .diff-preview{height:50px;display:flex;align-items:center;justify-content:center}
@@ -72,6 +75,7 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 .easy-zone{height:40px}
 .medium-zone{height:22px}
 .hard-zone{height:10px}
+.extreme-zone{height:4px;background:rgba(255,0,0,.25)}
 
 .footer-cr{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:.65rem;color:#30363d}
 </style>
@@ -126,6 +130,10 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
           <div class="diff-preview"><div class="diff-line"><div class="diff-zone hard-zone"></div></div></div>
           <strong>ยาก</strong><span>ขอบแคบมาก</span>
         </button>
+        <button class="diff-btn extreme" onclick="confirmDifficulty('extreme')">
+          <div class="diff-preview"><div class="diff-line"><div class="diff-zone extreme-zone"></div></div></div>
+          <strong>🔥 นรก</strong><span>แทบไม่มีขอบ</span>
+        </button>
       </div>
       <button class="btn-back" onclick="closeDifficulty()" style="margin-top:16px">◀ กลับเลือกเส้น</button>
     </div>
@@ -170,8 +178,8 @@ var lastLevel = 'straight';
 var lastDifficulty = 'easy';
 var pendingType = '';
 
-var DIFF_WIDTHS = { easy: 36, medium: 20, hard: 10 };
-var DIFF_NAMES = { easy: 'ง่าย', medium: 'กลาง', hard: 'ยาก' };
+var DIFF_WIDTHS = { easy: 36, medium: 20, hard: 10, extreme: 4 };
+var DIFF_NAMES = { easy: 'ง่าย', medium: 'กลาง', hard: 'ยาก', extreme: 'นรก' };
 
 function pickLevel(type, label) {
   pendingType = type;
