@@ -98,8 +98,8 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
   <p style="color:#ff9900;font-size:.85rem;margin-bottom:2px">วิชาฝึกฝีมือในงานเชื่อมโลหะ</p>
   <p class="sub">โดย ครูธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</p>
   <div class="name-row">
-    <label for="std-name">ชื่อ-สกุล:</label>
-    <input type="text" id="std-name" placeholder="พิมพ์ชื่อของคุณ..." maxlength="40" autocomplete="off">
+    <label for="std-name">ผู้เชื่อม:</label>
+    <input type="text" id="std-name" placeholder="พิมพ์ชื่อ-สกุล..." maxlength="40" autocomplete="off">
   </div>
   <div class="levels">
     <div class="level-card" onclick="pickLevel('straight','เส้นตรง')">
@@ -481,29 +481,7 @@ function drawScene() {
     var onTrack = ls.dev <= pathWidth;
     var sparkCol = onTrack ? 'rgba(46,160,67,0.7)' : 'rgba(248,81,73,0.7)';
 
-    if (isTouchDevice && drawing) {
-      var holdX = ls.x;
-      var holdY = ls.y - rodOffsetY;
-
-      // ลวดเชื่อม (เส้นจากด้ามจับถึงปลาย)
-      ctx.beginPath();
-      ctx.moveTo(holdX, holdY);
-      ctx.lineTo(ls.x, ls.y);
-      ctx.strokeStyle = '#777';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // ด้ามจับ (ตรงนิ้ว)
-      ctx.beginPath();
-      ctx.arc(holdX, holdY, 10, 0, Math.PI * 2);
-      ctx.fillStyle = '#444';
-      ctx.fill();
-      ctx.strokeStyle = '#666';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    // ประกายไฟปลายลวด (จุดเชื่อม)
+    // จุดเชื่อม
     ctx.beginPath();
     ctx.arc(ls.x, ls.y, 8, 0, Math.PI * 2);
     ctx.fillStyle = sparkCol;
@@ -600,8 +578,7 @@ function handlePointer(e) {
     rawX = e.touches[0].clientX - rect.left;
     rawY = e.touches[0].clientY - rect.top;
     px = rawX;
-    py = rawY + rodOffsetY;
-    if (py < 0) py = 0;
+    py = rawY;
   } else {
     rawX = e.clientX - rect.left;
     rawY = e.clientY - rect.top;
