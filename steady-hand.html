@@ -467,13 +467,6 @@ function drawScene() {
     ctx.fill();
   }
 
-  // Next target
-  if (started && !finished && nextPointIdx < path.length) {
-    ctx.beginPath();
-    ctx.arc(path[nextPointIdx].x, path[nextPointIdx].y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,225,255,0.5)';
-    ctx.fill();
-  }
 
   // Guide ring — moves along path at set speed (no separate dot)
   if (guideActive && started && !finished && guideIdx < path.length) {
