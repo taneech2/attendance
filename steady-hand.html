@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ฝึกมือนิ่ง — ช่างเชื่อมมือโปร</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:100vh;overflow:hidden;touch-action:none}
+
+.screen{display:none;width:100vw;height:100vh;flex-direction:column;align-items:center;justify-content:center}
+.screen.active{display:flex}
+
+/* Menu */
+#menu{background:linear-gradient(135deg,#0f1115 0%,#1c2128 100%);padding:20px;text-align:center}
+#menu h1{font-size:2rem;color:#ff6b00;text-shadow:0 0 20px rgba(255,107,0,.4);margin-bottom:4px}
+#menu .sub{color:#8b949e;font-size:1rem;margin-bottom:24px}
+.levels{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:400px;width:100%;padding:0 16px}
+.level-card{background:#21262d;border:2px solid #30363d;border-radius:14px;padding:20px 14px;cursor:pointer;transition:.2s;text-align:center}
+.level-card:hover{border-color:#ff6b00;transform:translateY(-3px);box-shadow:0 6px 20px rgba(255,107,0,.15)}
+.level-card .lv-icon{font-size:2.5rem;margin-bottom:8px}
+.level-card h3{font-size:1rem;margin-bottom:4px}
+.level-card p{font-size:.75rem;color:#8b949e}
+.level-card .stars{color:#ff6b00;font-size:.8rem;margin-top:6px}
+
+/* HUD */
+.hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(15,17,21,.9);z-index:10;border-bottom:2px solid #30363d}
+.hud-item{text-align:center}
+.hud-label{font-size:.65rem;color:#8b949e}
+.hud-val{font-size:1.1rem;font-weight:700}
+.hud-val.good{color:#2ea043}
+.hud-val.warn{color:#ff9900}
+.hud-val.bad{color:#f85149}
+.hud .btn-back{background:none;border:1px solid #30363d;color:#8b949e;padding:4px 12px;border-radius:6px;font-family:inherit;font-size:.8rem;cursor:pointer}
+
+/* Game */
+#game{position:relative}
+#game canvas{display:block}
+.start-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);color:#8b949e;font-size:.9rem;text-align:center;pointer-events:none;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* Result */
+#result{background:linear-gradient(135deg,#0f1115,#1c2128);padding:20px;text-align:center}
+.result-card{background:#21262d;border-radius:16px;padding:30px 24px;max-width:360px;width:90%}
+.result-grade{font-size:4rem;margin-bottom:8px}
+.result-title{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.result-sub{color:#8b949e;font-size:.9rem;margin-bottom:20px}
+.result-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.r-stat{background:#0d1117;border-radius:10px;padding:12px;text-align:center}
+.r-stat .r-num{font-size:1.3rem;font-weight:700;color:#ff6b00}
+.r-stat .r-label{font-size:.7rem;color:#8b949e;margin-top:2px}
+.btn-menu{background:#ff6b00;color:#000;border:none;padding:12px 30px;border-radius:8px;font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;margin-top:10px}
+.btn-menu:hover{background:#ff9900}
+
+.footer-cr{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:.65rem;color:#30363d}
+</style>
+</head>
+<body>
+
+<!-- Menu -->
+<div id="menu" class="screen active">
+  <h1>🔥 ฝึกมือนิ่ง</h1>
+  <p class="sub">ช่างเชื่อมมือโปร ต้องมือนิ่ง — ฝึกลากตามรอยเชื่อม</p>
+  <div class="levels">
+    <div class="level-card" onclick="startGame('straight')">
+      <div class="lv-icon">➖</div>
+      <h3>เส้นตรง</h3>
+      <p>รอยเชื่อมพื้นฐาน</p>
+      <div class="stars">ง่าย ★☆☆</div>
+    </div>
+    <div class="level-card" onclick="startGame('curve')">
+      <div class="lv-icon">〰️</div>
+      <h3>เส้นโค้ง</h3>
+      <p>รอยเชื่อมตามแนวโค้ง</p>
+      <div class="stars">ปานกลาง ★★☆</div>
+    </div>
+    <div class="level-card" onclick="startGame('zigzag')">
+      <div class="lv-icon">⚡</div>
+      <h3>ซิกแซก (Weaving)</h3>
+      <p>เทคนิคเชื่อม Weaving</p>
+      <div class="stars">ยาก ★★★</div>
+    </div>
+    <div class="level-card" onclick="startGame('circle')">
+      <div class="lv-icon">⭕</div>
+      <h3>วงกลม (ท่อ)</h3>
+      <p>เชื่อมรอบท่อ 360°</p>
+      <div class="stars">ท้าทาย ★★★</div>
+    </div>
+  </div>
+  <div class="footer-cr">&copy; 2026 ธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</div>
+</div>
+
+<!-- Game -->
+<div id="game" class="screen">
+  <div class="hud">
+    <button class="btn-back" onclick="showMenu()">◀ กลับ</button>
+    <div class="hud-item"><div class="hud-label">ความแม่น</div><div class="hud-val" id="hud-acc">--%</div></div>
+    <div class="hud-item"><div class="hud-label">เวลา</div><div class="hud-val" id="hud-time">0.0s</div></div>
+    <div class="hud-item"><div class="hud-label">ระยะ</div><div class="hud-val" id="hud-progress">0%</div></div>
+  </div>
+  <canvas id="cv"></canvas>
+  <div class="start-hint" id="hint">แตะ/คลิกที่จุดเริ่มต้นแล้วลากตามเส้น</div>
+</div>
+
+<!-- Result -->
+<div id="result" class="screen">
+  <div class="result-card">
+    <div class="result-grade" id="res-grade"></div>
+    <div class="result-title" id="res-title"></div>
+    <div class="result-sub" id="res-sub"></div>
+    <div class="result-stats">
+      <div class="r-stat"><div class="r-num" id="res-acc"></div><div class="r-label">ความแม่นยำ</div></div>
+      <div class="r-stat"><div class="r-num" id="res-time"></div><div class="r-label">เวลา (วินาที)</div></div>
+      <div class="r-stat"><div class="r-num" id="res-max-dev"></div><div class="r-label">เบี่ยงเบนสูงสุด (px)</div></div>
+      <div class="r-stat"><div class="r-num" id="res-level"></div><div class="r-label">ระดับ</div></div>
+    </div>
+    <button class="btn-menu" onclick="startGame(lastLevel)">🔄 เล่นอีกครั้ง</button>
+    <button class="btn-menu" style="background:#30363d;color:#e6edf3;margin-left:8px" onclick="showMenu()">📋 เมนู</button>
+  </div>
+</div>
+
+<script>
+var cv = document.getElementById('cv');
+var ctx = cv.getContext('2d');
+var lastLevel = 'straight';
+
+var path = [];
+var pathWidth = 24;
+var drawing = false;
+var started = false;
+var finished = false;
+var samples = [];
+var startTime = 0;
+var nextPointIdx = 0;
+var captureRadius = 30;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+function showMenu() { showScreen('menu'); }
+
+function generatePath(type) {
+  var w = cv.width, h = cv.height;
+  var pts = [];
+  var margin = 60;
+  var startY = h / 2;
+
+  if (type === 'straight') {
+    for (var x = margin; x <= w - margin; x += 4) {
+      pts.push({ x: x, y: startY });
+    }
+  } else if (type === 'curve') {
+    for (var x = margin; x <= w - margin; x += 4) {
+      var t = (x - margin) / (w - 2 * margin);
+      var y = startY + Math.sin(t * Math.PI * 2) * (h * 0.2);
+      pts.push({ x: x, y: y });
+    }
+  } else if (type === 'zigzag') {
+    var amp = h * 0.12;
+    var freq = 6;
+    for (var x = margin; x <= w - margin; x += 4) {
+      var t = (x - margin) / (w - 2 * margin);
+      var tri = Math.abs((t * freq) % 1 - 0.5) * 2;
+      var y = startY + (tri * 2 - 1) * amp;
+      pts.push({ x: x, y: y });
+    }
+  } else if (type === 'circle') {
+    var cx = w / 2, cy = h / 2;
+    var r = Math.min(w, h) * 0.3;
+    var steps = 200;
+    for (var i = 0; i <= steps; i++) {
+      var angle = (i / steps) * Math.PI * 2 - Math.PI / 2;
+      pts.push({ x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r });
+    }
+  }
+  return pts;
+}
+
+function resizeCanvas() {
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+}
+
+function startGame(type) {
+  lastLevel = type;
+  showScreen('game');
+  resizeCanvas();
+
+  var isMobile = cv.width < 600;
+  pathWidth = isMobile ? 28 : 24;
+  captureRadius = isMobile ? 40 : 30;
+
+  path = generatePath(type);
+  drawing = false;
+  started = false;
+  finished = false;
+  samples = [];
+  nextPointIdx = 0;
+  startTime = 0;
+
+  document.getElementById('hint').style.display = 'block';
+  document.getElementById('hud-acc').innerText = '--%';
+  document.getElementById('hud-acc').className = 'hud-val';
+  document.getElementById('hud-time').innerText = '0.0s';
+  document.getElementById('hud-progress').innerText = '0%';
+
+  drawScene();
+}
+
+function drawScene() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  // Background grid
+  ctx.strokeStyle = '#1a1e24';
+  ctx.lineWidth = 1;
+  for (var x = 0; x < cv.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cv.height); ctx.stroke(); }
+  for (var y = 0; y < cv.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cv.width, y); ctx.stroke(); }
+
+  // Path zone (tolerance area)
+  if (path.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(path[0].x, path[0].y);
+    for (var i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+    ctx.strokeStyle = 'rgba(255,107,0,0.15)';
+    ctx.lineWidth = pathWidth * 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+
+  // Center line
+  if (path.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(path[0].x, path[0].y);
+    for (var i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+    ctx.strokeStyle = '#ff6b00';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // User trail
+  if (samples.length > 1) {
+    for (var i = 1; i < samples.length; i++) {
+      ctx.beginPath();
+      ctx.moveTo(samples[i - 1].x, samples[i - 1].y);
+      ctx.lineTo(samples[i].x, samples[i].y);
+      ctx.strokeStyle = samples[i].dev <= pathWidth ? '#2ea043' : '#f85149';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  }
+
+  // Start dot
+  if (!started && path.length > 0) {
+    ctx.beginPath();
+    ctx.arc(path[0].x, path[0].y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = '#00e1ff';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(path[0].x, path[0].y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  }
+
+  // Next target
+  if (started && !finished && nextPointIdx < path.length) {
+    ctx.beginPath();
+    ctx.arc(path[nextPointIdx].x, path[nextPointIdx].y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,225,255,0.5)';
+    ctx.fill();
+  }
+
+  // End dot
+  if (path.length > 0) {
+    var end = path[path.length - 1];
+    ctx.beginPath();
+    ctx.arc(end.x, end.y, 10, 0, Math.PI * 2);
+    ctx.fillStyle = finished ? '#2ea043' : '#ff9900';
+    ctx.fill();
+  }
+}
+
+function distToSegment(px, py, ax, ay, bx, by) {
+  var dx = bx - ax, dy = by - ay;
+  var len2 = dx * dx + dy * dy;
+  if (len2 === 0) return Math.sqrt((px - ax) * (px - ax) + (py - ay) * (py - ay));
+  var t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+  var cx = ax + t * dx, cy = ay + t * dy;
+  return Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
+}
+
+function getDeviation(px, py) {
+  var minDist = Infinity;
+  for (var i = 0; i < path.length - 1; i++) {
+    var d = distToSegment(px, py, path[i].x, path[i].y, path[i + 1].x, path[i + 1].y);
+    if (d < minDist) minDist = d;
+  }
+  return minDist;
+}
+
+function advanceProgress(px, py) {
+  while (nextPointIdx < path.length) {
+    var pt = path[nextPointIdx];
+    var dx = px - pt.x, dy = py - pt.y;
+    if (dx * dx + dy * dy < captureRadius * captureRadius) {
+      nextPointIdx++;
+    } else {
+      break;
+    }
+  }
+}
+
+function updateHUD() {
+  if (samples.length === 0) return;
+  var goodCount = 0;
+  var maxDev = 0;
+  for (var i = 0; i < samples.length; i++) {
+    if (samples[i].dev <= pathWidth) goodCount++;
+    if (samples[i].dev > maxDev) maxDev = samples[i].dev;
+  }
+  var acc = Math.round((goodCount / samples.length) * 100);
+  var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  var progress = Math.round((nextPointIdx / path.length) * 100);
+
+  var accEl = document.getElementById('hud-acc');
+  accEl.innerText = acc + '%';
+  accEl.className = 'hud-val ' + (acc >= 85 ? 'good' : acc >= 60 ? 'warn' : 'bad');
+  document.getElementById('hud-time').innerText = elapsed + 's';
+  document.getElementById('hud-progress').innerText = progress + '%';
+}
+
+function handlePointer(e) {
+  e.preventDefault();
+  var rect = cv.getBoundingClientRect();
+  var px, py;
+  if (e.touches) {
+    px = e.touches[0].clientX - rect.left;
+    py = e.touches[0].clientY - rect.top;
+  } else {
+    px = e.clientX - rect.left;
+    py = e.clientY - rect.top;
+  }
+  return { x: px, y: py };
+}
+
+function onStart(e) {
+  if (finished) return;
+  var p = handlePointer(e);
+  var sp = path[0];
+  var dx = p.x - sp.x, dy = p.y - sp.y;
+  if (dx * dx + dy * dy < 40 * 40) {
+    drawing = true;
+    started = true;
+    startTime = Date.now();
+    document.getElementById('hint').style.display = 'none';
+    var dev = getDeviation(p.x, p.y);
+    samples.push({ x: p.x, y: p.y, dev: dev });
+    advanceProgress(p.x, p.y);
+  }
+}
+
+function onMove(e) {
+  if (!drawing || finished) return;
+  var p = handlePointer(e);
+  var dev = getDeviation(p.x, p.y);
+  samples.push({ x: p.x, y: p.y, dev: dev });
+  advanceProgress(p.x, p.y);
+  drawScene();
+  updateHUD();
+
+  if (nextPointIdx >= path.length - 5) {
+    var ep = path[path.length - 1];
+    var dx = p.x - ep.x, dy = p.y - ep.y;
+    if (dx * dx + dy * dy < captureRadius * captureRadius) {
+      finishGame();
+    }
+  }
+}
+
+function onEnd(e) {
+  if (drawing && started && !finished) {
+    drawing = false;
+  }
+}
+
+function finishGame() {
+  finished = true;
+  drawing = false;
+  drawScene();
+
+  var goodCount = 0, maxDev = 0, totalDev = 0;
+  for (var i = 0; i < samples.length; i++) {
+    if (samples[i].dev <= pathWidth) goodCount++;
+    if (samples[i].dev > maxDev) maxDev = samples[i].dev;
+    totalDev += samples[i].dev;
+  }
+  var acc = Math.round((goodCount / samples.length) * 100);
+  var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+  var grade, title, sub;
+  if (acc >= 95) { grade = '🏆'; title = 'ช่างเชื่อมมือโปร!'; sub = 'รอยเชื่อมเนี้ยบเหมือนเครื่องเชื่อมอัตโนมัติ'; }
+  else if (acc >= 85) { grade = '🥇'; title = 'ฝีมือดีมาก!'; sub = 'รอยเชื่อมสม่ำเสมอ ผ่านมาตรฐาน'; }
+  else if (acc >= 70) { grade = '🥈'; title = 'พอใช้ได้!'; sub = 'ฝึกอีกนิด รอยเชื่อมจะเนี้ยบขึ้น'; }
+  else if (acc >= 50) { grade = '🥉'; title = 'ต้องฝึกเพิ่ม'; sub = 'ยังเบี่ยงเบนเยอะ ลองใหม่ช้าๆ'; }
+  else { grade = '💪'; title = 'เริ่มต้นดี!'; sub = 'ค่อยๆ ลาก อย่ารีบ แล้วจะดีขึ้น'; }
+
+  document.getElementById('res-grade').innerText = grade;
+  document.getElementById('res-title').innerText = title;
+  document.getElementById('res-sub').innerText = sub;
+  document.getElementById('res-acc').innerText = acc + '%';
+  document.getElementById('res-time').innerText = elapsed;
+  document.getElementById('res-max-dev').innerText = Math.round(maxDev);
+  var lvNames = { straight: 'เส้นตรง', curve: 'เส้นโค้ง', zigzag: 'ซิกแซก', circle: 'วงกลม' };
+  document.getElementById('res-level').innerText = lvNames[lastLevel] || lastLevel;
+
+  setTimeout(function() { showScreen('result'); }, 600);
+}
+
+// Events
+cv.addEventListener('mousedown', onStart);
+cv.addEventListener('mousemove', onMove);
+cv.addEventListener('mouseup', onEnd);
+cv.addEventListener('mouseleave', onEnd);
+cv.addEventListener('touchstart', onStart, { passive: false });
+cv.addEventListener('touchmove', onMove, { passive: false });
+cv.addEventListener('touchend', onEnd);
+
+window.addEventListener('resize', function() {
+  if (document.getElementById('game').classList.contains('active') && !started) {
+    resizeCanvas();
+    path = generatePath(lastLevel);
+    drawScene();
+  }
+});
+</script>
+</body>
+</html>
