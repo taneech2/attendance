@@ -268,7 +268,7 @@ var guideActive = false;
 var animFrame = null;
 var guideRadius = 60;
 var paceSamples = [];
-var isTouchDevice = false;
+var isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 var rodOffsetY = -80;
 
 function showScreen(id) {
