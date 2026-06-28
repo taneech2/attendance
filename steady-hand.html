@@ -497,6 +497,25 @@ function drawScene() {
     var onTrack = ls.dev <= pathWidth;
     var sparkCol = onTrack ? 'rgba(46,160,67,0.7)' : 'rgba(248,81,73,0.7)';
 
+    // มือถือ: เส้นจากนิ้ว(ล่าง) ไป จุดเชื่อม(บน)
+    if (isTouchDevice && drawing) {
+      var fingerY = ls.y - rodOffsetY;
+      ctx.beginPath();
+      ctx.moveTo(ls.x, fingerY);
+      ctx.lineTo(ls.x, ls.y);
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // วงนิ้ว
+      ctx.beginPath();
+      ctx.arc(ls.x, fingerY, 8, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
     // จุดเชื่อม
     ctx.beginPath();
     ctx.arc(ls.x, ls.y, 8, 0, Math.PI * 2);
@@ -594,7 +613,9 @@ function handlePointer(e) {
     rawX = e.touches[0].clientX - rect.left;
     rawY = e.touches[0].clientY - rect.top;
     px = rawX;
-    py = rawY;
+    py = rawY + rodOffsetY;
+    if (py < 0) py = 0;
+    if (py > cv.height) py = cv.height;
   } else {
     rawX = e.clientX - rect.left;
     rawY = e.clientY - rect.top;
