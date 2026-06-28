@@ -37,8 +37,9 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 /* Game */
 #game{position:relative}
 #game canvas{display:block}
-.start-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);color:#8b949e;font-size:.9rem;text-align:center;pointer-events:none;animation:pulse 1.5s infinite}
-@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.start-hint{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);text-align:center;z-index:20}
+.start-btn{background:linear-gradient(135deg,#ff6b00,#ff9900);color:#fff;border:none;padding:16px 40px;border-radius:50px;font-family:'Kanit',sans-serif;font-size:1.2rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,0,.4);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 
 /* Result */
 #result{background:linear-gradient(135deg,#0f1115,#1c2128);padding:20px;text-align:center}
@@ -187,7 +188,9 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
     <div class="hud-item"><div class="hud-label">ระยะ</div><div class="hud-val" id="hud-progress">0%</div></div>
   </div>
   <canvas id="cv"></canvas>
-  <div class="start-hint" id="hint">แตะที่จุดเริ่มต้น (นิ้ว = ด้ามจับ, ปลายลวดอยู่เหนือนิ้ว)</div>
+  <div class="start-hint" id="hint">
+    <button class="start-btn" id="start-weld-btn" onclick="beginWelding()">🔥 แตะเพื่อเริ่มเชื่อม</button>
+  </div>
 </div>
 
 <!-- Result -->
@@ -333,6 +336,7 @@ function startGame(type) {
   drawing = false;
   started = false;
   finished = false;
+  readyToWeld = false;
   samples = [];
   nextPointIdx = 0;
   startTime = 0;
@@ -600,23 +604,27 @@ function handlePointer(e) {
   return { x: px, y: py, rawX: rawX, rawY: rawY };
 }
 
+var readyToWeld = false;
+
+function beginWelding() {
+  readyToWeld = true;
+  document.getElementById('hint').style.display = 'none';
+  started = true;
+  startTime = Date.now();
+  samples.push({ x: path[0].x, y: path[0].y, dev: 0 });
+  if (animFrame) cancelAnimationFrame(animFrame);
+  gameLoop();
+  drawScene();
+}
+
 function onStart(e) {
   if (finished) return;
+  if (!readyToWeld) return;
   var p = handlePointer(e);
-  var sp = path[0];
-  var dx = p.x - sp.x, dy = p.y - sp.y;
-  var startRadius = isTouchDevice ? 120 : 40;
-  if (dx * dx + dy * dy < startRadius * startRadius) {
-    drawing = true;
-    started = true;
-    startTime = Date.now();
-    document.getElementById('hint').style.display = 'none';
-    var dev = getDeviation(p.x, p.y);
-    samples.push({ x: p.x, y: p.y, dev: dev });
-    advanceProgress(p.x, p.y);
-    if (animFrame) cancelAnimationFrame(animFrame);
-    gameLoop();
-  }
+  drawing = true;
+  var dev = getDeviation(p.x, p.y);
+  samples.push({ x: p.x, y: p.y, dev: dev });
+  advanceProgress(p.x, p.y);
 }
 
 function onMove(e) {
