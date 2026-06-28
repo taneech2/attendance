@@ -343,6 +343,7 @@ function startGame(type) {
   paceSamples = [];
   if (animFrame) cancelAnimationFrame(animFrame);
 
+  previewPos = null;
   document.getElementById('hint').style.display = 'block';
   document.getElementById('hud-acc').innerText = '--%';
   document.getElementById('hud-acc').className = 'hud-val';
@@ -487,6 +488,37 @@ function drawScene() {
     ctx.setLineDash([]);
   }
 
+  // === Preview ตำแหน่งจุดเชื่อม (ก่อนลาก) ===
+  if (!started && previewPos) {
+    if (isTouchDevice) {
+      var fY = previewPos.y - rodOffsetY;
+      ctx.beginPath();
+      ctx.moveTo(previewPos.x, fY);
+      ctx.lineTo(previewPos.x, previewPos.y);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.arc(previewPos.x, fY, 6, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(previewPos.x, previewPos.y, 10, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,107,0,0.6)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([3, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(previewPos.x, previewPos.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,107,0,0.8)';
+    ctx.fill();
+  }
+
   // === จุดเชื่อม 1 จุด ===
   if (!finished && started && samples.length > 0) {
     var ls = samples[samples.length - 1];
@@ -621,25 +653,32 @@ function handlePointer(e) {
   return { x: px, y: py, rawX: rawX, rawY: rawY };
 }
 
+var previewPos = null;
+
 function onStart(e) {
   if (finished) return;
   var p = handlePointer(e);
+  previewPos = { x: p.x, y: p.y };
+  drawing = false;
+  drawScene();
+}
+
+function onMove(e) {
+  if (finished) return;
+  var p = handlePointer(e);
+  previewPos = { x: p.x, y: p.y };
+
   if (!started) {
     started = true;
     startTime = Date.now();
     document.getElementById('hint').style.display = 'none';
+    drawing = true;
     if (animFrame) cancelAnimationFrame(animFrame);
     gameLoop();
   }
-  drawing = true;
-  var dev = getDeviation(p.x, p.y);
-  samples.push({ x: p.x, y: p.y, dev: dev });
-  advanceProgress(p.x, p.y);
-}
 
-function onMove(e) {
-  if (!drawing || finished) return;
-  var p = handlePointer(e);
+  if (!drawing) { drawing = true; }
+
   var dev = getDeviation(p.x, p.y);
   samples.push({ x: p.x, y: p.y, dev: dev });
   advanceProgress(p.x, p.y);
