@@ -442,6 +442,18 @@ function drawScene() {
 
   // === จุดเริ่มต้น (ก่อนเริ่มเล่น) ===
   if (!started && path.length > 0) {
+    // วงพื้นที่แตะเริ่ม (มือถือ = ใหญ่)
+    var touchZone = isTouchDevice ? 120 : 40;
+    ctx.beginPath();
+    ctx.arc(path[0].x, path[0].y, touchZone, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(46,160,67,0.08)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(46,160,67,0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // จุดกลาง
     ctx.beginPath();
     ctx.arc(path[0].x, path[0].y, 12, 0, Math.PI * 2);
     ctx.fillStyle = '#2ea043';
@@ -593,7 +605,8 @@ function onStart(e) {
   var p = handlePointer(e);
   var sp = path[0];
   var dx = p.x - sp.x, dy = p.y - sp.y;
-  if (dx * dx + dy * dy < 40 * 40) {
+  var startRadius = isTouchDevice ? 120 : 40;
+  if (dx * dx + dy * dy < startRadius * startRadius) {
     drawing = true;
     started = true;
     startTime = Date.now();
