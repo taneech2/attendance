@@ -5,26 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>สื่อการเรียนการสอน — ครูธานี ชมสุข | วอศ.บุรีรัมย์</title>
 <style>
+  :root{
+    --page-bg:#f5f5f0; --page-bg-att:scroll;
+    --header-g1:#1e3a5f; --header-g2:#2c5f8a; --header-text:#fff;
+    --text-main:#1a1a1a; --text-sub:#666; --link-color:#2c5f8a;
+    --card-bg:#fff; --card-border:#e8e8e0; --card-blur:0px;
+    --stat-bg:#fff; --stat-border:#e8e8e0; --stat-num-color:#1e3a5f;
+    --section-border:#1e3a5f;
+    --footer-border:#e8e8e0; --footer-text:#999; --footer-strong:#666;
+  }
+  [data-theme="dark"]{
+    --page-bg:#0d0d10;
+    --header-g1:#0a1220; --header-g2:#132a42; --header-text:#f0f0f0;
+    --text-main:#e8e8ec; --text-sub:#9a9aa5; --link-color:#6fb3e0;
+    --card-bg:#17171c; --card-border:#2a2a33;
+    --stat-bg:#17171c; --stat-border:#2a2a33; --stat-num-color:#6fb3e0;
+    --section-border:#3a5a7a;
+    --footer-border:#2a2a33; --footer-text:#777; --footer-strong:#999;
+  }
+  [data-theme="glass"]{
+    --page-bg:linear-gradient(135deg,#3b5f9e,#7b3fa0 45%,#d1497a); --page-bg-att:fixed;
+    --header-g1:rgba(20,35,60,.45); --header-g2:rgba(60,50,110,.45); --header-text:#fff;
+    --text-main:#fff; --text-sub:rgba(255,255,255,.78); --link-color:#d8e8ff;
+    --card-bg:rgba(255,255,255,.14); --card-border:rgba(255,255,255,.32); --card-blur:14px;
+    --stat-bg:rgba(255,255,255,.14); --stat-border:rgba(255,255,255,.32); --stat-num-color:#fff;
+    --section-border:rgba(255,255,255,.55);
+    --footer-border:rgba(255,255,255,.25); --footer-text:rgba(255,255,255,.65); --footer-strong:rgba(255,255,255,.85);
+  }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Sarabun','Noto Sans Thai',sans-serif;background:#f5f5f0;color:#1a1a1a;line-height:1.6}
-  .header{background:linear-gradient(135deg,#1e3a5f,#2c5f8a);color:#fff;padding:2rem 1.5rem;text-align:center}
+  body{font-family:'Sarabun','Noto Sans Thai',sans-serif;background:var(--page-bg);background-attachment:var(--page-bg-att);color:var(--text-main);line-height:1.6;transition:background .3s,color .3s}
+  .header{background:linear-gradient(135deg,var(--header-g1),var(--header-g2));color:var(--header-text);padding:2rem 1.5rem;text-align:center;backdrop-filter:blur(var(--card-blur));transition:background .3s}
   .header h1{font-size:1.6rem;font-weight:700;margin-bottom:.3rem}
   .header p{font-size:.95rem;opacity:.85}
   .header .badge{display:inline-block;background:rgba(255,255,255,.15);padding:4px 14px;border-radius:20px;font-size:.8rem;margin-top:.5rem}
   .container{max-width:800px;margin:0 auto;padding:1.5rem 1rem}
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
-  .stat{background:#fff;border-radius:10px;padding:.8rem;text-align:center;border:1px solid #e8e8e0}
-  .stat-num{font-size:1.5rem;font-weight:700;color:#1e3a5f}
-  .stat-label{font-size:.75rem;color:#666}
+  .stat{background:var(--stat-bg);backdrop-filter:blur(var(--card-blur));border-radius:10px;padding:.8rem;text-align:center;border:1px solid var(--stat-border);transition:background .3s,border-color .3s}
+  .stat-num{font-size:1.5rem;font-weight:700;color:var(--stat-num-color)}
+  .stat-label{font-size:.75rem;color:var(--text-sub)}
   .section{margin-bottom:1.5rem}
-  .section-title{font-size:1rem;font-weight:700;color:#1e3a5f;margin-bottom:.6rem;display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:2px solid #1e3a5f}
-  .card{background:#fff;border:1px solid #e8e8e0;border-radius:10px;padding:.8rem 1rem;margin-bottom:8px;text-decoration:none;color:inherit;display:flex;align-items:center;gap:12px;transition:all .15s}
-  .card:hover{border-color:#2c5f8a;box-shadow:0 2px 8px rgba(30,58,95,.1);transform:translateY(-1px)}
+  .section-title{font-size:1rem;font-weight:700;color:var(--text-main);margin-bottom:.6rem;display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:2px solid var(--section-border)}
+  .card{background:var(--card-bg);backdrop-filter:blur(var(--card-blur));border:1px solid var(--card-border);border-radius:10px;padding:.8rem 1rem;margin-bottom:8px;text-decoration:none;color:inherit;display:flex;align-items:center;gap:12px;transition:all .15s}
+  .card:hover{border-color:var(--link-color);box-shadow:0 2px 8px rgba(30,58,95,.15);transform:translateY(-1px)}
   .card-icon{width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
   .card-body{flex:1;min-width:0}
-  .card-name{font-size:.9rem;font-weight:600;color:#1a1a1a}
-  .card-desc{font-size:.78rem;color:#666;margin-top:2px}
-  .card-url{font-size:.7rem;color:#2c5f8a;margin-top:2px;word-break:break-all}
+  .card-name{font-size:.9rem;font-weight:600;color:var(--text-main)}
+  .card-desc{font-size:.78rem;color:var(--text-sub);margin-top:2px}
+  .card-url{font-size:.7rem;color:var(--link-color);margin-top:2px;word-break:break-all}
   .tag{font-size:.65rem;padding:3px 8px;border-radius:12px;font-weight:600;flex-shrink:0;white-space:nowrap}
   .ic-weld{background:#fef3e6;color:#b45309}
   .ic-measure{background:#e6f7ef;color:#0d7a4a}
@@ -36,11 +63,21 @@
   .onedrive .card-name,.onedrive .card-desc,.onedrive .card-url{color:#fff}
   .onedrive .card-desc{opacity:.85}
   .onedrive:hover{box-shadow:0 4px 12px rgba(0,120,212,.3)}
-  .footer{text-align:center;padding:1.5rem;font-size:.75rem;color:#999;border-top:1px solid #e8e8e0;margin-top:1rem}
-  .footer strong{color:#666}
+  .footer{text-align:center;padding:1.5rem;font-size:.75rem;color:var(--footer-text);border-top:1px solid var(--footer-border);margin-top:1rem}
+  .footer strong{color:var(--footer-strong)}
   @media(max-width:500px){
     .stats{grid-template-columns:repeat(3,1fr);gap:6px}
     .header h1{font-size:1.3rem}
+  }
+
+  /* THEME SWITCHER */
+  .theme-switcher{position:fixed;right:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:1000;background:var(--card-bg);backdrop-filter:blur(var(--card-blur));border:1px solid var(--card-border);border-radius:16px;padding:8px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+  .theme-btn{width:38px;height:38px;border-radius:10px;border:2px solid transparent;background:rgba(128,128,128,.12);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .theme-btn:hover{background:rgba(128,128,128,.22)}
+  .theme-btn.on{border-color:var(--link-color);background:rgba(128,128,128,.28)}
+  @media(max-width:500px){
+    .theme-switcher{right:8px;padding:6px;gap:6px}
+    .theme-btn{width:32px;height:32px;font-size:14px}
   }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
@@ -270,6 +307,27 @@
   วิทยาลัยการอาชีพบุรีรัมย์ | สำนักงานคณะกรรมการการอาชีวศึกษา<br>
   จัดทำเพื่อรายงานฝ่ายสื่อการเรียนการสอน ภาคเรียนที่ 1/2569
 </div>
+
+<div class="theme-switcher" id="theme-switcher">
+  <button class="theme-btn" data-theme-btn="light" title="ธีมสว่าง">☀️</button>
+  <button class="theme-btn" data-theme-btn="dark" title="ธีมดำ">🌙</button>
+  <button class="theme-btn" data-theme-btn="glass" title="ธีมกระจกใส">💎</button>
+</div>
+
+<script>
+(function(){
+  const root = document.documentElement;
+  const buttons = document.querySelectorAll('.theme-btn');
+  function applyTheme(t){
+    if(t==='light') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', t);
+    buttons.forEach(b=>b.classList.toggle('on', b.dataset.themeBtn===t));
+    localStorage.setItem('hub-theme', t);
+  }
+  buttons.forEach(b=>b.addEventListener('click', ()=>applyTheme(b.dataset.themeBtn)));
+  applyTheme(localStorage.getItem('hub-theme') || 'light');
+})();
+</script>
 
 </body>
 </html>
