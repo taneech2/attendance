@@ -173,10 +173,12 @@ table.rpt tr:hover td{background:#161622}
       <div class="result-grade" id="rGrade"></div>
       <div class="result-who" id="rWho"></div>
       <div id="rBreakdown"></div>
-      <button class="btn-primary" onclick="location.reload()" style="margin-top:16px">🔄 กลับหน้าแรก</button>
+      <button class="btn-primary" id="btnCert" style="display:none;margin-top:6px" onclick="downloadCertificate()">🎓 ดาวน์โหลดใบประกาศ</button>
+      <button class="btn-primary" onclick="location.reload()" style="margin-top:10px">🔄 กลับหน้าแรก</button>
     </div>
   </div>
 </div>
+<canvas id="certCanvas" width="1400" height="990" style="display:none"></canvas>
 
 <!-- REPORT -->
 <div id="s-report" class="screen">
@@ -461,7 +463,9 @@ async function doSubmit(){
   showResult(record);
 }
 
+let lastResult = null;
 function showResult(r){
+  lastResult = r;
   document.getElementById('rScore').textContent = `${r.total} / 200 คะแนน`;
   document.getElementById('rPct').textContent = `คิดเป็น ${r.pct}%`;
   document.getElementById('rWho').textContent = `${r.fname} ${r.lname} — ${r.dept}`;
@@ -479,7 +483,89 @@ function showResult(r){
       <div class="sec-bar-wrap"><div class="sec-bar" style="width:${(s.val/max*100)}%;background:${s.color}"></div></div>
       <div class="sec-val">${s.val} / ${max}</div>
     </div>`).join('');
+  document.getElementById('btnCert').style.display = r.pass ? 'block' : 'none';
   show('s-result');
+}
+
+// ─── CERTIFICATE (ออกให้อัตโนมัติเมื่อสอบผ่าน) ─────────
+async function downloadCertificate(){
+  const r = lastResult;
+  if(!r || !r.pass) return;
+  if(document.fonts && document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} }
+
+  const canvas = document.getElementById('certCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // พื้นหลัง
+  ctx.fillStyle = '#fdfaf3';
+  ctx.fillRect(0,0,W,H);
+
+  // กรอบคู่ตกแต่ง
+  ctx.strokeStyle = '#0b2d4a';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(30,30,W-60,H-60);
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(50,50,W-100,H-100);
+
+  ctx.textAlign = 'center';
+
+  // หัวเรื่อง
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "800 60px 'Sarabun', sans-serif";
+  ctx.fillText('ใบประกาศเกียรติคุณ', W/2, 175);
+  ctx.fillStyle = '#c9a227';
+  ctx.font = "700 24px 'Sarabun', sans-serif";
+  ctx.fillText('CERTIFICATE OF ACHIEVEMENT', W/2, 215);
+
+  ctx.fillStyle = '#333';
+  ctx.font = "400 26px 'Sarabun', sans-serif";
+  ctx.fillText('มอบให้เพื่อแสดงว่า', W/2, 300);
+
+  // ชื่อ
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "800 52px 'Sarabun', sans-serif";
+  ctx.fillText(`${r.fname} ${r.lname}`, W/2, 375);
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(W/2-260,400); ctx.lineTo(W/2+260,400); ctx.stroke();
+
+  ctx.fillStyle = '#333';
+  ctx.font = "400 24px 'Sarabun', sans-serif";
+  ctx.fillText(`แผนก / ชั้นปี ${r.dept}`, W/2, 445);
+
+  ctx.font = "400 26px 'Sarabun', sans-serif";
+  const bodyLines = [
+    'ได้สอบผ่านการทดสอบกลางภาคเรียนที่ 1 ปีการศึกษา 2569',
+    'วิชาเทคโนโลยีสารสนเทศ (Word • Excel • PowerPoint)',
+  ];
+  bodyLines.forEach((line,i)=> ctx.fillText(line, W/2, 495 + i*38));
+
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "700 30px 'Sarabun', sans-serif";
+  ctx.fillText(`คะแนน ${r.total} / 200 (${r.pct}%)  —  ${r.gradeLabel}`, W/2, 605);
+
+  const dateTH = new Date(r.submittedAt || Date.now()).toLocaleDateString('th-TH-u-ca-buddhist', {day:'numeric', month:'long', year:'numeric'});
+  ctx.fillStyle = '#555';
+  ctx.font = "400 22px 'Sarabun', sans-serif";
+  ctx.fillText(`ให้ไว้ ณ วันที่ ${dateTH}`, W/2, 660);
+
+  // ลายเซ็น
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(W/2-190,840); ctx.lineTo(W/2+190,840); ctx.stroke();
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "700 24px 'Sarabun', sans-serif";
+  ctx.fillText('(นายธานี ชมสุข)', W/2, 875);
+  ctx.fillStyle = '#555';
+  ctx.font = "400 20px 'Sarabun', sans-serif";
+  ctx.fillText('ครูผู้สอน วิทยาลัยการอาชีพบุรีรัมย์', W/2, 905);
+
+  const link = document.createElement('a');
+  link.download = `certificate-${r.fname}-${r.lname}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 }
 
 // ─── REPORT (สำหรับครู) ───────────────────────────────
