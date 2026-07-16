@@ -95,6 +95,21 @@ table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;white-space:nowrap}
 table.rpt tr:hover td{background:#161622}
 .rpt-total{color:var(--cy);font-weight:800}
 .rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+
+/* GRADE */
+.result-grade{text-align:center;margin-bottom:16px}
+.grade-badge{display:inline-block;border-radius:20px;padding:6px 18px;font-size:15px;font-weight:800}
+.grade-badge.g4{background:rgba(34,197,94,.15);color:var(--gr);border:1.5px solid var(--gr)}
+.grade-badge.g3{background:rgba(34,211,238,.15);color:var(--cy);border:1.5px solid var(--cyd)}
+.grade-badge.g2{background:rgba(250,204,21,.15);color:var(--yw);border:1.5px solid var(--yw)}
+.grade-badge.g1{background:rgba(251,146,60,.15);color:#fb923c;border:1.5px solid #fb923c}
+.grade-badge.g0{background:rgba(244,63,94,.15);color:var(--rd);border:1.5px solid var(--rd)}
+.rpt-grade{font-weight:800}
+.rpt-grade.g4{color:var(--gr)}
+.rpt-grade.g3{color:var(--cy)}
+.rpt-grade.g2{color:var(--yw)}
+.rpt-grade.g1{color:#fb923c}
+.rpt-grade.g0{color:var(--rd)}
 </style>
 </head>
 <body>
@@ -155,6 +170,7 @@ table.rpt tr:hover td{background:#161622}
       <div class="result-emoji" id="rEmoji">🏆</div>
       <div class="result-score" id="rScore"></div>
       <div class="result-pct" id="rPct"></div>
+      <div class="result-grade" id="rGrade"></div>
       <div class="result-who" id="rWho"></div>
       <div id="rBreakdown"></div>
       <button class="btn-primary" onclick="location.reload()" style="margin-top:16px">🔄 กลับหน้าแรก</button>
@@ -264,6 +280,15 @@ const QUESTIONS = [
 ];
 const N = QUESTIONS.length; // 60
 const PT_PER_Q = 200 / N;
+
+// ─── GRADING (เกณฑ์: <50%=ไม่ผ่าน, 50-59%=เกรด1, 60-69%=เกรด2, 70-79%=เกรด3, 80%+=เกรด4) ──
+function gradeOf(pct){
+  if(pct >= 80) return {n:4, label:'เกรด 4', pass:true};
+  if(pct >= 70) return {n:3, label:'เกรด 3', pass:true};
+  if(pct >= 60) return {n:2, label:'เกรด 2', pass:true};
+  if(pct >= 50) return {n:1, label:'เกรด 1', pass:true};
+  return {n:0, label:'เกรด 0 (ไม่ผ่าน)', pass:false};
+}
 
 // ─── STATE ────────────────────────────────────────────
 let student = null;
@@ -386,10 +411,12 @@ async function doSubmit(){
   const pct = +(totalPts/200*100).toFixed(1);
   const usedSec = EXAM_SECONDS - Math.max(timeLeft,0);
 
+  const grade = gradeOf(pct);
   const record = {
     fname: student.fname, lname: student.lname, dept: student.dept,
     wordScore: secPts.word, excelScore: secPts.excel, pptScore: secPts.ppt,
     total: totalPts, pct: pct,
+    gradeN: grade.n, gradeLabel: grade.label, pass: grade.pass,
     usedSec: usedSec,
     submittedAt: Date.now(),
   };
@@ -405,6 +432,7 @@ function showResult(r){
   document.getElementById('rScore').textContent = `${r.total} / 200 คะแนน`;
   document.getElementById('rPct').textContent = `คิดเป็น ${r.pct}%`;
   document.getElementById('rWho').textContent = `${r.fname} ${r.lname} — ${r.dept}`;
+  document.getElementById('rGrade').innerHTML = `<span class="grade-badge g${r.gradeN}">${r.pass ? '✅' : '❌'} ${r.gradeLabel}</span>`;
   document.getElementById('rEmoji').textContent = r.pct>=80 ? '🏆' : r.pct>=50 ? '👍' : '📘';
   const secs = [
     {label:'Word', val:r.wordScore, color:'#60a5fa'},
@@ -457,10 +485,11 @@ function renderReport(){
     return;
   }
   const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  const gradeFor = r => r.gradeN != null ? {n:r.gradeN, label:r.gradeLabel} : (()=>{ const g=gradeOf(r.pct); return {n:g.n, label:g.label}; })();
   wrap.innerHTML = `<table class="rpt"><thead><tr>
-    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>Word</th><th>Excel</th><th>PowerPoint</th><th>รวม</th><th>%</th>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>Word</th><th>Excel</th><th>PowerPoint</th><th>รวม</th><th>%</th><th>เกรด</th>
   </tr></thead><tbody>
-  ${rows.map(r=>`<tr>
+  ${rows.map(r=>{ const g = gradeFor(r); return `<tr>
     <td>${fmtTime(r.submittedAt)}</td>
     <td>${r.fname} ${r.lname}</td>
     <td>${r.dept}</td>
@@ -469,18 +498,20 @@ function renderReport(){
     <td>${r.pptScore}</td>
     <td class="rpt-total">${r.total}</td>
     <td>${r.pct}%</td>
-  </tr>`).join('')}
+    <td class="rpt-grade g${g.n}">${g.label}</td>
+  </tr>`; }).join('')}
   </tbody></table>
-  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ</div>`;
+  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ — เกณฑ์ผ่าน: 50% ขึ้นไป (เกรด 1-4)</div>`;
 }
 
 function downloadCSV(){
   if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
-  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','Word','Excel','PowerPoint','รวม','เปอร์เซ็นต์'];
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','Word','Excel','PowerPoint','รวม','เปอร์เซ็นต์','เกรด'];
   const lines = [header.join(',')];
   reportData.forEach(r=>{
     const ts = new Date(r.submittedAt).toLocaleString('th-TH');
-    lines.push([ts, r.fname, r.lname, r.dept, r.wordScore, r.excelScore, r.pptScore, r.total, r.pct].map(v=>`"${v}"`).join(','));
+    const gradeLabel = r.gradeLabel != null ? r.gradeLabel : gradeOf(r.pct).label;
+    lines.push([ts, r.fname, r.lname, r.dept, r.wordScore, r.excelScore, r.pptScore, r.total, r.pct, gradeLabel].map(v=>`"${v}"`).join(','));
   });
   const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
