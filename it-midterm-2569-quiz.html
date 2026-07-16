@@ -273,13 +273,44 @@ const PPT_Q = [
   {q:"Rehearse Timings ใน PowerPoint มีไว้เพื่ออะไร?", c:["ตั้งเวลาให้ระบบจดจำระยะเวลาที่ใช้พูดในแต่ละสไลด์เพื่อซ้อมนำเสนอ","ลบสไลด์ที่ไม่ใช้","เปลี่ยนธีม","แทรกไฮเปอร์ลิงก์"], a:0},
 ];
 
-const QUESTIONS = [
+const MASTER_QUESTIONS = [
   ...WORD_Q.map(q=>({...q, sec:'word', secTH:'Word'})),
   ...EXCEL_Q.map(q=>({...q, sec:'excel', secTH:'Excel'})),
   ...PPT_Q.map(q=>({...q, sec:'ppt', secTH:'PowerPoint'})),
 ];
-const N = QUESTIONS.length; // 60
+const N = MASTER_QUESTIONS.length; // 60
 const PT_PER_Q = 200 / N;
+
+// ─── SHUFFLE (สุ่มลำดับข้อภายในแต่ละหมวด + สุ่มลำดับตัวเลือก ต่อผู้เข้าสอบ 1 คน) ──
+function shuffled(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function buildExamQuestions(){
+  const sections = [
+    {list: WORD_Q, sec:'word', secTH:'Word'},
+    {list: EXCEL_Q, sec:'excel', secTH:'Excel'},
+    {list: PPT_Q, sec:'ppt', secTH:'PowerPoint'},
+  ];
+  const out = [];
+  sections.forEach(({list, sec, secTH})=>{
+    shuffled(list).forEach(q=>{
+      const order = shuffled([0,1,2,3]);
+      out.push({
+        q: q.q,
+        c: order.map(origIdx=>q.c[origIdx]),
+        a: order.indexOf(q.a),
+        sec, secTH,
+      });
+    });
+  });
+  return out;
+}
+let examQuestions = MASTER_QUESTIONS; // reassigned per attempt in startExam()
 
 // ─── GRADING (เกณฑ์: <50%=ไม่ผ่าน, 50-59%=เกรด1, 60-69%=เกรด2, 70-79%=เกรด3, 80%+=เกรด4) ──
 function gradeOf(pct){
@@ -311,6 +342,7 @@ function startExam(){
   if(!fname || !lname || !dept){ alert('กรุณากรอก ชื่อ นามสกุล และแผนก ให้ครบ'); return; }
   student = {fname, lname, dept};
   document.getElementById('examWho').textContent = `${fname} ${lname} — ${dept}`;
+  examQuestions = buildExamQuestions();
   buildNavGrid();
   gotoQ(0);
   show('s-exam');
@@ -363,7 +395,7 @@ function refreshNavGrid(){
 function gotoQ(i){
   if(i<0 || i>=N) return;
   currentQ = i;
-  const item = QUESTIONS[i];
+  const item = examQuestions[i];
   const badge = document.getElementById('qBadge');
   badge.textContent = item.secTH;
   badge.className = 'q-badge ' + item.sec;
@@ -401,13 +433,14 @@ async function doSubmit(){
   window.removeEventListener('beforeunload', beforeUnload);
 
   const secScore = {word:0, excel:0, ppt:0};
-  QUESTIONS.forEach((item, i)=>{ if(answers[i] === item.a) secScore[item.sec]++; });
+  examQuestions.forEach((item, i)=>{ if(answers[i] === item.a) secScore[item.sec]++; });
+  const totalCorrect = secScore.word + secScore.excel + secScore.ppt;
+  const totalPts = +(totalCorrect * PT_PER_Q).toFixed(1);
   const secPts = {
     word: +(secScore.word * PT_PER_Q).toFixed(1),
     excel: +(secScore.excel * PT_PER_Q).toFixed(1),
     ppt: +(secScore.ppt * PT_PER_Q).toFixed(1),
   };
-  const totalPts = +(secPts.word + secPts.excel + secPts.ppt).toFixed(1);
   const pct = +(totalPts/200*100).toFixed(1);
   const usedSec = EXAM_SECONDS - Math.max(timeLeft,0);
 
