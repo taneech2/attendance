@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ข้อสอบกลางภาค 1/2569 — เทคโนโลยีสารสนเทศ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#22d3ee;--cyd:#0891b2;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--pp:#a78bfa;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0a0f 0%,#0d1420 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.wrap{max-width:760px;margin:0 auto;padding:20px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* LOGIN */
+#s-login{align-items:center;justify-content:center;min-height:100vh;padding:12px}
+#s-login.active{display:flex}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px 24px;width:100%;max-width:440px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.login-emblem{font-size:44px;text-align:center;margin-bottom:6px}
+.login-h1{text-align:center;font-size:20px;font-weight:800;color:var(--cy);line-height:1.4}
+.login-sub{text-align:center;font-size:13px;color:var(--mut);margin:4px 0 18px}
+.rules-box{background:#0d1a1e;border:1px solid var(--cyd);border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.9;color:var(--cy)}
+.rules-box b{color:var(--yw)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:#aab;margin-bottom:6px}
+.field input{width:100%;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:14px}
+.field input:focus{outline:none;border-color:var(--cy)}
+.btn-primary{display:block;width:100%;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#001;border:none;border-radius:10px;padding:14px;font-size:17px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{display:block;width:100%;background:none;border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:10px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:10px}
+
+/* EXAM TOPBAR */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(10,10,15,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:16px}
+.topbar-inner{max-width:760px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.topbar h1{font-size:15px;color:var(--cy);font-weight:800}
+.topbar .sub{font-size:11px;color:var(--mut)}
+.timer{display:flex;align-items:center;gap:8px}
+.timer-num{font-size:20px;font-weight:800;color:var(--gr);font-variant-numeric:tabular-nums;background:#0d1a1e;border:1px solid var(--cyd);border-radius:8px;padding:4px 12px}
+.timer-num.warn{color:var(--yw);border-color:var(--yw)}
+.timer-num.danger{color:var(--rd);border-color:var(--rd);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn-submit{background:var(--rd);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer}
+
+/* NAVIGATOR */
+.navgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-bottom:18px}
+.navbtn{aspect-ratio:1;border-radius:6px;border:1.5px solid var(--line);background:#161622;color:var(--mut);font-size:11px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.navbtn.answered{background:rgba(34,211,238,.15);border-color:var(--cyd);color:var(--cy)}
+.navbtn.current{border-color:var(--yw);color:var(--yw);box-shadow:0 0 0 2px rgba(250,204,21,.3)}
+
+/* QUESTION CARD */
+.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px 20px;max-width:720px;margin:0 auto 20px}
+.q-badge{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:4px 12px;margin-bottom:10px;color:#001}
+.q-badge.word{background:#60a5fa}
+.q-badge.excel{background:var(--gr)}
+.q-badge.ppt{background:#fb923c}
+.q-num{font-size:12px;color:var(--mut);margin-bottom:4px}
+.q-text{font-size:16px;font-weight:700;line-height:1.65;margin-bottom:16px;min-height:50px}
+.choices{display:grid;gap:9px;margin-bottom:18px}
+.choice-btn{display:flex;align-items:center;gap:11px;background:#161622;border:2px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;text-align:left;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;color:var(--tx);width:100%;transition:.12s}
+.choice-btn:active{transform:scale(.98)}
+.choice-ltr{width:26px;height:26px;background:var(--cyd);color:#001;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.choice-btn.sel{background:rgba(34,211,238,.12);border-color:var(--cy)}
+.choice-btn.sel .choice-ltr{background:var(--cy)}
+.nav-row{display:flex;gap:10px}
+.btn-nav{flex:1;background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:13px;font-size:14px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer}
+.btn-nav.primary{background:var(--cyd);border-color:var(--cyd);color:#001}
+.btn-nav:disabled{opacity:.4;cursor:default}
+
+/* RESULT */
+.result-emoji{font-size:56px;text-align:center;margin-bottom:6px}
+.result-score{text-align:center;font-size:34px;font-weight:800;color:var(--cy);margin-bottom:2px}
+.result-pct{text-align:center;font-size:14px;color:var(--mut);margin-bottom:20px}
+.result-who{text-align:center;font-size:14px;color:var(--tx);margin-bottom:20px}
+.sec-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:8px}
+.sec-bar-wrap{background:#1a1a26;border-radius:20px;height:10px;overflow:hidden;flex:1;margin:0 10px}
+.sec-bar{height:100%;border-radius:20px}
+.sec-label{width:110px;color:var(--mut)}
+.sec-val{width:70px;text-align:right;color:var(--tx);font-weight:700}
+
+/* REPORT */
+.report-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:13px}
+.report-tools button{background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+table.rpt th{text-align:left;color:var(--mut);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;white-space:nowrap}
+table.rpt tr:hover td{background:#161622}
+.rpt-total{color:var(--cy);font-weight:800}
+.rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="login-card">
+    <div class="login-emblem">💻</div>
+    <div class="login-h1">ข้อสอบกลางภาค 1/2569<br>วิชาเทคโนโลยีสารสนเทศ</div>
+    <div class="login-sub">Word • Excel • PowerPoint</div>
+    <div class="rules-box">
+      • ข้อสอบทั้งหมด <b>60 ข้อ</b> (เรื่องละ 20 ข้อ)<br>
+      • คะแนนเต็ม <b>200 คะแนน</b><br>
+      • เวลาสอบ <b>2 ชั่วโมง</b> — หมดเวลาระบบจะส่งข้อสอบให้อัตโนมัติ<br>
+      • สอบเสร็จ ระบบแสดงผลคะแนนทันที
+    </div>
+    <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+    <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+    <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
+    <button class="btn-primary" onclick="startExam()">🚀 เริ่มสอบ</button>
+    <button class="btn-ghost" onclick="openReport()">📊 รายงานผลสอบ (สำหรับครู)</button>
+  </div>
+</div>
+
+<!-- EXAM -->
+<div id="s-exam" class="screen">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <h1>ข้อสอบกลางภาค 1/2569 — เทคโนโลยีสารสนเทศ</h1>
+        <div class="sub" id="examWho"></div>
+      </div>
+      <div class="timer">
+        <div class="timer-num" id="timerNum">2:00:00</div>
+        <button class="btn-submit" onclick="confirmSubmit()">ส่งข้อสอบ</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="navgrid" id="navgrid"></div>
+    <div class="quiz-card">
+      <div class="q-badge" id="qBadge"></div>
+      <div class="q-num" id="qNum"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="choices" id="qChoices"></div>
+      <div class="nav-row">
+        <button class="btn-nav" id="btnPrev" onclick="gotoQ(currentQ-1)">← ข้อก่อนหน้า</button>
+        <button class="btn-nav primary" id="btnNext" onclick="gotoQ(currentQ+1)">ข้อถัดไป →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="wrap">
+    <div class="quiz-card">
+      <div class="result-emoji" id="rEmoji">🏆</div>
+      <div class="result-score" id="rScore"></div>
+      <div class="result-pct" id="rPct"></div>
+      <div class="result-who" id="rWho"></div>
+      <div id="rBreakdown"></div>
+      <button class="btn-primary" onclick="location.reload()" style="margin-top:16px">🔄 กลับหน้าแรก</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div id="s-report" class="screen">
+  <div class="wrap">
+    <div class="topbar" style="position:static;margin-bottom:16px;padding:0">
+      <div class="topbar-inner" style="padding:0">
+        <h1 style="font-size:18px">📊 รายงานผลสอบ — กลางภาค 1/2569</h1>
+        <button class="btn-nav" style="flex:none" onclick="backToLogin()">← กลับหน้าแรก</button>
+      </div>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── FIREBASE (ใช้โปรเจกต์เดียวกับระบบเช็คชื่อ, path แยกต่างหาก) ─────
+const DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+const RESULTS_URL = DB_BASE + '/examResults/it_midterm_2569.json';
+const REPORT_PIN = '2569';
+const EXAM_SECONDS = 2 * 60 * 60;
+
+// ─── QUESTION BANK ───────────────────────────────────
+const WORD_Q = [
+  {q:"คำสั่งใดใช้สำหรับรวมจดหมาย (Mail Merge) ใน Microsoft Word?", c:["แท็บ Insert","แท็บ Mailings","แท็บ Review","แท็บ References"], a:1},
+  {q:"การกด Ctrl+B มีผลอย่างไรกับข้อความที่เลือก?", c:["ทำตัวเอียง","ทำตัวหนา","ขีดเส้นใต้","เปลี่ยนสีตัวอักษร"], a:1},
+  {q:"นามสกุลไฟล์เริ่มต้นของ Microsoft Word เวอร์ชันปัจจุบันคืออะไร?", c:[".doc",".docx",".rtf",".txt"], a:1},
+  {q:"ต้องการใส่เลขหน้าเอกสารอัตโนมัติ ควรใช้คำสั่งในแท็บใด?", c:["Insert > Page Number","Home > Paragraph","Layout > Margins","Review > Comments"], a:0},
+  {q:"Style (สไตล์) ใน Word มีประโยชน์อย่างไรมากที่สุด?", c:["เปลี่ยนสีพื้นหลังหน้ากระดาษ","จัดรูปแบบข้อความให้สม่ำเสมอและสร้างสารบัญอัตโนมัติได้","แก้ไขตัวสะกดอัตโนมัติ","บีบอัดไฟล์ให้เล็กลง"], a:1},
+  {q:"คำสั่ง Track Changes อยู่ในแท็บใด?", c:["Home","Insert","Review","View"], a:2},
+  {q:"การจัดข้อความให้ชิดทั้งสองขอบ (ซ้าย-ขวา) เรียกว่าการจัดแบบใด?", c:["Align Left","Center","Justify","Align Right"], a:2},
+  {q:"Header และ Footer ใน Word ใช้สำหรับอะไร?", c:["ใส่ข้อความซ้ำที่หัวกระดาษและท้ายกระดาษทุกหน้า","ตั้งค่าระยะขอบกระดาษ","แทรกตาราง","ตรวจสอบไวยากรณ์"], a:0},
+  {q:"ปุ่มลัด Ctrl+Z ใช้สำหรับอะไร?", c:["ทำซ้ำ (Redo)","ยกเลิกการกระทำล่าสุด (Undo)","บันทึกไฟล์","พิมพ์เอกสาร"], a:1},
+  {q:"หากต้องการแบ่งเอกสารเป็นหลายคอลัมน์แบบหนังสือพิมพ์ ควรใช้คำสั่งใด?", c:["Layout > Columns","Insert > Table","Design > Watermark","References > Index"], a:0},
+  {q:"SmartArt ใน Word ใช้สำหรับอะไร?", c:["ตรวจตัวสะกด","สร้างแผนภาพ/ผังความคิดแบบสำเร็จรูป","แทรกสมการคณิตศาสตร์","บันทึกเสียง"], a:1},
+  {q:"การบันทึกไฟล์ Word ให้เป็น PDF ทำได้โดยวิธีใด?", c:["File > Save As แล้วเลือกประเภทไฟล์ PDF","Home > Font","Insert > Object","View > Outline"], a:0},
+  {q:"Word Count (จำนวนคำ) แสดงอยู่ที่ส่วนใดของโปรแกรม?", c:["แถบชื่อเรื่อง (Title bar)","แถบสถานะด้านล่าง (Status bar)","แท็บ Insert","Ribbon ด้านบน"], a:1},
+  {q:"หากพิมพ์ผิดและต้องการค้นหาแล้วแทนที่คำทั้งหมดในเอกสาร ควรใช้คำสั่งใด?", c:["Find & Replace (Ctrl+H)","Spelling & Grammar","Thesaurus","AutoCorrect"], a:0},
+  {q:"Watermark ใน Word คืออะไร?", c:["ตารางข้อมูล","ลายน้ำที่แสดงจางๆ อยู่หลังข้อความในเอกสาร","สารบัญอัตโนมัติ","เชิงอรรถ"], a:1},
+  {q:"การใส่เชิงอรรถ (Footnote) ใช้แท็บใด?", c:["References","Mailings","View","Design"], a:0},
+  {q:"Orientation แบบ Landscape ใน Word หมายถึงอะไร?", c:["กระดาษแนวตั้ง","กระดาษแนวนอน","กระดาษขนาด A4","ระยะขอบกระดาษ"], a:1},
+  {q:"เมื่อพิมพ์เอกสารเสร็จ ต้องการดูตัวอย่างก่อนพิมพ์จริง ใช้คำสั่งใด?", c:["Print Preview (ใน File > Print)","Spelling Check","Mail Merge","Track Changes"], a:0},
+  {q:"Bullet และ Numbering ใน Word ใช้สำหรับอะไร?", c:["ใส่สัญลักษณ์/ลำดับเลขหน้ารายการข้อความ","จัดหน้ากระดาษ","แทรกรูปภาพ","ตรวจสอบไวยากรณ์"], a:0},
+  {q:"การสร้าง Table of Contents (สารบัญอัตโนมัติ) ให้ถูกต้อง ต้องอาศัยการตั้งค่าใดของเอกสารก่อน?", c:["การใส่ Watermark","การกำหนด Style หัวข้อ (Heading Styles)","การเปิด Track Changes","การตั้งค่า Column"], a:1},
+];
+const EXCEL_Q = [
+  {q:"สูตรใดใช้สำหรับหาผลรวมของข้อมูลในช่วงเซลล์?", c:["=AVERAGE()","=SUM()","=COUNT()","=MAX()"], a:1},
+  {q:"เครื่องหมาย $ ในการอ้างอิงเซลล์ เช่น $A$1 หมายถึงอะไร?", c:["การอ้างอิงแบบสัมพัทธ์ (Relative)","การอ้างอิงแบบสัมบูรณ์ (Absolute)","การลบเซลล์","การรวมเซลล์"], a:1},
+  {q:"ฟังก์ชัน IF ใน Excel ใช้สำหรับอะไร?", c:["หาผลรวม","ตรวจสอบเงื่อนไขและคืนค่าตามจริง/เท็จ","เรียงลำดับข้อมูล","นับจำนวนเซลล์ว่าง"], a:1},
+  {q:"VLOOKUP ใช้สำหรับอะไร?", c:["ค้นหาข้อมูลตามแนวตั้งจากตารางแล้วดึงค่าที่เกี่ยวข้องมาแสดง","รวมข้อมูลหลายชีตเข้าด้วยกัน","จัดรูปแบบตัวเลข","สร้างกราฟ"], a:0},
+  {q:"การ Freeze Panes (ตรึงแถว/คอลัมน์) มีประโยชน์อย่างไร?", c:["ล็อกไฟล์ไม่ให้แก้ไข","ให้หัวตารางแสดงค้างไว้ขณะเลื่อนดูข้อมูลจำนวนมาก","ป้องกันไวรัส","บีบอัดไฟล์"], a:1},
+  {q:"นามสกุลไฟล์ปัจจุบันของ Microsoft Excel คือ?", c:[".xls",".xlsx",".csv",".txt"], a:1},
+  {q:"ต้องการเรียงข้อมูลจากมากไปน้อย ใช้คำสั่งใด?", c:["Filter","Sort Descending","Freeze Panes","Merge Cells"], a:1},
+  {q:"ฟังก์ชัน COUNTIF ใช้สำหรับอะไร?", c:["นับจำนวนเซลล์ที่ตรงตามเงื่อนไขที่กำหนด","หาค่าเฉลี่ย","หาค่ามากที่สุด","รวมข้อความ"], a:0},
+  {q:"แผนภูมิ (Chart) ชนิดใดเหมาะสมที่สุดสำหรับแสดงสัดส่วน (%) ของข้อมูล?", c:["Line Chart","Pie Chart","Scatter Chart","Bar Chart แบบซ้อน"], a:1},
+  {q:"Conditional Formatting ใน Excel ใช้ทำอะไร?", c:["จัดรูปแบบเซลล์อัตโนมัติตามเงื่อนไขที่กำหนด เช่น เปลี่ยนสีเมื่อค่าน้อยกว่า 50","ป้องกันแผ่นงาน","รวมเซลล์","สร้าง PivotTable"], a:0},
+  {q:"PivotTable ใช้สำหรับอะไร?", c:["วาดรูปภาพ","สรุปและวิเคราะห์ข้อมูลจำนวนมากในรูปแบบตารางสรุป","ตรวจตัวสะกด","ใส่ลายน้ำ"], a:1},
+  {q:"การอ้างอิงเซลล์แบบ A1 (ไม่มี $) เรียกว่าอะไร และมีพฤติกรรมอย่างไรเมื่อคัดลอกสูตร?", c:["Absolute Reference จะไม่เปลี่ยนแปลง","Relative Reference จะเปลี่ยนแปลงตามตำแหน่งที่คัดลอกไป","Mixed Reference","External Reference"], a:1},
+  {q:"ฟังก์ชัน AVERAGE ใช้ทำอะไร?", c:["หาผลรวม","หาค่าเฉลี่ยของกลุ่มตัวเลข","หาค่าต่ำสุด","นับจำนวนแถว"], a:1},
+  {q:"หากต้องการพิมพ์เฉพาะบางส่วนของแผ่นงาน ควรตั้งค่าอะไร?", c:["Print Area","Freeze Panes","Data Validation","Merge & Center"], a:0},
+  {q:"Data Validation ใน Excel มีประโยชน์อย่างไร?", c:["จำกัดชนิด/ค่าข้อมูลที่กรอกในเซลล์ เช่น ให้เลือกจากรายการที่กำหนด","จัดเรียงข้อมูล","รวมเซลล์","แทรกกราฟ"], a:0},
+  {q:"เครื่องหมาย = ที่ต้นสูตรใน Excel มีความหมายว่าอย่างไร?", c:["เป็นข้อความธรรมดา","บอกให้ Excel รู้ว่าเซลล์นี้คือสูตรที่ต้องคำนวณ","ทำให้เซลล์ว่าง","ล็อกเซลล์"], a:1},
+  {q:"ฟังก์ชัน MAX และ MIN ใช้ทำอะไร?", c:["หาผลรวมและค่าเฉลี่ย","หาค่าสูงสุดและค่าต่ำสุดในกลุ่มข้อมูล","นับจำนวนข้อมูล","ค้นหาข้อความ"], a:1},
+  {q:"การ Merge & Center เซลล์ใน Excel คือการทำอะไร?", c:["รวมหลายเซลล์เป็นเซลล์เดียวและจัดข้อความให้อยู่กึ่งกลาง","แยกเซลล์ออกจากกัน","ลบข้อมูลในเซลล์","ป้องกันแผ่นงาน"], a:0},
+  {q:"Sheet Tab ที่อยู่ด้านล่างของ Excel ใช้สำหรับอะไร?", c:["สลับไปมาระหว่างแผ่นงานต่างๆ ในสมุดงานเดียวกัน","เปลี่ยนสีตัวอักษร","ใส่สูตร","ตั้งค่าเครื่องพิมพ์"], a:0},
+  {q:"ฟังก์ชัน CONCATENATE (หรือ &) ใน Excel ใช้ทำอะไร?", c:["รวมข้อความจากหลายเซลล์เข้าด้วยกัน","หาผลรวมตัวเลข","นับจำนวนเซลล์","จัดเรียงข้อมูล"], a:0},
+];
+const PPT_Q = [
+  {q:"Slide Master ใน PowerPoint คืออะไร?", c:["สไลด์หลักที่ใช้กำหนดรูปแบบมาตรฐานให้ทุกสไลด์ในธีมเดียวกัน","สไลด์แรกของงานนำเสนอ","ไฟล์เสียงประกอบ","สไลด์สำหรับซ่อน"], a:0},
+  {q:"Transition (การเปลี่ยนสไลด์) ต่างจาก Animation (ภาพเคลื่อนไหว) อย่างไร?", c:["เหมือนกันทุกประการ","Transition คือเอฟเฟกต์ตอนเปลี่ยนจากสไลด์หนึ่งไปอีกสไลด์หนึ่ง ส่วน Animation คือเอฟเฟกต์ของวัตถุภายในสไลด์เดียวกัน","Transition ใช้กับข้อความเท่านั้น","Animation ใช้ได้แค่รูปภาพ"], a:1},
+  {q:"มุมมอง (View) ใดใน PowerPoint แสดงสไลด์ทั้งหมดเป็นภาพย่อเรียงกัน เหมาะกับการจัดลำดับสไลด์?", c:["Slide Show","Slide Sorter","Notes Page","Outline View"], a:1},
+  {q:"Presenter View มีประโยชน์อย่างไรตอนนำเสนอจริง?", c:["แสดงเฉพาะสไลด์ให้ผู้ฟังดูอย่างเดียว","ผู้บรรยายเห็นบันทึกย่อ เวลา และสไลด์ถัดไป ขณะที่ผู้ฟังเห็นเฉพาะสไลด์","บันทึกเสียงอัตโนมัติ","แปลภาษาสไลด์"], a:1},
+  {q:"นามสกุลไฟล์ปัจจุบันของ PowerPoint คือ?", c:[".ppt",".pptx",".pps",".pdf"], a:1},
+  {q:"Slide Layout เช่น Title and Content หมายถึงอะไร?", c:["รูปแบบการจัดวางองค์ประกอบพื้นฐานบนสไลด์ เช่น หัวข้อและเนื้อหา","สีธีมของสไลด์","เสียงเพลงประกอบ","ความเร็วของการเปลี่ยนสไลด์"], a:0},
+  {q:"หากต้องการนำเสนอแบบวนซ้ำอัตโนมัติในบูธนิทรรศการ ควรตั้งค่าใน Slide Show ที่ใดมากที่สุด?", c:["Set Up Slide Show เลือก Loop continuously จนกว่าจะกด Esc","Insert > Header & Footer","Design > Themes","Review > Comments"], a:0},
+  {q:"การแทรกวิดีโอลงในสไลด์ทำได้จากแท็บใด?", c:["Insert > Video","Home > Font","Review > Spelling","Transitions"], a:0},
+  {q:"Outline View ใน PowerPoint ใช้ทำอะไร?", c:["แสดงและแก้ไขข้อความของสไลด์ทั้งหมดในรูปแบบโครงร่าง (คล้ายเอกสาร)","ดูตัวอย่างก่อนพิมพ์","เปลี่ยนสีธีม","บันทึกเสียงพากย์"], a:0},
+  {q:"Theme (ธีม) ใน PowerPoint ประกอบด้วยอะไรบ้าง?", c:["เฉพาะสีพื้นหลัง","ชุดของสี ฟอนต์ และเอฟเฟกต์ที่ใช้ร่วมกันทั้งงานนำเสนอ","เฉพาะรูปภาพ","เฉพาะเสียง"], a:1},
+  {q:"การกด F5 ใน PowerPoint จะทำอะไร?", c:["บันทึกไฟล์","เริ่มการนำเสนอสไลด์โชว์ตั้งแต่สไลด์แรก","ปิดโปรแกรม","แทรกสไลด์ใหม่"], a:1},
+  {q:"Slide Number และ Date ที่ต้องการให้แสดงทุกสไลด์ ตั้งค่าได้จากคำสั่งใด?", c:["Insert > Header & Footer","Design > Slide Size","Transitions > Sound","Animations > Add Animation"], a:0},
+  {q:"หากต้องการซ่อนสไลด์บางแผ่นไม่ให้แสดงตอนนำเสนอ (แต่ยังเก็บไฟล์ไว้) ใช้คำสั่งใด?", c:["Delete Slide","Hide Slide","Duplicate Slide","New Slide"], a:1},
+  {q:"Animation Pane ใน PowerPoint ใช้ทำอะไร?", c:["จัดการลำดับและระยะเวลาของ Animation ต่างๆ บนสไลด์","เปลี่ยนพื้นหลังสไลด์","แทรกตาราง","ตรวจตัวสะกด"], a:0},
+  {q:"รูปแบบไฟล์ใดเหมาะสำหรับส่งงานนำเสนอให้ผู้อื่นดูโดยไม่ต้องแก้ไขและเปิดได้ทุกเครื่อง?", c:[".pptx ที่แก้ไขได้","PDF",".tmp",".bak"], a:1},
+  {q:"Notes (บันทึกย่อ) ใต้สไลด์ใช้ทำอะไร?", c:["จดสคริปต์/ประเด็นที่ผู้บรรยายจะพูด ซึ่งผู้ฟังจะไม่เห็นตอนฉายสไลด์","แสดงบนสไลด์ตลอดเวลา","เป็นชื่อไฟล์","เป็นสีพื้นหลัง"], a:0},
+  {q:"SmartArt ใน PowerPoint เหมือนใน Word ใช้เพื่ออะไร?", c:["สร้างแผนภาพ/ผังความคิดอย่างรวดเร็ว","ตรวจตัวสะกด","ใส่เสียง","จัดเรียงสไลด์"], a:0},
+  {q:"Design Ideas (หรือ Designer) ใน PowerPoint ช่วยอะไร?", c:["แนะนำรูปแบบการจัดวางสไลด์ให้สวยงามอัตโนมัติ","ตรวจไวยากรณ์","บันทึกไฟล์อัตโนมัติ","แปลภาษา"], a:0},
+  {q:"การบันทึกงานนำเสนอเป็นวิดีโอ (Export to Video) ทำได้จากเมนูใด?", c:["File > Export > Create a Video","Home > Font","Insert > Table","Review > Comments"], a:0},
+  {q:"Rehearse Timings ใน PowerPoint มีไว้เพื่ออะไร?", c:["ตั้งเวลาให้ระบบจดจำระยะเวลาที่ใช้พูดในแต่ละสไลด์เพื่อซ้อมนำเสนอ","ลบสไลด์ที่ไม่ใช้","เปลี่ยนธีม","แทรกไฮเปอร์ลิงก์"], a:0},
+];
+
+const QUESTIONS = [
+  ...WORD_Q.map(q=>({...q, sec:'word', secTH:'Word'})),
+  ...EXCEL_Q.map(q=>({...q, sec:'excel', secTH:'Excel'})),
+  ...PPT_Q.map(q=>({...q, sec:'ppt', secTH:'PowerPoint'})),
+];
+const N = QUESTIONS.length; // 60
+const PT_PER_Q = 200 / N;
+
+// ─── STATE ────────────────────────────────────────────
+let student = null;
+let answers = new Array(N).fill(-1);
+let currentQ = 0;
+let timeLeft = EXAM_SECONDS;
+let timerInterval = null;
+let submitted = false;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── LOGIN / START ────────────────────────────────────
+function startExam(){
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const dept = document.getElementById('dept').value.trim();
+  if(!fname || !lname || !dept){ alert('กรุณากรอก ชื่อ นามสกุล และแผนก ให้ครบ'); return; }
+  student = {fname, lname, dept};
+  document.getElementById('examWho').textContent = `${fname} ${lname} — ${dept}`;
+  buildNavGrid();
+  gotoQ(0);
+  show('s-exam');
+  timeLeft = EXAM_SECONDS;
+  updateTimerDisplay();
+  timerInterval = setInterval(tick, 1000);
+  window.addEventListener('beforeunload', beforeUnload);
+}
+
+function beforeUnload(e){
+  if(!submitted){ e.preventDefault(); e.returnValue=''; }
+}
+
+function tick(){
+  timeLeft--;
+  updateTimerDisplay();
+  if(timeLeft <= 0){ doSubmit(); }
+}
+
+function updateTimerDisplay(){
+  const h = Math.floor(timeLeft/3600), m = Math.floor((timeLeft%3600)/60), s = timeLeft%60;
+  const el = document.getElementById('timerNum');
+  el.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('warn', timeLeft <= 600 && timeLeft > 120);
+  el.classList.toggle('danger', timeLeft <= 120);
+}
+
+// ─── NAVIGATOR ────────────────────────────────────────
+function buildNavGrid(){
+  const grid = document.getElementById('navgrid');
+  grid.innerHTML = '';
+  for(let i=0;i<N;i++){
+    const b = document.createElement('button');
+    b.className = 'navbtn';
+    b.id = 'nav'+i;
+    b.textContent = i+1;
+    b.onclick = ()=>gotoQ(i);
+    grid.appendChild(b);
+  }
+}
+function refreshNavGrid(){
+  for(let i=0;i<N;i++){
+    const b = document.getElementById('nav'+i);
+    b.classList.toggle('answered', answers[i] !== -1);
+    b.classList.toggle('current', i === currentQ);
+  }
+}
+
+// ─── QUESTION RENDER ──────────────────────────────────
+function gotoQ(i){
+  if(i<0 || i>=N) return;
+  currentQ = i;
+  const item = QUESTIONS[i];
+  const badge = document.getElementById('qBadge');
+  badge.textContent = item.secTH;
+  badge.className = 'q-badge ' + item.sec;
+  document.getElementById('qNum').textContent = `ข้อที่ ${i+1} / ${N}`;
+  document.getElementById('qText').textContent = item.q;
+  const wrap = document.getElementById('qChoices');
+  wrap.innerHTML = '';
+  const letters = ['ก','ข','ค','ง'];
+  item.c.forEach((choice, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (answers[i]===idx ? ' sel' : '');
+    btn.innerHTML = `<span class="choice-ltr">${letters[idx]}</span><span>${choice}</span>`;
+    btn.onclick = ()=>{ answers[i]=idx; gotoQ(i); };
+    wrap.appendChild(btn);
+  });
+  document.getElementById('btnPrev').disabled = (i===0);
+  document.getElementById('btnNext').textContent = (i===N-1) ? '✓ ไปหน้าส่งข้อสอบ' : 'ข้อถัดไป →';
+  document.getElementById('btnNext').onclick = (i===N-1) ? confirmSubmit : ()=>gotoQ(currentQ+1);
+  refreshNavGrid();
+}
+
+// ─── SUBMIT ───────────────────────────────────────────
+function confirmSubmit(){
+  const unanswered = answers.filter(a=>a===-1).length;
+  const msg = unanswered>0
+    ? `ยังมีข้อที่ยังไม่ได้ตอบ ${unanswered} ข้อ ยืนยันส่งข้อสอบหรือไม่?`
+    : 'ยืนยันส่งข้อสอบหรือไม่?';
+  if(confirm(msg)) doSubmit();
+}
+
+async function doSubmit(){
+  if(submitted) return;
+  submitted = true;
+  clearInterval(timerInterval);
+  window.removeEventListener('beforeunload', beforeUnload);
+
+  const secScore = {word:0, excel:0, ppt:0};
+  QUESTIONS.forEach((item, i)=>{ if(answers[i] === item.a) secScore[item.sec]++; });
+  const secPts = {
+    word: +(secScore.word * PT_PER_Q).toFixed(1),
+    excel: +(secScore.excel * PT_PER_Q).toFixed(1),
+    ppt: +(secScore.ppt * PT_PER_Q).toFixed(1),
+  };
+  const totalPts = +(secPts.word + secPts.excel + secPts.ppt).toFixed(1);
+  const pct = +(totalPts/200*100).toFixed(1);
+  const usedSec = EXAM_SECONDS - Math.max(timeLeft,0);
+
+  const record = {
+    fname: student.fname, lname: student.lname, dept: student.dept,
+    wordScore: secPts.word, excelScore: secPts.excel, pptScore: secPts.ppt,
+    total: totalPts, pct: pct,
+    usedSec: usedSec,
+    submittedAt: Date.now(),
+  };
+
+  try{
+    await fetch(RESULTS_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(record)});
+  }catch(e){ /* เก็บผลไว้แสดงในเครื่องได้แม้ส่งขึ้นเซิร์ฟเวอร์ไม่สำเร็จ */ }
+
+  showResult(record);
+}
+
+function showResult(r){
+  document.getElementById('rScore').textContent = `${r.total} / 200 คะแนน`;
+  document.getElementById('rPct').textContent = `คิดเป็น ${r.pct}%`;
+  document.getElementById('rWho').textContent = `${r.fname} ${r.lname} — ${r.dept}`;
+  document.getElementById('rEmoji').textContent = r.pct>=80 ? '🏆' : r.pct>=50 ? '👍' : '📘';
+  const secs = [
+    {label:'Word', val:r.wordScore, color:'#60a5fa'},
+    {label:'Excel', val:r.excelScore, color:'var(--gr)'},
+    {label:'PowerPoint', val:r.pptScore, color:'#fb923c'},
+  ];
+  const max = +(200/3).toFixed(1);
+  document.getElementById('rBreakdown').innerHTML = secs.map(s=>`
+    <div class="sec-row">
+      <div class="sec-label">${s.label}</div>
+      <div class="sec-bar-wrap"><div class="sec-bar" style="width:${(s.val/max*100)}%;background:${s.color}"></div></div>
+      <div class="sec-val">${s.val} / ${max}</div>
+    </div>`).join('');
+  show('s-result');
+}
+
+// ─── REPORT (สำหรับครู) ───────────────────────────────
+let reportData = [];
+function openReport(){
+  const pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผลสอบ:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  show('s-report');
+  loadReport();
+}
+function backToLogin(){ show('s-login'); }
+
+async function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  try{
+    const res = await fetch(RESULTS_URL, {cache:'no-store'});
+    const data = await res.json();
+    reportData = data ? Object.values(data).sort((a,b)=>b.submittedAt-a.submittedAt) : [];
+  }catch(e){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+    return;
+  }
+  renderReport();
+}
+
+function renderReport(){
+  const filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  const rows = reportData.filter(r=>{
+    if(!filter) return true;
+    return (`${r.fname} ${r.lname} ${r.dept}`).toLowerCase().includes(filter);
+  });
+  const wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีนักเรียนสอบ หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  wrap.innerHTML = `<table class="rpt"><thead><tr>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>Word</th><th>Excel</th><th>PowerPoint</th><th>รวม</th><th>%</th>
+  </tr></thead><tbody>
+  ${rows.map(r=>`<tr>
+    <td>${fmtTime(r.submittedAt)}</td>
+    <td>${r.fname} ${r.lname}</td>
+    <td>${r.dept}</td>
+    <td>${r.wordScore}</td>
+    <td>${r.excelScore}</td>
+    <td>${r.pptScore}</td>
+    <td class="rpt-total">${r.total}</td>
+    <td>${r.pct}%</td>
+  </tr>`).join('')}
+  </tbody></table>
+  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ</div>`;
+}
+
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','Word','Excel','PowerPoint','รวม','เปอร์เซ็นต์'];
+  const lines = [header.join(',')];
+  reportData.forEach(r=>{
+    const ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    lines.push([ts, r.fname, r.lname, r.dept, r.wordScore, r.excelScore, r.pptScore, r.total, r.pct].map(v=>`"${v}"`).join(','));
+  });
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'exam-report-it-midterm-2569.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
