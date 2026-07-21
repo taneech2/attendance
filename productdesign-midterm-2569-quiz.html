@@ -92,6 +92,8 @@ table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;white-space:nowrap}
 table.rpt tr:hover td{background:#161622}
 .rpt-total{color:var(--cy);font-weight:800}
 .rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+.rpt-cert-btn{background:var(--cyd);color:#001;border:none;border-radius:6px;padding:5px 10px;font-family:'Sarabun',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.rpt-cert-btn:active{transform:scale(.96)}
 
 /* GRADE */
 .result-grade{text-align:center;margin-bottom:16px}
@@ -503,8 +505,8 @@ function showResult(r){
 }
 
 // ─── CERTIFICATE (ออกให้อัตโนมัติเมื่อสอบผ่าน) ─────────
-async function downloadCertificate(){
-  const r = lastResult;
+async function downloadCertificate(overrideResult){
+  const r = overrideResult || lastResult;
   if(!r || !r.pass) return;
   // ใช้ Web Share API (แชร์ไฟล์ตรง) เป็นหลักถ้ารองรับ — เชื่อถือได้สุดบนมือถือ ไม่ติดปัญหา popup/download attribute/in-app browser
   const canWebShareFile = (() => {
@@ -613,6 +615,8 @@ async function downloadCertificate(){
 
 // ─── REPORT (สำหรับครู) ───────────────────────────────
 let reportData = [];
+let currentReportRows = [];
+function downloadCertificateForRow(i){ downloadCertificate(currentReportRows[i]); }
 function openReport(){
   const pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผลสอบ:');
   if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
@@ -648,10 +652,11 @@ function renderReport(){
   }
   const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
   const gradeFor = r => r.gradeN != null ? {n:r.gradeN, label:r.gradeLabel} : (()=>{ const g=gradeOf(r.pct); return {n:g.n, label:g.label}; })();
+  currentReportRows = rows;
   wrap.innerHTML = `<table class="rpt"><thead><tr>
-    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th>${SECTIONS.map(s=>`<th>${s.label}</th>`).join('')}<th>รวม</th><th>%</th><th>เกรด</th>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th>${SECTIONS.map(s=>`<th>${s.label}</th>`).join('')}<th>รวม</th><th>%</th><th>เกรด</th><th>ใบประกาศ</th>
   </tr></thead><tbody>
-  ${rows.map(r=>{ const g = gradeFor(r); return `<tr>
+  ${rows.map((r,i)=>{ const g = gradeFor(r); return `<tr>
     <td>${fmtTime(r.submittedAt)}</td>
     <td>${r.fname} ${r.lname}</td>
     <td>${r.dept}</td>
@@ -659,6 +664,7 @@ function renderReport(){
     <td class="rpt-total">${r.total}</td>
     <td>${r.pct}%</td>
     <td class="rpt-grade g${g.n}">${g.label}</td>
+    <td>${r.pass ? `<button class="rpt-cert-btn" onclick="downloadCertificateForRow(${i})">🎓 ดาวน์โหลด</button>` : '—'}</td>
   </tr>`; }).join('')}
   </tbody></table>
   <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ — เกณฑ์ผ่าน: 50% ขึ้นไป (เกรด 1-4)</div>`;
