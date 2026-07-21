@@ -492,8 +492,13 @@ function showResult(r){
 async function downloadCertificate(){
   const r = lastResult;
   if(!r || !r.pass) return;
-  // เปิดแท็บใหม่แบบ synchronous ก่อน await ใดๆ — ป้องกันมือถือ (โดยเฉพาะ Safari iOS) บล็อก popup
-  const certWindow = window.open('', '_blank');
+  // ใช้ Web Share API (แชร์ไฟล์ตรง) เป็นหลักถ้ารองรับ — เชื่อถือได้สุดบนมือถือ ไม่ติดปัญหา popup/download attribute/in-app browser
+  const canWebShareFile = (() => {
+    try { return !!(navigator.canShare && navigator.share && navigator.canShare({files:[new File([''], 't.png', {type:'image/png'})]})); }
+    catch(e){ return false; }
+  })();
+  // ถ้าไม่รองรับ Web Share ค่อยเปิดแท็บใหม่แบบ synchronous ก่อน await ใดๆ (กันมือถือบล็อก popup)
+  const certWindow = canWebShareFile ? null : window.open('', '_blank');
   if(document.fonts && document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} }
 
   const canvas = document.getElementById('certCanvas');
@@ -574,14 +579,24 @@ async function downloadCertificate(){
   ctx.font = "400 20px 'Sarabun', sans-serif";
   ctx.fillText('ครูผู้สอน วิทยาลัยการอาชีพบุรีรัมย์', W/2, 905);
 
-  const dataUrl = canvas.toDataURL('image/png');
+  const fileName = `certificate-material-${r.fname}-${r.lname}.png`;
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+
+  if(canWebShareFile){
+    try{
+      await navigator.share({files:[new File([blob], fileName, {type:'image/png'})], title:'ใบประกาศเกียรติคุณ', text: `${r.fname} ${r.lname}`});
+    }catch(e){ /* ผู้ใช้กดยกเลิกการแชร์ หรือแชร์ไม่สำเร็จ — ถือเป็นการตัดสินใจของผู้ใช้ ไม่ต้องทำอะไรเพิ่ม */ }
+    return;
+  }
+
+  const blobUrl = URL.createObjectURL(blob);
   if(certWindow){
-    certWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบประกาศ - ${r.fname} ${r.lname}</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;background:#111;font-family:'Sarabun',sans-serif;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px}p{color:#fff;text-align:center;margin:0 0 14px;font-size:15px;line-height:1.8}img{max-width:100%;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5)}</style></head><body><p>📱 มือถือ: แตะค้างที่รูปด้านล่าง แล้วเลือก "บันทึกรูปภาพ"<br>💻 คอมพิวเตอร์: คลิกขวาที่รูป แล้วเลือก "บันทึกรูปภาพเป็น"</p><img src="${dataUrl}" alt="certificate"></body></html>`);
+    certWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบประกาศ - ${r.fname} ${r.lname}</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;background:#111;font-family:'Sarabun',sans-serif;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px}p{color:#fff;text-align:center;margin:0 0 14px;font-size:15px;line-height:1.8}img{max-width:100%;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5)}</style></head><body><p>📱 มือถือ: แตะค้างที่รูปด้านล่าง แล้วเลือก "บันทึกรูปภาพ"<br>💻 คอมพิวเตอร์: คลิกขวาที่รูป แล้วเลือก "บันทึกรูปภาพเป็น"</p><img src="${blobUrl}" alt="certificate"></body></html>`);
     certWindow.document.close();
   }else{
     const link = document.createElement('a');
-    link.download = `certificate-material-${r.fname}-${r.lname}.png`;
-    link.href = dataUrl;
+    link.download = fileName;
+    link.href = blobUrl;
     link.click();
     alert('เบราว์เซอร์บล็อกการเปิดหน้าต่างใหม่ กรุณาอนุญาต Pop-up ของเว็บนี้แล้วลองใหม่');
   }
