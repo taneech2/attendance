@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ใบงาน — ลองใช้ AI ก่อนสอบ (การใช้ AI ในการทำงานพื้นฐานและงานเชื่อมโลหะ)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#22d3ee;--cyd:#0891b2;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0a0f 0%,#0d1420 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.wrap{max-width:640px;margin:0 auto;padding:24px 16px 60px}
+.screen{display:none}
+.screen.active{display:block}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 22px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.emblem{font-size:44px;text-align:center;margin-bottom:6px}
+.h1{text-align:center;font-size:20px;font-weight:800;color:var(--cy);line-height:1.4}
+.sub{text-align:center;font-size:13px;color:var(--mut);margin:4px 0 18px}
+.rules-box{background:#0d1a1e;border:1px solid var(--cyd);border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.9;color:var(--cy)}
+.rules-box b{color:var(--yw)}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;color:#aab;margin-bottom:6px;font-weight:700}
+.field .hint{display:block;font-size:12px;color:var(--mut);margin-bottom:6px;font-weight:400}
+.field input,.field textarea,.field select{width:100%;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:14px}
+.field textarea{min-height:70px;resize:vertical}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--cy)}
+
+.section-title{font-size:14px;font-weight:800;color:var(--yw);margin:22px 0 4px;padding-top:14px;border-top:1px solid var(--line)}
+.section-title:first-of-type{margin-top:0;padding-top:0;border-top:none}
+
+.btn-primary{display:block;width:100%;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#001;border:none;border-radius:10px;padding:14px;font-size:17px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{display:block;width:100%;background:none;border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:10px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:10px}
+
+/* DONE SCREEN */
+.done-emoji{font-size:56px;text-align:center;margin-bottom:10px}
+.done-title{text-align:center;font-size:20px;font-weight:800;color:var(--gr);margin-bottom:6px}
+.done-sub{text-align:center;font-size:14px;color:var(--tx);margin-bottom:24px;line-height:1.8}
+
+/* REPORT */
+.report-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:13px}
+.report-tools button{background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+table.rpt th{text-align:left;color:var(--mut);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;max-width:260px;white-space:normal;vertical-align:top}
+table.rpt tr:hover td{background:#161622}
+.rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+.topbar-inner{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.btn-nav{flex:none;background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- FORM -->
+<div id="s-form" class="screen active">
+  <div class="wrap">
+    <div class="card">
+      <div class="emblem">🤖✍️</div>
+      <div class="h1">ใบงาน: ลองใช้ AI ก่อนสอบ</div>
+      <div class="sub">การใช้ AI ในการทำงานพื้นฐานและงานเชื่อมโลหะ — ทำก่อนเข้าสอบ 100 ข้อ</div>
+      <div class="rules-box">
+        • เปิดแอป AI ที่มีอยู่ (ChatGPT, Gemini, Copilot ฯลฯ) บนมือถือหรือคอมพิวเตอร์<br>
+        • ลองพิมพ์คำถาม (พรอมต์) ตามหัวข้อด้านล่าง แล้วจดสั้นๆ ว่า AI ตอบว่าอะไร<br>
+        • ทำเสร็จกด <b>ส่งใบงาน</b> ด้านล่าง ใช้เวลาประมาณ 10-15 นาที
+      </div>
+
+      <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+      <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+      <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างเชื่อม 1/1..."></div>
+
+      <div class="section-title">ตอนที่ 1 — ลอง AI กับงานพื้นฐาน</div>
+      <div class="field">
+        <label>พรอมต์ที่ 1 ที่คุณลองพิมพ์</label>
+        <span class="hint">เช่น ให้ AI ช่วยร่างข้อความ สรุปเรื่อง หรือแปลภาษา</span>
+        <textarea id="p1"></textarea>
+      </div>
+      <div class="field">
+        <label>AI ตอบว่าอะไร (สรุปสั้นๆ)</label>
+        <textarea id="r1"></textarea>
+      </div>
+
+      <div class="section-title">ตอนที่ 2 — ลอง AI กับงานเชื่อมโลหะ</div>
+      <div class="field">
+        <label>พรอมต์ที่ 2 ที่คุณลองพิมพ์</label>
+        <span class="hint">เช่น ถามเกี่ยวกับพารามิเตอร์การเชื่อม ข้อบกพร่องของแนวเชื่อม หรือความปลอดภัย</span>
+        <textarea id="p2"></textarea>
+      </div>
+      <div class="field">
+        <label>AI ตอบว่าอะไร (สรุปสั้นๆ)</label>
+        <textarea id="r2"></textarea>
+      </div>
+
+      <div class="section-title">ตอนที่ 3 — สรุปสิ่งที่ได้เรียนรู้</div>
+      <div class="field">
+        <label>คุณคิดว่า AI ช่วยงานเชื่อมหรืองานพื้นฐานของคุณได้อย่างไร และมีข้อควรระวังอะไรบ้าง</label>
+        <textarea id="reflect" style="min-height:100px"></textarea>
+      </div>
+
+      <button class="btn-primary" onclick="submitWorksheet()">📤 ส่งใบงาน</button>
+      <button class="btn-ghost" onclick="openReport()">📊 ดูรายการส่งงาน (สำหรับครู)</button>
+    </div>
+  </div>
+</div>
+
+<!-- DONE -->
+<div id="s-done" class="screen">
+  <div class="wrap">
+    <div class="card">
+      <div class="done-emoji">✅</div>
+      <div class="done-title">ส่งใบงานสำเร็จ</div>
+      <div class="done-sub" id="doneWho"></div>
+      <button class="btn-primary" onclick="location.href='ai-welding-workshop-2569.html'">🚀 ไปทำข้อสอบ 100 ข้อ</button>
+      <button class="btn-ghost" onclick="location.reload()">🔄 ส่งใบงานอีกฉบับ</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div id="s-report" class="screen">
+  <div class="wrap" style="max-width:1000px">
+    <div class="topbar-inner">
+      <div class="h1" style="font-size:17px;text-align:left">📊 รายการส่งใบงาน — AI งานพื้นฐาน+งานเชื่อม</div>
+      <button class="btn-nav" onclick="backToForm()">← กลับหน้าแรก</button>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+const RESULTS_URL = DB_BASE + '/examResults/ai_welding_worksheet_2569.json';
+const REPORT_PIN = '2569';
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+async function submitWorksheet(){
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const dept = document.getElementById('dept').value.trim();
+  const p1 = document.getElementById('p1').value.trim();
+  const r1 = document.getElementById('r1').value.trim();
+  const p2 = document.getElementById('p2').value.trim();
+  const r2 = document.getElementById('r2').value.trim();
+  const reflect = document.getElementById('reflect').value.trim();
+
+  if(!fname || !lname || !dept){ alert('กรุณากรอก ชื่อ นามสกุล และแผนก ให้ครบ'); return; }
+  if(!p1 || !r1 || !p2 || !r2 || !reflect){ alert('กรุณาทำให้ครบทุกช่องก่อนส่งใบงาน'); return; }
+
+  const record = { fname, lname, dept, p1, r1, p2, r2, reflect, submittedAt: Date.now() };
+
+  try{
+    await fetch(RESULTS_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(record)});
+  }catch(e){ /* เก็บผลไว้แสดงในเครื่องได้แม้ส่งขึ้นเซิร์ฟเวอร์ไม่สำเร็จ */ }
+
+  document.getElementById('doneWho').textContent = `${fname} ${lname} — ${dept}`;
+  show('s-done');
+}
+
+// ─── REPORT (สำหรับครู) ─────────────────
+let reportData = [];
+function openReport(){
+  const pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายการส่งใบงาน:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  show('s-report');
+  loadReport();
+}
+function backToForm(){ show('s-form'); }
+
+async function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  try{
+    const res = await fetch(RESULTS_URL, {cache:'no-store'});
+    const data = await res.json();
+    reportData = data ? Object.values(data).sort((a,b)=>b.submittedAt-a.submittedAt) : [];
+  }catch(e){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+    return;
+  }
+  renderReport();
+}
+
+function renderReport(){
+  const filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  const rows = reportData.filter(r=>{
+    if(!filter) return true;
+    return (`${r.fname} ${r.lname} ${r.dept}`).toLowerCase().includes(filter);
+  });
+  const wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีใบงานส่งเข้ามา หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  wrap.innerHTML = `<table class="rpt"><thead><tr>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>พรอมต์ 1</th><th>AI ตอบ 1</th><th>พรอมต์ 2</th><th>AI ตอบ 2</th><th>สรุปที่เรียนรู้</th>
+  </tr></thead><tbody>
+  ${rows.map(r=> `<tr>
+    <td>${fmtTime(r.submittedAt)}</td>
+    <td>${r.fname} ${r.lname}</td>
+    <td>${r.dept}</td>
+    <td>${r.p1||''}</td>
+    <td>${r.r1||''}</td>
+    <td>${r.p2||''}</td>
+    <td>${r.r2||''}</td>
+    <td>${r.reflect||''}</td>
+  </tr>`).join('')}
+  </tbody></table>
+  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ</div>`;
+}
+
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','พรอมต์1','AIตอบ1','พรอมต์2','AIตอบ2','สรุปที่เรียนรู้'];
+  const lines = [header.join(',')];
+  reportData.forEach(r=>{
+    const ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    lines.push([ts, r.fname, r.lname, r.dept, r.p1, r.r1, r.p2, r.r2, r.reflect].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));
+  });
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `ai-welding-worksheet-2569.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
