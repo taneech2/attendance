@@ -12,6 +12,19 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 .screen{display:none;width:100vw;height:100vh;flex-direction:column;align-items:center;justify-content:center}
 .screen.active{display:flex}
 
+/* Login */
+#login{background:linear-gradient(135deg,#0f1115 0%,#1c2128 100%);padding:20px}
+.login-card{background:#21262d;border:2px solid #30363d;border-radius:16px;padding:28px 24px;max-width:380px;width:90%;text-align:center}
+.login-card h1{font-size:1.6rem;color:#ff6b00;text-shadow:0 0 20px rgba(255,107,0,.4);margin-bottom:4px}
+.login-card .sub{color:#8b949e;font-size:.85rem;margin-bottom:20px}
+.field{margin-bottom:14px;text-align:left}
+.field label{display:block;font-size:.8rem;color:#8b949e;margin-bottom:6px}
+.field input{width:100%;background:#0d1117;border:2px solid #30363d;border-radius:8px;padding:10px 12px;color:#e6edf3;font-family:'Kanit',sans-serif;font-size:1rem}
+.field input:focus{outline:none;border-color:#ff6b00}
+.btn-primary{display:block;width:100%;background:#ff6b00;color:#000;border:none;border-radius:10px;padding:14px;font-size:1.05rem;font-weight:700;font-family:'Kanit',sans-serif;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{display:block;width:100%;background:none;border:1px solid #30363d;color:#8b949e;border-radius:10px;padding:10px;font-size:.85rem;font-family:'Kanit',sans-serif;cursor:pointer;margin-top:10px}
+
 /* Menu */
 #menu{background:linear-gradient(135deg,#0f1115 0%,#1c2128 100%);padding:20px;text-align:center}
 #menu h1{font-size:2rem;color:#ff6b00;text-shadow:0 0 20px rgba(255,107,0,.4);margin-bottom:4px}
@@ -36,7 +49,7 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 
 /* Game */
 #game{position:relative}
-#game canvas{display:block}
+#game canvas{display:block;touch-action:none}
 .start-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);color:#8b949e;font-size:.9rem;text-align:center;pointer-events:none;animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
 
@@ -52,6 +65,7 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 .r-stat .r-label{font-size:.7rem;color:#8b949e;margin-top:2px}
 .btn-menu{background:#ff6b00;color:#000;border:none;padding:12px 30px;border-radius:8px;font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;margin-top:10px}
 .btn-menu:hover{background:#ff9900}
+.submit-note{font-size:.75rem;color:#8b949e;margin-top:8px}
 
 /* Difficulty Picker */
 .diff-overlay{position:fixed;inset:0;background:rgba(15,17,21,.95);z-index:100;display:flex;align-items:center;justify-content:center}
@@ -82,25 +96,47 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
 .diff-btn.spd.active-spd{border-color:#00e1ff;background:#0d1117;box-shadow:0 0 12px rgba(0,225,255,.2)}
 .diff-btn.spd.active-spd strong{color:#00e1ff}
 
-.name-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:20px}
-.name-row label{font-size:.95rem;color:#00e1ff;white-space:nowrap}
-.name-row input{background:#21262d;border:2px solid #30363d;border-radius:8px;padding:10px 14px;font-size:1rem;color:#e6edf3;font-family:'Kanit',sans-serif;width:220px}
-.name-row input:focus{outline:none;border-color:#ff6b00;box-shadow:0 0 10px rgba(255,107,0,.3)}
+/* Report */
+#report{align-items:flex-start;justify-content:flex-start;overflow-y:auto;padding:24px 16px}
+.report-wrap{max-width:1000px;margin:0 auto;width:100%}
+.report-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}
+.report-topbar h1{font-size:1.2rem;color:#ff6b00}
+.report-card{background:#21262d;border:2px solid #30363d;border-radius:16px;padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#0d1117;border:2px solid #30363d;border-radius:8px;padding:9px 12px;color:#e6edf3;font-family:'Kanit',sans-serif;font-size:.85rem}
+.report-tools button{background:#0d1117;border:2px solid #30363d;color:#e6edf3;border-radius:8px;padding:9px 14px;font-family:'Kanit',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:.8rem;min-width:900px}
+table.rpt th{text-align:left;color:#8b949e;font-weight:700;padding:8px;border-bottom:1px solid #30363d;white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1e24;white-space:nowrap}
+table.rpt tr:hover td{background:#1a1e24}
+.rpt-total{color:#ff6b00;font-weight:800}
+.rpt-empty{text-align:center;color:#8b949e;padding:30px;font-size:.85rem}
 
 .footer-cr{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:.65rem;color:#30363d}
 </style>
 </head>
 <body>
 
-<!-- Menu -->
-<div id="menu" class="screen active">
-  <h1>🔥 ฝึกมือนิ่ง</h1>
-  <p style="color:#ff9900;font-size:.85rem;margin-bottom:2px">วิชาฝึกฝีมือในงานเชื่อมโลหะ</p>
-  <p class="sub">โดย ครูธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</p>
-  <div class="name-row">
-    <label for="std-name">ผู้เชื่อม:</label>
-    <input type="text" id="std-name" placeholder="พิมพ์ชื่อ-สกุล..." maxlength="40" autocomplete="off">
+<!-- Login -->
+<div id="login" class="screen active">
+  <div class="login-card">
+    <h1>🔥 ฝึกมือนิ่ง</h1>
+    <p style="color:#ff9900;font-size:.85rem;margin-bottom:2px">วิชาฝึกฝีมือในงานเชื่อมโลหะ</p>
+    <p class="sub">โดย ครูธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</p>
+    <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+    <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+    <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
+    <button class="btn-primary" onclick="login()">เข้าสู่ระบบ (Enter)</button>
+    <button class="btn-ghost" onclick="openReport()">📊 รายงานผลสอบ (สำหรับครู)</button>
   </div>
+  <div class="footer-cr">&copy; 2026 ธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</div>
+</div>
+
+<!-- Menu -->
+<div id="menu" class="screen">
+  <h1>🔥 ฝึกมือนิ่ง</h1>
+  <p style="color:#ff9900;font-size:.85rem;margin-bottom:2px" id="menu-userline"></p>
+  <p class="sub">โดย ครูธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</p>
   <div class="levels">
     <div class="level-card" onclick="pickLevel('straight','เส้นตรง')">
       <div class="lv-icon">➖</div>
@@ -173,8 +209,6 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
       <button class="btn-back" onclick="closeDifficulty()" style="margin-top:16px">◀ กลับเลือกเส้น</button>
     </div>
   </div>
-
-  <div class="footer-cr">&copy; 2026 ธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</div>
 </div>
 
 <!-- Game -->
@@ -187,7 +221,7 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
     <div class="hud-item"><div class="hud-label">ระยะ</div><div class="hud-val" id="hud-progress">0%</div></div>
   </div>
   <canvas id="cv"></canvas>
-  <div class="start-hint" id="hint">แตะที่จอแล้วลากตามแนวเชื่อม</div>
+  <div class="start-hint" id="hint">กดค้างที่จอแล้วลากตามแนวเชื่อม</div>
 </div>
 
 <!-- Result -->
@@ -204,8 +238,7 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
       <div class="r-stat"><div class="r-num" id="res-total"></div><div class="r-label">คะแนนรวม</div></div>
       <div class="r-stat"><div class="r-num" id="res-level"></div><div class="r-label">ระดับ</div></div>
     </div>
-    <button class="btn-menu" id="submit-btn" onclick="submitScore()">📊 ส่งคะแนนให้ครู</button>
-    <p id="submit-status" style="font-size:.8rem;min-height:1.2em;margin-top:6px"></p>
+    <div class="submit-note">📊 ส่งผลให้ครูอัตโนมัติแล้ว</div>
     <div style="margin-top:10px">
       <button class="btn-menu" onclick="startGame(lastLevel)">🔄 เล่นอีกครั้ง</button>
       <button class="btn-menu" style="background:#30363d;color:#e6edf3;margin-left:8px" onclick="showMenu()">📋 เมนู</button>
@@ -213,9 +246,41 @@ body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:
   </div>
 </div>
 
+<!-- Report -->
+<div id="report" class="screen">
+  <div class="report-wrap">
+    <div class="report-topbar">
+      <h1>📊 รายงานผลฝึกมือนิ่ง</h1>
+      <button class="btn-ghost" style="width:auto;margin-top:0" onclick="showScreen('login')">← กลับหน้าแรก</button>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก / เส้น..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</div>
+
 <script>
-// ⚙️ URL Google Apps Script — ครูธานี deploy แล้ววาง URL ตรงนี้
-var SCORE_URL = '';
+// ─── FIREBASE (ใช้โปรเจกต์เดียวกับระบบเช็คชื่อ/สอบกลางภาค, path แยกเฉพาะเกมนี้) ─────
+var DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+var RESULTS_URL = DB_BASE + '/examResults/steady_hand_welding.json';
+var REPORT_PIN = '2569';
+
+var userFirst = '', userLast = '', userDept = '';
+
+function login(){
+  var fn = document.getElementById('fname').value.trim();
+  var ln = document.getElementById('lname').value.trim();
+  var dp = document.getElementById('dept').value.trim();
+  if(!fn || !ln){ alert('กรุณากรอกชื่อและนามสกุล'); return; }
+  userFirst = fn; userLast = ln; userDept = dp;
+  document.getElementById('menu-userline').textContent = 'ผู้เชื่อม: ' + fn + ' ' + ln + (dp ? ' (' + dp + ')' : '');
+  showScreen('menu');
+}
 
 var cv = document.getElementById('cv');
 var ctx = cv.getContext('2d');
@@ -255,7 +320,6 @@ function pickSpeed(spd) {
 
 var path = [];
 var pathWidth = 36;
-var drawing = false;
 var started = false;
 var finished = false;
 var samples = [];
@@ -270,6 +334,12 @@ var guideRadius = 60;
 var paceSamples = [];
 var isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 var rodOffsetY = -80;
+
+// ── Pointer state (single unified input path — mouse / touch / pen) ──
+var isDown = false;
+var activePointerId = null;
+var activePointerType = null;
+var previewPos = null;
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
@@ -330,7 +400,9 @@ function startGame(type) {
   captureRadius = isMobile ? 40 : 30;
 
   path = generatePath(type);
-  drawing = false;
+  isDown = false;
+  activePointerId = null;
+  activePointerType = null;
   started = false;
   finished = false;
   samples = [];
@@ -490,7 +562,7 @@ function drawScene() {
 
   // === Preview ตำแหน่งจุดเชื่อม (ก่อนลาก) ===
   if (!started && previewPos) {
-    if (isTouchDevice) {
+    if (activePointerType === 'touch' || (isTouchDevice && activePointerType === null)) {
       var fY = previewPos.y - rodOffsetY;
       ctx.beginPath();
       ctx.moveTo(previewPos.x, fY);
@@ -526,7 +598,7 @@ function drawScene() {
     var sparkCol = onTrack ? 'rgba(46,160,67,0.7)' : 'rgba(248,81,73,0.7)';
 
     // มือถือ: เส้นจากนิ้ว(ล่าง) ไป จุดเชื่อม(บน)
-    if (isTouchDevice && drawing) {
+    if (activePointerType === 'touch' && isDown) {
       var fingerY = ls.y - rodOffsetY;
       ctx.beginPath();
       ctx.moveTo(ls.x, fingerY);
@@ -632,52 +704,50 @@ function updateHUD() {
   }
 }
 
-function handlePointer(e) {
-  e.preventDefault();
+// ── Unified pointer input (mouse / touch / pen all go through here) ──
+function getPos(e) {
   var rect = cv.getBoundingClientRect();
-  var px, py, rawX, rawY;
-  if (e.touches) {
-    isTouchDevice = true;
-    rawX = e.touches[0].clientX - rect.left;
-    rawY = e.touches[0].clientY - rect.top;
-    px = rawX;
+  var rawX = e.clientX - rect.left;
+  var rawY = e.clientY - rect.top;
+  var px = rawX, py = rawY;
+  if (e.pointerType === 'touch') {
     py = rawY + rodOffsetY;
     if (py < 0) py = 0;
     if (py > cv.height) py = cv.height;
-  } else {
-    rawX = e.clientX - rect.left;
-    rawY = e.clientY - rect.top;
-    px = rawX;
-    py = rawY;
   }
   return { x: px, y: py, rawX: rawX, rawY: rawY };
 }
 
-var previewPos = null;
-
-function onStart(e) {
+function onPointerDown(e) {
   if (finished) return;
-  var p = handlePointer(e);
+  if (activePointerId !== null) return; // ignore extra fingers while one is already tracked
+  activePointerId = e.pointerId;
+  activePointerType = e.pointerType;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  isDown = true;
+  var p = getPos(e);
   previewPos = { x: p.x, y: p.y };
-  drawing = false;
   drawScene();
 }
 
-function onMove(e) {
+function onPointerMove(e) {
+  if (e.pointerId !== activePointerId) return;
   if (finished) return;
-  var p = handlePointer(e);
+  var p = getPos(e);
   previewPos = { x: p.x, y: p.y };
+
+  if (!isDown) {
+    if (!started) drawScene();
+    return; // hovering without the pointer held down never records a bead
+  }
 
   if (!started) {
     started = true;
     startTime = Date.now();
     document.getElementById('hint').style.display = 'none';
-    drawing = true;
     if (animFrame) cancelAnimationFrame(animFrame);
     gameLoop();
   }
-
-  if (!drawing) { drawing = true; }
 
   var dev = getDeviation(p.x, p.y);
   samples.push({ x: p.x, y: p.y, dev: dev });
@@ -694,22 +764,25 @@ function onMove(e) {
 
   if (nextPointIdx >= path.length - 5) {
     var ep = path[path.length - 1];
-    var dx = p.x - ep.x, dy = p.y - ep.y;
-    if (dx * dx + dy * dy < captureRadius * captureRadius) {
+    var dx2 = p.x - ep.x, dy2 = p.y - ep.y;
+    if (dx2 * dx2 + dy2 * dy2 < captureRadius * captureRadius) {
       finishGame();
     }
   }
 }
 
-function onEnd(e) {
-  if (drawing && started && !finished) {
-    drawing = false;
-  }
+function onPointerUp(e) {
+  if (e.pointerId !== activePointerId) return;
+  isDown = false;
+  try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+  activePointerId = null;
+  activePointerType = null;
 }
 
 function finishGame() {
   finished = true;
-  drawing = false;
+  isDown = false;
+  activePointerId = null;
   if (animFrame) cancelAnimationFrame(animFrame);
   drawScene();
 
@@ -765,67 +838,101 @@ function finishGame() {
     grade: title
   };
 
-  document.getElementById('submit-btn').disabled = false;
-  document.getElementById('submit-btn').innerText = '📊 ส่งคะแนนให้ครู';
-  document.getElementById('submit-status').innerText = '';
+  submitResult(lastResult);
 
   setTimeout(function() { showScreen('result'); }, 600);
 }
 
-function submitScore() {
-  var name = document.getElementById('std-name').value.trim();
-  if (!name) {
-    document.getElementById('submit-status').innerText = '⚠️ กรุณากรอกชื่อที่หน้าเมนูก่อน';
-    document.getElementById('submit-status').style.color = '#ff9900';
-    return;
-  }
-  if (!SCORE_URL) {
-    document.getElementById('submit-status').innerText = '⚠️ ยังไม่ได้ตั้งค่า URL — แจ้งครูผู้สอน';
-    document.getElementById('submit-status').style.color = '#ff9900';
-    return;
-  }
-
-  var btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.innerText = '⏳ กำลังส่ง...';
-  document.getElementById('submit-status').innerText = '';
-
-  fetch(SCORE_URL, {
+function submitResult(r) {
+  fetch(RESULTS_URL, {
     method: 'POST',
-    mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      name: name,
-      level: lastResult.level,
-      difficulty: lastResult.difficulty,
-      speed: lastResult.speed,
-      accuracy: lastResult.accuracy,
-      pace: lastResult.pace,
-      total: lastResult.total,
-      time: lastResult.time,
-      maxDev: lastResult.maxDev,
-      grade: lastResult.grade
+      fname: userFirst, lname: userLast, dept: userDept,
+      level: r.level, difficulty: r.difficulty, speed: r.speed,
+      accuracy: r.accuracy, pace: r.pace, total: r.total,
+      time: +r.time, maxDev: r.maxDev,
+      submittedAt: Date.now()
     })
-  }).then(function() {
-    btn.innerText = '✅ ส่งแล้ว!';
-    document.getElementById('submit-status').innerText = 'ส่งคะแนนให้ครูเรียบร้อยแล้ว';
-    document.getElementById('submit-status').style.color = '#2ea043';
-  }).catch(function() {
-    btn.disabled = false;
-    btn.innerText = '📊 ส่งคะแนนให้ครู';
-    document.getElementById('submit-status').innerText = '❌ ส่งไม่สำเร็จ ลองอีกครั้ง';
-    document.getElementById('submit-status').style.color = '#f85149';
+  }).catch(function(){});
+}
+
+// ─── REPORT (สำหรับครู) ────────────────────────────────
+var reportData = [];
+function openReport(){
+  var pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผลสอบ:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  showScreen('report');
+  loadReport();
+}
+
+function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  fetch(RESULTS_URL, {cache:'no-store'}).then(function(res){ return res.json(); }).then(function(data){
+    reportData = data ? Object.keys(data).map(function(k){ return data[k]; }).sort(function(a,b){ return b.submittedAt - a.submittedAt; }) : [];
+    renderReport();
+  }).catch(function(){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
   });
 }
 
-// Events
-cv.addEventListener('mousedown', onStart);
-cv.addEventListener('mousemove', onMove);
-cv.addEventListener('mouseup', onEnd);
-cv.addEventListener('mouseleave', onEnd);
-cv.addEventListener('touchstart', onStart, { passive: false });
-cv.addEventListener('touchmove', onMove, { passive: false });
-cv.addEventListener('touchend', onEnd);
+function renderReport(){
+  var filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  var rows = reportData.filter(function(r){
+    if(!filter) return true;
+    return (r.fname+' '+r.lname+' '+r.dept+' '+r.level).toLowerCase().indexOf(filter) !== -1;
+  });
+  var wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีนักเรียนฝึก หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  function fmtTime(ts){ return new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}); }
+  var html = '<table class="rpt"><thead><tr>'
+    + '<th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>เส้น</th><th>ความยาก</th><th>ความเร็ว</th>'
+    + '<th>ความแม่นยำ</th><th>จังหวะ</th><th>รวม</th><th>เวลา(s)</th><th>เบี่ยงเบนสูงสุด(px)</th>'
+    + '</tr></thead><tbody>';
+  rows.forEach(function(r){
+    html += '<tr>'
+      + '<td>'+fmtTime(r.submittedAt)+'</td>'
+      + '<td>'+r.fname+' '+r.lname+'</td>'
+      + '<td>'+(r.dept||'-')+'</td>'
+      + '<td>'+r.level+'</td>'
+      + '<td>'+r.difficulty+'</td>'
+      + '<td>'+r.speed+'</td>'
+      + '<td>'+r.accuracy+'%</td>'
+      + '<td>'+r.pace+'%</td>'
+      + '<td class="rpt-total">'+r.total+'%</td>'
+      + '<td>'+r.time+'</td>'
+      + '<td>'+r.maxDev+'</td>'
+      + '</tr>';
+  });
+  html += '</tbody></table><div style="margin-top:10px;font-size:.75rem;color:#8b949e">ทั้งหมด ' + rows.length + ' รายการ</div>';
+  wrap.innerHTML = html;
+}
+
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  var header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','เส้น','ความยาก','ความเร็ว','ความแม่นยำ','จังหวะ','รวม','เวลา','เบี่ยงเบนสูงสุด'];
+  var lines = [header.join(',')];
+  reportData.forEach(function(r){
+    var ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    lines.push([ts, r.fname, r.lname, r.dept, r.level, r.difficulty, r.speed, r.accuracy, r.pace, r.total, r.time, r.maxDev].map(function(v){ return '"'+v+'"'; }).join(','));
+  });
+  var blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'exam-report-steady-hand.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Events — Pointer Events unify mouse / touch / pen through one gated path
+cv.addEventListener('pointerdown', onPointerDown);
+cv.addEventListener('pointermove', onPointerMove);
+cv.addEventListener('pointerup', onPointerUp);
+cv.addEventListener('pointercancel', onPointerUp);
 
 window.addEventListener('resize', function() {
   if (document.getElementById('game').classList.contains('active') && !started) {
