@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Weld 3D Trainer — วิชาฝึกฝีมือในงานเชื่อมโลหะ | ครูธานี ชมสุข</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Kanit',sans-serif;background:#0f1115;color:#e6edf3;min-height:100vh;overflow:hidden;touch-action:none}
+
+.screen{display:none;width:100vw;height:100vh;flex-direction:column;align-items:center;justify-content:center}
+.screen.active{display:flex}
+
+/* Login */
+#login{background:linear-gradient(135deg,#0f1115 0%,#1c2128 100%);padding:20px}
+.login-card{background:#21262d;border:2px solid #30363d;border-radius:16px;padding:28px 24px;max-width:380px;width:90%;text-align:center}
+.login-card h1{font-size:1.5rem;color:#ff6b00;text-shadow:0 0 20px rgba(255,107,0,.4);margin-bottom:4px}
+.login-card .sub{color:#8b949e;font-size:.85rem;margin-bottom:20px}
+.field{margin-bottom:14px;text-align:left}
+.field label{display:block;font-size:.8rem;color:#8b949e;margin-bottom:6px}
+.field input{width:100%;background:#0d1117;border:2px solid #30363d;border-radius:8px;padding:10px 12px;color:#e6edf3;font-family:'Kanit',sans-serif;font-size:1rem}
+.field input:focus{outline:none;border-color:#ff6b00}
+.btn-primary{display:block;width:100%;background:#ff6b00;color:#000;border:none;border-radius:10px;padding:14px;font-size:1.05rem;font-weight:700;font-family:'Kanit',sans-serif;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{display:block;width:100%;background:none;border:1px solid #30363d;color:#8b949e;border-radius:10px;padding:10px;font-size:.85rem;font-family:'Kanit',sans-serif;cursor:pointer;margin-top:10px}
+
+/* Menu */
+#menu{background:linear-gradient(135deg,#0f1115 0%,#1c2128 100%);padding:20px;text-align:center}
+#menu h1{font-size:1.8rem;color:#ff6b00;text-shadow:0 0 20px rgba(255,107,0,.4);margin-bottom:4px}
+#menu .sub{color:#8b949e;font-size:.95rem;margin-bottom:24px}
+.levels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;max-width:520px;width:100%;padding:0 16px}
+.level-card{background:#21262d;border:2px solid #30363d;border-radius:14px;padding:18px 10px;cursor:pointer;transition:.2s;text-align:center}
+.level-card:hover{border-color:#ff6b00;transform:translateY(-3px);box-shadow:0 6px 20px rgba(255,107,0,.15)}
+.level-card .lv-icon{font-size:2rem;margin-bottom:6px}
+.level-card h3{font-size:.85rem;margin-bottom:4px}
+.level-card p{font-size:.68rem;color:#8b949e}
+.level-card.disabled{opacity:.4;cursor:not-allowed}
+.level-card.disabled:hover{border-color:#30363d;transform:none;box-shadow:none}
+.soon-tag{display:inline-block;margin-top:6px;font-size:.62rem;color:#00e1ff;border:1px solid #00e1ff;border-radius:10px;padding:1px 8px}
+
+/* HUD */
+.hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(15,17,21,.9);z-index:10;border-bottom:2px solid #30363d}
+.hud-item{text-align:center}
+.hud-label{font-size:.65rem;color:#8b949e}
+.hud-val{font-size:1.1rem;font-weight:700}
+.hud-val.good{color:#2ea043}
+.hud-val.warn{color:#ff9900}
+.hud-val.bad{color:#f85149}
+.hud .btn-back{background:none;border:1px solid #30363d;color:#8b949e;padding:4px 12px;border-radius:6px;font-family:inherit;font-size:.8rem;cursor:pointer}
+
+/* Game */
+#game{position:relative}
+#game canvas{display:block;touch-action:none}
+.start-hint{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);color:#8b949e;font-size:.9rem;text-align:center;pointer-events:none;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* Result */
+#result{background:linear-gradient(135deg,#0f1115,#1c2128);padding:20px;text-align:center}
+.result-card{background:#21262d;border-radius:16px;padding:30px 24px;max-width:360px;width:90%}
+.result-grade{font-size:4rem;margin-bottom:8px}
+.result-title{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.result-sub{color:#8b949e;font-size:.9rem;margin-bottom:20px}
+.result-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.r-stat{background:#0d1117;border-radius:10px;padding:12px;text-align:center}
+.r-stat .r-num{font-size:1.3rem;font-weight:700;color:#ff6b00}
+.r-stat .r-label{font-size:.7rem;color:#8b949e;margin-top:2px}
+.btn-menu{background:#ff6b00;color:#000;border:none;padding:12px 30px;border-radius:8px;font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;margin-top:10px}
+.btn-menu:hover{background:#ff9900}
+.submit-note{font-size:.75rem;color:#8b949e;margin-top:8px}
+
+/* Difficulty Picker */
+.diff-overlay{position:fixed;inset:0;background:rgba(15,17,21,.95);z-index:100;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:20px 0}
+.diff-card{background:#21262d;border-radius:16px;padding:28px 24px;max-width:420px;width:90%;text-align:center}
+.diff-card h2{font-size:1.3rem;color:#ff6b00;margin-bottom:4px}
+.diff-sub{color:#8b949e;font-size:.9rem;margin-bottom:20px}
+.diff-btns{display:flex;gap:10px}
+.diff-btn{flex:1;background:#0d1117;border:2px solid #30363d;border-radius:12px;padding:14px 8px;cursor:pointer;transition:.2s;text-align:center;color:#e6edf3;font-family:inherit}
+.diff-btn:hover{transform:translateY(-3px)}
+.diff-btn.easy:hover{border-color:#2ea043;box-shadow:0 4px 15px rgba(46,160,67,.2)}
+.diff-btn.medium:hover{border-color:#ff9900;box-shadow:0 4px 15px rgba(255,153,0,.2)}
+.diff-btn.hard:hover{border-color:#f85149;box-shadow:0 4px 15px rgba(248,81,73,.2)}
+.diff-btn.extreme{border-color:#30363d;background:linear-gradient(135deg,#1a0000,#0d1117)}
+.diff-btn.extreme:hover{border-color:#ff0000;box-shadow:0 4px 20px rgba(255,0,0,.3)}
+.diff-btn strong{display:block;font-size:1rem;margin-top:8px}
+.diff-btn span{font-size:.7rem;color:#8b949e}
+.diff-preview{height:50px;display:flex;align-items:center;justify-content:center}
+.diff-line{width:100%;height:2px;background:#ff6b00;position:relative}
+.diff-zone{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);background:rgba(255,107,0,.15);border-radius:4px}
+.easy-zone{height:40px}
+.medium-zone{height:22px}
+.hard-zone{height:10px}
+.extreme-zone{height:4px;background:rgba(255,0,0,.25)}
+
+.speed-btns{margin-top:0}
+.spd .spd-icon{font-size:1.5rem;margin-bottom:4px}
+.diff-btn.spd.active-spd{border-color:#00e1ff;background:#0d1117;box-shadow:0 0 12px rgba(0,225,255,.2)}
+.diff-btn.spd.active-spd strong{color:#00e1ff}
+
+/* Report */
+#report{align-items:flex-start;justify-content:flex-start;overflow-y:auto;padding:24px 16px}
+.report-wrap{max-width:1000px;margin:0 auto;width:100%}
+.report-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}
+.report-topbar h1{font-size:1.2rem;color:#ff6b00}
+.report-card{background:#21262d;border:2px solid #30363d;border-radius:16px;padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#0d1117;border:2px solid #30363d;border-radius:8px;padding:9px 12px;color:#e6edf3;font-family:'Kanit',sans-serif;font-size:.85rem}
+.report-tools button{background:#0d1117;border:2px solid #30363d;color:#e6edf3;border-radius:8px;padding:9px 14px;font-family:'Kanit',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:.8rem;min-width:900px}
+table.rpt th{text-align:left;color:#8b949e;font-weight:700;padding:8px;border-bottom:1px solid #30363d;white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1e24;white-space:nowrap}
+table.rpt tr:hover td{background:#1a1e24}
+.rpt-total{color:#ff6b00;font-weight:800}
+.rpt-empty{text-align:center;color:#8b949e;padding:30px;font-size:.85rem}
+
+.footer-cr{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:.65rem;color:#30363d}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login" class="screen active">
+  <div class="login-card">
+    <h1>🔧 Weld 3D Trainer</h1>
+    <p style="color:#ff9900;font-size:.85rem;margin-bottom:2px">วิชาฝึกฝีมือในงานเชื่อมโลหะ</p>
+    <p class="sub">โดย ครูธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</p>
+    <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+    <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+    <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
+    <button class="btn-primary" onclick="login()">เข้าสู่ระบบ (Enter)</button>
+    <button class="btn-ghost" onclick="openReport()">📊 รายงานผลสอบ (สำหรับครู)</button>
+  </div>
+  <div class="footer-cr">&copy; 2026 ธานี ชมสุข — วิทยาลัยการอาชีพบุรีรัมย์</div>
+</div>
+
+<!-- Menu -->
+<div id="menu" class="screen">
+  <h1>🔧 Weld 3D Trainer</h1>
+  <p style="color:#ff9900;font-size:.85rem;margin-bottom:2px" id="menu-userline"></p>
+  <p class="sub">เลือกรูปแบบรอยเชื่อม</p>
+  <div class="levels">
+    <div class="level-card" onclick="pickLevel('bop','Bead on Plate')">
+      <div class="lv-icon">➖</div>
+      <h3>Bead on Plate</h3>
+      <p>เชื่อมพอกแนวบนแผ่นเรียบ</p>
+    </div>
+    <div class="level-card disabled">
+      <div class="lv-icon">📐</div>
+      <h3>Fillet Weld</h3>
+      <p>เชื่อมต่อมุมฉาก</p>
+      <div class="soon-tag">เร็วๆ นี้</div>
+    </div>
+    <div class="level-card disabled">
+      <div class="lv-icon">🔺</div>
+      <h3>Single-V Butt</h3>
+      <p>เชื่อมต่อชนร่องวี</p>
+      <div class="soon-tag">เร็วๆ นี้</div>
+    </div>
+  </div>
+  <!-- Difficulty Picker -->
+  <div id="diff-picker" class="diff-overlay" style="display:none">
+    <div class="diff-card">
+      <h2>เลือกความยาก</h2>
+      <p class="diff-sub" id="diff-type-label"></p>
+      <div class="diff-btns">
+        <button class="diff-btn easy" onclick="confirmDifficulty('easy')">
+          <div class="diff-preview"><div class="diff-line"><div class="diff-zone easy-zone"></div></div></div>
+          <strong>ง่าย</strong><span>ขอบกว้าง</span>
+        </button>
+        <button class="diff-btn medium" onclick="confirmDifficulty('medium')">
+          <div class="diff-preview"><div class="diff-line"><div class="diff-zone medium-zone"></div></div></div>
+          <strong>กลาง</strong><span>ขอบปานกลาง</span>
+        </button>
+        <button class="diff-btn hard" onclick="confirmDifficulty('hard')">
+          <div class="diff-preview"><div class="diff-line"><div class="diff-zone hard-zone"></div></div></div>
+          <strong>ยาก</strong><span>ขอบแคบมาก</span>
+        </button>
+        <button class="diff-btn extreme" onclick="confirmDifficulty('extreme')">
+          <div class="diff-preview"><div class="diff-line"><div class="diff-zone extreme-zone"></div></div></div>
+          <strong>🔥 นรก</strong><span>แทบไม่มีขอบ</span>
+        </button>
+      </div>
+      <h3 style="margin-top:18px;font-size:1rem;color:#00e1ff">ความเร็วจุดนำทาง (Guide)</h3>
+      <p class="diff-sub" style="margin-bottom:12px">ความเร็วเดินลวดเชื่อมธูป SMAW จริง ≈ 150–250 mm/min</p>
+      <div class="diff-btns speed-btns">
+        <button class="diff-btn spd" onclick="pickSpeed('slow')" id="spd-slow">
+          <div class="spd-icon">🐢</div>
+          <strong>150 mm/min</strong><span>ช้า — แนวใหญ่</span>
+        </button>
+        <button class="diff-btn spd active-spd" onclick="pickSpeed('medium')" id="spd-medium">
+          <div class="spd-icon">👌</div>
+          <strong>200 mm/min</strong><span>พอดี — แนวสวย</span>
+        </button>
+        <button class="diff-btn spd" onclick="pickSpeed('fast')" id="spd-fast">
+          <div class="spd-icon">⚡</div>
+          <strong>250 mm/min</strong><span>เร็ว — แนวเล็ก</span>
+        </button>
+        <button class="diff-btn spd" onclick="pickSpeed('none')" id="spd-none">
+          <div class="spd-icon">🔓</div>
+          <strong>อิสระ</strong><span>ไม่มี guide</span>
+        </button>
+      </div>
+      <button class="btn-back" onclick="closeDifficulty()" style="margin-top:16px">◀ กลับเลือกรูปแบบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Game -->
+<div id="game" class="screen">
+  <div class="hud">
+    <button class="btn-back" onclick="showMenu()">◀ กลับ</button>
+    <div class="hud-item"><div class="hud-label">ความแม่น</div><div class="hud-val" id="hud-acc">--%</div></div>
+    <div class="hud-item"><div class="hud-label">เวลา</div><div class="hud-val" id="hud-time">0.0s</div></div>
+    <div class="hud-item" id="hud-pace-wrap" style="display:none"><div class="hud-label">จังหวะ</div><div class="hud-val" id="hud-pace">--%</div></div>
+    <div class="hud-item"><div class="hud-label">ระยะ</div><div class="hud-val" id="hud-progress">0%</div></div>
+  </div>
+  <div id="cv-wrap"></div>
+  <div class="start-hint" id="hint">กดค้างที่ชิ้นงานแล้วลากตามแนวเชื่อม</div>
+</div>
+
+<!-- Result -->
+<div id="result" class="screen">
+  <div class="result-card">
+    <div class="result-grade" id="res-grade"></div>
+    <div class="result-title" id="res-title"></div>
+    <div class="result-sub" id="res-sub"></div>
+    <div class="result-stats">
+      <div class="r-stat"><div class="r-num" id="res-acc"></div><div class="r-label">ความแม่นยำ</div></div>
+      <div class="r-stat"><div class="r-num" id="res-time"></div><div class="r-label">เวลา (วินาที)</div></div>
+      <div class="r-stat" id="res-pace-wrap" style="display:none"><div class="r-num" id="res-pace"></div><div class="r-label">จังหวะตาม Guide</div></div>
+      <div class="r-stat"><div class="r-num" id="res-total"></div><div class="r-label">คะแนนรวม</div></div>
+      <div class="r-stat" style="grid-column:1/-1"><div class="r-num" id="res-level"></div><div class="r-label">ระดับ</div></div>
+    </div>
+    <div class="submit-note">📊 ส่งผลให้ครูอัตโนมัติแล้ว</div>
+    <div style="margin-top:10px">
+      <button class="btn-menu" onclick="startGame(lastLevel)">🔄 เล่นอีกครั้ง</button>
+      <button class="btn-menu" style="background:#30363d;color:#e6edf3;margin-left:8px" onclick="showMenu()">📋 เมนู</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report -->
+<div id="report" class="screen">
+  <div class="report-wrap">
+    <div class="report-topbar">
+      <h1>📊 รายงานผล Weld 3D Trainer</h1>
+      <button class="btn-ghost" style="width:auto;margin-top:0" onclick="showScreen('login')">← กลับหน้าแรก</button>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── FIREBASE (ใช้โปรเจกต์เดียวกับระบบเช็คชื่อ/สอบกลางภาค, path แยกเฉพาะเกมนี้) ─────
+var DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+var RESULTS_URL = DB_BASE + '/examResults/weld_3d_bead_on_plate.json';
+var REPORT_PIN = '2569';
+
+var userFirst = '', userLast = '', userDept = '';
+
+function login(){
+  var fn = document.getElementById('fname').value.trim();
+  var ln = document.getElementById('lname').value.trim();
+  var dp = document.getElementById('dept').value.trim();
+  if(!fn || !ln){ alert('กรุณากรอกชื่อและนามสกุล'); return; }
+  userFirst = fn; userLast = ln; userDept = dp;
+  document.getElementById('menu-userline').textContent = 'ผู้เชื่อม: ' + fn + ' ' + ln + (dp ? ' (' + dp + ')' : '');
+  showScreen('menu');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+function showMenu() { showScreen('menu'); }
+
+var lastLevel = 'bop';
+var lastResult = {};
+var lastDifficulty = 'easy';
+var pendingType = '';
+
+var DIFF_WIDTHS = { easy: 0.09, medium: 0.05, hard: 0.026, extreme: 0.012 };
+var DIFF_NAMES = { easy: 'ง่าย', medium: 'กลาง', hard: 'ยาก', extreme: 'นรก' };
+var SPEED_DURATIONS = { slow: 20, medium: 15, fast: 12, none: 0 };
+var SPEED_NAMES = { slow: '150 mm/min (แนวใหญ่)', medium: '200 mm/min (แนวสวย)', fast: '250 mm/min (แนวเล็ก)', none: 'อิสระ' };
+var selectedSpeed = 'medium';
+
+function pickLevel(type, label) {
+  pendingType = type;
+  document.getElementById('diff-type-label').innerText = 'รูปแบบ: ' + label;
+  document.getElementById('diff-picker').style.display = 'flex';
+}
+function confirmDifficulty(diff) {
+  lastDifficulty = diff;
+  document.getElementById('diff-picker').style.display = 'none';
+  startGame(pendingType);
+}
+function closeDifficulty() { document.getElementById('diff-picker').style.display = 'none'; }
+function pickSpeed(spd) {
+  selectedSpeed = spd;
+  ['slow','medium','fast','none'].forEach(function(s) {
+    document.getElementById('spd-' + s).classList.toggle('active-spd', s === spd);
+  });
+}
+
+// ─── THREE.JS SCENE ─────────────────────────────────
+var PLATE_L = 3.2, PLATE_W = 1.0, PLATE_T = 0.12;
+var scene, camera, renderer, plateMesh, raycastPlane, torchGroup, glowLight, glowSphere;
+var beadMesh = null, guideRing;
+var sceneReady = false;
+
+function makeMetalTexture(){
+  var c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  var ctx2 = c.getContext('2d');
+  ctx2.fillStyle = '#9a9ea3';
+  ctx2.fillRect(0,0,256,256);
+  for (var i=0;i<3200;i++){
+    var x = Math.random()*256, y = Math.random()*256;
+    var v = Math.random()*40-20;
+    ctx2.fillStyle = 'rgba(' + (140+v) + ',' + (144+v) + ',' + (150+v) + ',0.5)';
+    ctx2.fillRect(x, y, 1.4, 1.4);
+  }
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(4, 1.4);
+  return tex;
+}
+
+function initScene(){
+  if (sceneReady) return;
+  sceneReady = true;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f1115);
+  scene.fog = new THREE.Fog(0x0f1115, 4, 9);
+
+  camera = new THREE.PerspectiveCamera(45, 1, 0.1, 50);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  document.getElementById('cv-wrap').appendChild(renderer.domElement);
+
+  scene.add(new THREE.HemisphereLight(0x8899aa, 0x201a14, 0.9));
+  var dl = new THREE.DirectionalLight(0xffffff, 1.1);
+  dl.position.set(1.5, 3, -1.5);
+  scene.add(dl);
+  var dl2 = new THREE.DirectionalLight(0x557799, 0.4);
+  dl2.position.set(-2, 1.5, 2);
+  scene.add(dl2);
+
+  var plateGeo = new THREE.BoxGeometry(PLATE_W, PLATE_T, PLATE_L);
+  var plateMat = new THREE.MeshStandardMaterial({ map: makeMetalTexture(), roughness: 0.55, metalness: 0.75 });
+  plateMesh = new THREE.Mesh(plateGeo, plateMat);
+  scene.add(plateMesh);
+
+  // Invisible larger raycast plane at the plate's top surface, so drags near
+  // the edges never miss (raycasting the thin box top face is fragile).
+  var rGeo = new THREE.PlaneGeometry(PLATE_W * 2.2, PLATE_L * 1.3);
+  var rMat = new THREE.MeshBasicMaterial({ visible: false });
+  raycastPlane = new THREE.Mesh(rGeo, rMat);
+  raycastPlane.rotation.x = -Math.PI / 2;
+  raycastPlane.position.y = PLATE_T / 2;
+  scene.add(raycastPlane);
+
+  // Table underneath, purely for visual depth
+  var tableGeo = new THREE.PlaneGeometry(20, 20);
+  var tableMat = new THREE.MeshStandardMaterial({ color: 0x15181d, roughness: 1 });
+  var table = new THREE.Mesh(tableGeo, tableMat);
+  table.rotation.x = -Math.PI / 2;
+  table.position.y = -PLATE_T / 2 - 0.001;
+  scene.add(table);
+
+  // Torch (simple handle + tip)
+  torchGroup = new THREE.Group();
+  var handleGeo = new THREE.CylinderGeometry(0.028, 0.032, 0.42, 16);
+  var handleMat = new THREE.MeshStandardMaterial({ color: 0xff6b00, roughness: 0.4, metalness: 0.3 });
+  var handle = new THREE.Mesh(handleGeo, handleMat);
+  handle.position.y = 0.21;
+  torchGroup.add(handle);
+  var tipGeo = new THREE.CylinderGeometry(0.01, 0.016, 0.14, 12);
+  var tipMat = new THREE.MeshStandardMaterial({ color: 0x8a8a8a, roughness: 0.3, metalness: 0.9 });
+  var tip = new THREE.Mesh(tipGeo, tipMat);
+  tip.position.y = -0.07;
+  torchGroup.add(tip);
+  torchGroup.rotation.z = -0.62;
+  scene.add(torchGroup);
+
+  glowLight = new THREE.PointLight(0xfff2c0, 0, 1.2);
+  scene.add(glowLight);
+  var glowGeo = new THREE.SphereGeometry(0.018, 10, 10);
+  var glowMat = new THREE.MeshBasicMaterial({ color: 0xfff6d8, transparent: true, opacity: 0 });
+  glowSphere = new THREE.Mesh(glowGeo, glowMat);
+  scene.add(glowSphere);
+
+  // Guide ring
+  var ringGeo = new THREE.TorusGeometry(0.11, 0.006, 8, 32);
+  var ringMat = new THREE.MeshBasicMaterial({ color: 0x2ea043, transparent: true, opacity: 0.7 });
+  guideRing = new THREE.Mesh(ringGeo, ringMat);
+  guideRing.rotation.x = -Math.PI / 2;
+  guideRing.visible = false;
+  scene.add(guideRing);
+
+  window.addEventListener('resize', onResize);
+}
+
+function onResize(){
+  if (!sceneReady) return;
+  var wrap = document.getElementById('cv-wrap');
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+function frameCamera(){
+  // Fixed 3/4 angle looking down the plate's length, torch/start near viewer.
+  camera.position.set(0, 1.9, -PLATE_L * 0.95);
+  camera.lookAt(0, -0.1, PLATE_L * 0.02);
+  onResize();
+}
+
+// ─── PATH / GAMEPLAY STATE (same scoring model as the 2D trainer, in 3D world units) ──
+var path = [];        // array of THREE.Vector3 on the plate top surface
+var pathWidth = 0.09;
+var started = false;
+var finished = false;
+var samples = [];      // array of {p: Vector3, dev: number}
+var startTime = 0;
+var nextPointIdx = 0;
+var captureRadius = 0.14;
+var guideIdx = 0;
+var guideDuration = 10;
+var guideActive = false;
+var animFrame = null;
+var guideRadius = 0.12;
+var paceSamples = [];
+var previewPos = null;
+
+var isDown = false;
+var activePointerId = null;
+
+function generatePath(){
+  var pts = [];
+  var margin = 0.28;
+  var z0 = -PLATE_L / 2 + margin, z1 = PLATE_L / 2 - margin;
+  var steps = 140;
+  for (var i = 0; i <= steps; i++) {
+    var z = z0 + (z1 - z0) * (i / steps);
+    pts.push(new THREE.Vector3(0, PLATE_T / 2 + 0.004, z));
+  }
+  return pts;
+}
+
+function startGame(type) {
+  initScene();
+  lastLevel = type;
+  showScreen('game');
+  frameCamera();
+
+  pathWidth = DIFF_WIDTHS[lastDifficulty] || 0.09;
+  captureRadius = 0.14;
+
+  path = generatePath();
+  isDown = false;
+  activePointerId = null;
+  started = false;
+  finished = false;
+  samples = [];
+  nextPointIdx = 0;
+  startTime = 0;
+
+  guideIdx = 0;
+  guideDuration = SPEED_DURATIONS[selectedSpeed] || 0;
+  guideActive = selectedSpeed !== 'none';
+  paceSamples = [];
+  if (animFrame) cancelAnimationFrame(animFrame);
+
+  previewPos = null;
+  if (beadMesh) { scene.remove(beadMesh); beadMesh.geometry.dispose(); beadMesh.material.dispose(); beadMesh = null; }
+  guideRing.visible = false;
+  glowSphere.material.opacity = 0;
+  glowLight.intensity = 0;
+  torchGroup.visible = false;
+
+  document.getElementById('hint').style.display = 'block';
+  document.getElementById('hud-acc').innerText = '--%';
+  document.getElementById('hud-acc').className = 'hud-val';
+  document.getElementById('hud-time').innerText = '0.0s';
+  document.getElementById('hud-progress').innerText = '0%';
+  document.getElementById('hud-pace-wrap').style.display = guideActive ? '' : 'none';
+  document.getElementById('hud-pace').innerText = '--%';
+
+  drawScene();
+  renderLoop();
+}
+
+function beadRadiusFor(speed){
+  if (speed === 'slow') return 0.05;
+  if (speed === 'fast') return 0.022;
+  return 0.036;
+}
+
+function rebuildBead(){
+  if (beadMesh) { scene.remove(beadMesh); beadMesh.geometry.dispose(); beadMesh.material.dispose(); beadMesh = null; }
+  if (samples.length < 2) return;
+  var pts = samples.map(function(s){ return s.p; });
+  var curve = new THREE.CatmullRomCurve3(pts);
+  var r = beadRadiusFor(selectedSpeed);
+  var tubeGeo = new THREE.TubeGeometry(curve, Math.max(8, pts.length), r, 8, false);
+  var tubeMat = new THREE.MeshStandardMaterial({ color: 0x9a9aa0, roughness: 0.35, metalness: 0.85 });
+  beadMesh = new THREE.Mesh(tubeGeo, tubeMat);
+  scene.add(beadMesh);
+}
+
+function distToSegment3(p, a, b) {
+  var ab = new THREE.Vector3().subVectors(b, a);
+  var len2 = ab.lengthSq();
+  if (len2 === 0) return p.distanceTo(a);
+  var t = Math.max(0, Math.min(1, new THREE.Vector3().subVectors(p, a).dot(ab) / len2));
+  var closest = new THREE.Vector3().copy(a).addScaledVector(ab, t);
+  return p.distanceTo(closest);
+}
+
+function getDeviation(p) {
+  var minDist = Infinity;
+  for (var i = 0; i < path.length - 1; i++) {
+    var d = distToSegment3(p, path[i], path[i + 1]);
+    if (d < minDist) minDist = d;
+  }
+  return minDist;
+}
+
+function advanceProgress(p) {
+  while (nextPointIdx < path.length) {
+    var pt = path[nextPointIdx];
+    if (p.distanceTo(pt) < captureRadius) nextPointIdx++;
+    else break;
+  }
+}
+
+function updateHUD() {
+  if (samples.length === 0) return;
+  var goodCount = 0;
+  for (var i = 0; i < samples.length; i++) if (samples[i].dev <= pathWidth) goodCount++;
+  var acc = Math.round((goodCount / samples.length) * 100);
+  var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  var progress = Math.round((nextPointIdx / path.length) * 100);
+
+  var accEl = document.getElementById('hud-acc');
+  accEl.innerText = acc + '%';
+  accEl.className = 'hud-val ' + (acc >= 85 ? 'good' : acc >= 60 ? 'warn' : 'bad');
+  document.getElementById('hud-time').innerText = elapsed + 's';
+  document.getElementById('hud-progress').innerText = progress + '%';
+
+  if (guideActive && paceSamples.length > 0) {
+    var paceGood = 0;
+    for (var j = 0; j < paceSamples.length; j++) if (paceSamples[j] <= guideRadius) paceGood++;
+    var paceAcc = Math.round((paceGood / paceSamples.length) * 100);
+    var paceEl = document.getElementById('hud-pace');
+    paceEl.innerText = paceAcc + '%';
+    paceEl.className = 'hud-val ' + (paceAcc >= 80 ? 'good' : paceAcc >= 50 ? 'warn' : 'bad');
+  }
+}
+
+// ── Pointer input: raycast screen point onto the plate's top plane ──
+var raycaster = new THREE.Raycaster();
+var ndc = new THREE.Vector2();
+
+function pickPoint(clientX, clientY) {
+  var rect = renderer.domElement.getBoundingClientRect();
+  ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(ndc, camera);
+  var hit = raycaster.intersectObject(raycastPlane)[0];
+  return hit ? hit.point.clone() : null;
+}
+
+function positionTorch(p, active){
+  torchGroup.visible = true;
+  torchGroup.position.set(p.x, p.y + 0.02, p.z + 0.14);
+}
+
+function onPointerDown(e) {
+  if (finished) return;
+  if (activePointerId !== null) return;
+  var p = pickPoint(e.clientX, e.clientY);
+  if (!p) return;
+  activePointerId = e.pointerId;
+  try { renderer.domElement.setPointerCapture(e.pointerId); } catch (err) {}
+  isDown = true;
+  previewPos = p;
+  positionTorch(p, false);
+}
+
+function onPointerMove(e) {
+  if (e.pointerId !== activePointerId && activePointerId !== null) return;
+  if (finished) return;
+  var p = pickPoint(e.clientX, e.clientY);
+  if (!p) return;
+  previewPos = p;
+
+  if (!isDown) {
+    if (!started) positionTorch(p, false);
+    return; // hovering without the pointer held down never records a bead
+  }
+
+  positionTorch(p, true);
+
+  if (!started) {
+    started = true;
+    startTime = Date.now();
+    document.getElementById('hint').style.display = 'none';
+  }
+
+  var dev = getDeviation(p);
+  samples.push({ p: p, dev: dev });
+  advanceProgress(p);
+
+  if (guideActive && guideIdx < path.length) {
+    paceSamples.push(p.distanceTo(path[Math.min(guideIdx, path.length - 1)]));
+  }
+
+  rebuildBead();
+  updateHUD();
+  glowLight.position.set(p.x, p.y + 0.05, p.z);
+  glowLight.intensity = 1.4;
+  glowSphere.position.set(p.x, p.y + 0.015, p.z);
+  glowSphere.material.opacity = 0.9;
+
+  if (nextPointIdx >= path.length - 4) {
+    var ep = path[path.length - 1];
+    if (p.distanceTo(ep) < captureRadius) finishGame();
+  }
+}
+
+function onPointerUp(e) {
+  if (e.pointerId !== activePointerId) return;
+  isDown = false;
+  try { renderer.domElement.releasePointerCapture(e.pointerId); } catch (err) {}
+  activePointerId = null;
+  glowLight.intensity = 0;
+  glowSphere.material.opacity = 0;
+}
+
+function drawScene(){
+  if (!started && path.length > 0) {
+    guideRing.visible = false;
+  }
+  renderer.render(scene, camera);
+}
+
+function renderLoop() {
+  if (finished) { renderer.render(scene, camera); return; }
+
+  if (started) {
+    if (guideActive && guideDuration > 0) {
+      var elapsed = (Date.now() - startTime) / 1000;
+      guideIdx = Math.min(path.length - 1, Math.floor((elapsed / guideDuration) * path.length));
+    }
+    if (guideActive) {
+      var gp = path[Math.min(guideIdx, path.length - 1)];
+      guideRing.visible = true;
+      guideRing.position.set(gp.x, gp.y + 0.01, gp.z);
+      var pulse = 1 + Math.sin(Date.now() / 260) * 0.12;
+      guideRing.scale.set(pulse, pulse, pulse);
+      var pd = paceSamples.length > 0 ? paceSamples[paceSamples.length - 1] : 0;
+      guideRing.material.color.set(pd <= guideRadius * 0.5 ? 0x2ea043 : pd <= guideRadius ? 0xff9900 : 0xf85149);
+    }
+    updateHUD();
+  }
+
+  renderer.render(scene, camera);
+  animFrame = requestAnimationFrame(renderLoop);
+}
+
+function finishGame() {
+  finished = true;
+  isDown = false;
+  activePointerId = null;
+  torchGroup.visible = false;
+  glowLight.intensity = 0;
+  glowSphere.material.opacity = 0;
+  guideRing.visible = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
+  drawScene();
+
+  var goodCount = 0, maxDev = 0;
+  for (var i = 0; i < samples.length; i++) {
+    if (samples[i].dev <= pathWidth) goodCount++;
+    if (samples[i].dev > maxDev) maxDev = samples[i].dev;
+  }
+  var acc = Math.round((goodCount / samples.length) * 100);
+  var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+  var paceAcc = 100;
+  if (guideActive && paceSamples.length > 0) {
+    var paceGood = 0;
+    for (var j = 0; j < paceSamples.length; j++) if (paceSamples[j] <= guideRadius) paceGood++;
+    paceAcc = Math.round((paceGood / paceSamples.length) * 100);
+  }
+
+  var total = guideActive ? Math.round(acc * 0.6 + paceAcc * 0.4) : acc;
+
+  var grade, title, sub;
+  if (total >= 95) { grade = '🏆'; title = 'ช่างเชื่อมมือโปร!'; sub = 'รอยเชื่อมเนี้ยบ จังหวะมือสม่ำเสมอ'; }
+  else if (total >= 85) { grade = '🥇'; title = 'ฝีมือดีมาก!'; sub = 'แม่นยำดี ควบคุมจังหวะได้'; }
+  else if (total >= 70) { grade = '🥈'; title = 'พอใช้ได้!'; sub = 'ฝึกอีกนิด จะเนี้ยบขึ้น'; }
+  else if (total >= 50) { grade = '🥉'; title = 'ต้องฝึกเพิ่ม'; sub = 'คุมมือให้นิ่ง ตามจุดนำให้ทัน'; }
+  else { grade = '💪'; title = 'เริ่มต้นดี!'; sub = 'ค่อยๆ ลาก ตามจุดฟ้า อย่ารีบ'; }
+
+  document.getElementById('res-grade').innerText = grade;
+  document.getElementById('res-title').innerText = title;
+  document.getElementById('res-sub').innerText = sub;
+  document.getElementById('res-acc').innerText = acc + '%';
+  document.getElementById('res-time').innerText = elapsed;
+  document.getElementById('res-total').innerText = total + '%';
+  document.getElementById('res-pace-wrap').style.display = guideActive ? '' : 'none';
+  document.getElementById('res-pace').innerText = paceAcc + '%';
+  var lvNames = { bop: 'Bead on Plate' };
+  var speedLabel = SPEED_NAMES[selectedSpeed] || '';
+  document.getElementById('res-level').innerText = (lvNames[lastLevel] || lastLevel) + ' / ' + (DIFF_NAMES[lastDifficulty] || '') + (speedLabel ? ' / ' + speedLabel : '');
+
+  lastResult = {
+    level: lvNames[lastLevel] || lastLevel,
+    difficulty: DIFF_NAMES[lastDifficulty] || lastDifficulty,
+    speed: speedLabel || 'อิสระ',
+    accuracy: acc, pace: paceAcc, total: total, time: elapsed
+  };
+
+  submitResult(lastResult);
+  setTimeout(function() { showScreen('result'); }, 600);
+}
+
+function submitResult(r) {
+  fetch(RESULTS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fname: userFirst, lname: userLast, dept: userDept,
+      level: r.level, difficulty: r.difficulty, speed: r.speed,
+      accuracy: r.accuracy, pace: r.pace, total: r.total, time: +r.time,
+      submittedAt: Date.now()
+    })
+  }).catch(function(){});
+}
+
+// ─── REPORT (สำหรับครู) ────────────────────────────────
+var reportData = [];
+function openReport(){
+  var pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผลสอบ:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  showScreen('report');
+  loadReport();
+}
+function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  fetch(RESULTS_URL, {cache:'no-store'}).then(function(res){ return res.json(); }).then(function(data){
+    reportData = data ? Object.keys(data).map(function(k){ return data[k]; }).sort(function(a,b){ return b.submittedAt - a.submittedAt; }) : [];
+    renderReport();
+  }).catch(function(){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+  });
+}
+function renderReport(){
+  var filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  var rows = reportData.filter(function(r){
+    if(!filter) return true;
+    return (r.fname+' '+r.lname+' '+r.dept+' '+r.level).toLowerCase().indexOf(filter) !== -1;
+  });
+  var wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีนักเรียนฝึก หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  function fmtTime(ts){ return new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}); }
+  var html = '<table class="rpt"><thead><tr>'
+    + '<th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>รูปแบบ</th><th>ความยาก</th><th>ความเร็ว</th>'
+    + '<th>ความแม่นยำ</th><th>จังหวะ</th><th>รวม</th><th>เวลา(s)</th>'
+    + '</tr></thead><tbody>';
+  rows.forEach(function(r){
+    html += '<tr>'
+      + '<td>'+fmtTime(r.submittedAt)+'</td>'
+      + '<td>'+r.fname+' '+r.lname+'</td>'
+      + '<td>'+(r.dept||'-')+'</td>'
+      + '<td>'+r.level+'</td>'
+      + '<td>'+r.difficulty+'</td>'
+      + '<td>'+r.speed+'</td>'
+      + '<td>'+r.accuracy+'%</td>'
+      + '<td>'+r.pace+'%</td>'
+      + '<td class="rpt-total">'+r.total+'%</td>'
+      + '<td>'+r.time+'</td>'
+      + '</tr>';
+  });
+  html += '</tbody></table><div style="margin-top:10px;font-size:.75rem;color:#8b949e">ทั้งหมด ' + rows.length + ' รายการ</div>';
+  wrap.innerHTML = html;
+}
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  var header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','รูปแบบ','ความยาก','ความเร็ว','ความแม่นยำ','จังหวะ','รวม','เวลา'];
+  var lines = [header.join(',')];
+  reportData.forEach(function(r){
+    var ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    lines.push([ts, r.fname, r.lname, r.dept, r.level, r.difficulty, r.speed, r.accuracy, r.pace, r.total, r.time].map(function(v){ return '"'+v+'"'; }).join(','));
+  });
+  var blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'exam-report-weld-3d.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('cv-wrap').addEventListener('pointerdown', onPointerDown);
+  document.getElementById('cv-wrap').addEventListener('pointermove', onPointerMove);
+  document.getElementById('cv-wrap').addEventListener('pointerup', onPointerUp);
+  document.getElementById('cv-wrap').addEventListener('pointercancel', onPointerUp);
+});
+</script>
+</body>
+</html>
