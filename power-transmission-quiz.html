@@ -119,6 +119,19 @@ body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
 .calc-grid button.op{color:var(--cy)}
 .calc-grid button.eq{background:var(--cyd);color:#001}
 .calc-grid button.clr{color:var(--rd)}
+
+/* REPORT */
+.btn-ghost{display:block;width:100%;background:none;border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:10px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:10px}
+.report-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:13px}
+.report-tools button{background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:13px;min-width:700px}
+table.rpt th{text-align:left;color:var(--mut);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;white-space:nowrap}
+table.rpt tr:hover td{background:#161622}
+.rpt-total{color:var(--cy);font-weight:800}
+.rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
 </style>
 </head>
 <body>
@@ -132,6 +145,29 @@ body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
     <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
     <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
     <button class="btn-primary" onclick="login()">เข้าสู่ระบบ (Enter)</button>
+    <button class="btn-ghost" onclick="openReport()">📊 รายงานผลสอบ (สำหรับครู)</button>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div id="s-report" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1 style="font-size:18px">📊 รายงานผลสอบ — ระบบส่งกำลังและความเร็วรอบ</h1>
+      </div>
+      <div class="nav-btns">
+        <button class="nav-btn" onclick="showScreen('s-login')">← กลับหน้าแรก</button>
+      </div>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก / สัปดาห์..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
   </div>
 </div>
 
@@ -1356,16 +1392,50 @@ function setupSim14c(host, myGen){
 let mode = 'learn';
 let learnWeek = 10;
 let g = {};
+let userFirst='', userLast='', userDept='';
+
+// ตั้งค่าลิงก์ Apps Script Web App ที่ผูกกับ Google Sheet บันทึกผลสอบ
+// (ดูวิธีสร้างที่ https://docs.google.com/spreadsheets/d/1bD9hJCGyohaS7G_beojZQEpI6XFIQb4Se5tP3F_anHM/edit)
+const RESULT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwL11z2y8tnhqSWR2jG-pG-ajIuzyHsZ0r0uN8IPr2NrfxhLmgii-O4i1Td1tDRL12uuQ/exec';
+
+// ─── FIREBASE (ใช้โปรเจกต์เดียวกับระบบเช็คชื่อ/สอบกลางภาค, path แยกเฉพาะควิซนี้) ─────
+const DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+const RESULTS_URL = DB_BASE + '/examResults/power_transmission_quiz.json';
+const REPORT_PIN = '2569';
 
 function login(){
   const fn=document.getElementById('fname').value.trim();
   const ln=document.getElementById('lname').value.trim();
   const dp=document.getElementById('dept').value.trim();
   if(!fn||!ln){ alert('กรุณากรอกชื่อและนามสกุล'); return }
+  userFirst=fn; userLast=ln; userDept=dp;
   document.getElementById('userline').textContent = `ผู้ใช้งาน: ${fn} ${ln}${dp?' ('+dp+')':''}`;
   showScreen('s-main');
   buildLearnWeekTabs();
   setMode('learn');
+}
+
+function submitResult(weekLabel, correct, total, score, pct){
+  if(RESULT_SHEET_URL){
+    fetch(RESULT_SHEET_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        name:userFirst, lastname:userLast, dept:userDept,
+        week:weekLabel, correct, total, percent:pct.toFixed(0), score
+      })
+    }).catch(()=>{});
+  }
+  fetch(RESULTS_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      fname:userFirst, lname:userLast, dept:userDept,
+      week:weekLabel, correct, total, score, pct:+pct.toFixed(1),
+      submittedAt:Date.now()
+    })
+  }).catch(()=>{});
 }
 
 function showScreen(id){
@@ -1454,7 +1524,8 @@ function startQuiz(weekFilter){
     const q = topic.generate();
     qs.push({topic, ...q});
   }
-  g = {qs, cur:0, score:0, correct:0, answered:false};
+  const weekLabel = weekFilter==='all' ? `ทั้งหมด` : (WEEKS.find(w=>w.id===weekFilter)?.label || weekFilter);
+  g = {qs, cur:0, score:0, correct:0, answered:false, weekLabel};
   document.getElementById('view-quiz-pre').style.display='none';
   document.getElementById('view-quiz-play').style.display='block';
   document.getElementById('view-quiz-result').style.display='none';
@@ -1514,11 +1585,12 @@ function nextQuestion(){
 }
 
 function endQuiz(){
-  const {qs,correct,score} = g;
+  const {qs,correct,score,weekLabel} = g;
   const total = qs.length;
   const pct = correct/total*100;
   document.getElementById('view-quiz-play').style.display='none';
   document.getElementById('view-quiz-result').style.display='block';
+  submitResult(weekLabel, correct, total, score, pct);
 
   let emoji,grade,color;
   if(pct>=90){emoji='🏆';grade='เยี่ยมมาก!';color='#facc15'}
@@ -1537,6 +1609,73 @@ function backToQuizPre(){
   document.getElementById('view-quiz-result').style.display='none';
   document.getElementById('view-quiz-pre').style.display='block';
   buildQuizCats();
+}
+
+// ─── REPORT (สำหรับครู) ────────────────────────────────
+let reportData = [];
+function openReport(){
+  const pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผลสอบ:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  showScreen('s-report');
+  loadReport();
+}
+
+async function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  try{
+    const res = await fetch(RESULTS_URL, {cache:'no-store'});
+    const data = await res.json();
+    reportData = data ? Object.values(data).sort((a,b)=>b.submittedAt-a.submittedAt) : [];
+  }catch(e){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+    return;
+  }
+  renderReport();
+}
+
+function renderReport(){
+  const filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  const rows = reportData.filter(r=>{
+    if(!filter) return true;
+    return (`${r.fname} ${r.lname} ${r.dept} ${r.week}`).toLowerCase().includes(filter);
+  });
+  const wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีนักเรียนทำแบบทดสอบ หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  wrap.innerHTML = `<table class="rpt"><thead><tr>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>สัปดาห์</th><th>ถูก/ทั้งหมด</th><th>คะแนน</th><th>%</th>
+  </tr></thead><tbody>
+  ${rows.map(r=>`<tr>
+    <td>${fmtTime(r.submittedAt)}</td>
+    <td>${r.fname} ${r.lname}</td>
+    <td>${r.dept||'-'}</td>
+    <td>${r.week}</td>
+    <td>${r.correct} / ${r.total}</td>
+    <td class="rpt-total">${r.score}</td>
+    <td>${r.pct}%</td>
+  </tr>`).join('')}
+  </tbody></table>
+  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ</div>`;
+}
+
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','สัปดาห์','ถูก','ทั้งหมด','คะแนน','เปอร์เซ็นต์'];
+  const lines = [header.join(',')];
+  reportData.forEach(r=>{
+    const ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    lines.push([ts, r.fname, r.lname, r.dept, r.week, r.correct, r.total, r.score, r.pct].map(v=>`"${v}"`).join(','));
+  });
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'exam-report-power-transmission.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── CALCULATOR (floating, available in Learn & Quiz) ─
