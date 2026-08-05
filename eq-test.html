@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>แบบทดสอบความฉลาดทางอารมณ์ (EQ) — ดี เก่ง สุข</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#a78bfa;--cyd:#7c3aed;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(167,139,250,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(167,139,250,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0a0f 0%,#160d20 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.wrap{max-width:820px;margin:0 auto;padding:20px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* LOGIN */
+#s-login{align-items:center;justify-content:center;min-height:100vh;padding:12px}
+#s-login.active{display:flex}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px 24px;width:100%;max-width:460px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.login-h1{text-align:center;font-size:22px;font-weight:800;color:var(--cy)}
+.login-sub{text-align:center;font-size:13px;color:var(--mut);margin:4px 0 20px;line-height:1.6}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:#aab;margin-bottom:6px}
+.field input{width:100%;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:14px}
+.field input:focus{outline:none;border-color:var(--cy)}
+.age-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.age-opt{border:1.5px solid var(--line);background:#1a1a26;color:var(--tx);border-radius:10px;padding:12px 8px;font-size:13px;text-align:center;cursor:pointer;line-height:1.5}
+.age-opt b{display:block;font-size:14px;margin-bottom:2px}
+.age-opt.sel{border-color:var(--cy);background:rgba(167,139,250,.15);color:var(--cy)}
+.btn-primary{display:block;width:100%;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#100822;border:none;border-radius:10px;padding:14px;font-size:17px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:16px}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{display:block;width:100%;background:none;border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:10px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:10px}
+
+/* HEADER */
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+.topbar h1{font-size:19px;color:var(--cy);font-weight:800}
+.topbar .sub{font-size:13px;color:var(--mut);margin-top:2px}
+.nav-btn{border:1px solid var(--line);background:#1a1a26;color:var(--tx);padding:9px 16px;border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+
+/* QUIZ */
+.progress-wrap{height:6px;background:#1a1a26;border-radius:10px;margin-bottom:18px;overflow:hidden}
+.progress-fill{height:100%;background:var(--cy);border-radius:10px;transition:width .3s}
+.page-label{font-size:13px;color:var(--mut);margin-bottom:14px;text-align:center}
+.likert-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.likert-text{font-size:14px;line-height:1.6;margin-bottom:12px}
+.likert-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.likert-opt{border:1.5px solid var(--line);background:#1a1a26;color:var(--tx);border-radius:8px;padding:10px 4px;font-size:12px;text-align:center;cursor:pointer;line-height:1.3}
+.likert-opt.sel{border-color:var(--cy);background:rgba(167,139,250,.18);color:var(--cy);font-weight:700}
+@media (max-width:480px){.likert-opts{grid-template-columns:repeat(2,1fr)}}
+.quiz-nav{display:flex;gap:10px;margin-top:6px}
+.quiz-nav button{flex:1;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer}
+.quiz-nav .btn-back{background:#1a1a26;color:var(--tx);border:1px solid var(--line)}
+.quiz-nav .btn-fwd{background:linear-gradient(135deg,var(--cyd),var(--cy));color:#100822}
+
+/* RESULT */
+.res-hero{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;text-align:center;margin-bottom:20px}
+.res-hero .r-pct{font-size:44px;font-weight:800;color:var(--cy)}
+.res-hero .r-band{font-size:16px;font-weight:800;margin:4px 0}
+.res-hero .r-note{font-size:13px;color:var(--mut);line-height:1.7;max-width:520px;margin:8px auto 0}
+.pillar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.pillar-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center}
+.pillar-card .p-name{font-size:15px;font-weight:800;margin-bottom:4px}
+.pillar-card .p-pct{font-size:30px;font-weight:800;margin:4px 0}
+.pillar-card .p-band{font-size:12px;font-weight:700;margin-bottom:6px}
+.pillar-card .p-desc{font-size:11px;color:var(--mut);line-height:1.6}
+.section-h{font-size:15px;font-weight:800;color:var(--cy);margin:22px 0 12px}
+.comp-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:20px}
+.comp-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px}
+.comp-row .name{width:150px;flex-shrink:0;color:#ccd}
+.comp-bar-wrap{flex:1;height:14px;background:#1a1a26;border-radius:8px;overflow:hidden}
+.comp-bar-fill{height:100%;border-radius:8px;transition:width .8s ease}
+.comp-row .pct{width:44px;text-align:right;font-weight:700}
+.sugg-card{background:rgba(167,139,250,.08);border:1px solid var(--cyd);border-radius:10px;padding:14px;margin-bottom:10px;font-size:13px;line-height:1.7}
+.sugg-card b{color:var(--cy)}
+.disclaimer{background:#161622;border:1px dashed var(--line);border-radius:10px;padding:14px;font-size:12px;color:var(--mut);line-height:1.8;margin-top:8px}
+.btn-replay{display:block;width:100%;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#100822;border:none;border-radius:10px;padding:14px;font-size:16px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:20px}
+
+/* REPORT */
+.report-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:13px}
+.report-tools button{background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+table.rpt th{text-align:left;color:var(--mut);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;white-space:nowrap}
+table.rpt tr:hover td{background:#191926}
+.rpt-total{color:var(--cy);font-weight:800}
+.rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="login-card">
+    <div class="login-h1">🧠 แบบทดสอบความฉลาดทางอารมณ์ (EQ)</div>
+    <div class="login-sub">อิงกรอบแนวคิด 3 องค์ประกอบหลัก / 9 องค์ประกอบย่อย ของกรมสุขภาพจิต — "ดี เก่ง สุข"<br>ใช้เป็นเครื่องมือคัดกรอง/สะท้อนตนเองเบื้องต้น</div>
+    <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+    <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+    <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
+    <div class="field">
+      <label>ช่วงอายุของผู้ทำแบบทดสอบ</label>
+      <div class="age-opts">
+        <div class="age-opt" id="age-teen" onclick="pickAge('teen')"><b>วัยรุ่น</b>12–17 ปี (นักเรียน)</div>
+        <div class="age-opt" id="age-adult" onclick="pickAge('adult')"><b>ผู้ใหญ่</b>18 ปีขึ้นไป</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="login()">เริ่มทำแบบทดสอบ</button>
+    <button class="btn-ghost" onclick="openReport()">📊 รายงานผล (สำหรับครู)</button>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div id="s-report" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div><h1>📊 รายงานผล EQ — สำหรับครู</h1></div>
+      <button class="nav-btn" onclick="showScreen('s-login')">← กลับหน้าแรก</button>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="s-quiz" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>🧠 แบบทดสอบ EQ</h1>
+        <div class="sub" id="quizUserline"></div>
+      </div>
+    </div>
+    <div class="progress-wrap"><div class="progress-fill" id="quiz-prog" style="width:0%"></div></div>
+    <div class="page-label" id="quiz-pagelabel"></div>
+    <div id="quiz-items"></div>
+    <div class="quiz-nav">
+      <button class="btn-back" id="btn-back" onclick="prevPage()" style="display:none">← ย้อนกลับ</button>
+      <button class="btn-fwd" id="btn-fwd" onclick="nextPage()">ถัดไป →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div><h1>🧠 ผลการทดสอบ EQ</h1><div class="sub" id="resultUserline"></div></div>
+    </div>
+    <div class="res-hero">
+      <div style="font-size:13px;color:var(--mut)">คะแนน EQ โดยรวม</div>
+      <div class="r-pct" id="r-total-pct">0%</div>
+      <div class="r-band" id="r-total-band"></div>
+      <div class="r-note" id="r-total-note"></div>
+    </div>
+
+    <div class="section-h">3 องค์ประกอบหลัก</div>
+    <div class="pillar-grid" id="pillar-grid"></div>
+
+    <div class="section-h">รายละเอียด 9 องค์ประกอบย่อย</div>
+    <div class="comp-card" id="comp-card"></div>
+
+    <div class="section-h">จุดที่ควรพัฒนาเพิ่มเติม</div>
+    <div id="sugg-wrap"></div>
+
+    <div class="disclaimer">
+      <b>หมายเหตุ:</b> แบบทดสอบนี้ออกแบบโครงสร้างตามกรอบแนวคิด "ดี เก่ง สุข" (3 องค์ประกอบหลัก / 9 องค์ประกอบย่อย) ของกรมสุขภาพจิต แต่ข้อคำถามทั้งหมดเขียนขึ้นใหม่ ไม่ได้คัดลอกจากแบบทดสอบต้นฉบับ และเกณฑ์คะแนน (ต่ำ/ปกติ/โดดเด่น) เป็นเกณฑ์อ้างอิงเชิงโครงสร้างคะแนน ไม่ใช่คะแนนปกติวิสัยจากกลุ่มตัวอย่างประชากรจริงของกรมสุขภาพจิต จึงเหมาะสำหรับใช้คัดกรอง/สะท้อนตนเองเบื้องต้นเท่านั้น ไม่ใช่เครื่องมือวินิจฉัยทางคลินิก หากต้องการผลที่อ้างอิงมาตรฐานราชการเต็มรูปแบบ แนะนำให้ทำแบบทดสอบฉบับจริงที่ dmh.go.th
+    </div>
+
+    <button class="btn-replay" onclick="showScreen('s-login')">🔄 ทำแบบทดสอบใหม่ / กลับหน้าแรก</button>
+  </div>
+</div>
+
+<script>
+// ─── COMPONENT / PILLAR METADATA ────────────────────────
+const COMPONENTS = [
+  {id:1, pillar:'ดี',   name:'ควบคุมอารมณ์ตนเอง'},
+  {id:2, pillar:'ดี',   name:'เห็นใจผู้อื่น'},
+  {id:3, pillar:'ดี',   name:'รับผิดชอบ'},
+  {id:4, pillar:'เก่ง', name:'แรงจูงใจ'},
+  {id:5, pillar:'เก่ง', name:'ตัดสินใจแก้ปัญหา'},
+  {id:6, pillar:'เก่ง', name:'สัมพันธภาพกับผู้อื่น'},
+  {id:7, pillar:'สุข',  name:'ภูมิใจในตนเอง'},
+  {id:8, pillar:'สุข',  name:'พึงพอใจในชีวิต'},
+  {id:9, pillar:'สุข',  name:'สงบทางใจ'},
+];
+const PILLARS = {
+  'ดี':   {label:'ดี (Good)',    desc:'คุณธรรม ควบคุมตนเอง เห็นใจและรับผิดชอบต่อผู้อื่น'},
+  'เก่ง': {label:'เก่ง (Smart)', desc:'แรงจูงใจ การตัดสินใจ และสัมพันธภาพกับคนรอบข้าง'},
+  'สุข':  {label:'สุข (Happy)',  desc:'ความภูมิใจ พึงพอใจในชีวิต และความสงบทางใจ'},
+};
+const SUGGESTIONS = {
+  1:'ลองฝึกเทคนิคหายใจลึกๆ หรือนับ 1–10 ก่อนตอบโต้ทุกครั้งที่รู้สึกโกรธหรือหงุดหงิด',
+  2:'ฝึกฟังอย่างตั้งใจ (Active Listening) และถามความรู้สึกคนรอบข้างก่อนตัดสินใจหรือตัดสินคนอื่น',
+  3:'แบ่งงานเป็นขั้นตอนย่อยพร้อมกำหนดเวลา (To-do list) เพื่อลดการผัดวันประกันพรุ่ง',
+  4:'ตั้งเป้าหมายเล็กๆ ที่ทำสำเร็จได้ในระยะสั้น เพื่อสร้างความรู้สึกสำเร็จอย่างต่อเนื่อง',
+  5:'ฝึกเขียนข้อดี-ข้อเสียของแต่ละทางเลือก ก่อนตัดสินใจเรื่องสำคัญทุกครั้ง',
+  6:'ฝึกเริ่มบทสนทนาสั้นๆ กับคนรอบข้างทุกวัน เพื่อสร้างความคุ้นเคยทีละน้อย',
+  7:'จดบันทึกสิ่งที่ตัวเองทำได้ดีในแต่ละวัน อย่างน้อยวันละ 1 อย่าง',
+  8:'ฝึกขอบคุณสิ่งดีๆ ในชีวิต (Gratitude Journal) สั้นๆ ก่อนนอนทุกคืน',
+  9:'ลองฝึกสมาธิหรือผ่อนคลายกล้ามเนื้อ (Deep Breathing / Relaxation) วันละ 5–10 นาที',
+};
+
+// ─── ITEM BANKS (เขียนขึ้นใหม่ทั้งหมด ตามโครงสร้าง 9 องค์ประกอบ ไม่ได้คัดลอกจากต้นฉบับราชการ) ───
+// key: P = ข้อความเชิงบวก (คะแนนตรงตามคำตอบ), R = ข้อความเชิงลบ (คะแนนกลับด้าน)
+const ITEM_BANK = {
+  teen: [
+    {comp:1,key:'P',text:'เวลาโกรธหรือหงุดหงิด ฉันสามารถควบคุมตัวเองไม่ให้ระเบิดอารมณ์ใส่คนอื่นได้'},
+    {comp:1,key:'P',text:'เมื่อเจอเรื่องที่ทำให้หัวเสีย ฉันมักตั้งสติก่อนพูดหรือทำอะไรลงไป'},
+    {comp:1,key:'R',text:'เวลาไม่พอใจ ฉันมักพูดจาหรือทำอะไรแรงๆ ออกไปโดยไม่ยั้งคิด'},
+    {comp:1,key:'R',text:'ฉันควบคุมอารมณ์ตัวเองได้ยากเวลาถูกเพื่อนล้อหรือยั่วโมโห'},
+
+    {comp:2,key:'P',text:'เวลาเพื่อนมีปัญหา ฉันมักสังเกตออกและอยากเข้าไปช่วยเหลือ'},
+    {comp:2,key:'P',text:'ฉันพยายามเข้าใจว่าทำไมเพื่อนหรือคนในครอบครัวถึงรู้สึกแบบนั้น ก่อนจะตัดสิน'},
+    {comp:2,key:'R',text:'ฉันมักไม่ค่อยสนใจว่าคนรอบข้างจะรู้สึกอย่างไรกับสิ่งที่ฉันพูดหรือทำ'},
+    {comp:2,key:'R',text:'เวลาเห็นเพื่อนเสียใจ ฉันมักรู้สึกเฉยๆ ไม่ค่อยอินไปกับเขา'},
+
+    {comp:3,key:'P',text:'งานที่ครูหรือหัวหน้ากลุ่มมอบหมาย ฉันตั้งใจทำให้เสร็จตามกำหนด'},
+    {comp:3,key:'P',text:'เมื่อทำผิดพลาด ฉันยอมรับและพยายามแก้ไข แทนที่จะโทษคนอื่น'},
+    {comp:3,key:'R',text:'ฉันมักผัดวันประกันพรุ่งจนงานเสร็จไม่ทันกำหนดส่ง'},
+    {comp:3,key:'R',text:'เวลาทำอะไรผิด ฉันมักหาข้ออ้างหรือโทษสถานการณ์มากกว่ายอมรับ'},
+
+    {comp:4,key:'P',text:'ฉันมีเป้าหมายที่อยากไปให้ถึง และพยายามลงมือทำอย่างต่อเนื่อง'},
+    {comp:4,key:'P',text:'แม้เจออุปสรรคในการเรียนหรือฝึกงาน ฉันก็ยังพยายามต่อไม่ยอมแพ้ง่ายๆ'},
+    {comp:4,key:'R',text:'ฉันมักท้อและเลิกล้มเมื่อสิ่งที่ทำไม่ได้ผลตั้งแต่ครั้งแรก'},
+    {comp:4,key:'R',text:'ฉันไม่ค่อยมีแรงบันดาลใจหรือเป้าหมายชัดเจนในการเรียน/ฝึกฝีมือ'},
+
+    {comp:5,key:'P',text:'เวลาเจอปัญหา ฉันมักคิดหาหลายทางเลือกก่อนตัดสินใจเลือกวิธีที่ดีที่สุด'},
+    {comp:5,key:'P',text:'ฉันพยายามคิดถึงผลที่จะตามมาก่อนตัดสินใจทำอะไรที่สำคัญ'},
+    {comp:5,key:'R',text:'ฉันมักตัดสินใจแบบเร็วๆ ตามอารมณ์ โดยไม่คิดถึงผลที่จะตามมา'},
+    {comp:5,key:'R',text:'เมื่อเจอปัญหาที่ซับซ้อน ฉันมักรู้สึกท้อและไม่รู้จะเริ่มแก้ตรงไหน'},
+
+    {comp:6,key:'P',text:'ฉันสามารถทำงานร่วมกับเพื่อนในกลุ่มได้ดี แม้ความคิดจะไม่ตรงกัน'},
+    {comp:6,key:'P',text:'ฉันกล้าพูดคุย แลกเปลี่ยนความเห็นกับครูหรือเพื่อนใหม่ๆ ได้อย่างสบายใจ'},
+    {comp:6,key:'R',text:'ฉันมักมีปัญหาทะเลาะหรือขัดแย้งกับเพื่อนบ่อยๆ'},
+    {comp:6,key:'R',text:'ฉันรู้สึกอึดอัดและหลีกเลี่ยงการเข้าสังคมกับเพื่อนกลุ่มใหม่'},
+
+    {comp:7,key:'P',text:'ฉันรู้สึกภูมิใจในความสามารถและฝีมือของตัวเอง'},
+    {comp:7,key:'P',text:'ฉันเชื่อมั่นว่าตัวเองมีคุณค่าและทำสิ่งดีๆ ได้'},
+    {comp:7,key:'R',text:'ฉันมักรู้สึกว่าตัวเองด้อยกว่าคนอื่นอยู่เสมอ'},
+    {comp:7,key:'R',text:'ฉันไม่ค่อยพอใจในตัวเอง ไม่ว่าจะทำอะไรก็ตาม'},
+
+    {comp:8,key:'P',text:'โดยรวมแล้วฉันพอใจกับชีวิตความเป็นอยู่ของตัวเองตอนนี้'},
+    {comp:8,key:'P',text:'ฉันมองว่าชีวิตของฉันมีสิ่งดีๆ ให้รู้สึกขอบคุณอยู่เสมอ'},
+    {comp:8,key:'R',text:'ฉันรู้สึกไม่พอใจกับชีวิตตัวเองและอยากให้อะไรๆ เปลี่ยนไป'},
+    {comp:8,key:'R',text:'ฉันมักรู้สึกว่าชีวิตตัวเองไม่ค่อยมีอะไรดีเท่าที่ควร'},
+
+    {comp:9,key:'P',text:'เวลาเจอเรื่องเครียด ฉันยังหาวิธีทำใจให้สงบลงได้ในเวลาไม่นาน'},
+    {comp:9,key:'P',text:'โดยทั่วไปฉันรู้สึกผ่อนคลายและสบายใจในชีวิตประจำวัน'},
+    {comp:9,key:'R',text:'ฉันมักรู้สึกกังวลหรือเครียดสะสมจนนอนไม่หลับ'},
+    {comp:9,key:'R',text:'ใจของฉันมักไม่ค่อยสงบ คิดวนเวียนกับเรื่องที่กังวลอยู่บ่อยๆ'},
+  ],
+  adult: [
+    {comp:1,key:'P',text:'เมื่อเจอสถานการณ์กดดันในที่ทำงาน ฉันยังควบคุมอารมณ์และคำพูดของตัวเองได้'},
+    {comp:1,key:'P',text:'ฉันตั้งสติได้เร็วเมื่อเผชิญเรื่องที่ทำให้โมโหหรือหงุดหงิด'},
+    {comp:1,key:'R',text:'เวลาไม่พอใจเพื่อนร่วมงานหรือคนในครอบครัว ฉันมักแสดงอารมณ์ออกมาโดยไม่ยั้งคิด'},
+    {comp:1,key:'R',text:'ฉันควบคุมอารมณ์ตัวเองได้ยากเมื่อถูกวิพากษ์วิจารณ์การทำงาน'},
+
+    {comp:2,key:'P',text:'ฉันมักสังเกตและเข้าใจความรู้สึกของเพื่อนร่วมงานหรือคนในครอบครัวได้ดี'},
+    {comp:2,key:'P',text:'ก่อนตัดสินคนอื่น ฉันมักพยายามมองในมุมของเขาก่อนเสมอ'},
+    {comp:2,key:'R',text:'ฉันไม่ค่อยสนใจว่าคำพูดหรือการกระทำของฉันจะกระทบความรู้สึกคนอื่นแค่ไหน'},
+    {comp:2,key:'R',text:'เวลาเห็นคนรอบข้างมีปัญหา ฉันมักรู้สึกเฉยๆ ไม่รู้สึกร่วม'},
+
+    {comp:3,key:'P',text:'งานที่ได้รับมอบหมาย ฉันตั้งใจทำให้เสร็จอย่างมีคุณภาพและตรงเวลา'},
+    {comp:3,key:'P',text:'เมื่อเกิดความผิดพลาดในงาน ฉันยอมรับผิดชอบและหาทางแก้ไขทันที'},
+    {comp:3,key:'R',text:'ฉันมักปล่อยงานค้างจนใกล้กำหนดส่งถึงจะเริ่มลงมือทำ'},
+    {comp:3,key:'R',text:'เมื่อทำงานผิดพลาด ฉันมักโทษปัจจัยภายนอกมากกว่ามองที่ตัวเอง'},
+
+    {comp:4,key:'P',text:'ฉันมีเป้าหมายในการทำงาน/ชีวิตที่ชัดเจน และมุ่งมั่นทำให้สำเร็จ'},
+    {comp:4,key:'P',text:'แม้งานจะยากหรือเจออุปสรรค ฉันยังมีกำลังใจทำต่อไปจนกว่าจะสำเร็จ'},
+    {comp:4,key:'R',text:'ฉันมักหมดไฟและอยากเลิกทำ เมื่อผลงานไม่เป็นไปตามที่หวังในช่วงแรก'},
+    {comp:4,key:'R',text:'ฉันรู้สึกเรื่อยเปื่อย ไม่ค่อยมีเป้าหมายชัดเจนในการทำงาน'},
+
+    {comp:5,key:'P',text:'เมื่อเจอปัญหาในงาน ฉันมักวิเคราะห์ข้อมูลรอบด้านก่อนตัดสินใจ'},
+    {comp:5,key:'P',text:'ฉันพิจารณาผลกระทบที่จะตามมาอย่างรอบคอบก่อนตัดสินใจเรื่องสำคัญ'},
+    {comp:5,key:'R',text:'ฉันมักตัดสินใจเรื่องสำคัญตามอารมณ์ชั่ววูบ โดยไม่ทันคิดผลที่ตามมา'},
+    {comp:5,key:'R',text:'เมื่อเจอปัญหาที่ซับซ้อนในงาน ฉันมักรู้สึกจนมุมและไม่รู้จะเริ่มแก้ตรงไหน'},
+
+    {comp:6,key:'P',text:'ฉันทำงานร่วมกับเพื่อนร่วมงานหรือทีมได้ดี แม้ความเห็นจะไม่ตรงกัน'},
+    {comp:6,key:'P',text:'ฉันสื่อสารและประสานงานกับคนอื่นได้อย่างราบรื่น'},
+    {comp:6,key:'R',text:'ฉันมักมีเรื่องขัดแย้งหรือกระทบกระทั่งกับเพื่อนร่วมงานบ่อยครั้ง'},
+    {comp:6,key:'R',text:'ฉันรู้สึกลำบากใจเวลาต้องเริ่มพูดคุยหรือสร้างสัมพันธ์กับคนใหม่ๆ'},
+
+    {comp:7,key:'P',text:'ฉันภูมิใจในความสามารถและประสบการณ์การทำงานของตัวเอง'},
+    {comp:7,key:'P',text:'ฉันเชื่อมั่นว่าตัวเองมีคุณค่าต่อองค์กรและคนรอบข้าง'},
+    {comp:7,key:'R',text:'ฉันมักรู้สึกว่าตัวเองไม่เก่งหรือด้อยกว่าเพื่อนร่วมงานคนอื่น'},
+    {comp:7,key:'R',text:'ฉันไม่ค่อยพอใจในผลงานของตัวเอง ไม่ว่าจะทำอะไรก็ตาม'},
+
+    {comp:8,key:'P',text:'โดยรวมแล้วฉันพอใจกับชีวิตการงานและครอบครัวของตัวเองตอนนี้'},
+    {comp:8,key:'P',text:'ฉันมองว่าชีวิตของฉันมีเรื่องดีๆ ให้รู้สึกขอบคุณอยู่เสมอ'},
+    {comp:8,key:'R',text:'ฉันรู้สึกไม่พอใจกับชีวิตตัวเองและอยากให้หลายอย่างเปลี่ยนไป'},
+    {comp:8,key:'R',text:'ฉันมักรู้สึกว่าชีวิตตัวเองไม่ประสบความสำเร็จเท่าที่ควร'},
+
+    {comp:9,key:'P',text:'แม้งานจะหนักหรือเครียด ฉันยังหาวิธีทำใจให้สงบลงได้'},
+    {comp:9,key:'P',text:'โดยทั่วไปฉันรู้สึกผ่อนคลายและสบายใจกับชีวิตประจำวัน'},
+    {comp:9,key:'R',text:'ฉันมักเครียดสะสมเรื่องงานหรือครอบครัวจนกระทบการนอนหลับ'},
+    {comp:9,key:'R',text:'ใจของฉันมักไม่สงบ คิดวนเวียนกับเรื่องกังวลอยู่บ่อยๆ'},
+  ],
+};
+const LIKERT_LABELS = ['ไม่จริงเลย','จริงเล็กน้อย','ค่อนข้างจริง','จริงมาก'];
+
+// ─── FIREBASE (ใช้โปรเจกต์เดียวกับระบบเช็คชื่อ/สอบกลางภาค, path แยกเฉพาะแบบทดสอบนี้) ───
+const DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+const RESULTS_URL = DB_BASE + '/examResults/eq_test.json';
+const REPORT_PIN = '2569';
+
+// ─── STATE ───────────────────────────────────────────
+let userFirst='', userLast='', userDept='', ageGroup=null;
+let quizItems=[], answers={}, currentPage=0;
+const PAGE_SIZE = 9;
+
+function pickAge(g){
+  ageGroup = g;
+  document.getElementById('age-teen').classList.toggle('sel', g==='teen');
+  document.getElementById('age-adult').classList.toggle('sel', g==='adult');
+}
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function login(){
+  const fn=document.getElementById('fname').value.trim();
+  const ln=document.getElementById('lname').value.trim();
+  const dp=document.getElementById('dept').value.trim();
+  if(!fn||!ln){ alert('กรุณากรอกชื่อและนามสกุล'); return }
+  if(!ageGroup){ alert('กรุณาเลือกช่วงอายุของผู้ทำแบบทดสอบ'); return }
+  userFirst=fn; userLast=ln; userDept=dp;
+  buildQuiz();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── QUIZ ────────────────────────────────────────────
+function buildQuiz(){
+  quizItems = ITEM_BANK[ageGroup].map((it,i)=>({...it, id:'i'+i}));
+  shuffle(quizItems);
+  answers = {};
+  currentPage = 0;
+  document.getElementById('quizUserline').textContent =
+    `${userFirst} ${userLast}${userDept?' ('+userDept+')':''} — กลุ่ม${ageGroup==='teen'?'วัยรุ่น 12-17 ปี':'ผู้ใหญ่ 18 ปีขึ้นไป'}`;
+  showScreen('s-quiz');
+  renderQuizPage();
+}
+
+function totalPages(){ return Math.ceil(quizItems.length / PAGE_SIZE) }
+
+function renderQuizPage(){
+  const start = currentPage*PAGE_SIZE;
+  const slice = quizItems.slice(start, start+PAGE_SIZE);
+  document.getElementById('quiz-pagelabel').textContent = `หน้า ${currentPage+1} / ${totalPages()} — ตอบตามความรู้สึก/พฤติกรรมจริงของคุณ`;
+  document.getElementById('quiz-prog').style.width = ((currentPage)/totalPages()*100)+'%';
+
+  const wrap = document.getElementById('quiz-items');
+  wrap.innerHTML = slice.map(it=>`
+    <div class="likert-item">
+      <div class="likert-text">${it.text}</div>
+      <div class="likert-opts">
+        ${LIKERT_LABELS.map((lab,i)=>{
+          const v=i+1;
+          const sel = answers[it.id]===v ? ' sel':'';
+          return `<div class="likert-opt${sel}" onclick="selectAnswer('${it.id}',${v})">${lab}</div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('btn-back').style.display = currentPage>0 ? 'block':'none';
+  document.getElementById('btn-fwd').textContent = currentPage===totalPages()-1 ? 'ส่งแบบทดสอบและดูผล ✓' : 'ถัดไป →';
+}
+
+function selectAnswer(id, val){
+  answers[id]=val;
+  renderQuizPage();
+}
+
+function prevPage(){
+  if(currentPage>0){ currentPage--; renderQuizPage(); window.scrollTo(0,0) }
+}
+
+function nextPage(){
+  const start = currentPage*PAGE_SIZE;
+  const slice = quizItems.slice(start, start+PAGE_SIZE);
+  if(slice.some(it=>!answers[it.id])){
+    alert('กรุณาตอบให้ครบทุกข้อในหน้านี้ก่อนไปต่อ');
+    return;
+  }
+  if(currentPage < totalPages()-1){
+    currentPage++; renderQuizPage(); window.scrollTo(0,0);
+  } else {
+    finishQuiz();
+  }
+}
+
+// ─── SCORING ─────────────────────────────────────────
+function computeScores(){
+  const raw={}; COMPONENTS.forEach(c=>raw[c.id]=0);
+  quizItems.forEach(it=>{
+    const v = answers[it.id];
+    const s = it.key==='P' ? v : (5-v);
+    raw[it.comp] += s;
+  });
+  const compPct={};
+  COMPONENTS.forEach(c=>{ compPct[c.id] = Math.round((raw[c.id]-4)/12*100) });
+
+  const pillarRaw={'ดี':0,'เก่ง':0,'สุข':0};
+  COMPONENTS.forEach(c=>{ pillarRaw[c.pillar]+=raw[c.id] });
+  const pillarPct={};
+  Object.keys(pillarRaw).forEach(p=>{ pillarPct[p]=Math.round((pillarRaw[p]-12)/36*100) });
+
+  const totalRaw = Object.values(raw).reduce((a,b)=>a+b,0);
+  const totalPct = Math.round((totalRaw-36)/108*100);
+
+  return {raw, compPct, pillarRaw, pillarPct, totalRaw, totalPct};
+}
+
+function band(pct){
+  if(pct<60) return {label:'ควรพัฒนา', color:'var(--rd)'};
+  if(pct<80) return {label:'อยู่ในเกณฑ์ปกติ', color:'var(--yw)'};
+  return {label:'โดดเด่น', color:'var(--gr)'};
+}
+
+const OVERALL_NOTE = {
+  low:'ควรให้ความสำคัญกับการพัฒนา EQ เพิ่มเติม โดยเฉพาะองค์ประกอบที่คะแนนต่ำที่สุด ลองเริ่มจากคำแนะนำด้านล่าง',
+  mid:'อยู่ในเกณฑ์ปกติทั่วไป มีทั้งจุดแข็งและจุดที่พัฒนาต่อได้ ลองดูองค์ประกอบที่คะแนนต่ำสุดเพื่อพัฒนาต่อยอด',
+  high:'มีความฉลาดทางอารมณ์ในระดับที่โดดเด่น ควรรักษาจุดแข็งนี้ไว้และเป็นแบบอย่างที่ดีต่อคนรอบข้าง',
+};
+
+function finishQuiz(){
+  const res = computeScores();
+  renderResult(res);
+  submitResult(res);
+  showScreen('s-result');
+  window.scrollTo(0,0);
+}
+
+function renderResult(res){
+  document.getElementById('resultUserline').textContent =
+    `${userFirst} ${userLast}${userDept?' ('+userDept+')':''} — กลุ่ม${ageGroup==='teen'?'วัยรุ่น 12-17 ปี':'ผู้ใหญ่ 18 ปีขึ้นไป'}`;
+
+  const tb = band(res.totalPct);
+  document.getElementById('r-total-pct').textContent = res.totalPct+'%';
+  document.getElementById('r-total-pct').style.color = tb.color;
+  document.getElementById('r-total-band').textContent = tb.label;
+  document.getElementById('r-total-band').style.color = tb.color;
+  document.getElementById('r-total-note').textContent =
+    OVERALL_NOTE[res.totalPct<60?'low':(res.totalPct<80?'mid':'high')];
+
+  const pgrid = document.getElementById('pillar-grid');
+  pgrid.innerHTML = Object.keys(PILLARS).map(p=>{
+    const pct = res.pillarPct[p];
+    const b = band(pct);
+    return `<div class="pillar-card">
+      <div class="p-name">${PILLARS[p].label}</div>
+      <div class="p-pct" style="color:${b.color}">${pct}%</div>
+      <div class="p-band" style="color:${b.color}">${b.label}</div>
+      <div class="p-desc">${PILLARS[p].desc}</div>
+    </div>`;
+  }).join('');
+
+  const cc = document.getElementById('comp-card');
+  cc.innerHTML = COMPONENTS.map(c=>{
+    const pct = res.compPct[c.id];
+    const b = band(pct);
+    return `<div class="comp-row">
+      <div class="name">${c.name}</div>
+      <div class="comp-bar-wrap"><div class="comp-bar-fill" style="width:${Math.max(pct,2)}%;background:${b.color}"></div></div>
+      <div class="pct" style="color:${b.color}">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  const weakest = [...COMPONENTS].sort((a,b)=>res.compPct[a.id]-res.compPct[b.id]).slice(0,2);
+  document.getElementById('sugg-wrap').innerHTML = weakest.map(c=>`
+    <div class="sugg-card"><b>${c.name}</b> (${res.compPct[c.id]}%) — ${SUGGESTIONS[c.id]}</div>
+  `).join('');
+}
+
+function submitResult(res){
+  fetch(RESULTS_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      fname:userFirst, lname:userLast, dept:userDept, ageGroup,
+      compPct:res.compPct, pillarPct:res.pillarPct, totalPct:res.totalPct,
+      submittedAt: Date.now()
+    })
+  }).catch(()=>{});
+}
+
+// ─── REPORT (สำหรับครู) ────────────────────────────────
+let reportData = [];
+function openReport(){
+  const pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผล:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  showScreen('s-report');
+  loadReport();
+}
+
+async function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  try{
+    const res = await fetch(RESULTS_URL, {cache:'no-store'});
+    const data = await res.json();
+    reportData = data ? Object.values(data).sort((a,b)=>b.submittedAt-a.submittedAt) : [];
+  }catch(e){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+    return;
+  }
+  renderReport();
+}
+
+function renderReport(){
+  const filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  const rows = reportData.filter(r=>{
+    if(!filter) return true;
+    return (`${r.fname} ${r.lname} ${r.dept}`).toLowerCase().includes(filter);
+  });
+  const wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีนักเรียนทำแบบทดสอบ หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  const bandLabel = pct => band(pct).label;
+  wrap.innerHTML = `<table class="rpt"><thead><tr>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>กลุ่มอายุ</th>
+    <th>ดี</th><th>เก่ง</th><th>สุข</th><th>EQ รวม</th><th>ระดับ</th>
+  </tr></thead><tbody>
+  ${rows.map(r=>`<tr>
+    <td>${fmtTime(r.submittedAt)}</td>
+    <td>${r.fname} ${r.lname}</td>
+    <td>${r.dept||'-'}</td>
+    <td>${r.ageGroup==='teen'?'วัยรุ่น':'ผู้ใหญ่'}</td>
+    <td>${r.pillarPct?.['ดี'] ?? '-'}%</td>
+    <td>${r.pillarPct?.['เก่ง'] ?? '-'}%</td>
+    <td>${r.pillarPct?.['สุข'] ?? '-'}%</td>
+    <td class="rpt-total">${r.totalPct}%</td>
+    <td>${bandLabel(r.totalPct)}</td>
+  </tr>`).join('')}
+  </tbody></table>
+  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ</div>`;
+}
+
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','กลุ่มอายุ','ดี(%)','เก่ง(%)','สุข(%)','EQ รวม(%)','ระดับ'];
+  const lines = [header.join(',')];
+  reportData.forEach(r=>{
+    const ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    lines.push([ts, r.fname, r.lname, r.dept, (r.ageGroup==='teen'?'วัยรุ่น':'ผู้ใหญ่'),
+      r.pillarPct?.['ดี'] ?? '', r.pillarPct?.['เก่ง'] ?? '', r.pillarPct?.['สุข'] ?? '',
+      r.totalPct, band(r.totalPct).label].map(v=>`"${v}"`).join(','));
+  });
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'eq-test-report.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
