@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>บันทึกภาพถ่ายที่อยู่อาศัย</title>
+<title>โครงการเยี่ยมบ้านออนไลน์ — บันทึกภาพถ่ายที่อยู่อาศัย</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -284,7 +284,7 @@
 
 <div class="sheet">
   <div class="head">
-    <div class="eyebrow">แบบบันทึกภาพประกอบโครงการ</div>
+    <div class="eyebrow">โครงการเยี่ยมบ้านออนไลน์</div>
     <div class="title">บันทึกภาพถ่ายที่อยู่อาศัย</div>
     <div class="subtitle">ถ่ายภาพสดจากกล้อง — ระบบจะประทับพิกัด GPS และเวลาให้อัตโนมัติ</div>
   </div>
@@ -303,6 +303,17 @@
       <div class="field">
         <label for="sclass">ชั้น/แผนกวิชา</label>
         <input type="text" id="sclass" placeholder="เช่น ปวช.1 ช่างเชื่อม">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="sphone">เบอร์โทรนักเรียน</label>
+        <input type="tel" id="sphone" placeholder="เช่น 08X-XXX-XXXX" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="pphone">เบอร์โทรผู้ปกครอง</label>
+        <input type="tel" id="pphone" placeholder="เช่น 08X-XXX-XXXX" inputmode="numeric">
       </div>
     </div>
 
@@ -571,7 +582,7 @@ function requestGPS(){
 }
 
 function checkReady(){
-  $('submitBtn').disabled = !(capturedDataUrl && gpsData && $('sname').value.trim() && allReqsChecked());
+  $('submitBtn').disabled = !(capturedDataUrl && gpsData && $('sname').value.trim() && $('sphone').value.trim() && allReqsChecked());
 }
 
 function allReqsChecked(){
@@ -591,6 +602,7 @@ document.querySelectorAll('.reqcheck').forEach(c => {
 updateCaptureLock();
 $('sname').addEventListener('input', checkReady);
 $('sclass').addEventListener('input', checkReady);
+$('sphone').addEventListener('input', checkReady);
 
 // ---------- Stamp + Submit ----------
 $('submitBtn').addEventListener('click', async () => {
@@ -603,6 +615,8 @@ $('submitBtn').addEventListener('click', async () => {
   const entry = {
     name: $('sname').value.trim(),
     cls: $('sclass').value.trim(),
+    phone: $('sphone').value.trim(),
+    parentPhone: $('pphone').value.trim(),
     lat: gpsData.lat,
     lon: gpsData.lon,
     acc: Math.round(gpsData.acc),
@@ -812,10 +826,15 @@ async function loadGallery(){
     box.innerHTML = items.map(it => {
       const mapUrl = `https://www.google.com/maps?q=${it.lat},${it.lon}`;
       const t = new Date(it.time).toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+      const phoneLine = [
+        it.phone ? `📱 <a href="tel:${escapeHtml(it.phone)}">${escapeHtml(it.phone)}</a>` : '',
+        it.parentPhone ? `ผู้ปกครอง <a href="tel:${escapeHtml(it.parentPhone)}">${escapeHtml(it.parentPhone)}</a>` : ''
+      ].filter(Boolean).join(' · ');
       return `<div class="entry">
         <img src="${it.img}" alt="">
         <div class="meta">
           <b>${escapeHtml(it.name)}</b>${it.cls ? ' · ' + escapeHtml(it.cls) : ''}<br>
+          ${phoneLine ? phoneLine + '<br>' : ''}
           ${it.lat.toFixed(6)}, ${it.lon.toFixed(6)} (±${it.acc}m)<br>
           ${t}<br>
           <a href="${mapUrl}" target="_blank" rel="noopener">เปิดใน Google Maps →</a>
@@ -840,7 +859,7 @@ $('downloadZipBtn').addEventListener('click', async () => {
       return;
     }
     const zip = new JSZip();
-    let csv = 'ชื่อ,ชั้น/แผนก,ละติจูด,ลองจิจูด,ความแม่นยำ(ม.),วันเวลา,ลิงก์แผนที่,ไฟล์ภาพ\n';
+    let csv = 'ชื่อ,ชั้น/แผนก,เบอร์โทรนักเรียน,เบอร์โทรผู้ปกครอง,ละติจูด,ลองจิจูด,ความแม่นยำ(ม.),วันเวลา,ลิงก์แผนที่,ไฟล์ภาพ\n';
     items.forEach((it, i) => {
       const n = (it.time || Date.now()).toString();
       const safeName = (it.name || 'unknown').replace(/[\\/:*?"<>|,]/g, '_');
@@ -849,7 +868,7 @@ $('downloadZipBtn').addEventListener('click', async () => {
       zip.file(fname, base64, { base64: true });
       const mapUrl = `https://www.google.com/maps?q=${it.lat},${it.lon}`;
       const t = new Date(it.time).toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
-      csv += `"${(it.name||'').replace(/"/g,'""')}","${(it.cls||'').replace(/"/g,'""')}",${it.lat},${it.lon},${it.acc},"${t}","${mapUrl}","${fname}"\n`;
+      csv += `"${(it.name||'').replace(/"/g,'""')}","${(it.cls||'').replace(/"/g,'""')}","${(it.phone||'').replace(/"/g,'""')}","${(it.parentPhone||'').replace(/"/g,'""')}",${it.lat},${it.lon},${it.acc},"${t}","${mapUrl}","${fname}"\n`;
     });
     zip.file('รายชื่อและพิกัด.csv', '\uFEFF' + csv);
     const blob = await zip.generateAsync({ type: 'blob' });
