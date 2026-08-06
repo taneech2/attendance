@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <style>
   :root{
     --paper:#F5F1E4;
@@ -91,6 +94,14 @@
   }
   input[type=text]:focus{outline:2px solid var(--stamp); outline-offset:1px;}
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .map-overview{
+    height:280px;
+    width:100%;
+    border:1px solid var(--brass);
+    border-radius:2px;
+    background:#e8e4d4;
+  }
 
   .inapp-warning{
     border:1px solid var(--stamp);
@@ -386,6 +397,12 @@
         <button id="saveCloudUrlBtn" type="button" style="font-size:12px; padding:6px 10px; background:var(--ink); color:#fff;">บันทึก</button>
       </div>
       <div id="cloudUrlStatus" style="font-size:11.5px; color:var(--ok); margin-top:4px;"></div>
+    </div>
+
+    <div id="mapOverviewWrap" style="display:none; margin-bottom:16px;">
+      <h2 style="font-size:15px;">🗺️ ภาพรวมพิกัดบ้านนักเรียน</h2>
+      <div id="mapOverview" class="map-overview"></div>
+      <div style="font-size:11.5px; color:var(--ink-soft); margin-top:6px;">สีแดงเข้ม = บ้านนักเรียนอยู่ใกล้กันหนาแน่น — ใช้ดูว่าโซนไหนมีนักเรียนกลุ่มเสี่ยงกระจุกตัวมากที่สุด เพื่อวางแผนแนะแนวเชิงพื้นที่</div>
     </div>
 
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
@@ -819,6 +836,7 @@ async function loadGallery(){
   try {
     const items = await fetchAllSubmissions();
     lastLoadedItems = items;
+    updateOverviewMap(items);
     if (items.length === 0) {
       box.innerHTML = '<div class="empty">ยังไม่มีรายการส่ง (หรือยังไม่ได้เชื่อมต่อ Firebase Database URL)</div>';
       return;
@@ -844,6 +862,61 @@ async function loadGallery(){
   } catch (e) {
     box.innerHTML = '<div class="empty">โหลดรายการไม่สำเร็จ</div>';
   }
+}
+
+// ---------- Overview map (all home locations at a glance) ----------
+let overviewMap = null;
+let overviewMarkers = [];
+let overviewHeatLayer = null;
+
+function ensureOverviewMap(){
+  if (overviewMap) return overviewMap;
+  overviewMap = L.map('mapOverview');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(overviewMap);
+  return overviewMap;
+}
+
+function updateOverviewMap(items){
+  const valid = items.filter(it => typeof it.lat === 'number' && typeof it.lon === 'number');
+  const wrap = $('mapOverviewWrap');
+  if (!valid.length) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'block';
+  const map = ensureOverviewMap();
+
+  overviewMarkers.forEach(m => map.removeLayer(m));
+  overviewMarkers = [];
+  if (overviewHeatLayer) { map.removeLayer(overviewHeatLayer); overviewHeatLayer = null; }
+
+  const latlngs = [];
+  valid.forEach(it => {
+    const marker = L.marker([it.lat, it.lon]).addTo(map);
+    const t = new Date(it.time).toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+    marker.bindPopup(
+      `<b>${escapeHtml(it.name)}</b>${it.cls ? ' · ' + escapeHtml(it.cls) : ''}<br>` +
+      `${t}<br><a href="https://www.google.com/maps?q=${it.lat},${it.lon}" target="_blank" rel="noopener">เปิดใน Google Maps →</a>`
+    );
+    overviewMarkers.push(marker);
+    latlngs.push([it.lat, it.lon]);
+  });
+
+  if (typeof L.heatLayer === 'function') {
+    overviewHeatLayer = L.heatLayer(latlngs, { radius: 35, blur: 25, maxZoom: 17 }).addTo(map);
+  }
+
+  setTimeout(() => {
+    map.invalidateSize();
+    if (latlngs.length === 1) {
+      map.setView(latlngs[0], 15);
+    } else {
+      map.fitBounds(L.latLngBounds(latlngs), { padding: [24, 24] });
+    }
+  }, 50);
 }
 
 $('downloadZipBtn').addEventListener('click', async () => {
