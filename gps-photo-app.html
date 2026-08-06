@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บันทึกภาพถ่ายที่อยู่อาศัย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --paper:#F5F1E4;
+    --paper-dark:#EDE6D0;
+    --ink:#1F2A44;
+    --ink-soft:#4A5470;
+    --stamp:#A02020;
+    --grid:#D8CFAF;
+    --brass:#8B6F3E;
+    --ok:#2F5D3A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--paper);
+    color:var(--ink);
+    font-family:'Sarabun',sans-serif;
+    min-height:100vh;
+    padding:24px 14px 60px;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+  .sheet{
+    max-width:560px;
+    margin:0 auto;
+    background:var(--paper);
+    border:1px solid var(--brass);
+    box-shadow:0 1px 0 var(--brass), 0 0 0 5px rgba(139,111,62,0.08);
+    position:relative;
+  }
+  .sheet::before{
+    content:"";
+    position:absolute; inset:6px;
+    border:1px solid rgba(139,111,62,0.35);
+    pointer-events:none;
+  }
+  .head{
+    text-align:center;
+    padding:22px 20px 16px;
+    border-bottom:2px solid var(--brass);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+  .title{
+    font-family:'Noto Serif Thai',serif;
+    font-weight:700;
+    font-size:26px;
+    margin:6px 0 2px;
+  }
+  .subtitle{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .body{padding:20px;}
+
+  label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    letter-spacing:.02em;
+  }
+  .field{margin-bottom:14px;}
+  input[type=text]{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid var(--brass);
+    background:#fffdf8;
+    font-family:'Sarabun',sans-serif;
+    font-size:15px;
+    color:var(--ink);
+    border-radius:2px;
+  }
+  input[type=text]:focus{outline:2px solid var(--stamp); outline-offset:1px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .reqbox{
+    border:1px solid var(--stamp);
+    background:rgba(160,32,32,0.045);
+    padding:12px 14px 6px;
+    margin-bottom:12px;
+    border-radius:2px;
+  }
+  .reqbox-title{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--stamp);
+    margin-bottom:8px;
+    letter-spacing:.01em;
+  }
+  .reqitem{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    font-size:13px;
+    font-weight:400;
+    color:var(--ink);
+    margin-bottom:9px;
+    cursor:pointer;
+  }
+  .reqitem input{
+    margin-top:2px;
+    flex-shrink:0;
+    accent-color:var(--stamp);
+    width:16px; height:16px;
+  }
+  .reqitem b{font-weight:700;}
+
+  .photo-box{
+    border:2px dashed var(--brass);
+    background:#fffdf8;
+    aspect-ratio:4/3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:12px;
+    border-radius:2px;
+  }
+  .photo-box img, .photo-box video{
+    width:100%; height:100%; object-fit:cover; display:block;
+  }
+  .photo-placeholder{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+    padding:20px;
+  }
+  .photo-placeholder svg{margin-bottom:8px; opacity:.5;}
+
+  .btnrow{display:flex; gap:10px; flex-wrap:wrap;}
+  button{
+    font-family:'Sarabun',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    border-radius:2px;
+    border:1px solid var(--ink);
+    padding:11px 16px;
+    cursor:pointer;
+    background:var(--paper);
+    color:var(--ink);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button:active{transform:translateY(1px);}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+  button:disabled:active{transform:none;}
+  button:focus-visible{outline:2px solid var(--stamp); outline-offset:2px;}
+  button.primary{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+    flex:1;
+  }
+  button.primary:disabled{opacity:.45; cursor:not-allowed;}
+  button.stamp-btn{
+    background:var(--stamp);
+    color:#fff;
+    border-color:var(--stamp);
+    flex:1;
+  }
+  button.stamp-btn:disabled{opacity:.45; cursor:not-allowed;}
+  button.ghost{background:transparent;}
+
+  .gpsbox{
+    margin-top:14px;
+    border:1px solid var(--brass);
+    background:#fffdf8;
+    padding:12px 14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height:20px;
+    border-radius:2px;
+  }
+  .gpsdot{
+    width:9px; height:9px; border-radius:50%;
+    background:#b8ac82; flex-shrink:0;
+  }
+  .gpsdot.live{background:var(--ok); box-shadow:0 0 0 3px rgba(47,93,58,.15);}
+  .gpsdot.err{background:var(--stamp);}
+
+  .status{
+    margin-top:12px;
+    font-size:13px;
+    color:var(--ok);
+    display:none;
+  }
+  .status.show{display:block;}
+
+  .divider{
+    border:none;
+    border-top:1px dashed var(--brass);
+    margin:22px 0;
+  }
+
+  .teacher-toggle{
+    text-align:center;
+    padding:14px 20px 22px;
+  }
+  .teacher-toggle button{
+    font-size:12px;
+    padding:7px 12px;
+    border-color:var(--ink-soft);
+    color:var(--ink-soft);
+  }
+
+  .gallery{padding:0 20px 24px; display:none;}
+  .gallery.show{display:block;}
+  .gallery h2{
+    font-family:'Noto Serif Thai',serif;
+    font-size:17px;
+    border-bottom:1px solid var(--brass);
+    padding-bottom:8px;
+  }
+  .entry{
+    display:flex;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--grid);
+  }
+  .entry img{
+    width:70px; height:70px; object-fit:cover; border:1px solid var(--brass); flex-shrink:0; border-radius:2px;
+  }
+  .entry .meta{font-size:12.5px; color:var(--ink-soft); line-height:1.5;}
+  .entry .meta b{color:var(--ink); font-size:13.5px;}
+  .entry a{color:var(--stamp); text-decoration:none; font-weight:600;}
+  .empty{font-size:13px; color:var(--ink-soft); padding:14px 0;}
+
+  canvas{display:none;}
+
+  @keyframes thump{
+    0%{transform:scale(2) rotate(-8deg); opacity:0;}
+    55%{transform:scale(0.94) rotate(-8deg); opacity:1;}
+    75%{transform:scale(1.05) rotate(-8deg);}
+    100%{transform:scale(1) rotate(-8deg); opacity:1;}
+  }
+  .seal{
+    animation:thump .5s cubic-bezier(.2,.9,.3,1.2);
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="head">
+    <div class="eyebrow">แบบบันทึกภาพประกอบโครงการ</div>
+    <div class="title">บันทึกภาพถ่ายที่อยู่อาศัย</div>
+    <div class="subtitle">ถ่ายภาพสดจากกล้อง — ระบบจะประทับพิกัด GPS และเวลาให้อัตโนมัติ</div>
+  </div>
+
+  <div class="body">
+    <div class="row2">
+      <div class="field">
+        <label for="sname">ชื่อ-สกุลนักเรียน</label>
+        <input type="text" id="sname" placeholder="เช่น เด็กชายสมชาย ใจดี">
+      </div>
+      <div class="field">
+        <label for="sclass">ชั้น/แผนกวิชา</label>
+        <input type="text" id="sclass" placeholder="เช่น ปวช.1 ช่างเชื่อม">
+      </div>
+    </div>
+
+    <label>ภาพถ่ายบ้าน (ต้องถ่ายภาพสดจากกล้องเท่านั้น)</label>
+
+    <div class="reqbox" id="reqBox">
+      <div class="reqbox-title">ข้อกำหนดของภาพถ่าย — ต้องมีครบทุกข้อในภาพเดียวกัน</div>
+      <label class="reqitem"><input type="checkbox" class="reqcheck"> นักเรียนแต่งกาย<b>ชุดองค์การ (เครื่องแบบนักศึกษาวิชาชีพ)</b> ครบถ้วน</label>
+      <label class="reqitem"><input type="checkbox" class="reqcheck"> สวม<b>ผ้าพันคอลูกเสือ</b></label>
+      <label class="reqitem"><input type="checkbox" class="reqcheck"> สวม<b>วอกเกิล (Woggle)</b> รัดผ้าพันคอ</label>
+      <label class="reqitem"><input type="checkbox" class="reqcheck"> สวม<b>หมวกลูกเสือ</b></label>
+      <label class="reqitem"><input type="checkbox" class="reqcheck"> เห็น<b>บ้านหรือหอพักทั้งหลัง</b>ในภาพชัดเจน (ไม่ถ่ายเฉพาะบางส่วน)</label>
+    </div>
+
+    <div class="photo-box" id="photoBox">
+      <div class="photo-placeholder" id="placeholder">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        <div>ยังไม่มีภาพ — กด "เปิดกล้องถ่ายภาพสด" ด้านล่าง</div>
+      </div>
+      <video id="video" autoplay playsinline style="display:none;"></video>
+      <img id="preview" style="display:none;">
+    </div>
+
+    <div class="btnrow" id="captureRow">
+      <button class="primary" id="openCamBtn" type="button" style="width:100%;">📷 เปิดกล้องถ่ายภาพสด</button>
+    </div>
+    <div id="reqHint" style="font-size:12px; color:var(--stamp); margin-top:6px; display:none;">โปรดติ๊กครบทุกข้อด้านบนก่อนถ่ายภาพ</div>
+    <div class="btnrow" id="shootRow" style="display:none; margin-top:10px;">
+      <button class="stamp-btn" id="shootBtn" type="button">ถ่ายภาพ</button>
+      <button class="ghost" id="cancelCamBtn" type="button">ยกเลิก</button>
+    </div>
+    <div class="btnrow" id="retakeRow" style="display:none; margin-top:10px;">
+      <button class="ghost" id="retakeBtn" type="button">ถ่ายใหม่</button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="gpsbox">
+      <span class="gpsdot" id="gpsDot"></span>
+      <span id="gpsText">ยังไม่ได้ขอตำแหน่ง GPS</span>
+    </div>
+
+    <div class="field" style="margin-top:16px;">
+      <button class="primary" id="submitBtn" style="width:100%;" disabled>ยืนยันและบันทึก</button>
+    </div>
+    <div class="status" id="statusMsg"></div>
+  </div>
+
+  <div class="teacher-toggle">
+    <button id="teacherBtn" type="button">โหมดครู — ดูรายการที่ส่งทั้งหมด</button>
+    <div id="pinRow" style="display:none; margin-top:10px; justify-content:center; gap:8px; align-items:center;">
+      <input type="password" id="pinInput" inputmode="numeric" maxlength="6" placeholder="รหัสผ่านครู" style="width:130px; padding:9px 10px; text-align:center; letter-spacing:.15em;">
+      <button id="pinSubmit" type="button" style="font-size:12.5px; padding:9px 12px;">เข้าสู่ระบบ</button>
+    </div>
+    <div id="pinError" style="display:none; color:#A02020; font-size:12px; margin-top:6px;">รหัสผ่านไม่ถูกต้อง</div>
+  </div>
+
+  <div class="gallery" id="gallery">
+    <hr class="divider" style="margin-top:0;">
+    
+    <div style="background:rgba(139,111,62,0.08); border:1px solid var(--brass); padding:10px 12px; margin-bottom:14px; border-radius:2px; font-size:12.5px;">
+      <div style="font-weight:700; color:var(--ink); margin-bottom:4px;">🌐 เชื่อมต่อฐานข้อมูลคลาวด์ (Firebase Realtime Database)</div>
+      <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">ใส่ Firebase Database URL เพื่อรวมข้อมูลของนักเรียนทุกคนเข้าฐานข้อมูลเดียวกัน</div>
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="cloudUrlInput" placeholder="เช่น https://myproject-default-rtdb.firebaseio.com" style="font-size:12px; padding:6px 8px; flex:1;">
+        <button id="saveCloudUrlBtn" type="button" style="font-size:12px; padding:6px 10px; background:var(--ink); color:#fff;">บันทึก</button>
+      </div>
+      <div id="cloudUrlStatus" style="font-size:11.5px; color:var(--ok); margin-top:4px;"></div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h2 style="border-bottom:none; padding-bottom:0;">รายการภาพที่นักเรียนส่ง (จากทุกอุปกรณ์)</h2>
+      <div style="display:flex; gap:6px;">
+        <button id="refreshGalleryBtn" type="button" style="font-size:12px; padding:8px 10px;">🔄 ดึงข้อมูลใหม่</button>
+        <button id="downloadZipBtn" type="button" style="font-size:12px; padding:8px 10px;">ดาวน์โหลดทั้งหมดเป็น ZIP</button>
+      </div>
+    </div>
+    <div id="entries"><div class="empty">กำลังโหลด…</div></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let stream = null;
+let capturedDataUrl = null;
+let gpsData = null; // {lat, lon, acc}
+
+// ---------- Cloud DB Configuration ----------
+const DEFAULT_CLOUD_DB_URL = 'https://gps-photo-app-19249-default-rtdb.asia-southeast1.firebasedatabase.app';
+function getCloudDbUrl() {
+  return localStorage.getItem('cloud_db_url') || DEFAULT_CLOUD_DB_URL;
+}
+
+const storageProvider = {
+  async set(key, val) {
+    const entry = JSON.parse(val);
+    const dbUrl = getCloudDbUrl().replace(/\/$/, '');
+    let savedToCloud = false;
+
+    if (dbUrl) {
+      try {
+        const res = await fetch(`${dbUrl}/submissions.json`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entry)
+        });
+        if (res.ok) savedToCloud = true;
+      } catch(e) {
+        console.error('Cloud save failed:', e);
+      }
+    }
+
+    // Always save to local storage as fallback
+    try {
+      localStorage.setItem(key, val);
+    } catch(e){}
+
+    return true;
+  }
+};
+
+// ---------- Camera (Strict Live Capture) ----------
+$('openCamBtn').addEventListener('click', async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    $('video').srcObject = stream;
+    $('video').style.display = 'block';
+    $('placeholder').style.display = 'none';
+    $('preview').style.display = 'none';
+    $('captureRow').style.display = 'none';
+    $('shootRow').style.display = 'flex';
+    $('retakeRow').style.display = 'none';
+    requestGPS();
+  } catch (e) {
+    setStatus('เปิดกล้องไม่ได้ — โปรดอนุญาตการเข้าถึงกล้องในเบราว์เซอร์ แล้วลองใหม่', true);
+  }
+});
+
+$('shootBtn').addEventListener('click', () => {
+  const video = $('video');
+  const canvas = $('canvas');
+  const w = video.videoWidth || 1280;
+  const h = video.videoHeight || 960;
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+  finishCapture(canvas.toDataURL('image/jpeg', 0.85));
+  stopCamera();
+});
+
+$('cancelCamBtn').addEventListener('click', () => {
+  stopCamera();
+  resetCaptureUI();
+});
+
+$('retakeBtn').addEventListener('click', () => {
+  capturedDataUrl = null;
+  resetCaptureUI();
+  checkReady();
+});
+
+function stopCamera(){
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  $('video').style.display = 'none';
+}
+
+function resetCaptureUI(){
+  $('placeholder').style.display = 'flex';
+  $('preview').style.display = 'none';
+  $('captureRow').style.display = 'flex';
+  $('shootRow').style.display = 'none';
+  $('retakeRow').style.display = 'none';
+}
+
+function finishCapture(dataUrl){
+  capturedDataUrl = dataUrl;
+  $('preview').src = dataUrl;
+  $('preview').style.display = 'block';
+  $('video').style.display = 'none';
+  $('placeholder').style.display = 'none';
+  $('captureRow').style.display = 'none';
+  $('shootRow').style.display = 'none';
+  $('retakeRow').style.display = 'flex';
+  checkReady();
+}
+
+// ---------- GPS ----------
+function requestGPS(){
+  const dot = $('gpsDot'), txt = $('gpsText');
+  if (!navigator.geolocation) {
+    dot.className = 'gpsdot err';
+    txt.textContent = 'อุปกรณ์นี้ไม่รองรับ GPS';
+    return;
+  }
+  txt.textContent = 'กำลังขอตำแหน่ง GPS…';
+  navigator.geolocation.getCurrentPosition((pos) => {
+    gpsData = {
+      lat: pos.coords.latitude,
+      lon: pos.coords.longitude,
+      acc: pos.coords.accuracy
+    };
+    dot.className = 'gpsdot live';
+    txt.innerHTML = `${gpsData.lat.toFixed(6)}, ${gpsData.lon.toFixed(6)} &nbsp;(±${Math.round(gpsData.acc)}m)`;
+    checkReady();
+  }, (err) => {
+    dot.className = 'gpsdot err';
+    txt.textContent = 'ขอตำแหน่งไม่สำเร็จ — โปรดอนุญาตการเข้าถึงตำแหน่งที่ตั้ง แล้วลองใหม่';
+  }, { enableHighAccuracy: true, timeout: 15000 });
+}
+
+function checkReady(){
+  $('submitBtn').disabled = !(capturedDataUrl && gpsData && $('sname').value.trim() && allReqsChecked());
+}
+
+function allReqsChecked(){
+  return Array.from(document.querySelectorAll('.reqcheck')).every(c => c.checked);
+}
+
+function updateCaptureLock(){
+  const ok = allReqsChecked();
+  $('openCamBtn').disabled = !ok;
+  $('reqHint').style.display = ok ? 'none' : 'block';
+}
+
+document.querySelectorAll('.reqcheck').forEach(c => {
+  c.addEventListener('change', () => { updateCaptureLock(); checkReady(); });
+});
+updateCaptureLock();
+$('sname').addEventListener('input', checkReady);
+$('sclass').addEventListener('input', checkReady);
+
+// ---------- Stamp + Submit ----------
+$('submitBtn').addEventListener('click', async () => {
+  if (!capturedDataUrl || !gpsData) return;
+  $('submitBtn').disabled = true;
+  $('submitBtn').textContent = 'กำลังประทับตราและบันทึก…';
+
+  const stampedUrl = await stampImage(capturedDataUrl, gpsData, $('sname').value.trim(), $('sclass').value.trim());
+
+  const entry = {
+    name: $('sname').value.trim(),
+    cls: $('sclass').value.trim(),
+    lat: gpsData.lat,
+    lon: gpsData.lon,
+    acc: Math.round(gpsData.acc),
+    time: new Date().toISOString(),
+    img: stampedUrl
+  };
+
+  try {
+    const key = 'submissions:' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+    const res = await storageProvider.set(key, JSON.stringify(entry));
+    if (!res) throw new Error('save failed');
+    setStatus('บันทึกสำเร็จ — ขอบคุณครับ/ค่ะ', false);
+    $('submitBtn').textContent = 'ส่งแล้ว ✓';
+    loadGallery();
+  } catch (e) {
+    setStatus('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง', true);
+    $('submitBtn').disabled = false;
+    $('submitBtn').textContent = 'ยืนยันและบันทึก';
+  }
+});
+
+function setStatus(msg, isErr){
+  const el = $('statusMsg');
+  el.textContent = msg;
+  el.style.color = isErr ? '#A02020' : '#2F5D3A';
+  el.classList.add('show');
+}
+
+function stampImage(dataUrl, gps, name, cls){
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      const pad = Math.max(14, img.width * 0.02);
+      const barH = Math.max(70, img.height * 0.14);
+      ctx.fillStyle = 'rgba(31,42,68,0.72)';
+      ctx.fillRect(0, img.height - barH, img.width, barH);
+
+      const fs1 = Math.max(13, img.width * 0.028);
+      const fs2 = Math.max(11, img.width * 0.021);
+      ctx.fillStyle = '#F5F1E4';
+      ctx.font = `600 ${fs1}px 'Sarabun', sans-serif`;
+      ctx.fillText(name + (cls ? '  ·  ' + cls : ''), pad, img.height - barH + fs1 + pad*0.5);
+
+      ctx.font = `${fs2}px 'JetBrains Mono', monospace`;
+      const coordStr = `${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)}  (±${Math.round(gps.acc)}m)`;
+      ctx.fillText(coordStr, pad, img.height - barH + fs1 + pad*0.5 + fs2*1.6);
+
+      const timeStr = new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+      ctx.fillText(timeStr, pad, img.height - barH + fs1 + pad*0.5 + fs2*3.2);
+
+      // seal circle top-right
+      const r = Math.max(28, img.width * 0.055);
+      const cx = img.width - r - pad;
+      const cy = r + pad;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(-8 * Math.PI/180);
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(160,32,32,0.9)';
+      ctx.lineWidth = Math.max(2, r*0.08);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, r*0.78, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(160,32,32,0.9)';
+      ctx.font = `700 ${r*0.32}px 'Noto Serif Thai', serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('GPS', 0, r*0.12);
+      ctx.font = `600 ${r*0.16}px 'JetBrains Mono', monospace`;
+      ctx.fillText('VERIFIED', 0, r*0.36);
+      ctx.restore();
+
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.src = dataUrl;
+  });
+}
+
+// ---------- Teacher gallery (PIN protected) ----------
+const TEACHER_PIN = '2569'; // เปลี่ยนรหัสผ่านครูได้ที่นี่
+let galleryOpen = false;
+let teacherUnlocked = false;
+
+$('teacherBtn').addEventListener('click', () => {
+  if (galleryOpen) {
+    galleryOpen = false;
+    $('gallery').classList.remove('show');
+    $('teacherBtn').textContent = 'โหมดครู — ดูรายการที่ส่งทั้งหมด';
+    return;
+  }
+  if (teacherUnlocked) {
+    openGallery();
+    return;
+  }
+  const pinRow = $('pinRow');
+  const showing = pinRow.style.display === 'flex';
+  pinRow.style.display = showing ? 'none' : 'flex';
+  $('pinError').style.display = 'none';
+  if (!showing) $('pinInput').focus();
+});
+
+$('pinSubmit').addEventListener('click', checkPin);
+$('pinInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') checkPin(); });
+
+function checkPin(){
+  if ($('pinInput').value.trim() === TEACHER_PIN) {
+    teacherUnlocked = true;
+    $('pinRow').style.display = 'none';
+    $('pinError').style.display = 'none';
+    $('pinInput').value = '';
+    openGallery();
+  } else {
+    $('pinError').style.display = 'block';
+    $('pinInput').value = '';
+    $('pinInput').focus();
+  }
+}
+
+function openGallery(){
+  galleryOpen = true;
+  $('gallery').classList.add('show');
+  $('teacherBtn').textContent = 'ซ่อนรายการ';
+  
+  if ($('cloudUrlInput')) {
+    $('cloudUrlInput').value = getCloudDbUrl();
+  }
+  loadGallery();
+}
+
+if ($('saveCloudUrlBtn')) {
+  $('saveCloudUrlBtn').addEventListener('click', () => {
+    const url = $('cloudUrlInput').value.trim();
+    localStorage.setItem('cloud_db_url', url);
+    $('cloudUrlStatus').textContent = url ? 'บันทึก Firebase Database URL เรียบร้อยแล้ว ✓' : 'ลบการเชื่อมต่อคลาวด์แล้ว';
+    setTimeout(() => { $('cloudUrlStatus').textContent = ''; }, 3000);
+    loadGallery();
+  });
+}
+
+if ($('refreshGalleryBtn')) {
+  $('refreshGalleryBtn').addEventListener('click', loadGallery);
+}
+
+let lastLoadedItems = [];
+
+async function fetchAllSubmissions(){
+  const dbUrl = getCloudDbUrl().replace(/\/$/, '');
+  const itemsMap = new Map();
+
+  // 1. Fetch from Cloud Database (Firebase)
+  if (dbUrl) {
+    try {
+      const res = await fetch(`${dbUrl}/submissions.json`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data === 'object') {
+          Object.values(data).forEach(it => {
+            if (it && it.name && it.time) {
+              itemsMap.set(it.name + '_' + it.time, it);
+            }
+          });
+        }
+      }
+    } catch(e) {
+      console.error('Error fetching cloud submissions:', e);
+    }
+  }
+
+  // 2. Fetch from LocalStorage as fallback
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('submissions:')) {
+      try {
+        const val = localStorage.getItem(k);
+        if (val) {
+          const it = JSON.parse(val);
+          if (it && it.name && it.time) {
+            itemsMap.set(it.name + '_' + it.time, it);
+          }
+        }
+      } catch(e){}
+    }
+  }
+
+  const items = Array.from(itemsMap.values());
+  items.sort((a,b) => new Date(b.time) - new Date(a.time));
+  return items;
+}
+
+async function loadGallery(){
+  const box = $('entries');
+  box.innerHTML = '<div class="empty">กำลังโหลดรายการ…</div>';
+  try {
+    const items = await fetchAllSubmissions();
+    lastLoadedItems = items;
+    if (items.length === 0) {
+      box.innerHTML = '<div class="empty">ยังไม่มีรายการส่ง (หรือยังไม่ได้เชื่อมต่อ Firebase Database URL)</div>';
+      return;
+    }
+    box.innerHTML = items.map(it => {
+      const mapUrl = `https://www.google.com/maps?q=${it.lat},${it.lon}`;
+      const t = new Date(it.time).toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+      return `<div class="entry">
+        <img src="${it.img}" alt="">
+        <div class="meta">
+          <b>${escapeHtml(it.name)}</b>${it.cls ? ' · ' + escapeHtml(it.cls) : ''}<br>
+          ${it.lat.toFixed(6)}, ${it.lon.toFixed(6)} (±${it.acc}m)<br>
+          ${t}<br>
+          <a href="${mapUrl}" target="_blank" rel="noopener">เปิดใน Google Maps →</a>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">โหลดรายการไม่สำเร็จ</div>';
+  }
+}
+
+$('downloadZipBtn').addEventListener('click', async () => {
+  const btn = $('downloadZipBtn');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'กำลังรวมไฟล์…';
+  try {
+    const items = lastLoadedItems.length ? lastLoadedItems : await fetchAllSubmissions();
+    if (!items.length) {
+      btn.textContent = 'ยังไม่มีรายการส่ง';
+      setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 1800);
+      return;
+    }
+    const zip = new JSZip();
+    let csv = 'ชื่อ,ชั้น/แผนก,ละติจูด,ลองจิจูด,ความแม่นยำ(ม.),วันเวลา,ลิงก์แผนที่,ไฟล์ภาพ\n';
+    items.forEach((it, i) => {
+      const n = (it.time || Date.now()).toString();
+      const safeName = (it.name || 'unknown').replace(/[\\/:*?"<>|,]/g, '_');
+      const fname = `${String(i+1).padStart(3,'0')}_${safeName}.jpg`;
+      const base64 = it.img.split(',')[1];
+      zip.file(fname, base64, { base64: true });
+      const mapUrl = `https://www.google.com/maps?q=${it.lat},${it.lon}`;
+      const t = new Date(it.time).toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+      csv += `"${(it.name||'').replace(/"/g,'""')}","${(it.cls||'').replace(/"/g,'""')}",${it.lat},${it.lon},${it.acc},"${t}","${mapUrl}","${fname}"\n`;
+    });
+    zip.file('รายชื่อและพิกัด.csv', '\uFEFF' + csv);
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `บันทึกภาพบ้านนักเรียน_${new Date().toISOString().slice(0,10)}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    btn.textContent = 'ดาวน์โหลดแล้ว ✓';
+    setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2200);
+  } catch (e) {
+    btn.textContent = 'เกิดข้อผิดพลาด ลองใหม่';
+    setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2200);
+  }
+});
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+</script>
+</body>
+</html>
