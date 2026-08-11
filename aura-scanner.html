@@ -160,6 +160,7 @@
     z-index:15;
   }
   .badge.on{color:#7bffa0; border-color:#1f4b31;}
+  .badge.left{ left:10px; right:auto; }
 
   .dragHint{
     position:absolute; left:0; right:0; top:10px;
@@ -169,6 +170,22 @@
     z-index:10;
     pointer-events:none;
   }
+  .toast{
+    position:absolute; left:50%; top:46px;
+    transform:translateX(-50%) translateY(-4px);
+    background:rgba(13,20,32,.92);
+    border:1px solid var(--edge);
+    color:var(--ink);
+    font-size:12px;
+    padding:7px 14px;
+    border-radius:999px;
+    z-index:30;
+    opacity:0;
+    white-space:nowrap;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
   /* Discreet operator dock */
   .dock{
@@ -195,6 +212,7 @@
     backdrop-filter:blur(4px);
   }
   .dock button:active{ transform:scale(.9); }
+  .dock button.on{ border-color:#7bffa0; box-shadow:0 0 8px rgba(123,255,160,.5); }
   .dock .lbl{
     font-family:'JetBrains Mono',monospace;
     font-size:8px;
@@ -255,7 +273,9 @@
     <div class="flash" id="flash"></div>
 
     <div class="badge" id="trackBadge">AUTO-TRACK: OFF</div>
+    <div class="badge left" id="styleBadge">แบบ: ดูดเข้า</div>
     <div class="dragHint" id="dragHint">ลากจุดแสงไปวางที่หน้าผากได้</div>
+    <div class="toast" id="toast"></div>
 
     <div class="status">
       <div class="mode" id="modeText" style="color:#cfd6e4;">กำลังรอการตรวจจับ…</div>
@@ -292,6 +312,18 @@
       <button id="btnAuto" title="สลับติดตามใบหน้าอัตโนมัติ">🎯</button>
       <div class="lbl">trk</div>
     </div>
+    <div>
+      <button id="btnStyle" title="สลับลักษณะกระแส (คีย์ลัด S)">🧲</button>
+      <div class="lbl">sty</div>
+    </div>
+    <div>
+      <button id="btnCam" title="สลับกล้องหน้า/หลัง (คีย์ลัด C)">🔄</button>
+      <div class="lbl">cam</div>
+    </div>
+    <div>
+      <button id="btnMood" title="ตรวจจับสีหน้าอัตโนมัติ: ยิ้ม/บึ้ง (คีย์ลัด M)">🎭</button>
+      <div class="lbl">mood</div>
+    </div>
   </div>
 
   <div class="modal" id="helpModal">
@@ -304,6 +336,9 @@
         <li><code>0</code> หรือปุ่ม ◯ → กลับสู่สถานะรอ</li>
         <li>🎯 → เปิด/ปิดระบบติดตามใบหน้าอัตโนมัติ (ต้องมีอินเทอร์เน็ตให้โหลดโมเดลครั้งแรก)</li>
         <li>ลากบนวิดีโอ → ย้ายจุดวางกระแสด้วยมือ (ใช้เมื่อไม่มีอินเทอร์เน็ต/ตรวจจับใบหน้าไม่เจอ)</li>
+        <li><code>S</code> หรือปุ่ม 🧲 → สลับ "ลักษณะกระแส" 3 แบบ: <b>ดูดเข้า</b> (ค่าเริ่มต้น — พลังงานพุ่งเข้าหาหน้าผากเหมือนแรงดึงดูด), <b>พุ่งออก</b> (พลังงานลอยออกจากหน้าผาก), <b>วนรอบ</b> (พลังงานเป็นวงแหวนหมุนรอบหน้าผาก)</li>
+        <li><code>C</code> หรือปุ่ม 🔄 → สลับกล้องหน้า/หลัง (ค่าเริ่มต้นเปิดกล้องหลังก่อน)</li>
+        <li><code>M</code> หรือปุ่ม 🎭 → <b>โหมดจับสีหน้าจริง</b> (ต่างจากปุ่ม 1/2 ที่เป็นปุ่มลับ) — ใช้ AI วิเคราะห์สีหน้าจากกล้องจริงๆ ถ้ายิ้ม (happy) จะขึ้นทองอัตโนมัติ ถ้าหน้าบึ้ง/เศร้า/โกรธ จะขึ้นดำอัตโนมัติ เหมาะกับเล่นสดต่อหน้าห้องเรียนให้เด็กยิ้มแล้วเห็นผลจริง — กดปุ่ม 1/2/0 เมื่อไรจะปิดโหมดนี้ทันที (กลับไปคุมมือ)</li>
       </ul>
       <p>ใช้เป็นสื่อสอนเรื่อง "คิดดี พูดดี ทำดี" — ให้ผู้เรียนลองพูดสิ่งดี ๆ แล้วผู้ควบคุมกดปุ่มทองให้สอดคล้อง เพื่อสร้างความประทับใจเชิงบวก ไม่ควรใช้หลอกลวงเพื่อผลประโยชน์อื่น</p>
       <div class="closeRow"><button id="closeHelp">ปิด</button></div>
@@ -322,6 +357,7 @@
   const startBtn = document.getElementById('startBtn');
   const flashEl = document.getElementById('flash');
   const trackBadge = document.getElementById('trackBadge');
+  const styleBadge = document.getElementById('styleBadge');
   const dragHint = document.getElementById('dragHint');
   const helpBtn = document.getElementById('helpBtn');
   const helpModal = document.getElementById('helpModal');
@@ -337,17 +373,30 @@
     negative:{ label:'🌑 กระแสพลังลบ — สีดำ', tagline:'คิดร้าย พูดร้าย ทำร้าย → ผลักไสโชคดี', core:'#b79bff' }
   };
 
+  const STYLES = ['attract', 'emit', 'orbit'];
+  const STYLE_META = {
+    attract:{ label:'ดูดเข้า', icon:'🧲' },
+    emit:   { label:'พุ่งออก', icon:'🎇' },
+    orbit:  { label:'วนรอบ',   icon:'🌀' }
+  };
+
   let mode = 'idle';
+  let style = 'attract';
   let anchor = { x:0.5, y:0.30 };   // fraction of canvas
   let manualAnchor = false;
   let autoTrack = false;
   let modelReady = false;
   let particles = [];
+  let rings = [];
   let cw = 0, ch = 0;
   let dragging = false;
 
-  function setMode(next){
+  function setMode(next, opts){
+    opts = opts || {};
+    if(!opts.auto) autoExpression = false;
     mode = next;
+    particles = [];
+    rings = [];
     const t = THEMES[mode];
     modeText.textContent = t.label;
     modeText.style.color = t.core;
@@ -366,6 +415,19 @@
     }
   }
 
+  function setStyle(next){
+    style = next;
+    particles = [];
+    rings = [];
+    const m = STYLE_META[style];
+    styleBadge.textContent = `แบบ: ${m.label}`;
+    document.getElementById('btnStyle').textContent = m.icon;
+  }
+  function cycleStyle(){
+    const i = STYLES.indexOf(style);
+    setStyle(STYLES[(i+1) % STYLES.length]);
+  }
+
   function resizeCanvas(){
     const rect = stage.getBoundingClientRect();
     cw = canvas.width = Math.round(rect.width * devicePixelRatio);
@@ -374,43 +436,87 @@
   window.addEventListener('resize', resizeCanvas);
 
   // ---- particle system ----
+  // kinds: 'cartesian' (x/y + vx/vy, used by emit + idle ambient),
+  //        'polar'     (radius/angle around the anchor, used by attract),
+  //        'orbitpolar'(fixed-ish radius steady spin, used by orbit)
+  const ORBIT_COUNT = 22;
+
   function spawnParticle(){
-    const ax = anchor.x * cw, ay = anchor.y * ch;
+    const baseR = cw * 0.09;
     const spread = cw * 0.05;
-    if(mode === 'positive'){
-      particles.push({
-        x: ax + (Math.random()-0.5)*spread,
-        y: ay + (Math.random()-0.5)*spread*0.6,
-        vx: (Math.random()-0.5)*0.25,
-        vy: -0.6 - Math.random()*0.9,
-        life: 1, decay: 0.006 + Math.random()*0.008,
-        size: (2 + Math.random()*3) * devicePixelRatio,
-        hue: 'gold'
-      });
-    } else if(mode === 'negative'){
-      particles.push({
-        x: ax + (Math.random()-0.5)*spread*1.3,
-        y: ay + (Math.random()-0.5)*spread*0.6,
-        vx: (Math.random()-0.5)*0.5,
-        vy: 0.3 + Math.random()*0.5,
-        life: 1, decay: 0.005 + Math.random()*0.006,
-        size: (2.5 + Math.random()*4) * devicePixelRatio,
-        hue: 'dark'
-      });
-    } else {
+
+    if(mode === 'idle'){
       if(Math.random() < 0.4){
         particles.push({
-          x: ax + (Math.random()-0.5)*spread*0.7,
-          y: ay + (Math.random()-0.5)*spread*0.4,
-          vx: (Math.random()-0.5)*0.15,
-          vy: -0.2 - Math.random()*0.2,
+          kind:'cartesian', x:0, y:0,
+          dx:(Math.random()-0.5)*spread*0.7, dy:(Math.random()-0.5)*spread*0.4,
+          vx: (Math.random()-0.5)*0.15, vy: -0.2 - Math.random()*0.2,
           life: 1, decay: 0.01,
           size: (1.5 + Math.random()*2) * devicePixelRatio,
           hue: 'neutral'
         });
       }
+      return;
+    }
+
+    const hue = mode === 'positive' ? 'gold' : 'dark';
+
+    if(style === 'emit'){
+      if(hue === 'gold'){
+        particles.push({
+          kind:'cartesian', x:0, y:0,
+          dx:(Math.random()-0.5)*spread, dy:(Math.random()-0.5)*spread*0.6,
+          vx: (Math.random()-0.5)*0.25, vy: -0.6 - Math.random()*0.9,
+          life: 1, decay: 0.006 + Math.random()*0.008,
+          size: (2 + Math.random()*3) * devicePixelRatio,
+          hue
+        });
+      } else {
+        particles.push({
+          kind:'cartesian', x:0, y:0,
+          dx:(Math.random()-0.5)*spread*1.3, dy:(Math.random()-0.5)*spread*0.6,
+          vx: (Math.random()-0.5)*0.5, vy: 0.3 + Math.random()*0.5,
+          life: 1, decay: 0.005 + Math.random()*0.006,
+          size: (2.5 + Math.random()*4) * devicePixelRatio,
+          hue
+        });
+      }
+    } else if(style === 'attract'){
+      const maxR = baseR * (2.8 + Math.random()*1.2);
+      particles.push({
+        kind:'polar',
+        radius: maxR, maxRadius: maxR, angle: Math.random()*Math.PI*2,
+        spin: (hue==='gold' ? 0.02 : 0.03) * (Math.random()<0.5?-1:1) * (hue==='gold'?1:(1+Math.random())),
+        shrink: hue==='gold' ? 0.972 : 0.965,
+        jitter: hue==='gold' ? 0 : 0.06,
+        life: 1, decay: 0.003,
+        size: (hue==='gold' ? 2+Math.random()*2.5 : 2.5+Math.random()*3.5) * devicePixelRatio,
+        hue
+      });
+    } else if(style === 'orbit'){
+      const want = particles.filter(p=>p.kind==='orbitpolar' && p.hue===hue).length;
+      if(want < ORBIT_COUNT){
+        const r = baseR * (1.5 + Math.random()*0.6);
+        particles.push({
+          kind:'orbitpolar',
+          radius: r, baseRadius: r, angle: Math.random()*Math.PI*2,
+          spin: (hue==='gold' ? 0.012 : -0.018) * (1 + Math.random()*0.6),
+          jitter: hue==='gold' ? 0.02 : 0.09,
+          life: 1, decay: 0,
+          size: (hue==='gold' ? 1.8+Math.random()*2 : 2+Math.random()*2.6) * devicePixelRatio,
+          hue
+        });
+      }
     }
   }
+
+  function spawnPullRing(){
+    if(style !== 'attract' || mode === 'idle') return;
+    const baseR = cw * 0.09;
+    const hue = mode === 'positive' ? 'gold' : 'dark';
+    rings.push({ radius: baseR*3.4, life:1, hue });
+  }
+  let lastRingAt = 0;
 
   function drawGlow(){
     const ax = anchor.x * cw, ay = anchor.y * ch;
@@ -436,21 +542,72 @@
     ctx.fill();
   }
 
+  function particleColor(hue, alpha){
+    if(hue === 'gold') return `rgba(255,${210+Math.floor(Math.random()*30)},${90+Math.floor(Math.random()*60)},${alpha})`;
+    if(hue === 'dark') return `rgba(${20+Math.floor(Math.random()*40)},${10+Math.floor(Math.random()*20)},${30+Math.floor(Math.random()*40)},${alpha})`;
+    return `rgba(210,215,230,${alpha})`;
+  }
+
   function drawParticles(){
+    const ax = anchor.x * cw, ay = anchor.y * ch;
+    const baseR = cw * 0.09;
+    const killR = baseR * 0.14;
+    const t = performance.now() / 1000;
+
     for(let i = particles.length - 1; i >= 0; i--){
       const p = particles[i];
-      p.x += p.vx * devicePixelRatio;
-      p.y += p.vy * devicePixelRatio;
-      p.life -= p.decay;
-      if(p.life <= 0){ particles.splice(i,1); continue; }
-      let color;
-      if(p.hue === 'gold') color = `rgba(255,${210+Math.floor(Math.random()*30)},${90+Math.floor(Math.random()*60)},${p.life})`;
-      else if(p.hue === 'dark') color = `rgba(${20+Math.floor(Math.random()*40)},${10+Math.floor(Math.random()*20)},${30+Math.floor(Math.random()*40)},${p.life*0.9})`;
-      else color = `rgba(210,215,230,${p.life*0.5})`;
-      ctx.fillStyle = color;
+      let x, y, alpha;
+
+      if(p.kind === 'cartesian'){
+        p.x += p.vx * devicePixelRatio;
+        p.y += p.vy * devicePixelRatio;
+        p.life -= p.decay;
+        if(p.life <= 0){ particles.splice(i,1); continue; }
+        x = ax + p.dx + p.x;
+        y = ay + p.dy + p.y;
+        alpha = p.life;
+      } else if(p.kind === 'polar'){
+        p.radius *= p.shrink;
+        p.angle += p.spin * (p.maxRadius / Math.max(p.radius, killR));
+        if(p.jitter) p.angle += (Math.random()-0.5) * p.jitter;
+        p.life -= p.decay;
+        if(p.radius <= killR || p.life <= 0){ particles.splice(i,1); continue; }
+        x = ax + p.radius * Math.cos(p.angle);
+        y = ay + p.radius * Math.sin(p.angle);
+        alpha = Math.min(1, 0.35 + (1 - p.radius / p.maxRadius) * 0.9) * p.life;
+      } else { // orbitpolar
+        p.angle += p.spin;
+        const wob = p.jitter ? Math.sin(t * 2.2 + p.angle * 3) * p.jitter : 0;
+        p.radius = p.baseRadius * (1 + wob);
+        x = ax + p.radius * Math.cos(p.angle);
+        y = ay + p.radius * Math.sin(p.angle) * 0.94;
+        alpha = 0.85;
+      }
+
+      ctx.fillStyle = particleColor(p.hue, alpha);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI*2);
+      ctx.arc(x, y, p.size * Math.max(alpha, 0.4), 0, Math.PI*2);
       ctx.fill();
+    }
+  }
+
+  function drawPullRings(){
+    const ax = anchor.x * cw, ay = anchor.y * ch;
+    const baseR = cw * 0.09;
+    for(let i = rings.length - 1; i >= 0; i--){
+      const r = rings[i];
+      r.radius *= 0.955;
+      r.life -= 0.02;
+      if(r.radius <= baseR*0.5 || r.life <= 0){ rings.splice(i,1); continue; }
+      ctx.save();
+      ctx.strokeStyle = r.hue === 'gold'
+        ? `rgba(255,215,106,${r.life*0.45})`
+        : `rgba(140,100,220,${r.life*0.4})`;
+      ctx.lineWidth = 1.5 * devicePixelRatio;
+      ctx.beginPath();
+      ctx.arc(ax, ay, r.radius, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -472,7 +629,12 @@
     if(mode !== 'idle'){
       for(let k=0;k<2;k++) spawnParticle();
     }
+    if(style === 'attract' && mode !== 'idle'){
+      const now = performance.now();
+      if(now - lastRingAt > 750){ lastRingAt = now; spawnPullRing(); }
+    }
     drawGlow();
+    drawPullRings();
     drawParticles();
     drawAnchorMarker();
     requestAnimationFrame(loop);
@@ -499,17 +661,23 @@
   canvas.addEventListener('touchend', endDrag);
 
   function updateTrackBadge(){
-    trackBadge.textContent = autoTrack ? 'AUTO-TRACK: ON' : 'AUTO-TRACK: OFF';
+    trackBadge.textContent = 'TRACK: ' + (autoTrack ? 'ON' : 'OFF') + (autoExpression ? ' · MOOD: ON' : '');
     trackBadge.classList.toggle('on', autoTrack);
   }
 
-  // ---- face-api auto tracking (best-effort, graceful fallback) ----
-  const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models@master/tiny_face_detector';
+  // ---- face-api auto tracking + expression detection (best-effort, graceful fallback) ----
+  const MODELS_BASE = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models@master';
+  let autoExpression = false;
+  let exprCandidate = null, exprCandidateCount = 0;
+
   async function initFaceApi(){
     try{
       await Promise.race([
-        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), 6000))
+        Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_BASE + '/tiny_face_detector'),
+          faceapi.nets.faceExpressionNet.loadFromUri(MODELS_BASE + '/face_expression')
+        ]),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), 8000))
       ]);
       modelReady = true;
       autoTrack = true;
@@ -523,17 +691,39 @@
     }
   }
 
+  function handleExpression(expr){
+    const happy = expr.happy || 0;
+    const negSum = (expr.sad||0) + (expr.angry||0) + (expr.disgusted||0) + (expr.fearful||0)*0.5;
+    let target = null;
+    if(happy > 0.55) target = 'positive';
+    else if(negSum > 0.5) target = 'negative';
+
+    if(!target){ exprCandidate = null; exprCandidateCount = 0; return; }
+    if(target === exprCandidate) exprCandidateCount++;
+    else { exprCandidate = target; exprCandidateCount = 1; }
+
+    if(exprCandidateCount >= 2 && target !== mode){
+      setMode(target, { auto:true });
+      exprCandidateCount = 0;
+    }
+  }
+
   async function trackDetectLoop(){
     if(!modelReady || video.readyState < 2){ setTimeout(trackDetectLoop, 250); return; }
     if(autoTrack && !manualAnchor && video.videoWidth){
       try{
-        const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }));
+        const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+        let query = faceapi.detectSingleFace(video, opts);
+        if(autoExpression) query = query.withFaceExpressions();
+        const det = await query;
         if(det){
+          const box = autoExpression ? det.detection.box : det.box;
           const vw = video.videoWidth, vh = video.videoHeight;
-          const fx = (det.box.x + det.box.width/2) / vw;
-          const fy = (det.box.y + det.box.height*0.16) / vh;
+          const fx = (box.x + box.width/2) / vw;
+          const fy = (box.y + box.height*0.16) / vh;
           anchor.x += (fx - anchor.x) * 0.35;
           anchor.y += (fy - anchor.y) * 0.35;
+          if(autoExpression && det.expressions) handleExpression(det.expressions);
         }
       }catch(e){ /* ignore single-frame failures */ }
     }
@@ -547,26 +737,66 @@
     updateTrackBadge();
   };
 
+  async function toggleExpression(){
+    if(!modelReady){
+      showToast('⏳ กำลังโหลดโมเดลตรวจจับสีหน้า…');
+      await initFaceApi();
+      if(!modelReady){ showToast('⚠️ โหลดโมเดลไม่สำเร็จ ลองใหม่เมื่อมีอินเทอร์เน็ต'); return; }
+    }
+    autoExpression = !autoExpression;
+    if(autoExpression){ manualAnchor = false; autoTrack = true; exprCandidate = null; exprCandidateCount = 0; }
+    document.getElementById('btnMood').classList.toggle('on', autoExpression);
+    updateTrackBadge();
+    showToast(autoExpression ? '🎭 โหมดจับสีหน้า: ยิ้ม = ทอง, บึ้ง/เศร้า = ดำ' : '🎭 ปิดโหมดจับสีหน้าแล้ว');
+  }
+
   // ---- controls ----
   document.getElementById('btnPos').onclick = () => setMode('positive');
   document.getElementById('btnNeg').onclick = () => setMode('negative');
   document.getElementById('btnIdle').onclick = () => setMode('idle');
+  document.getElementById('btnStyle').onclick = () => cycleStyle();
+  document.getElementById('btnMood').onclick = () => toggleExpression();
 
   window.addEventListener('keydown', (e) => {
-    if(e.key === '1' || e.key === 'ArrowUp') setMode('positive');
-    else if(e.key === '2' || e.key === 'ArrowDown') setMode('negative');
-    else if(e.key === '0' || e.key === 'Escape') setMode('idle');
+    if(e.target && ['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+    if(e.key === '1') setMode('positive');
+    else if(e.key === '2') setMode('negative');
+    else if(e.key === '0') setMode('idle');
+    else if(e.key === 's' || e.key === 'S') cycleStyle();
+    else if(e.key === 'c' || e.key === 'C') switchCamera();
+    else if(e.key === 'm' || e.key === 'M') toggleExpression();
   });
 
+  // ---- toast ----
+  let toastTimer;
+  function showToast(msg){
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>el.classList.remove('show'), 1800);
+  }
+
   // ---- camera bootstrap ----
+  let currentFacing = 'environment';
+  let currentStream = null;
+  let camSwitching = false;
+
+  async function openCamera(facing){
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: facing }, width:{ideal:960}, height:{ideal:1280} },
+      audio:false
+    });
+    if(currentStream){ currentStream.getTracks().forEach(t=>t.stop()); }
+    currentStream = stream;
+    video.srcObject = stream;
+    await video.play();
+    currentFacing = facing;
+  }
+
   async function startCamera(){
     try{
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width:{ideal:960}, height:{ideal:1280} },
-        audio:false
-      });
-      video.srcObject = stream;
-      await video.play();
+      await openCamera(currentFacing);
       startOverlay.style.display = 'none';
       resizeCanvas();
       loop();
@@ -577,6 +807,21 @@
   }
   startBtn.onclick = startCamera;
 
+  async function switchCamera(){
+    if(camSwitching || startOverlay.style.display !== 'none') return;
+    camSwitching = true;
+    const next = currentFacing === 'environment' ? 'user' : 'environment';
+    try{
+      await openCamera(next);
+      showToast(next === 'user' ? '🤳 สลับเป็นกล้องหน้าแล้ว' : '📷 สลับเป็นกล้องหลังแล้ว');
+    }catch(err){
+      showToast('⚠️ ไม่พบกล้องอีกด้าน');
+    }
+    camSwitching = false;
+  }
+  document.getElementById('btnCam').onclick = switchCamera;
+
+  setStyle('attract');
   window.addEventListener('load', resizeCanvas);
 })();
 </script>
