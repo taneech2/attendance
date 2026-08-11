@@ -187,18 +187,47 @@
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
+  .recBadge{
+    position:absolute; left:50%; top:78px;
+    transform:translateX(-50%);
+    display:none;
+    align-items:center; gap:6px;
+    background:rgba(120,10,10,.85);
+    border:1px solid rgba(255,120,120,.6);
+    color:#fff;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    padding:5px 12px;
+    border-radius:999px;
+    z-index:30;
+    pointer-events:none;
+  }
+  .recBadge .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:#ff5555;
+    animation:recPulse 1s infinite;
+  }
+  @keyframes recPulse{ 0%,100%{opacity:1;} 50%{opacity:.25;} }
+
   /* Discreet operator dock */
   .dock{
     position:fixed;
     right:10px;
     bottom:10px;
+    top:10px;
     display:flex;
     flex-direction:column;
+    justify-content:flex-end;
     gap:7px;
     z-index:50;
     opacity:.4;
     transition:opacity .25s ease;
+    overflow-y:auto;
+    scrollbar-width:none;
+    pointer-events:none;
   }
+  .dock::-webkit-scrollbar{ display:none; }
+  .dock > div{ pointer-events:auto; }
   .dock:hover, .dock:focus-within{ opacity:1; }
   .dock button{
     width:34px; height:34px;
@@ -276,6 +305,7 @@
     <div class="badge left" id="styleBadge">แบบ: ดูดเข้า</div>
     <div class="dragHint" id="dragHint">ลากจุดแสงไปวางที่หน้าผากได้</div>
     <div class="toast" id="toast"></div>
+    <div class="recBadge" id="recBadge"><span class="dot"></span><span id="recBadgeText">REC</span></div>
 
     <div class="status">
       <div class="mode" id="modeText" style="color:#cfd6e4;">กำลังรอการตรวจจับ…</div>
@@ -324,6 +354,14 @@
       <button id="btnMood" title="ตรวจจับสีหน้าอัตโนมัติ: ยิ้ม/บึ้ง (คีย์ลัด M)">🎭</button>
       <div class="lbl">mood</div>
     </div>
+    <div>
+      <button id="btnPhoto" title="ถ่ายภาพนิ่ง (คีย์ลัด P)">📸</button>
+      <div class="lbl">photo</div>
+    </div>
+    <div>
+      <button id="btnVideo" title="อัดวิดีโอสั้น ~8 วิ (คีย์ลัด V)">🎥</button>
+      <div class="lbl">video</div>
+    </div>
   </div>
 
   <div class="modal" id="helpModal">
@@ -339,6 +377,8 @@
         <li><code>S</code> หรือปุ่ม 🧲 → สลับ "ลักษณะกระแส" 3 แบบ: <b>ดูดเข้า</b> (ค่าเริ่มต้น — พลังงานพุ่งเข้าหาหน้าผากเหมือนแรงดึงดูด), <b>พุ่งออก</b> (พลังงานลอยออกจากหน้าผาก), <b>วนรอบ</b> (พลังงานเป็นวงแหวนหมุนรอบหน้าผาก)</li>
         <li><code>C</code> หรือปุ่ม 🔄 → สลับกล้องหน้า/หลัง (ค่าเริ่มต้นเปิดกล้องหลังก่อน)</li>
         <li><code>M</code> หรือปุ่ม 🎭 → <b>โหมดจับสีหน้าจริง</b> (ต่างจากปุ่ม 1/2 ที่เป็นปุ่มลับ) — ใช้ AI วิเคราะห์สีหน้าจากกล้องจริงๆ ถ้ายิ้ม (happy) จะขึ้นทองอัตโนมัติ ถ้าหน้าบึ้ง/เศร้า/โกรธ จะขึ้นดำอัตโนมัติ เหมาะกับเล่นสดต่อหน้าห้องเรียนให้เด็กยิ้มแล้วเห็นผลจริง — กดปุ่ม 1/2/0 เมื่อไรจะปิดโหมดนี้ทันที (กลับไปคุมมือ)</li>
+        <li><code>P</code> หรือปุ่ม 📸 → ถ่ายภาพนิ่ง (วิดีโอ+เอฟเฟกต์+ข้อความ รวมเป็นไฟล์เดียว) ดาวน์โหลดเป็น PNG ทันที</li>
+        <li><code>V</code> หรือปุ่ม 🎥 → เริ่ม/หยุดอัดวิดีโอสั้น (สูงสุด 8 วินาที ตัดจบอัตโนมัติ) ดาวน์โหลดเป็น .webm หลังหยุด</li>
       </ul>
       <p>ใช้เป็นสื่อสอนเรื่อง "คิดดี พูดดี ทำดี" — ให้ผู้เรียนลองพูดสิ่งดี ๆ แล้วผู้ควบคุมกดปุ่มทองให้สอดคล้อง เพื่อสร้างความประทับใจเชิงบวก ไม่ควรใช้หลอกลวงเพื่อผลประโยชน์อื่น</p>
       <div class="closeRow"><button id="closeHelp">ปิด</button></div>
@@ -765,6 +805,8 @@
     else if(e.key === 's' || e.key === 'S') cycleStyle();
     else if(e.key === 'c' || e.key === 'C') switchCamera();
     else if(e.key === 'm' || e.key === 'M') toggleExpression();
+    else if(e.key === 'p' || e.key === 'P') capturePhoto();
+    else if(e.key === 'v' || e.key === 'V') toggleRecording();
   });
 
   // ---- toast ----
@@ -836,6 +878,143 @@
     camSwitching = false;
   }
   document.getElementById('btnCam').onclick = switchCamera;
+
+  // ---- photo / video capture ----
+  // Renders what's on screen (cropped video + fx overlay + caption) onto an
+  // export canvas, since the visible video is CSS object-fit:cover — a plain
+  // drawImage(video,0,0) would ignore that crop and skew the result.
+  function drawVideoCover(destCtx, dw, dh){
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if(!vw || !vh) return;
+    const vAspect = vw/vh, dAspect = dw/dh;
+    let sx, sy, sw, sh;
+    if(vAspect > dAspect){ sh = vh; sw = vh*dAspect; sx = (vw-sw)/2; sy = 0; }
+    else { sw = vw; sh = vw/dAspect; sx = 0; sy = (vh-sh)/2; }
+    destCtx.drawImage(video, sx, sy, sw, sh, 0, 0, dw, dh);
+  }
+
+  function drawCaptionOverlay(destCtx, dw, dh){
+    const t = THEMES[mode];
+    destCtx.save();
+    const scrimH = dh * 0.16;
+    const grad = destCtx.createLinearGradient(0, dh-scrimH, 0, dh);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,.6)');
+    destCtx.fillStyle = grad;
+    destCtx.fillRect(0, dh-scrimH, dw, scrimH);
+    destCtx.textAlign = 'center';
+    destCtx.fillStyle = t.core;
+    destCtx.font = `700 ${Math.round(dw*0.034)}px 'Noto Serif Thai', sans-serif`;
+    destCtx.fillText(t.label, dw/2, dh - scrimH*0.5);
+    destCtx.font = `${Math.round(dw*0.022)}px 'Sarabun', sans-serif`;
+    destCtx.fillStyle = 'rgba(255,255,255,.75)';
+    destCtx.fillText(t.tagline, dw/2, dh - scrimH*0.18);
+    destCtx.restore();
+  }
+
+  function renderComposite(destCtx, dw, dh){
+    destCtx.clearRect(0, 0, dw, dh);
+    drawVideoCover(destCtx, dw, dh);
+    destCtx.drawImage(canvas, 0, 0, dw, dh);
+    drawCaptionOverlay(destCtx, dw, dh);
+  }
+
+  function shutterFlash(){
+    flashEl.style.background = 'rgba(255,255,255,.85)';
+    flashEl.style.transition = 'none';
+    flashEl.style.opacity = '1';
+    requestAnimationFrame(()=>{
+      flashEl.style.transition = 'opacity .35s ease';
+      flashEl.style.opacity = '0';
+    });
+  }
+
+  function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  }
+
+  function capturePhoto(){
+    if(startOverlay.style.display !== 'none') return;
+    const out = document.createElement('canvas');
+    out.width = cw; out.height = ch;
+    renderComposite(out.getContext('2d'), cw, ch);
+    shutterFlash();
+    out.toBlob(blob => {
+      if(!blob){ showToast('⚠️ ถ่ายภาพไม่สำเร็จ'); return; }
+      downloadBlob(blob, `aura-${mode}-${Math.round(performance.now())}.png`);
+      showToast('📸 บันทึกภาพแล้ว');
+    }, 'image/png');
+  }
+  document.getElementById('btnPhoto').onclick = capturePhoto;
+
+  const MAX_RECORD_MS = 8000;
+  let mediaRecorder = null, recordedChunks = [], recordCanvas = null, recordRAF = null, recordStartAt = 0, recordTimer = null;
+  const recBadge = document.getElementById('recBadge');
+  const recBadgeText = document.getElementById('recBadgeText');
+  const btnVideo = document.getElementById('btnVideo');
+
+  function stopRecordFrameLoop(){
+    if(recordRAF) cancelAnimationFrame(recordRAF);
+    recordRAF = null;
+  }
+
+  async function toggleRecording(){
+    if(mediaRecorder && mediaRecorder.state === 'recording'){ mediaRecorder.stop(); return; }
+    if(startOverlay.style.display !== 'none') return;
+    if(typeof MediaRecorder === 'undefined'){ showToast('⚠️ เบราว์เซอร์นี้อัดวิดีโอไม่ได้'); return; }
+
+    recordCanvas = document.createElement('canvas');
+    recordCanvas.width = cw; recordCanvas.height = ch;
+    const rctx = recordCanvas.getContext('2d');
+    (function drawFrame(){ renderComposite(rctx, cw, ch); recordRAF = requestAnimationFrame(drawFrame); })();
+
+    const stream = recordCanvas.captureStream(30);
+    const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']
+      .find(m => MediaRecorder.isTypeSupported(m)) || '';
+    try{
+      mediaRecorder = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream);
+    }catch(err){
+      showToast('⚠️ เริ่มอัดวิดีโอไม่สำเร็จ');
+      stopRecordFrameLoop();
+      return;
+    }
+    recordedChunks = [];
+    mediaRecorder.ondataavailable = e => { if(e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stopRecordFrameLoop();
+      clearInterval(recordTimer);
+      recBadge.style.display = 'none';
+      btnVideo.textContent = '🎥';
+      btnVideo.classList.remove('on');
+      const blob = new Blob(recordedChunks, { type: mime.split(';')[0] || 'video/webm' });
+      if(blob.size > 0){
+        downloadBlob(blob, `aura-clip-${Math.round(performance.now())}.webm`);
+        showToast('🎬 บันทึกวิดีโอแล้ว');
+      } else {
+        showToast('⚠️ ไม่ได้วิดีโอ ลองใหม่อีกครั้ง');
+      }
+    };
+
+    mediaRecorder.start();
+    recordStartAt = performance.now();
+    btnVideo.textContent = '⏹️';
+    btnVideo.classList.add('on');
+    recBadge.style.display = 'flex';
+    recBadgeText.textContent = 'REC 0.0s';
+    showToast('⏺️ เริ่มอัดวิดีโอ (สูงสุด 8 วิ)');
+    recordTimer = setInterval(() => {
+      const elapsed = (performance.now() - recordStartAt) / 1000;
+      recBadgeText.textContent = `REC ${elapsed.toFixed(1)}s`;
+      if(elapsed*1000 >= MAX_RECORD_MS && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    }, 100);
+  }
+  btnVideo.onclick = toggleRecording;
 
   setStyle('attract');
   window.addEventListener('load', resizeCanvas);
