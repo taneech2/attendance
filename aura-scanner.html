@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>เครื่องสแกนพลังงานความคิด — กระแสจิต</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+  :root{
+    --bg:#05070c;
+    --panel:#0d1420;
+    --edge:#1f2b3d;
+    --ink:#e8edf5;
+    --ink-soft:#8a97ad;
+    --gold:#ffd76a;
+    --gold-deep:#ff9f1a;
+    --dark:#7c5cff;
+    --dark-deep:#0c0616;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(circle at 50% 0%, #101826 0%, var(--bg) 60%);
+    color:var(--ink);
+    font-family:'Sarabun',sans-serif;
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:14px 12px 18px;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+  header{
+    width:100%;
+    max-width:560px;
+    text-align:center;
+    padding:6px 4px 14px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.16em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+  h1{
+    font-family:'Noto Serif Thai',serif;
+    font-weight:700;
+    font-size:22px;
+    margin:4px 0 4px;
+    background:linear-gradient(90deg,#ffd76a,#7c5cff);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .sub{font-size:12.5px;color:var(--ink-soft);}
+
+  .helpBtn{
+    position:absolute; top:10px; left:10px;
+    width:30px;height:30px;border-radius:50%;
+    border:1px solid var(--edge);
+    background:rgba(13,20,32,.8);
+    color:var(--ink-soft);
+    font-size:14px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    z-index:40;
+  }
+
+  .stage{
+    position:relative;
+    width:100%;
+    max-width:560px;
+    aspect-ratio:3/4;
+    background:#000;
+    border:1px solid var(--edge);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.02), 0 20px 60px rgba(0,0,0,.5);
+  }
+  video{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    filter:saturate(0.9) brightness(0.92);
+  }
+  canvas{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    pointer-events:auto;
+    touch-action:none;
+  }
+  .vignette{
+    position:absolute; inset:0;
+    pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.55) 100%);
+  }
+  .flash{
+    position:absolute; inset:0;
+    pointer-events:none;
+    opacity:0;
+    z-index:5;
+  }
+
+  .startOverlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px;
+    background:rgba(5,7,12,.92);
+    z-index:20;
+    text-align:center;
+    padding:20px;
+  }
+  .startOverlay p{color:var(--ink-soft); font-size:13px; max-width:320px; line-height:1.6; margin:0;}
+  .bigBtn{
+    font-family:'Sarabun',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:#05070c;
+    background:linear-gradient(90deg,#ffd76a,#ff9f1a);
+    border:none;
+    padding:13px 26px;
+    border-radius:999px;
+    cursor:pointer;
+  }
+  .status{
+    position:absolute; left:0; right:0; bottom:0;
+    padding:16px 16px 14px;
+    text-align:center;
+    z-index:10;
+    background:linear-gradient(0deg, rgba(0,0,0,.65), transparent);
+    pointer-events:none;
+  }
+  .status .mode{
+    font-family:'Noto Serif Thai',serif;
+    font-weight:700;
+    font-size:17px;
+    letter-spacing:.02em;
+    transition:color .5s ease, text-shadow .5s ease;
+  }
+  .status .tagline{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:3px;
+  }
+  .badge{
+    position:absolute; top:10px; right:10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    letter-spacing:.06em;
+    padding:4px 8px;
+    border-radius:999px;
+    background:rgba(13,20,32,.8);
+    border:1px solid var(--edge);
+    color:var(--ink-soft);
+    z-index:15;
+  }
+  .badge.on{color:#7bffa0; border-color:#1f4b31;}
+
+  .dragHint{
+    position:absolute; left:0; right:0; top:10px;
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    z-index:10;
+    pointer-events:none;
+  }
+
+  /* Discreet operator dock */
+  .dock{
+    position:fixed;
+    right:10px;
+    bottom:10px;
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    z-index:50;
+    opacity:.4;
+    transition:opacity .25s ease;
+  }
+  .dock:hover, .dock:focus-within{ opacity:1; }
+  .dock button{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:1px solid var(--edge);
+    background:rgba(13,20,32,.75);
+    color:var(--ink);
+    font-size:15px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    backdrop-filter:blur(4px);
+  }
+  .dock button:active{ transform:scale(.9); }
+  .dock .lbl{
+    font-family:'JetBrains Mono',monospace;
+    font-size:8px;
+    color:var(--ink-soft);
+    text-align:center;
+    letter-spacing:.05em;
+  }
+
+  footer{
+    margin-top:14px;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    text-align:center;
+    max-width:400px;
+  }
+
+  .modal{
+    position:fixed; inset:0;
+    background:rgba(5,7,12,.85);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  .modal.open{display:flex;}
+  .modalBox{
+    background:var(--panel);
+    border:1px solid var(--edge);
+    border-radius:14px;
+    padding:22px;
+    max-width:420px;
+    max-height:80vh;
+    overflow-y:auto;
+  }
+  .modalBox h2{font-family:'Noto Serif Thai',serif; font-size:17px; margin:0 0 10px;}
+  .modalBox p, .modalBox li{font-size:13px; line-height:1.7; color:var(--ink-soft);}
+  .modalBox code{background:#000; padding:1px 5px; border-radius:4px; color:var(--gold);}
+  .modalBox .closeRow{text-align:right; margin-top:14px;}
+  .modalBox button{
+    background:none; border:1px solid var(--edge); color:var(--ink);
+    padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px;
+  }
+</style>
+</head>
+<body>
+
+  <header style="position:relative;">
+    <button class="helpBtn" id="helpBtn" title="คู่มือ (สำหรับผู้ควบคุม)">?</button>
+    <div class="eyebrow">Chomsuk69 · Energy Vision</div>
+    <h1>เครื่องสแกนพลังงานความคิด</h1>
+    <div class="sub">ส่องกล้องไปที่ใบหน้า แล้วสังเกตกระแสพลังงานเหนือหน้าผาก</div>
+  </header>
+
+  <div class="stage" id="stage">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="fx"></canvas>
+    <div class="vignette"></div>
+    <div class="flash" id="flash"></div>
+
+    <div class="badge" id="trackBadge">AUTO-TRACK: OFF</div>
+    <div class="dragHint" id="dragHint">ลากจุดแสงไปวางที่หน้าผากได้</div>
+
+    <div class="status">
+      <div class="mode" id="modeText" style="color:#cfd6e4;">กำลังรอการตรวจจับ…</div>
+      <div class="tagline" id="taglineText">เปิดกล้องเพื่อเริ่มสแกน</div>
+    </div>
+
+    <div class="startOverlay" id="startOverlay">
+      <div class="eyebrow">พร้อมสแกน</div>
+      <p>อนุญาตให้ใช้กล้อง แล้วส่องไปที่ใบหน้าคน — เครื่องจะแสดง <b>กระแสสีทอง</b> เมื่อคิดดี คิดบวก คิดสร้างสรรค์ และ <b>กระแสสีดำ</b> เมื่อคิดลบ คิดร้าย</p>
+      <button class="bigBtn" id="startBtn">เปิดกล้องเริ่มสแกน</button>
+    </div>
+  </div>
+
+  <footer>
+    คิดดี พูดดี ทำดี → ดึงดูดโชคดีเข้าหาตัว 🙏<br>
+    บริษัทชมสุข69 — ใช้เพื่อการเรียนรู้เชิงบวกเท่านั้น
+  </footer>
+
+  <!-- Operator dock: kept small & low-opacity so it reads as a calibration widget, not an on/off switch -->
+  <div class="dock" id="dock">
+    <div>
+      <button id="btnPos" title="พลังบวก (คีย์ลัด 1)">☀️</button>
+      <div class="lbl">1</div>
+    </div>
+    <div>
+      <button id="btnNeg" title="พลังลบ (คีย์ลัด 2)">🌑</button>
+      <div class="lbl">2</div>
+    </div>
+    <div>
+      <button id="btnIdle" title="รีเซ็ต (คีย์ลัด 0)">◯</button>
+      <div class="lbl">0</div>
+    </div>
+    <div>
+      <button id="btnAuto" title="สลับติดตามใบหน้าอัตโนมัติ">🎯</button>
+      <div class="lbl">trk</div>
+    </div>
+  </div>
+
+  <div class="modal" id="helpModal">
+    <div class="modalBox">
+      <h2>คู่มือผู้ควบคุม (กุศโลบายสอนศีลธรรม)</h2>
+      <p>แอปนี้ <b>ไม่ได้อ่านความคิดจริง</b> — สีของกระแสพลังงานถูกควบคุมโดยผู้ใช้ ผ่านปุ่มเล็ก ๆ มุมขวาล่างของจอ (หรือคีย์ลัด) ซึ่งจงใจทำให้ไม่เด่นชัด เพื่อให้ผู้ถูกสแกนรู้สึกว่าเครื่องกำลัง "อ่าน" พลังงานของตัวเองจริง ๆ</p>
+      <ul>
+        <li><code>1</code> หรือปุ่ม ☀️ → กระแสทอง (คิดดี/บวก)</li>
+        <li><code>2</code> หรือปุ่ม 🌑 → กระแสดำ (คิดร้าย/ลบ)</li>
+        <li><code>0</code> หรือปุ่ม ◯ → กลับสู่สถานะรอ</li>
+        <li>🎯 → เปิด/ปิดระบบติดตามใบหน้าอัตโนมัติ (ต้องมีอินเทอร์เน็ตให้โหลดโมเดลครั้งแรก)</li>
+        <li>ลากบนวิดีโอ → ย้ายจุดวางกระแสด้วยมือ (ใช้เมื่อไม่มีอินเทอร์เน็ต/ตรวจจับใบหน้าไม่เจอ)</li>
+      </ul>
+      <p>ใช้เป็นสื่อสอนเรื่อง "คิดดี พูดดี ทำดี" — ให้ผู้เรียนลองพูดสิ่งดี ๆ แล้วผู้ควบคุมกดปุ่มทองให้สอดคล้อง เพื่อสร้างความประทับใจเชิงบวก ไม่ควรใช้หลอกลวงเพื่อผลประโยชน์อื่น</p>
+      <div class="closeRow"><button id="closeHelp">ปิด</button></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('fx');
+  const ctx = canvas.getContext('2d');
+  const stage = document.getElementById('stage');
+  const modeText = document.getElementById('modeText');
+  const taglineText = document.getElementById('taglineText');
+  const startOverlay = document.getElementById('startOverlay');
+  const startBtn = document.getElementById('startBtn');
+  const flashEl = document.getElementById('flash');
+  const trackBadge = document.getElementById('trackBadge');
+  const dragHint = document.getElementById('dragHint');
+  const helpBtn = document.getElementById('helpBtn');
+  const helpModal = document.getElementById('helpModal');
+  const closeHelp = document.getElementById('closeHelp');
+
+  helpBtn.onclick = () => helpModal.classList.add('open');
+  closeHelp.onclick = () => helpModal.classList.remove('open');
+  helpModal.onclick = (e) => { if(e.target === helpModal) helpModal.classList.remove('open'); };
+
+  const THEMES = {
+    idle:    { label:'กำลังรอการตรวจจับ…', tagline:'สังเกตกระแสพลังงานเหนือหน้าผาก', core:'#cfd6e4' },
+    positive:{ label:'✨ กระแสพลังบวก — สีทอง', tagline:'คิดดี พูดดี ทำดี → ดึงดูดโชคดี', core:'#ffd76a' },
+    negative:{ label:'🌑 กระแสพลังลบ — สีดำ', tagline:'คิดร้าย พูดร้าย ทำร้าย → ผลักไสโชคดี', core:'#b79bff' }
+  };
+
+  let mode = 'idle';
+  let anchor = { x:0.5, y:0.30 };   // fraction of canvas
+  let manualAnchor = false;
+  let autoTrack = false;
+  let modelReady = false;
+  let particles = [];
+  let cw = 0, ch = 0;
+  let dragging = false;
+
+  function setMode(next){
+    mode = next;
+    const t = THEMES[mode];
+    modeText.textContent = t.label;
+    modeText.style.color = t.core;
+    modeText.style.textShadow = mode === 'idle' ? 'none' : `0 0 16px ${t.core}`;
+    taglineText.textContent = t.tagline;
+    if(mode !== 'idle'){
+      flashEl.style.background = mode === 'positive'
+        ? 'radial-gradient(circle at 50% 30%, rgba(255,215,106,.35), transparent 60%)'
+        : 'radial-gradient(circle at 50% 30%, rgba(124,92,255,.30), transparent 60%)';
+      flashEl.style.transition = 'none';
+      flashEl.style.opacity = '1';
+      requestAnimationFrame(()=>{
+        flashEl.style.transition = 'opacity .6s ease';
+        flashEl.style.opacity = '0';
+      });
+    }
+  }
+
+  function resizeCanvas(){
+    const rect = stage.getBoundingClientRect();
+    cw = canvas.width = Math.round(rect.width * devicePixelRatio);
+    ch = canvas.height = Math.round(rect.height * devicePixelRatio);
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  // ---- particle system ----
+  function spawnParticle(){
+    const ax = anchor.x * cw, ay = anchor.y * ch;
+    const spread = cw * 0.05;
+    if(mode === 'positive'){
+      particles.push({
+        x: ax + (Math.random()-0.5)*spread,
+        y: ay + (Math.random()-0.5)*spread*0.6,
+        vx: (Math.random()-0.5)*0.25,
+        vy: -0.6 - Math.random()*0.9,
+        life: 1, decay: 0.006 + Math.random()*0.008,
+        size: (2 + Math.random()*3) * devicePixelRatio,
+        hue: 'gold'
+      });
+    } else if(mode === 'negative'){
+      particles.push({
+        x: ax + (Math.random()-0.5)*spread*1.3,
+        y: ay + (Math.random()-0.5)*spread*0.6,
+        vx: (Math.random()-0.5)*0.5,
+        vy: 0.3 + Math.random()*0.5,
+        life: 1, decay: 0.005 + Math.random()*0.006,
+        size: (2.5 + Math.random()*4) * devicePixelRatio,
+        hue: 'dark'
+      });
+    } else {
+      if(Math.random() < 0.4){
+        particles.push({
+          x: ax + (Math.random()-0.5)*spread*0.7,
+          y: ay + (Math.random()-0.5)*spread*0.4,
+          vx: (Math.random()-0.5)*0.15,
+          vy: -0.2 - Math.random()*0.2,
+          life: 1, decay: 0.01,
+          size: (1.5 + Math.random()*2) * devicePixelRatio,
+          hue: 'neutral'
+        });
+      }
+    }
+  }
+
+  function drawGlow(){
+    const ax = anchor.x * cw, ay = anchor.y * ch;
+    const t = performance.now() / 1000;
+    const pulse = 1 + Math.sin(t * (mode==='negative' ? 2.4 : 1.6)) * 0.12;
+    let r0, r1, colorStops;
+    const baseR = cw * 0.09;
+    if(mode === 'positive'){
+      r1 = baseR * 2.4 * pulse;
+      colorStops = [[0,'rgba(255,247,214,0.9)'],[0.25,'rgba(255,215,106,0.55)'],[0.6,'rgba(255,159,26,0.18)'],[1,'rgba(255,159,26,0)']];
+    } else if(mode === 'negative'){
+      r1 = baseR * 2.2 * pulse;
+      colorStops = [[0,'rgba(180,150,255,0.55)'],[0.3,'rgba(90,50,150,0.4)'],[0.65,'rgba(20,10,35,0.35)'],[1,'rgba(10,5,20,0)']];
+    } else {
+      r1 = baseR * 1.3 * pulse;
+      colorStops = [[0,'rgba(220,225,240,0.35)'],[0.5,'rgba(180,190,210,0.12)'],[1,'rgba(180,190,210,0)']];
+    }
+    const grad = ctx.createRadialGradient(ax, ay, 0, ax, ay, r1);
+    colorStops.forEach(([off,col])=>grad.addColorStop(off,col));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(ax, ay, r1, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawParticles(){
+    for(let i = particles.length - 1; i >= 0; i--){
+      const p = particles[i];
+      p.x += p.vx * devicePixelRatio;
+      p.y += p.vy * devicePixelRatio;
+      p.life -= p.decay;
+      if(p.life <= 0){ particles.splice(i,1); continue; }
+      let color;
+      if(p.hue === 'gold') color = `rgba(255,${210+Math.floor(Math.random()*30)},${90+Math.floor(Math.random()*60)},${p.life})`;
+      else if(p.hue === 'dark') color = `rgba(${20+Math.floor(Math.random()*40)},${10+Math.floor(Math.random()*20)},${30+Math.floor(Math.random()*40)},${p.life*0.9})`;
+      else color = `rgba(210,215,230,${p.life*0.5})`;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawAnchorMarker(){
+    if(!manualAnchor && autoTrack) return;
+    const ax = anchor.x * cw, ay = anchor.y * ch;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1.5 * devicePixelRatio;
+    ctx.beginPath();
+    ctx.arc(ax, ay, 10*devicePixelRatio, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function loop(){
+    ctx.clearRect(0,0,cw,ch);
+    spawnParticle();
+    if(mode !== 'idle'){
+      for(let k=0;k<2;k++) spawnParticle();
+    }
+    drawGlow();
+    drawParticles();
+    drawAnchorMarker();
+    requestAnimationFrame(loop);
+  }
+
+  // ---- drag to reposition anchor ----
+  function posFromEvent(e){
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) / rect.width,
+      y: (clientY - rect.top) / rect.height
+    };
+  }
+  function startDrag(e){ dragging = true; manualAnchor = true; autoTrack = false; updateTrackBadge(); moveAnchor(e); dragHint.style.display='none'; }
+  function moveAnchor(e){ if(!dragging) return; const p = posFromEvent(e); anchor = { x: Math.min(1,Math.max(0,p.x)), y: Math.min(1,Math.max(0,p.y)) }; }
+  function endDrag(){ dragging = false; }
+  canvas.addEventListener('mousedown', startDrag);
+  canvas.addEventListener('mousemove', moveAnchor);
+  window.addEventListener('mouseup', endDrag);
+  canvas.addEventListener('touchstart', startDrag, {passive:true});
+  canvas.addEventListener('touchmove', moveAnchor, {passive:true});
+  canvas.addEventListener('touchend', endDrag);
+
+  function updateTrackBadge(){
+    trackBadge.textContent = autoTrack ? 'AUTO-TRACK: ON' : 'AUTO-TRACK: OFF';
+    trackBadge.classList.toggle('on', autoTrack);
+  }
+
+  // ---- face-api auto tracking (best-effort, graceful fallback) ----
+  const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models@master/tiny_face_detector';
+  async function initFaceApi(){
+    try{
+      await Promise.race([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), 6000))
+      ]);
+      modelReady = true;
+      autoTrack = true;
+      manualAnchor = false;
+      updateTrackBadge();
+      trackDetectLoop();
+    }catch(err){
+      modelReady = false;
+      updateTrackBadge();
+      console.warn('face-api model unavailable, falling back to manual drag anchor:', err.message);
+    }
+  }
+
+  async function trackDetectLoop(){
+    if(!modelReady || video.readyState < 2){ setTimeout(trackDetectLoop, 250); return; }
+    if(autoTrack && !manualAnchor && video.videoWidth){
+      try{
+        const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }));
+        if(det){
+          const vw = video.videoWidth, vh = video.videoHeight;
+          const fx = (det.box.x + det.box.width/2) / vw;
+          const fy = (det.box.y + det.box.height*0.16) / vh;
+          anchor.x += (fx - anchor.x) * 0.35;
+          anchor.y += (fy - anchor.y) * 0.35;
+        }
+      }catch(e){ /* ignore single-frame failures */ }
+    }
+    setTimeout(trackDetectLoop, 180);
+  }
+
+  document.getElementById('btnAuto').onclick = () => {
+    if(!modelReady){ initFaceApi(); return; }
+    autoTrack = !autoTrack;
+    if(autoTrack) manualAnchor = false;
+    updateTrackBadge();
+  };
+
+  // ---- controls ----
+  document.getElementById('btnPos').onclick = () => setMode('positive');
+  document.getElementById('btnNeg').onclick = () => setMode('negative');
+  document.getElementById('btnIdle').onclick = () => setMode('idle');
+
+  window.addEventListener('keydown', (e) => {
+    if(e.key === '1' || e.key === 'ArrowUp') setMode('positive');
+    else if(e.key === '2' || e.key === 'ArrowDown') setMode('negative');
+    else if(e.key === '0' || e.key === 'Escape') setMode('idle');
+  });
+
+  // ---- camera bootstrap ----
+  async function startCamera(){
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width:{ideal:960}, height:{ideal:1280} },
+        audio:false
+      });
+      video.srcObject = stream;
+      await video.play();
+      startOverlay.style.display = 'none';
+      resizeCanvas();
+      loop();
+      initFaceApi();
+    }catch(err){
+      startOverlay.querySelector('p').textContent = 'ไม่สามารถเปิดกล้องได้: ' + err.message + ' — ลองอนุญาตสิทธิ์กล้อง หรือเปิดผ่าน https:// / localhost';
+    }
+  }
+  startBtn.onclick = startCamera;
+
+  window.addEventListener('load', resizeCanvas);
+})();
+</script>
+</body>
+</html>
