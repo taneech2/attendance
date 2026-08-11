@@ -783,11 +783,20 @@
   let camSwitching = false;
 
   async function openCamera(facing){
+    // Release the current camera BEFORE requesting the next one — most phones'
+    // camera hardware only allows a single active stream at a time, so requesting
+    // the new stream first (while the old one is still held) fails on-device even
+    // though it works fine on desktop.
+    if(currentStream){
+      currentStream.getTracks().forEach(t => t.stop());
+      currentStream = null;
+      video.srcObject = null;
+      await new Promise(r => setTimeout(r, 250));
+    }
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: facing }, width:{ideal:960}, height:{ideal:1280} },
       audio:false
     });
-    if(currentStream){ currentStream.getTracks().forEach(t=>t.stop()); }
     currentStream = stream;
     video.srcObject = stream;
     await video.play();
@@ -810,12 +819,19 @@
   async function switchCamera(){
     if(camSwitching || startOverlay.style.display !== 'none') return;
     camSwitching = true;
+    const prev = currentFacing;
     const next = currentFacing === 'environment' ? 'user' : 'environment';
     try{
       await openCamera(next);
       showToast(next === 'user' ? '🤳 สลับเป็นกล้องหน้าแล้ว' : '📷 สลับเป็นกล้องหลังแล้ว');
     }catch(err){
-      showToast('⚠️ ไม่พบกล้องอีกด้าน');
+      console.warn('switchCamera failed:', err.name, err.message);
+      try{
+        await openCamera(prev);
+        showToast(`⚠️ ไม่พบกล้อง${next==='user'?'หน้า':'หลัง'} (${err.name||'error'}) — กลับไปใช้ตัวเดิม`);
+      }catch(err2){
+        showToast('⚠️ เปิดกล้องไม่สำเร็จ ลองรีเฟรชหน้า');
+      }
     }
     camSwitching = false;
   }
