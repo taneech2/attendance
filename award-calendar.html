@@ -135,6 +135,13 @@
   }
   .stat b{color:var(--ink);font-weight:700;}
 
+  .updated{
+    font-size:.8rem;
+    color:var(--ink-faint);
+    margin:.85rem 0 0;
+    font-variant-numeric:tabular-nums;
+  }
+
   .filters{
     display:flex;
     flex-wrap:wrap;
@@ -325,6 +332,7 @@
       <span class="stat"><b>8</b> หมวดหมู่</span>
       <span class="stat">รวมรางวัลที่ระบุตัวเลขชัด ≈ <b>2,850,000</b> บาท/ปี</span>
     </div>
+    <p class="updated" id="updated">กำลังตรวจสอบวันที่อัปเดตล่าสุด…</p>
   </header>
 
   <nav class="filters" id="filters" aria-label="กรองตามหมวดหมู่">
@@ -679,4 +687,21 @@
   });
 
   applyFilter('all');
+
+  (function(){
+    var el = document.getElementById('updated');
+    var THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    fetch('https://api.github.com/repos/taneech2/attendance/commits?path=award-calendar.html&per_page=1')
+      .then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function(data){
+        if (!data || !data[0]) throw new Error('no commit data');
+        var iso = data[0].commit.author.date;
+        var d = new Date(iso);
+        var thaiYear = d.getFullYear() + 543;
+        el.textContent = 'อัปเดตข้อมูลล่าสุด: ' + d.getDate() + ' ' + THAI_MONTHS[d.getMonth()] + ' ' + thaiYear + ' (ตรวจสอบและเพิ่มเวทีใหม่โดยระบบอัตโนมัติทุกวัน)';
+      })
+      .catch(function(){
+        el.textContent = '';
+      });
+  })();
 </script>
