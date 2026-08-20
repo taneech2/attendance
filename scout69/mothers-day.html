@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>โครงการวันแม่แห่งชาติลูกเสือวิสามัญ — บันทึกภาพกิจกรรมวันแม่</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<style>
+  :root{
+    --paper:#FBF0E8;
+    --paper-dark:#F4E1D4;
+    --ink:#3A1F2B;
+    --ink-soft:#6E4A55;
+    --stamp:#C0392B;
+    --grid:#E8CFC0;
+    --brass:#B5754F;
+    --ok:#2F5D3A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--paper);
+    color:var(--ink);
+    font-family:'Sarabun',sans-serif;
+    min-height:100vh;
+    padding:24px 14px 60px;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+  .sheet{
+    max-width:560px;
+    margin:0 auto;
+    background:var(--paper);
+    border:1px solid var(--brass);
+    box-shadow:0 1px 0 var(--brass), 0 0 0 5px rgba(181,117,79,0.08);
+    position:relative;
+  }
+  .sheet::before{
+    content:"";
+    position:absolute; inset:6px;
+    border:1px solid rgba(181,117,79,0.35);
+    pointer-events:none;
+  }
+  .head{
+    text-align:center;
+    padding:22px 20px 16px;
+    border-bottom:2px solid var(--brass);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+  .title{
+    font-family:'Noto Serif Thai',serif;
+    font-weight:700;
+    font-size:26px;
+    margin:6px 0 2px;
+  }
+  .subtitle{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .body{padding:20px;}
+
+  label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    letter-spacing:.02em;
+  }
+  .field{margin-bottom:14px;}
+  input[type=text]{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid var(--brass);
+    background:#fffaf6;
+    font-family:'Sarabun',sans-serif;
+    font-size:15px;
+    color:var(--ink);
+    border-radius:2px;
+  }
+  input[type=text]:focus{outline:2px solid var(--stamp); outline-offset:1px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .map-overview{
+    height:280px;
+    width:100%;
+    border:1px solid var(--brass);
+    border-radius:2px;
+    background:#f0e2d6;
+  }
+
+  .inapp-warning{
+    border:1px solid var(--stamp);
+    background:rgba(192,57,43,0.06);
+    padding:12px 14px;
+    margin-bottom:14px;
+    border-radius:2px;
+  }
+  .inapp-warning-title{
+    font-size:13px;
+    font-weight:700;
+    color:var(--stamp);
+    margin-bottom:4px;
+  }
+  .inapp-warning-text{
+    font-size:12.5px;
+    color:var(--ink);
+    line-height:1.5;
+  }
+
+  .reqbox{
+    border:1px solid var(--stamp);
+    background:rgba(192,57,43,0.045);
+    padding:12px 14px 6px;
+    margin-bottom:16px;
+    border-radius:2px;
+  }
+  .reqbox-title{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--stamp);
+    margin-bottom:8px;
+    letter-spacing:.01em;
+  }
+  .reqitem{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    font-size:13px;
+    font-weight:400;
+    color:var(--ink);
+    margin-bottom:9px;
+    cursor:pointer;
+  }
+  .reqitem input{
+    margin-top:2px;
+    flex-shrink:0;
+    accent-color:var(--stamp);
+    width:16px; height:16px;
+  }
+  .reqitem b{font-weight:700;}
+
+  .photo-slot{margin-bottom:22px;}
+  .photo-slot-label{
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:8px;
+  }
+  .photo-slot-label small{
+    display:block;
+    font-size:11.5px;
+    font-weight:400;
+    color:var(--ink-soft);
+    margin-top:1px;
+  }
+
+  .photo-box{
+    border:2px dashed var(--brass);
+    background:#fffaf6;
+    aspect-ratio:4/3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:12px;
+    border-radius:2px;
+  }
+  .photo-box img, .photo-box video{
+    width:100%; height:100%; object-fit:cover; display:block;
+  }
+  .photo-placeholder{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+    padding:20px;
+  }
+  .photo-placeholder svg{margin-bottom:8px; opacity:.5;}
+
+  .btnrow{display:flex; gap:10px; flex-wrap:wrap;}
+  button{
+    font-family:'Sarabun',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    border-radius:2px;
+    border:1px solid var(--ink);
+    padding:11px 16px;
+    cursor:pointer;
+    background:var(--paper);
+    color:var(--ink);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button:active{transform:translateY(1px);}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+  button:disabled:active{transform:none;}
+  button:focus-visible{outline:2px solid var(--stamp); outline-offset:2px;}
+  button.primary{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+    flex:1;
+  }
+  button.primary:disabled{opacity:.45; cursor:not-allowed;}
+  button.stamp-btn{
+    background:var(--stamp);
+    color:#fff;
+    border-color:var(--stamp);
+    flex:1;
+  }
+  button.stamp-btn:disabled{opacity:.45; cursor:not-allowed;}
+  button.ghost{background:transparent;}
+
+  .gpsbox{
+    margin-top:14px;
+    border:1px solid var(--brass);
+    background:#fffaf6;
+    padding:12px 14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height:20px;
+    border-radius:2px;
+  }
+  .gpsdot{
+    width:9px; height:9px; border-radius:50%;
+    background:#cbb09e; flex-shrink:0;
+  }
+  .gpsdot.live{background:var(--ok); box-shadow:0 0 0 3px rgba(47,93,58,.15);}
+  .gpsdot.err{background:var(--stamp);}
+
+  .status{
+    margin-top:12px;
+    font-size:13px;
+    color:var(--ok);
+    display:none;
+  }
+  .status.show{display:block;}
+
+  .divider{
+    border:none;
+    border-top:1px dashed var(--brass);
+    margin:22px 0;
+  }
+
+  .teacher-toggle{
+    text-align:center;
+    padding:14px 20px 22px;
+  }
+  .teacher-toggle button{
+    font-size:12px;
+    padding:7px 12px;
+    border-color:var(--ink-soft);
+    color:var(--ink-soft);
+  }
+
+  .gallery{padding:0 20px 24px; display:none;}
+  .gallery.show{display:block;}
+  .gallery h2{
+    font-family:'Noto Serif Thai',serif;
+    font-size:17px;
+    border-bottom:1px solid var(--brass);
+    padding-bottom:8px;
+  }
+  .entry{
+    display:flex;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--grid);
+  }
+  .entry .thumbs{display:flex; gap:5px; flex-shrink:0;}
+  .entry .thumbs img{
+    width:56px; height:56px; object-fit:cover; border:1px solid var(--brass); border-radius:2px;
+  }
+  .entry .meta{font-size:12.5px; color:var(--ink-soft); line-height:1.5;}
+  .entry .meta b{color:var(--ink); font-size:13.5px;}
+  .entry a{color:var(--stamp); text-decoration:none; font-weight:600;}
+  .empty{font-size:13px; color:var(--ink-soft); padding:14px 0;}
+
+  canvas{display:none;}
+
+  @keyframes thump{
+    0%{transform:scale(2) rotate(-8deg); opacity:0;}
+    55%{transform:scale(0.94) rotate(-8deg); opacity:1;}
+    75%{transform:scale(1.05) rotate(-8deg);}
+    100%{transform:scale(1) rotate(-8deg); opacity:1;}
+  }
+  .seal{
+    animation:thump .5s cubic-bezier(.2,.9,.3,1.2);
+  }
+
+  .mandatory-badge{
+    margin:12px 20px 0;
+    background:var(--stamp);
+    color:#fff;
+    border-radius:2px;
+    padding:10px 14px;
+    text-align:center;
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:.01em;
+    line-height:1.5;
+  }
+  .mandatory-badge span{
+    display:block;
+    font-size:11px;
+    font-weight:400;
+    opacity:.92;
+    margin-top:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="head">
+    <div class="eyebrow">โครงการวันแม่แห่งชาติ ลูกเสือวิสามัญ</div>
+    <div class="title">บันทึกภาพกิจกรรมวันแม่</div>
+    <div class="subtitle">ถ่ายภาพสดจากกล้อง — ระบบจะประทับพิกัด GPS และเวลาให้อัตโนมัติ</div>
+  </div>
+
+  <div class="mandatory-badge">⚠️ กิจกรรมบังคับ — ลูกเสือวิสามัญทุกคนต้องดำเนินการ
+    <span>หากไม่ส่งภาพตามกำหนด จะถูกตัดสิน "มผ." (ไม่ผ่าน) ทันที</span>
+  </div>
+
+  <div class="body">
+    <div class="inapp-warning" id="inAppWarning" style="display:none;">
+      <div class="inapp-warning-title">⚠️ เปิดผ่านแอปแชท กล้องอาจใช้งานไม่ได้</div>
+      <div class="inapp-warning-text">หน้านี้เปิดอยู่ในเบราว์เซอร์ของแอปแชท (เช่น LINE) ซึ่งมักขอสิทธิ์กล้องไม่ได้ กดปุ่มด้านล่างเพื่อเปิดใน Chrome/Safari โดยตรง</div>
+      <button class="ghost" id="openExternalBtn" type="button" style="margin-top:8px; width:100%; border-color:var(--stamp); color:var(--stamp);">เปิดในเบราว์เซอร์ปกติ</button>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="sname">ชื่อ-สกุลนักเรียน</label>
+        <input type="text" id="sname" placeholder="เช่น เด็กชายสมชาย ใจดี">
+      </div>
+      <div class="field">
+        <label for="sclass">ชั้น/แผนกวิชา</label>
+        <input type="text" id="sclass" placeholder="เช่น ปวช.1 ช่างเชื่อม">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="sphone">เบอร์โทรนักเรียน</label>
+        <input type="tel" id="sphone" placeholder="เช่น 08X-XXX-XXXX" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="pphone">เบอร์โทรผู้ปกครอง</label>
+        <input type="tel" id="pphone" placeholder="เช่น 08X-XXX-XXXX" inputmode="numeric">
+      </div>
+    </div>
+
+    <label>ภาพถ่ายกิจกรรมวันแม่ (ต้องถ่ายภาพสดจากกล้อง 2 ภาพ — ภาพใกล้ และ ภาพไกล)</label>
+
+    <div class="reqbox" id="reqBox">
+      <div class="reqbox-title">ข้อกำหนดของภาพถ่าย — ต้องปรากฏครบทุกข้อในภาพรวม (ใกล้ + ไกล)</div>
+      <label class="reqitem"><input type="checkbox" class="reqcheck"> นักเรียนสวม<b>ผ้าพันคอลูกเสือ</b>และ<b>วอกเกิล (Woggle)</b> เรียบร้อยก่อนถ่าย</label>
+      <label class="reqitem"><input type="checkbox" class="reqcheck"> เห็น<b>หน้านักเรียนและแม่/ผู้ปกครอง</b>ชัดเจนทั้งคู่</label>
+      <label class="reqitem"><input type="checkbox" class="reqcheck"> มี<b>กิจกรรมแสดงความกตัญญู</b> เช่น การกราบ/ไหว้ หรือมอบดอกมะลิ/พวงมาลัยแด่แม่</label>
+    </div>
+
+    <div class="photo-slot" data-slot="near">
+      <div class="photo-slot-label">📷 ภาพที่ 1 — ภาพใกล้ (Close-up)<small>ถ่ายใกล้ ให้เห็นหน้าและกิจกรรมความกตัญญูชัดเจน</small></div>
+      <div class="photo-box" id="photoBox-near">
+        <div class="photo-placeholder" id="placeholder-near">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <div>ยังไม่มีภาพ — กด "เปิดกล้องถ่ายภาพสด" ด้านล่าง</div>
+        </div>
+        <video id="video-near" autoplay playsinline style="display:none;"></video>
+        <img id="preview-near" style="display:none;">
+      </div>
+      <div class="btnrow" id="captureRow-near">
+        <button class="primary" type="button" style="width:100%;" onclick="openCam('near')">📷 เปิดกล้องถ่ายภาพสด</button>
+      </div>
+      <div class="btnrow" id="uploadRow-near" style="margin-top:8px;">
+        <button class="ghost" type="button" style="width:100%;" onclick="triggerUpload('near')">🖼️ อัปโหลดรูปจากเครื่อง</button>
+      </div>
+      <input type="file" id="fileInput-near" accept="image/*" style="display:none;">
+      <div class="btnrow" id="shootRow-near" style="display:none; margin-top:10px;">
+        <button class="stamp-btn" type="button" onclick="shootPhoto('near')">ถ่ายภาพ</button>
+        <button class="ghost" type="button" onclick="cancelCam('near')">ยกเลิก</button>
+      </div>
+      <div class="btnrow" id="retakeRow-near" style="display:none; margin-top:10px;">
+        <button class="ghost" type="button" onclick="retakePhoto('near')">ถ่ายใหม่</button>
+      </div>
+    </div>
+
+    <div class="photo-slot" data-slot="far">
+      <div class="photo-slot-label">📷 ภาพที่ 2 — ภาพไกล (มุมกว้าง)<small>ถอยมุมกล้อง ให้เห็นบรรยากาศโดยรวมของสถานที่</small></div>
+      <div class="photo-box" id="photoBox-far">
+        <div class="photo-placeholder" id="placeholder-far">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <div>ยังไม่มีภาพ — กด "เปิดกล้องถ่ายภาพสด" ด้านล่าง</div>
+        </div>
+        <video id="video-far" autoplay playsinline style="display:none;"></video>
+        <img id="preview-far" style="display:none;">
+      </div>
+      <div class="btnrow" id="captureRow-far">
+        <button class="primary" type="button" style="width:100%;" onclick="openCam('far')">📷 เปิดกล้องถ่ายภาพสด</button>
+      </div>
+      <div class="btnrow" id="uploadRow-far" style="margin-top:8px;">
+        <button class="ghost" type="button" style="width:100%;" onclick="triggerUpload('far')">🖼️ อัปโหลดรูปจากเครื่อง</button>
+      </div>
+      <input type="file" id="fileInput-far" accept="image/*" style="display:none;">
+      <div class="btnrow" id="shootRow-far" style="display:none; margin-top:10px;">
+        <button class="stamp-btn" type="button" onclick="shootPhoto('far')">ถ่ายภาพ</button>
+        <button class="ghost" type="button" onclick="cancelCam('far')">ยกเลิก</button>
+      </div>
+      <div class="btnrow" id="retakeRow-far" style="display:none; margin-top:10px;">
+        <button class="ghost" type="button" onclick="retakePhoto('far')">ถ่ายใหม่</button>
+      </div>
+    </div>
+
+    <div id="reqHint" style="font-size:12px; color:var(--stamp); margin-top:-10px; margin-bottom:14px; display:none;">โปรดติ๊กครบทุกข้อในข้อกำหนดด้านบนก่อนถ่ายภาพ</div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="gpsbox">
+      <span class="gpsdot" id="gpsDot"></span>
+      <span id="gpsText">ยังไม่ได้ขอตำแหน่ง GPS</span>
+    </div>
+
+    <div class="field" style="margin-top:16px;">
+      <button class="primary" id="submitBtn" style="width:100%;" disabled>ยืนยันและบันทึก</button>
+    </div>
+    <div class="status" id="statusMsg"></div>
+  </div>
+
+  <div class="teacher-toggle">
+    <button id="teacherBtn" type="button">โหมดครู — ดูรายการที่ส่งทั้งหมด</button>
+    <div id="pinRow" style="display:none; margin-top:10px; justify-content:center; gap:8px; align-items:center;">
+      <input type="password" id="pinInput" inputmode="numeric" maxlength="6" placeholder="รหัสผ่านครู" style="width:130px; padding:9px 10px; text-align:center; letter-spacing:.15em;">
+      <button id="pinSubmit" type="button" style="font-size:12.5px; padding:9px 12px;">เข้าสู่ระบบ</button>
+    </div>
+    <div id="pinError" style="display:none; color:#C0392B; font-size:12px; margin-top:6px;">รหัสผ่านไม่ถูกต้อง</div>
+  </div>
+
+  <div class="gallery" id="gallery">
+    <hr class="divider" style="margin-top:0;">
+
+    <div id="mapOverviewWrap" style="display:none; margin-bottom:16px;">
+      <h2 style="font-size:15px;">🗺️ ภาพรวมพิกัดกิจกรรมวันแม่</h2>
+      <div id="mapOverview" class="map-overview"></div>
+      <div style="font-size:11.5px; color:var(--ink-soft); margin-top:6px;">สีแดงเข้ม = จุดที่นักเรียนส่งภาพอยู่ใกล้กันหนาแน่น</div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h2 style="border-bottom:none; padding-bottom:0;">รายการภาพที่นักเรียนส่ง (จากทุกอุปกรณ์)</h2>
+      <div style="display:flex; gap:6px;">
+        <button id="refreshGalleryBtn" type="button" style="font-size:12px; padding:8px 10px;">🔄 ดึงข้อมูลใหม่</button>
+        <button id="downloadZipBtn" type="button" style="font-size:12px; padding:8px 10px;">ดาวน์โหลดทั้งหมดเป็น ZIP</button>
+      </div>
+    </div>
+    <div id="entries"><div class="empty">กำลังโหลด…</div></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let stream = null;
+let photos = { near: null, far: null }; // dataUrls
+let gpsData = null; // {lat, lon, acc}
+
+// ---------- Cloud DB Configuration ----------
+// TODO: สร้างโปรเจกต์ Firebase Realtime Database ใหม่แยกจากโครงการอื่น แล้ววาง URL ที่ได้แทนค่าด้านล่างนี้
+const DEFAULT_CLOUD_DB_URL = 'https://PASTE-YOUR-NEW-FIREBASE-URL-HERE.firebasedatabase.app';
+function getCloudDbUrl() {
+  return localStorage.getItem('motherday_cloud_db_url') || DEFAULT_CLOUD_DB_URL;
+}
+
+const storageProvider = {
+  async set(key, val) {
+    const entry = JSON.parse(val);
+    const dbUrl = getCloudDbUrl().replace(/\/$/, '');
+    let savedToCloud = false;
+
+    if (dbUrl) {
+      try {
+        const res = await fetch(`${dbUrl}/submissions.json`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entry)
+        });
+        if (res.ok) savedToCloud = true;
+      } catch(e) {
+        console.error('Cloud save failed:', e);
+      }
+    }
+
+    // Always save to local storage as fallback
+    try {
+      localStorage.setItem(key, val);
+    } catch(e){}
+
+    return true;
+  }
+};
+
+// ---------- Camera (Strict Live Capture, 2 slots: near / far) ----------
+async function openCam(slot){
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const video = $('video-' + slot);
+    video.srcObject = stream;
+    video.style.display = 'block';
+    $('placeholder-' + slot).style.display = 'none';
+    $('preview-' + slot).style.display = 'none';
+    $('captureRow-' + slot).style.display = 'none';
+    $('uploadRow-' + slot).style.display = 'none';
+    $('shootRow-' + slot).style.display = 'flex';
+    $('retakeRow-' + slot).style.display = 'none';
+    requestGPS();
+  } catch (e) {
+    setStatus('เปิดกล้องไม่ได้ — โปรดอนุญาตการเข้าถึงกล้องในเบราว์เซอร์ แล้วลองใหม่', true);
+  }
+}
+
+function shootPhoto(slot){
+  const video = $('video-' + slot);
+  const canvas = $('canvas');
+  const w = video.videoWidth || 1280;
+  const h = video.videoHeight || 960;
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+  finishCapture(slot, canvas.toDataURL('image/jpeg', 0.85));
+  stopCamera(slot);
+}
+
+function cancelCam(slot){
+  stopCamera(slot);
+  resetSlotUI(slot);
+}
+
+function retakePhoto(slot){
+  photos[slot] = null;
+  resetSlotUI(slot);
+  checkReady();
+}
+
+function stopCamera(slot){
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  $('video-' + slot).style.display = 'none';
+}
+
+function resetSlotUI(slot){
+  $('placeholder-' + slot).style.display = 'flex';
+  $('preview-' + slot).style.display = 'none';
+  $('captureRow-' + slot).style.display = 'flex';
+  $('uploadRow-' + slot).style.display = 'flex';
+  $('shootRow-' + slot).style.display = 'none';
+  $('retakeRow-' + slot).style.display = 'none';
+}
+
+function finishCapture(slot, dataUrl){
+  photos[slot] = dataUrl;
+  const preview = $('preview-' + slot);
+  preview.src = dataUrl;
+  preview.style.display = 'block';
+  $('video-' + slot).style.display = 'none';
+  $('placeholder-' + slot).style.display = 'none';
+  $('captureRow-' + slot).style.display = 'none';
+  $('uploadRow-' + slot).style.display = 'none';
+  $('shootRow-' + slot).style.display = 'none';
+  $('retakeRow-' + slot).style.display = 'flex';
+  checkReady();
+}
+
+// ---------- In-app browser detection (LINE/Facebook/IG often block camera) ----------
+function isInAppBrowser(){
+  const ua = navigator.userAgent || '';
+  return /Line\//i.test(ua) || /FBAN|FBAV/i.test(ua) || /Instagram/i.test(ua) || /MicroMessenger/i.test(ua);
+}
+if (isInAppBrowser()) {
+  $('inAppWarning').style.display = 'block';
+}
+$('openExternalBtn').addEventListener('click', () => {
+  const url = location.href.split('#')[0];
+  if (/Android/i.test(navigator.userAgent)) {
+    const noProto = url.replace(/^https?:\/\//, '');
+    location.href = `intent://${noProto}#Intent;scheme=https;package=com.android.chrome;end;`;
+  } else {
+    alert('บน iPhone: กดปุ่ม ⋯ หรือ ⋮ ที่มุมขวาบน (หรือมุมล่าง) ของหน้าจอ แล้วเลือก "เปิดใน Safari"');
+  }
+});
+
+// ---------- Upload from device (fallback for those who can't use live camera) ----------
+function triggerUpload(slot){
+  requestGPS();
+  $('fileInput-' + slot).click();
+}
+
+['near', 'far'].forEach(slot => {
+  $('fileInput-' + slot).addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      resizeImage(ev.target.result, (resizedDataUrl) => {
+        finishCapture(slot, resizedDataUrl);
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+});
+
+function resizeImage(dataUrl, cb){
+  const img = new Image();
+  img.onload = () => {
+    const MAX = 1280;
+    let w = img.width, h = img.height;
+    if (w > h && w > MAX) { h = Math.round(h * (MAX / w)); w = MAX; }
+    else if (h > MAX) { w = Math.round(w * (MAX / h)); h = MAX; }
+    const canvas = $('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    cb(canvas.toDataURL('image/jpeg', 0.85));
+  };
+  img.src = dataUrl;
+}
+
+// ---------- GPS ----------
+function requestGPS(){
+  const dot = $('gpsDot'), txt = $('gpsText');
+  if (!navigator.geolocation) {
+    dot.className = 'gpsdot err';
+    txt.textContent = 'อุปกรณ์นี้ไม่รองรับ GPS';
+    return;
+  }
+  txt.textContent = 'กำลังขอตำแหน่ง GPS…';
+  navigator.geolocation.getCurrentPosition((pos) => {
+    gpsData = {
+      lat: pos.coords.latitude,
+      lon: pos.coords.longitude,
+      acc: pos.coords.accuracy
+    };
+    dot.className = 'gpsdot live';
+    txt.innerHTML = `${gpsData.lat.toFixed(6)}, ${gpsData.lon.toFixed(6)} &nbsp;(±${Math.round(gpsData.acc)}m)`;
+    checkReady();
+  }, (err) => {
+    dot.className = 'gpsdot err';
+    txt.textContent = 'ขอตำแหน่งไม่สำเร็จ — โปรดอนุญาตการเข้าถึงตำแหน่งที่ตั้ง แล้วลองใหม่';
+  }, { enableHighAccuracy: true, timeout: 15000 });
+}
+
+function checkReady(){
+  $('submitBtn').disabled = !(photos.near && photos.far && gpsData && $('sname').value.trim() && $('sphone').value.trim() && allReqsChecked());
+}
+
+function allReqsChecked(){
+  return Array.from(document.querySelectorAll('.reqcheck')).every(c => c.checked);
+}
+
+function updateCaptureLock(){
+  const ok = allReqsChecked();
+  ['near', 'far'].forEach(slot => {
+    $('captureRow-' + slot).querySelector('button').disabled = !ok;
+    $('uploadRow-' + slot).querySelector('button').disabled = !ok;
+  });
+  $('reqHint').style.display = ok ? 'none' : 'block';
+}
+
+document.querySelectorAll('.reqcheck').forEach(c => {
+  c.addEventListener('change', () => { updateCaptureLock(); checkReady(); });
+});
+updateCaptureLock();
+$('sname').addEventListener('input', checkReady);
+$('sclass').addEventListener('input', checkReady);
+$('sphone').addEventListener('input', checkReady);
+
+// ---------- Stamp + Submit ----------
+$('submitBtn').addEventListener('click', async () => {
+  if (!photos.near || !photos.far || !gpsData) return;
+  $('submitBtn').disabled = true;
+  $('submitBtn').textContent = 'กำลังประทับตราและบันทึก…';
+
+  const name = $('sname').value.trim();
+  const cls = $('sclass').value.trim();
+  const stampedNear = await stampImage(photos.near, gpsData, name, cls, 'ภาพใกล้');
+  const stampedFar = await stampImage(photos.far, gpsData, name, cls, 'ภาพไกล');
+
+  const entry = {
+    name: name,
+    cls: cls,
+    phone: $('sphone').value.trim(),
+    parentPhone: $('pphone').value.trim(),
+    lat: gpsData.lat,
+    lon: gpsData.lon,
+    acc: Math.round(gpsData.acc),
+    time: new Date().toISOString(),
+    imgNear: stampedNear,
+    imgFar: stampedFar
+  };
+
+  try {
+    const key = 'motherday_submissions:' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+    const res = await storageProvider.set(key, JSON.stringify(entry));
+    if (!res) throw new Error('save failed');
+    setStatus('บันทึกสำเร็จ — ขอบคุณครับ/ค่ะ', false);
+    $('submitBtn').textContent = 'ส่งแล้ว ✓';
+    loadGallery();
+  } catch (e) {
+    setStatus('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง', true);
+    $('submitBtn').disabled = false;
+    $('submitBtn').textContent = 'ยืนยันและบันทึก';
+  }
+});
+
+function setStatus(msg, isErr){
+  const el = $('statusMsg');
+  el.textContent = msg;
+  el.style.color = isErr ? '#C0392B' : '#2F5D3A';
+  el.classList.add('show');
+}
+
+function stampImage(dataUrl, gps, name, cls, tag){
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      const pad = Math.max(14, img.width * 0.02);
+      const barH = Math.max(70, img.height * 0.14);
+      ctx.fillStyle = 'rgba(58,31,43,0.72)';
+      ctx.fillRect(0, img.height - barH, img.width, barH);
+
+      const fs1 = Math.max(13, img.width * 0.028);
+      const fs2 = Math.max(11, img.width * 0.021);
+      ctx.fillStyle = '#FBF0E8';
+      ctx.font = `600 ${fs1}px 'Sarabun', sans-serif`;
+      const nameLine = name + (cls ? '  ·  ' + cls : '') + (tag ? '  ·  ' + tag : '');
+      ctx.fillText(nameLine, pad, img.height - barH + fs1 + pad*0.5);
+
+      ctx.font = `${fs2}px 'JetBrains Mono', monospace`;
+      const coordStr = `${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)}  (±${Math.round(gps.acc)}m)`;
+      ctx.fillText(coordStr, pad, img.height - barH + fs1 + pad*0.5 + fs2*1.6);
+
+      const timeStr = new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+      ctx.fillText(timeStr, pad, img.height - barH + fs1 + pad*0.5 + fs2*3.2);
+
+      // seal circle top-right
+      const r = Math.max(28, img.width * 0.055);
+      const cx = img.width - r - pad;
+      const cy = r + pad;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(-8 * Math.PI/180);
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(192,57,43,0.9)';
+      ctx.lineWidth = Math.max(2, r*0.08);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, r*0.78, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(192,57,43,0.9)';
+      ctx.font = `700 ${r*0.32}px 'Noto Serif Thai', serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('GPS', 0, r*0.12);
+      ctx.font = `600 ${r*0.16}px 'JetBrains Mono', monospace`;
+      ctx.fillText('VERIFIED', 0, r*0.36);
+      ctx.restore();
+
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.src = dataUrl;
+  });
+}
+
+// ---------- Teacher gallery (PIN protected) ----------
+const TEACHER_PIN = '2569'; // เปลี่ยนรหัสผ่านครูได้ที่นี่
+let galleryOpen = false;
+let teacherUnlocked = false;
+
+$('teacherBtn').addEventListener('click', () => {
+  if (galleryOpen) {
+    galleryOpen = false;
+    $('gallery').classList.remove('show');
+    $('teacherBtn').textContent = 'โหมดครู — ดูรายการที่ส่งทั้งหมด';
+    return;
+  }
+  if (teacherUnlocked) {
+    openGallery();
+    return;
+  }
+  const pinRow = $('pinRow');
+  const showing = pinRow.style.display === 'flex';
+  pinRow.style.display = showing ? 'none' : 'flex';
+  $('pinError').style.display = 'none';
+  if (!showing) $('pinInput').focus();
+});
+
+$('pinSubmit').addEventListener('click', checkPin);
+$('pinInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') checkPin(); });
+
+function checkPin(){
+  if ($('pinInput').value.trim() === TEACHER_PIN) {
+    teacherUnlocked = true;
+    $('pinRow').style.display = 'none';
+    $('pinError').style.display = 'none';
+    $('pinInput').value = '';
+    openGallery();
+  } else {
+    $('pinError').style.display = 'block';
+    $('pinInput').value = '';
+    $('pinInput').focus();
+  }
+}
+
+function openGallery(){
+  galleryOpen = true;
+  $('gallery').classList.add('show');
+  $('teacherBtn').textContent = 'ซ่อนรายการ';
+  loadGallery();
+}
+
+if ($('refreshGalleryBtn')) {
+  $('refreshGalleryBtn').addEventListener('click', loadGallery);
+}
+
+let lastLoadedItems = [];
+
+async function fetchAllSubmissions(){
+  const dbUrl = getCloudDbUrl().replace(/\/$/, '');
+  const itemsMap = new Map();
+
+  // 1. Fetch from Cloud Database (Firebase)
+  if (dbUrl) {
+    try {
+      const res = await fetch(`${dbUrl}/submissions.json`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data === 'object') {
+          Object.values(data).forEach(it => {
+            if (it && it.name && it.time) {
+              itemsMap.set(it.name + '_' + it.time, it);
+            }
+          });
+        }
+      }
+    } catch(e) {
+      console.error('Error fetching cloud submissions:', e);
+    }
+  }
+
+  // 2. Fetch from LocalStorage as fallback
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('motherday_submissions:')) {
+      try {
+        const val = localStorage.getItem(k);
+        if (val) {
+          const it = JSON.parse(val);
+          if (it && it.name && it.time) {
+            itemsMap.set(it.name + '_' + it.time, it);
+          }
+        }
+      } catch(e){}
+    }
+  }
+
+  const items = Array.from(itemsMap.values());
+  items.sort((a,b) => new Date(b.time) - new Date(a.time));
+  return items;
+}
+
+async function loadGallery(){
+  const box = $('entries');
+  box.innerHTML = '<div class="empty">กำลังโหลดรายการ…</div>';
+  try {
+    const items = await fetchAllSubmissions();
+    lastLoadedItems = items;
+    updateOverviewMap(items);
+    if (items.length === 0) {
+      box.innerHTML = '<div class="empty">ยังไม่มีรายการส่ง (หรือยังไม่ได้เชื่อมต่อ Firebase Database URL)</div>';
+      return;
+    }
+    box.innerHTML = items.map(it => {
+      const mapUrl = `https://www.google.com/maps?q=${it.lat},${it.lon}`;
+      const t = new Date(it.time).toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+      const phoneLine = [
+        it.phone ? `📱 <a href="tel:${escapeHtml(it.phone)}">${escapeHtml(it.phone)}</a>` : '',
+        it.parentPhone ? `ผู้ปกครอง <a href="tel:${escapeHtml(it.parentPhone)}">${escapeHtml(it.parentPhone)}</a>` : ''
+      ].filter(Boolean).join(' · ');
+      return `<div class="entry">
+        <div class="thumbs">
+          <img src="${it.imgNear || it.img || ''}" alt="ภาพใกล้">
+          <img src="${it.imgFar || ''}" alt="ภาพไกล">
+        </div>
+        <div class="meta">
+          <b>${escapeHtml(it.name)}</b>${it.cls ? ' · ' + escapeHtml(it.cls) : ''}<br>
+          ${phoneLine ? phoneLine + '<br>' : ''}
+          ${it.lat.toFixed(6)}, ${it.lon.toFixed(6)} (±${it.acc}m)<br>
+          ${t}<br>
+          <a href="${mapUrl}" target="_blank" rel="noopener">เปิดใน Google Maps →</a>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">โหลดรายการไม่สำเร็จ</div>';
+  }
+}
+
+// ---------- Overview map (all submission locations at a glance) ----------
+let overviewMap = null;
+let overviewMarkers = [];
+let overviewHeatLayer = null;
+
+function ensureOverviewMap(){
+  if (overviewMap) return overviewMap;
+  overviewMap = L.map('mapOverview');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(overviewMap);
+  return overviewMap;
+}
+
+function updateOverviewMap(items){
+  const valid = items.filter(it => typeof it.lat === 'number' && typeof it.lon === 'number');
+  const wrap = $('mapOverviewWrap');
+  if (!valid.length) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'block';
+  const map = ensureOverviewMap();
+
+  overviewMarkers.forEach(m => map.removeLayer(m));
+  overviewMarkers = [];
+  if (overviewHeatLayer) { map.removeLayer(overviewHeatLayer); overviewHeatLayer = null; }
+
+  const latlngs = [];
+  valid.forEach(it => {
+    const marker = L.marker([it.lat, it.lon]).addTo(map);
+    const t = new Date(it.time).toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+    marker.bindPopup(
+      `<b>${escapeHtml(it.name)}</b>${it.cls ? ' · ' + escapeHtml(it.cls) : ''}<br>` +
+      `${t}<br><a href="https://www.google.com/maps?q=${it.lat},${it.lon}" target="_blank" rel="noopener">เปิดใน Google Maps →</a>`
+    );
+    overviewMarkers.push(marker);
+    latlngs.push([it.lat, it.lon]);
+  });
+
+  if (typeof L.heatLayer === 'function') {
+    overviewHeatLayer = L.heatLayer(latlngs, { radius: 35, blur: 25, maxZoom: 17 }).addTo(map);
+  }
+
+  setTimeout(() => {
+    map.invalidateSize();
+    if (latlngs.length === 1) {
+      map.setView(latlngs[0], 15);
+    } else {
+      map.fitBounds(L.latLngBounds(latlngs), { padding: [24, 24] });
+    }
+  }, 50);
+}
+
+$('downloadZipBtn').addEventListener('click', async () => {
+  const btn = $('downloadZipBtn');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'กำลังรวมไฟล์…';
+  try {
+    const items = lastLoadedItems.length ? lastLoadedItems : await fetchAllSubmissions();
+    if (!items.length) {
+      btn.textContent = 'ยังไม่มีรายการส่ง';
+      setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 1800);
+      return;
+    }
+    const zip = new JSZip();
+    let csv = 'ชื่อ,ชั้น/แผนก,เบอร์โทรนักเรียน,เบอร์โทรผู้ปกครอง,ละติจูด,ลองจิจูด,ความแม่นยำ(ม.),วันเวลา,ลิงก์แผนที่,ไฟล์ภาพใกล้,ไฟล์ภาพไกล\n';
+    items.forEach((it, i) => {
+      const safeName = (it.name || 'unknown').replace(/[\\/:*?"<>|,]/g, '_');
+      const fnameNear = `${String(i+1).padStart(3,'0')}_${safeName}_near.jpg`;
+      const fnameFar = `${String(i+1).padStart(3,'0')}_${safeName}_far.jpg`;
+      if (it.imgNear) zip.file(fnameNear, it.imgNear.split(',')[1], { base64: true });
+      else if (it.img) zip.file(fnameNear, it.img.split(',')[1], { base64: true });
+      if (it.imgFar) zip.file(fnameFar, it.imgFar.split(',')[1], { base64: true });
+      const mapUrl = `https://www.google.com/maps?q=${it.lat},${it.lon}`;
+      const t = new Date(it.time).toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+      csv += `"${(it.name||'').replace(/"/g,'""')}","${(it.cls||'').replace(/"/g,'""')}","${(it.phone||'').replace(/"/g,'""')}","${(it.parentPhone||'').replace(/"/g,'""')}",${it.lat},${it.lon},${it.acc},"${t}","${mapUrl}","${fnameNear}","${it.imgFar ? fnameFar : ''}"\n`;
+    });
+    zip.file('รายชื่อและพิกัด.csv', '﻿' + csv);
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `บันทึกภาพวันแม่_${new Date().toISOString().slice(0,10)}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    btn.textContent = 'ดาวน์โหลดแล้ว ✓';
+    setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2200);
+  } catch (e) {
+    btn.textContent = 'เกิดข้อผิดพลาด ลองใหม่';
+    setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2200);
+  }
+});
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+</script>
+</body>
+</html>
