@@ -436,8 +436,8 @@ let capturedDataUrl = null;
 let gpsData = null; // {lat, lon, acc}
 
 // ---------- Cloud DB Configuration ----------
-// TODO: สร้างโปรเจกต์ Firebase Realtime Database ใหม่แยกจากโครงการอื่น แล้ววาง URL ที่ได้แทนค่าด้านล่างนี้
-const DEFAULT_CLOUD_DB_URL = 'https://PASTE-YOUR-NEW-FIREBASE-URL-HERE.firebasedatabase.app';
+// ใช้ Firebase เดิมของโครงการเยี่ยมบ้าน (gps-photo-app.html) ร่วมกัน — เขียนข้อมูลแยกที่ path /motherday-submissions ไม่ปนกับ /submissions เดิม
+const DEFAULT_CLOUD_DB_URL = 'https://gps-photo-app-19249-default-rtdb.asia-southeast1.firebasedatabase.app';
 function getCloudDbUrl() {
   return localStorage.getItem('motherday_cloud_db_url') || DEFAULT_CLOUD_DB_URL;
 }
@@ -450,7 +450,7 @@ const storageProvider = {
 
     if (dbUrl) {
       try {
-        const res = await fetch(`${dbUrl}/submissions.json`, {
+        const res = await fetch(`${dbUrl}/motherday-submissions.json`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(entry)
@@ -793,7 +793,7 @@ async function fetchAllSubmissions(){
   // 1. Fetch from Cloud Database (Firebase)
   if (dbUrl) {
     try {
-      const res = await fetch(`${dbUrl}/submissions.json`);
+      const res = await fetch(`${dbUrl}/motherday-submissions.json`);
       if (res.ok) {
         const data = await res.json();
         if (data && typeof data === 'object') {
