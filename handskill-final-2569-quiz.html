@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ข้อสอบปลายภาค 1/2569 — งานฝึกฝีมือ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#22d3ee;--cyd:#0891b2;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--pp:#a78bfa;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0a0f 0%,#0d1420 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.wrap{max-width:760px;margin:0 auto;padding:20px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* LOGIN */
+#s-login{align-items:center;justify-content:center;min-height:100vh;padding:12px}
+#s-login.active{display:flex}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px 24px;width:100%;max-width:440px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.login-emblem{font-size:44px;text-align:center;margin-bottom:6px}
+.login-h1{text-align:center;font-size:20px;font-weight:800;color:var(--cy);line-height:1.4}
+.login-sub{text-align:center;font-size:13px;color:var(--mut);margin:4px 0 18px}
+.rules-box{background:#0d1a1e;border:1px solid var(--cyd);border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.9;color:var(--cy)}
+.rules-box b{color:var(--yw)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:#aab;margin-bottom:6px}
+.field input{width:100%;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:14px}
+.field input:focus{outline:none;border-color:var(--cy)}
+.btn-primary{display:block;width:100%;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#001;border:none;border-radius:10px;padding:14px;font-size:17px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{display:block;width:100%;background:none;border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:10px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:10px}
+
+/* EXAM TOPBAR */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(10,10,15,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:16px}
+.topbar-inner{max-width:760px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.topbar h1{font-size:15px;color:var(--cy);font-weight:800}
+.topbar .sub{font-size:11px;color:var(--mut)}
+.timer{display:flex;align-items:center;gap:8px}
+.timer-num{font-size:20px;font-weight:800;color:var(--gr);font-variant-numeric:tabular-nums;background:#0d1a1e;border:1px solid var(--cyd);border-radius:8px;padding:4px 12px}
+.timer-num.warn{color:var(--yw);border-color:var(--yw)}
+.timer-num.danger{color:var(--rd);border-color:var(--rd);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn-submit{background:var(--rd);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer}
+
+/* NAVIGATOR */
+.navgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-bottom:18px}
+.navbtn{aspect-ratio:1;border-radius:6px;border:1.5px solid var(--line);background:#161622;color:var(--mut);font-size:11px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.navbtn.answered{background:rgba(34,211,238,.15);border-color:var(--cyd);color:var(--cy)}
+.navbtn.current{border-color:var(--yw);color:var(--yw);box-shadow:0 0 0 2px rgba(250,204,21,.3)}
+
+/* QUESTION CARD */
+.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px 20px;max-width:720px;margin:0 auto 20px}
+.q-badge{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:4px 12px;margin-bottom:10px;color:#001}
+.q-num{font-size:12px;color:var(--mut);margin-bottom:4px}
+.q-text{font-size:16px;font-weight:700;line-height:1.65;margin-bottom:16px;min-height:50px}
+.choices{display:grid;gap:9px;margin-bottom:18px}
+.choice-btn{display:flex;align-items:center;gap:11px;background:#161622;border:2px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;text-align:left;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;color:var(--tx);width:100%;transition:.12s}
+.choice-btn:active{transform:scale(.98)}
+.choice-ltr{width:26px;height:26px;background:var(--cyd);color:#001;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.choice-btn.sel{background:rgba(34,211,238,.12);border-color:var(--cy)}
+.choice-btn.sel .choice-ltr{background:var(--cy)}
+.nav-row{display:flex;gap:10px}
+.btn-nav{flex:1;background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:13px;font-size:14px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer}
+.btn-nav.primary{background:var(--cyd);border-color:var(--cyd);color:#001}
+.btn-nav:disabled{opacity:.4;cursor:default}
+
+/* RESULT */
+.result-emoji{font-size:56px;text-align:center;margin-bottom:6px}
+.result-score{text-align:center;font-size:34px;font-weight:800;color:var(--cy);margin-bottom:2px}
+.result-pct{text-align:center;font-size:14px;color:var(--mut);margin-bottom:20px}
+.result-who{text-align:center;font-size:14px;color:var(--tx);margin-bottom:20px}
+.sec-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:8px}
+.sec-bar-wrap{background:#1a1a26;border-radius:20px;height:10px;overflow:hidden;flex:1;margin:0 10px}
+.sec-bar{height:100%;border-radius:20px}
+.sec-label{width:130px;color:var(--mut);flex-shrink:0}
+.sec-val{width:70px;text-align:right;color:var(--tx);font-weight:700;flex-shrink:0}
+
+/* REPORT */
+.report-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:13px}
+.report-tools button{background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
+table.rpt th{text-align:left;color:var(--mut);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;white-space:nowrap}
+table.rpt tr:hover td{background:#161622}
+.rpt-total{color:var(--cy);font-weight:800}
+.rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+.rpt-cert-btn{background:var(--cyd);color:#001;border:none;border-radius:6px;padding:5px 10px;font-family:'Sarabun',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.rpt-cert-btn:active{transform:scale(.96)}
+
+/* GRADE */
+.result-grade{text-align:center;margin-bottom:16px}
+.grade-badge{display:inline-block;border-radius:20px;padding:6px 18px;font-size:15px;font-weight:800}
+.grade-badge.g4{background:rgba(34,197,94,.15);color:var(--gr);border:1.5px solid var(--gr)}
+.grade-badge.g3{background:rgba(34,211,238,.15);color:var(--cy);border:1.5px solid var(--cyd)}
+.grade-badge.g2{background:rgba(250,204,21,.15);color:var(--yw);border:1.5px solid var(--yw)}
+.grade-badge.g1{background:rgba(251,146,60,.15);color:#fb923c;border:1.5px solid #fb923c}
+.grade-badge.g0{background:rgba(244,63,94,.15);color:var(--rd);border:1.5px solid var(--rd)}
+.rpt-grade{font-weight:800}
+.rpt-grade.g4{color:var(--gr)}
+.rpt-grade.g3{color:var(--cy)}
+.rpt-grade.g2{color:var(--yw)}
+.rpt-grade.g1{color:#fb923c}
+.rpt-grade.g0{color:var(--rd)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="login-card">
+    <div class="login-emblem">🛠️</div>
+    <div class="login-h1">ข้อสอบปลายภาค 1/2569<br>วิชางานฝึกฝีมือ</div>
+    <div class="login-sub">รหัสวิชา 20100-1003</div>
+    <div class="rules-box">
+      • ข้อสอบทั้งหมด <b>60 ข้อ</b> (6 หัวข้อ หัวข้อละ 10 ข้อ)<br>
+      • คะแนนเต็ม <b>200 คะแนน</b><br>
+      • เวลาสอบ <b>2 ชั่วโมง</b> — หมดเวลาระบบจะส่งข้อสอบให้อัตโนมัติ<br>
+      • สอบเสร็จ ระบบแสดงผลคะแนนทันที
+    </div>
+    <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+    <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+    <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
+    <button class="btn-primary" onclick="startExam()">🚀 เริ่มสอบ</button>
+    <button class="btn-ghost" onclick="openReport()">📊 รายงานผลสอบ (สำหรับครู)</button>
+  </div>
+</div>
+
+<!-- EXAM -->
+<div id="s-exam" class="screen">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <h1>ข้อสอบปลายภาค 1/2569 — งานฝึกฝีมือ</h1>
+        <div class="sub" id="examWho"></div>
+      </div>
+      <div class="timer">
+        <div class="timer-num" id="timerNum">2:00:00</div>
+        <button class="btn-submit" onclick="confirmSubmit()">ส่งข้อสอบ</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="navgrid" id="navgrid"></div>
+    <div class="quiz-card">
+      <div class="q-badge" id="qBadge"></div>
+      <div class="q-num" id="qNum"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="choices" id="qChoices"></div>
+      <div class="nav-row">
+        <button class="btn-nav" id="btnPrev" onclick="gotoQ(currentQ-1)">← ข้อก่อนหน้า</button>
+        <button class="btn-nav primary" id="btnNext" onclick="gotoQ(currentQ+1)">ข้อถัดไป →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="wrap">
+    <div class="quiz-card">
+      <div class="result-emoji" id="rEmoji">🏆</div>
+      <div class="result-score" id="rScore"></div>
+      <div class="result-pct" id="rPct"></div>
+      <div class="result-grade" id="rGrade"></div>
+      <div class="result-who" id="rWho"></div>
+      <div id="rBreakdown"></div>
+      <button class="btn-primary" id="btnCert" style="display:none;margin-top:6px" onclick="downloadCertificate()">🎓 ดาวน์โหลดใบประกาศ</button>
+      <button class="btn-primary" onclick="location.reload()" style="margin-top:10px">🔄 กลับหน้าแรก</button>
+    </div>
+  </div>
+</div>
+<canvas id="certCanvas" width="1400" height="990" style="display:none"></canvas>
+
+<!-- REPORT -->
+<div id="s-report" class="screen">
+  <div class="wrap">
+    <div class="topbar" style="position:static;margin-bottom:16px;padding:0">
+      <div class="topbar-inner" style="padding:0">
+        <h1 style="font-size:18px">📊 รายงานผลสอบ — ปลายภาค 1/2569</h1>
+        <button class="btn-nav" style="flex:none" onclick="backToLogin()">← กลับหน้าแรก</button>
+      </div>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── FIREBASE (ใช้โปรเจกต์เดียวกับระบบเช็คชื่อ, path แยกต่างหาก) ─────
+const DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+const RESULTS_URL = DB_BASE + '/examResults/handskill_final_2569.json';
+const REPORT_PIN = '2569';
+const EXAM_SECONDS = 2 * 60 * 60;
+const SIGNATURE_PNG_B64 = "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";
+
+// ─── QUESTION BANK (6 หัวข้อ x 10 ข้อ — ครึ่งหลังเทอม) ───────────────
+const DRILL_Q = [
+  {q:"สว่านมือ (Hand Drill) และสว่านไฟฟ้าแบบตั้งโต๊ะ (Drill Press) แตกต่างกันหลักๆ อย่างไร", c:["Drill Press ยึดกับฐานให้เจาะได้ตรงและแม่นยำกว่า ส่วนสว่านมือพกพาสะดวกแต่ควบคุมมุมเจาะยากกว่า","ทั้งสองแบบเหมือนกันทุกประการ","สว่านมือใช้เจาะไม้ได้เท่านั้น","Drill Press ใช้เจาะพลาสติกได้เท่านั้น"], a:0},
+  {q:"ดอกสว่าน (Twist Drill) ที่ใช้เจาะโลหะทั่วไปทำจากวัสดุใดเป็นหลัก", c:["เหล็กกล้าความเร็วสูง (High Speed Steel, HSS)","ไม้เนื้อแข็ง","พลาสติก ABS","ยางแข็ง"], a:0},
+  {q:"ก่อนเจาะรูบนชิ้นงานโลหะ ควรทำการตอกนำศูนย์ (Center Punch) ก่อนเพื่ออะไร", c:["ป้องกันดอกสว่านลื่นไถลออกจากตำแหน่งที่ต้องการเจาะ","เพื่อให้รูเจาะมีขนาดใหญ่ขึ้น","เพื่อลดความร้อนขณะเจาะ","เพื่อทำความสะอาดผิวชิ้นงาน"], a:0},
+  {q:"ความเร็วรอบในการเจาะ (Drilling Speed) ควรปรับอย่างไรเมื่อขนาดดอกสว่านใหญ่ขึ้น", c:["ลดความเร็วรอบลง เพื่อลดความร้อนและยืดอายุดอกสว่าน","เพิ่มความเร็วรอบให้สูงที่สุดเสมอ","ไม่มีผลใดๆ ต่อความเร็วรอบ","ต้องหยุดเครื่องก่อนเจาะทุกครั้ง"], a:0},
+  {q:"น้ำมันหล่อเย็น (Cutting Fluid) ในงานเจาะโลหะมีประโยชน์อย่างไร", c:["ลดความร้อนและแรงเสียดทานที่ดอกสว่าน ช่วยยืดอายุการใช้งานและได้รูที่เรียบร้อย","ทำให้รูเจาะมีขนาดใหญ่ขึ้น","เปลี่ยนสีของดอกสว่าน","ไม่มีผลต่อการเจาะ"], a:0},
+  {q:"หากต้องการเจาะรูขนาดใหญ่บนแผ่นเหล็กหนา ควรปฏิบัติอย่างไรเพื่อความแม่นยำและปลอดภัย", c:["เจาะนำด้วยดอกสว่านขนาดเล็กก่อน แล้วค่อยขยายด้วยดอกสว่านขนาดใหญ่ขึ้นตามลำดับ","ใช้ดอกสว่านขนาดใหญ่เจาะทีเดียวเสมอ","เพิ่มความเร็วรอบสูงสุดทันที","ไม่จำเป็นต้องยึดชิ้นงานให้แน่น"], a:0},
+  {q:"การจับยึดชิ้นงานด้วยปากกาจับชิ้นงาน (Vise) หรือคลิปยึดขณะเจาะมีความสำคัญอย่างไร", c:["ป้องกันชิ้นงานหมุนตามดอกสว่านซึ่งอาจทำให้เกิดอุบัติเหตุและรูเจาะไม่ตรงตำแหน่ง","ทำให้เจาะได้เร็วขึ้นเท่านั้น","ไม่มีความจำเป็นหากชิ้นงานมีขนาดเล็ก","ทำให้ดอกสว่านมีอายุการใช้งานสั้นลง"], a:0},
+  {q:"มุมปลายของดอกสว่าน (Point Angle) มาตรฐานทั่วไปสำหรับเจาะเหล็กกล้าอยู่ที่ประมาณกี่องศา", c:["118 องศา","30 องศา","180 องศา","0 องศา"], a:0},
+  {q:"หากดอกสว่านเกิดความร้อนสูงจนเปลี่ยนเป็นสีน้ำเงินขณะเจาะ แสดงว่าเกิดปัญหาใด", c:["ความเร็วรอบสูงเกินไปหรือขาดน้ำมันหล่อเย็น ทำให้ดอกสว่านสูญเสียความแข็งจากความร้อน","ดอกสว่านทำงานได้ดีเป็นปกติ","ชิ้นงานมีความหนาไม่พอ","รูเจาะเสร็จสมบูรณ์แล้ว"], a:0},
+  {q:"ข้อควรระวังด้านความปลอดภัยที่สำคัญเมื่อใช้เครื่องเจาะตั้งโต๊ะคือข้อใด", c:["ไม่สวมถุงมือขณะเจาะ เพราะอาจถูกดอกสว่านพันดึงเข้าไปได้ และควรสวมแว่นตานิรภัยเสมอ","สวมถุงมือหนาๆ เพื่อป้องกันมือบาดเจ็บเสมอ","ไม่จำเป็นต้องสวมแว่นตานิรภัย","ปล่อยผมยาวสยายได้ตามปกติ"], a:0},
+];
+const THREAD_Q = [
+  {q:"การทำเกลียวในด้วยมือใช้เครื่องมือใดเป็นหลัก", c:["ดอกต๊าป (Tap)","ดอกสว่าน","ตะไบ","เลื่อยมือ"], a:0},
+  {q:"การทำเกลียวนอกด้วยมือใช้เครื่องมือใดเป็นหลัก", c:["เดี่ยว (Die) และด้ามจับเดี่ยว (Die Stock)","ดอกต๊าป","ตะไบกลม","ค้อนหงอน"], a:0},
+  {q:"ก่อนทำเกลียวใน จำเป็นต้องเจาะรูนำ (Tap Drill) ให้มีขนาดเท่าใด", c:["เล็กกว่าขนาดเกลียวที่ต้องการเล็กน้อยตามตารางมาตรฐาน","ใหญ่กว่าขนาดเกลียวที่ต้องการเสมอ","เท่ากับขนาดเกลียวพอดีเป๊ะ","ไม่จำเป็นต้องเจาะรูนำ"], a:0},
+  {q:"ชุดดอกต๊าปมือ (Hand Tap Set) มาตรฐานมักประกอบด้วยกี่ตัว และมีชื่อเรียกต่างกันอย่างไร", c:["3 ตัว คือ ต๊าปนำ (Taper Tap) ต๊าปกลาง (Plug Tap) และต๊าปตาม (Bottoming Tap)","1 ตัว ใช้ได้ทุกงาน","5 ตัว ใช้แยกตามสีเท่านั้น","2 ตัว คือต๊าปซ้ายและต๊าปขวา"], a:0},
+  {q:"เหตุใดขณะทำเกลียวด้วยต๊าปหรือเดี่ยว จึงควรหมุนกลับครึ่งรอบเป็นระยะๆ", c:["เพื่อหักเศษโลหะให้ขาดออกจากร่องเกลียว ป้องกันเกลียวติดขัดหรือดอกต๊าปหัก","เพื่อให้เกลียวลึกขึ้นเร็วกว่าเดิม","เพื่อเปลี่ยนทิศทางเกลียวจากขวาเป็นซ้าย","ไม่มีเหตุผลพิเศษใดๆ"], a:0},
+  {q:"เกลียวมาตรฐานเมตริก (Metric Thread) ระบุขนาดด้วยสัญลักษณ์ใด", c:["M ตามด้วยเส้นผ่านศูนย์กลางเป็นมิลลิเมตร เช่น M8","BSP ตามด้วยนิ้ว","AWG ตามด้วยตัวเลข","HRC ตามด้วยตัวเลข"], a:0},
+  {q:"น้ำมันหล่อลื่นในงานทำเกลียวมีประโยชน์อย่างไร", c:["ลดแรงเสียดทานและความร้อน ช่วยให้เกลียวเรียบและยืดอายุดอกต๊าป/เดี่ยว","ทำให้เกลียวมีขนาดใหญ่ขึ้น","เปลี่ยนทิศทางของเกลียว","ไม่มีผลต่องานทำเกลียว"], a:0},
+  {q:"หากดอกต๊าปหักคาอยู่ในรูที่กำลังทำเกลียว สาเหตุที่พบบ่อยที่สุดคือข้อใด", c:["ใช้แรงบิดมากเกินไปหรือไม่หมุนกลับคายเศษวัสดุตามจังหวะ","หล่อลื่นมากเกินไป","รูนำมีขนาดใหญ่เกินไป","ใช้ความเร็วรอบต่ำเกินไป"], a:0},
+  {q:"เกลียวขวา (Right-hand Thread) กับเกลียวซ้าย (Left-hand Thread) ต่างกันอย่างไร", c:["เกลียวขวาขันแน่นเมื่อหมุนตามเข็มนาฬิกา ส่วนเกลียวซ้ายขันแน่นเมื่อหมุนทวนเข็มนาฬิกา","ทั้งสองแบบขันแน่นด้วยทิศทางเดียวกัน","เกลียวซ้ายใช้กับพลาสติกเท่านั้น","ไม่มีความแตกต่างกันเลย"], a:0},
+  {q:"การใช้ด้ามจับต๊าป (Tap Wrench) ที่เหมาะสมกับขนาดดอกต๊าปมีความสำคัญอย่างไร", c:["ช่วยควบคุมแรงบิดและทิศทางให้ดอกต๊าปตั้งฉากกับชิ้นงาน ลดโอกาสเกลียวเอียงหรือดอกต๊าปหัก","ไม่มีผลต่อคุณภาพเกลียว","ทำให้ทำเกลียวได้เร็วขึ้นเท่านั้นโดยไม่มีผลอื่น","ใช้เพื่อความสวยงามเท่านั้น"], a:0},
+];
+const BEND_Q = [
+  {q:"การดัดโลหะแผ่นด้วยมือมักใช้เครื่องมือพื้นฐานใด", c:["แท่นดัด/ปากกาดัด (Bending Bar/Vise) ร่วมกับค้อนยาง","สว่านมือ","ดอกต๊าป","ตะไบกลม"], a:0},
+  {q:"เหตุใดจึงควรคำนวณระยะชดเชยการยืดตัว (Bend Allowance) ก่อนดัดโลหะแผ่น", c:["เพื่อให้ความยาวชิ้นงานหลังดัดตรงตามขนาดที่ออกแบบไว้ เนื่องจากโลหะยืดตัวบริเวณมุมดัด","เพื่อให้โลหะมีสีสวยขึ้น","เพื่อลดน้ำหนักของชิ้นงาน","ไม่มีความจำเป็นต้องคำนวณ"], a:0},
+  {q:"รัศมีดัด (Bend Radius) ที่เล็กเกินไปอาจทำให้เกิดปัญหาใดกับโลหะแผ่น", c:["เกิดรอยแตกร้าวบริเวณมุมดัดโดยเฉพาะกับโลหะที่เปราะหรือหนา","ทำให้โลหะแข็งแรงขึ้นเสมอ","ไม่มีผลใดๆ ต่อชิ้นงาน","ทำให้ชิ้นงานเบาลง"], a:0},
+  {q:"ค้อนยางหรือค้อนไม้ นิยมใช้ในงานดัดโลหะแผ่นเพราะเหตุใด", c:["ลดโอกาสเกิดรอยบุบหรือรอยขีดข่วนบนผิวชิ้นงานเมื่อเทียบกับค้อนเหล็ก","ทำให้ดัดโลหะได้แรงกว่าค้อนเหล็กเสมอ","มีน้ำหนักมากกว่าค้อนเหล็ก","ใช้ตัดโลหะได้ด้วย"], a:0},
+  {q:"การดัดท่อโลหะโดยไม่ให้ท่อแบนหรือย่นบริเวณมุมดัด มักใช้เครื่องมือหรือวิธีใดช่วย", c:["เครื่องดัดท่อ (Pipe Bender) หรือการใส่สปริงดัดท่อ/บรรจุทรายในท่อก่อนดัด","ใช้ค้อนเหล็กทุบโดยตรง","เผาท่อให้แดงก่อนดัดทุกกรณี","ไม่ต้องใช้เครื่องมือพิเศษใดๆ"], a:0},
+  {q:"เส้นแนวดัด (Bend Line) ที่ขีดไว้บนชิ้นงานก่อนดัดมีประโยชน์อย่างไร", c:["เป็นแนวอ้างอิงให้ดัดชิ้นงานได้ตรงตำแหน่งและมุมที่ต้องการ","ทำให้โลหะแข็งแรงขึ้น","ไม่มีประโยชน์ใดๆ","ใช้แทนการวัดขนาดทั้งหมด"], a:0},
+  {q:"เหตุใดโลหะบางชนิด เช่น เหล็กกล้าคาร์บอนสูง จึงไม่เหมาะกับการดัดเย็น (Cold Bending) มุมแหลม", c:["มีความเปราะสูง เสี่ยงแตกร้าวบริเวณมุมดัดได้ง่ายกว่าเหล็กกล้าคาร์บอนต่ำ","ดัดง่ายที่สุดในบรรดาโลหะทั้งหมด","มีราคาถูกที่สุด","ไม่มีผลต่อการดัด"], a:0},
+  {q:"แท่นดัดมุมฉาก (Box and Pan Brake) ใช้สำหรับงานลักษณะใดเป็นหลัก", c:["ดัดโลหะแผ่นให้เป็นมุมหรือกล่องตามแนวเส้นที่กำหนด","เจาะรูโลหะ","ตัดโลหะให้ขาด","วัดขนาดชิ้นงาน"], a:0},
+  {q:"การดัดโลหะร้อน (Hot Bending) แตกต่างจากการดัดเย็น (Cold Bending) อย่างไร", c:["ดัดร้อนต้องเผาชิ้นงานให้ร้อนก่อนดัด ทำให้ดัดง่ายขึ้นและลดความเสี่ยงแตกร้าวในโลหะที่แข็งหรือหนา","ดัดร้อนใช้กับพลาสติกเท่านั้น","ดัดเย็นต้องเผาชิ้นงานก่อนเสมอ","ทั้งสองวิธีเหมือนกันทุกประการ"], a:0},
+  {q:"ข้อควรระวังด้านความปลอดภัยเมื่อดัดโลหะร้อนคือข้อใด", c:["สวมอุปกรณ์ป้องกันความร้อน เช่น ถุงมือหนังและแว่นตานิรภัย และระวังไม่ให้ผิวหนังสัมผัสชิ้นงานร้อนโดยตรง","ไม่จำเป็นต้องสวมอุปกรณ์ป้องกันใดๆ","จับชิ้นงานร้อนด้วยมือเปล่าได้ตามปกติ","ทำงานใกล้วัสดุไวไฟได้โดยไม่มีความเสี่ยง"], a:0},
+];
+const RIVET_Q = [
+  {q:"หมุดย้ำ (Rivet) เป็นวิธีการยึดชิ้นงานประเภทใด", c:["การยึดแบบถาวร (Permanent Joint) ที่ไม่สามารถถอดประกอบซ้ำได้โดยไม่ทำลายหมุด","การยึดแบบถอดประกอบได้ไม่จำกัดครั้ง","การเชื่อมโลหะด้วยความร้อน","การยึดด้วยกาว"], a:0},
+  {q:"ขั้นตอนพื้นฐานของการย้ำหมุดด้วยมือเริ่มจากอะไร", c:["เจาะรูให้ขนาดพอดีกับหมุด สอดหมุดเข้ารู แล้วตีหัวหมุดอีกด้านให้แผ่ยึดชิ้นงาน","ทาสีหมุดก่อนใช้งานทุกครั้ง","อบชุบหมุดด้วยความร้อนก่อนใช้","ตัดหมุดให้สั้นที่สุดก่อนเจาะรู"], a:0},
+  {q:"หมุดย้ำแบบดึง (Pop Rivet / Blind Rivet) มีข้อดีอย่างไรเมื่อเทียบกับหมุดย้ำแบบตอกทั่วไป", c:["สามารถย้ำได้จากด้านเดียวของชิ้นงาน เหมาะกับงานที่เข้าถึงได้เพียงด้านเดียว","ต้องเข้าถึงชิ้นงานทั้งสองด้านเสมอ","แข็งแรงน้อยกว่าหมุดตอกทุกกรณี","ใช้ได้กับพลาสติกเท่านั้น"], a:0},
+  {q:"ขนาดรูเจาะสำหรับใส่หมุดย้ำควรมีลักษณะอย่างไร", c:["ใหญ่กว่าเส้นผ่านศูนย์กลางหมุดเล็กน้อยตามมาตรฐาน เพื่อให้สอดหมุดเข้าได้พอดีไม่หลวมเกินไป","เล็กกว่าหมุดเสมอเพื่อให้แน่นที่สุด","ใหญ่กว่าหมุดมากเพื่อให้สอดง่าย","ไม่มีมาตรฐานกำหนด"], a:0},
+  {q:"เหตุใดความยาวของก้านหมุดที่โผล่พ้นชิ้นงานก่อนตีย้ำจึงมีความสำคัญ", c:["หากสั้นหรือยาวเกินไปจะทำให้หัวย้ำที่เกิดขึ้นไม่แน่นหรือไม่ได้รูปทรงที่แข็งแรง","ไม่มีผลต่อความแข็งแรงของงาน","ทำให้เปลี่ยนสีของหมุด","มีผลต่อน้ำหนักของหมุดเท่านั้น"], a:0},
+  {q:"การย้ำหมุดหลายตัวเรียงแถวในงานแผ่นโลหะ ควรย้ำตามลำดับใดจึงเหมาะสม", c:["ย้ำจากจุดกึ่งกลางออกไปด้านนอกสลับกัน เพื่อกระจายแรงและลดการบิดงอของชิ้นงาน","ย้ำจากปลายด้านหนึ่งไปอีกด้านหนึ่งเรียงลำดับตรงๆ เสมอ","ย้ำตัวใดก่อนก็ได้ไม่มีผล","ต้องย้ำพร้อมกันทุกตัวในเวลาเดียวกัน"], a:0},
+  {q:"วัสดุที่นิยมใช้ทำหมุดย้ำสำหรับงานโลหะแผ่นบางทั่วไปคือข้อใด", c:["อะลูมิเนียมหรือเหล็กกล้าอ่อน","แก้ว","เซรามิก","ไม้"], a:0},
+  {q:"ข้อแตกต่างหลักระหว่างการยึดด้วยหมุดย้ำกับการยึดด้วยสกรู/น็อตคืออะไร", c:["หมุดย้ำเป็นการยึดถาวรถอดไม่ได้ ส่วนสกรู/น็อตสามารถถอดประกอบซ้ำได้","หมุดย้ำถอดประกอบได้ง่ายกว่าสกรูเสมอ","สกรูใช้ได้กับพลาสติกเท่านั้น","ทั้งสองวิธีให้ผลลัพธ์เหมือนกันทุกประการ"], a:0},
+  {q:"เครื่องมือที่ใช้ตีขึ้นหัวหมุด (Rivet Set/Snap) มีหน้าที่อะไร", c:["ช่วยขึ้นรูปหัวหมุดด้านที่ตีให้มีรูปทรงกลมสวยงามและแน่นหนา","ใช้เจาะรูหมุด","ใช้วัดขนาดหมุด","ใช้ตัดหมุดให้สั้นลง"], a:0},
+  {q:"งานโครงสร้างที่ต้องรับแรงสั่นสะเทือนสูง เช่น ตัวถังเครื่องบินรุ่นเก่า เหตุใดจึงนิยมใช้หมุดย้ำมากกว่าการเชื่อม", c:["หมุดย้ำไม่ทำให้เกิดความร้อนที่เปลี่ยนโครงสร้างวัสดุ และทนต่อแรงสั่นสะเทือนได้ดีโดยไม่แตกร้าวง่ายเหมือนรอยเชื่อมบางกรณี","หมุดย้ำมีน้ำหนักเบากว่าเสมอในทุกกรณี","การเชื่อมทำไม่ได้กับโลหะทุกชนิด","หมุดย้ำมีราคาแพงกว่าการเชื่อมมาก"], a:0},
+];
+const ASSEMBLE_Q = [
+  {q:"สลักเกลียว (Bolt) และน็อต (Nut) เป็นวิธียึดชิ้นงานประเภทใด", c:["การยึดแบบถอดประกอบได้ (Removable Joint)","การยึดแบบถาวรเท่านั้น","การเชื่อมด้วยความร้อน","การยึดด้วยกาวเท่านั้น"], a:0},
+  {q:"แหวนรองสปริง (Spring Washer) ใช้ประกอบร่วมกับสลักเกลียวเพื่อวัตถุประสงค์ใด", c:["ป้องกันน็อตคลายตัวจากแรงสั่นสะเทือน","เพิ่มความยาวของสลักเกลียว","เปลี่ยนขนาดเกลียว","ลดน้ำหนักของชิ้นงาน"], a:0},
+  {q:"แรงบิดขัน (Torque) ที่เหมาะสมในการขันน็อตมีความสำคัญอย่างไร", c:["ทำให้การยึดแน่นเพียงพอโดยไม่ทำให้เกลียวหรือชิ้นงานเสียหายจากแรงมากเกินไป","ไม่มีผลต่อคุณภาพงาน ขันแน่นแค่ไหนก็ได้","ทำให้เกลียวมีขนาดใหญ่ขึ้น","มีผลต่อสีของน็อตเท่านั้น"], a:0},
+  {q:"ประแจปอนด์ (Torque Wrench) ใช้สำหรับอะไร", c:["ขันน็อต/สลักเกลียวให้ได้ค่าแรงบิดที่กำหนดอย่างแม่นยำ","วัดขนาดเส้นผ่านศูนย์กลางของน็อต","ตัดเกลียวน็อต","เจาะรูสำหรับใส่สลักเกลียว"], a:0},
+  {q:"ลำดับการขันน็อตหลายตัวบนหน้าแปลน (Flange) ที่ถูกต้องเพื่อให้แรงกดสม่ำเสมอคือแบบใด", c:["ขันแบบไขว้ (Cross/Star Pattern) ทีละน้อยจนครบ แทนที่จะขันแน่นตัวใดตัวหนึ่งจนสุดก่อน","ขันตัวแรกให้แน่นสุดก่อนแล้วค่อยขันตัวถัดไป","ขันเรียงจากซ้ายไปขวาตามลำดับเสมอ","ไม่มีลำดับที่เฉพาะเจาะจง"], a:0},
+  {q:"สลักเกลียวหกเหลี่ยมฝังใน (Socket Head Cap Screw) ต้องใช้เครื่องมือใดขัน", c:["ประแจหกเหลี่ยม (Allen Key/Hex Key)","ประแจเลื่อน","คีมล็อก","ไขควงแบน"], a:0},
+  {q:"การใช้กาวล็อกเกลียว (Thread Locker/Loctite) มีวัตถุประสงค์อะไร", c:["ป้องกันสลักเกลียวและน็อตคลายตัวเองจากแรงสั่นสะเทือนในระยะยาว","เพิ่มความแข็งแรงของเกลียวให้มากกว่าเดิมสองเท่า","ทำให้เกลียวมีสีสันสวยงาม","ใช้แทนน้ำมันหล่อลื่นในการทำเกลียว"], a:0},
+  {q:"หากขันน็อตแน่นเกินค่าที่กำหนด (Over-torque) อาจเกิดปัญหาใด", c:["เกลียวเสียหาย/ขาด หรือชิ้นงานที่ยึดแตกร้าวเสียหาย","ทำให้งานแข็งแรงขึ้นเสมอโดยไม่มีข้อเสีย","ไม่มีผลใดๆ ต่อชิ้นงาน","ทำให้เกลียวมีอายุการใช้งานนานขึ้น"], a:0},
+  {q:"สกรูเกลียวปล่อย (Self-tapping Screw) เหมาะกับการใช้งานลักษณะใด", c:["ยึดวัสดุที่ยังไม่มีเกลียวมาก่อน โดยสกรูจะสร้างเกลียวขึ้นเองขณะขัน","ใช้ได้เฉพาะกับรูที่มีเกลียวสำเร็จรูปมาก่อนเท่านั้น","ใช้แทนหมุดย้ำในทุกกรณี","ใช้กับกระจกเท่านั้น"], a:0},
+  {q:"เหตุใดจึงควรเลือกใช้สลักเกลียวและน็อตที่มีเกรดวัสดุเหมาะสมกับงานที่ต้องรับแรงสูง เช่น โครงสร้างเครื่องจักร", c:["เพื่อให้รับแรงดึงและแรงเฉือนได้ตามที่ออกแบบไว้โดยไม่เสียหายหรือคลายตัวก่อนเวลาอันควร","เพราะไม่มีผลต่อความแข็งแรงของงานเลย","เพื่อให้มีราคาถูกที่สุดเท่านั้น","เพื่อความสวยงามเพียงอย่างเดียว"], a:0},
+];
+const GRIND_Q = [
+  {q:"เครื่องเจียรมือ (Angle Grinder) ใช้สำหรับงานลักษณะใดเป็นหลัก", c:["ตัด เจียร และขัดผิวโลหะด้วยใบเจียร/ใบตัดที่หมุนด้วยความเร็วสูง","เจาะรูขนาดใหญ่","ทำเกลียวใน","วัดขนาดชิ้นงาน"], a:0},
+  {q:"ก่อนใช้เครื่องเจียรมือทุกครั้ง ควรตรวจสอบสิ่งใดเพื่อความปลอดภัย", c:["สภาพใบเจียรว่าไม่แตกร้าว และยึดแน่นหนาถูกต้องตามขนาดเครื่อง พร้อมสวมแว่นตานิรภัย","ตรวจสอบสีของใบเจียรเท่านั้น","ไม่จำเป็นต้องตรวจสอบก่อนใช้งาน","ตรวจสอบเฉพาะน้ำหนักของเครื่อง"], a:0},
+  {q:"ฝาครอบป้องกัน (Guard) บนเครื่องเจียรมือมีความสำคัญอย่างไร", c:["ป้องกันเศษวัสดุหรือใบเจียรที่แตกกระเด็นมาโดนผู้ใช้งาน","ทำให้เจียรได้เร็วขึ้นเท่านั้น","ไม่มีผลต่อความปลอดภัย สามารถถอดออกได้เสมอ","ใช้เพื่อความสวยงามของเครื่องเท่านั้น"], a:0},
+  {q:"ความเร็วรอบสูงสุดที่ระบุบนใบเจียร (Max RPM) ต้องสัมพันธ์กับเครื่องเจียรอย่างไร", c:["ต้องไม่ต่ำกว่าความเร็วรอบสูงสุดของเครื่องเจียรที่ใช้ เพื่อป้องกันใบเจียรแตกจากแรงเหวี่ยง","ไม่มีความเกี่ยวข้องกัน สามารถใช้ใบใดก็ได้","ต้องต่ำกว่าความเร็วเครื่องเสมอ","มีผลเฉพาะกับสีของใบเจียรเท่านั้น"], a:0},
+  {q:"มุมจับเครื่องเจียรมือที่เหมาะสมขณะเจียรผิวงานควรเป็นอย่างไร", c:["เอียงทำมุมพอเหมาะกับผิวงานตามลักษณะงาน และจับให้มั่นคงด้วยสองมือ","ตั้งฉาก 90 องศากับผิวงานเสมอทุกกรณี","จับด้วยมือเดียวเพื่อความรวดเร็ว","ไม่มีมุมที่เหมาะสมเฉพาะเจาะจง"], a:0},
+  {q:"การเจียรโลหะเป็นเวลานานต่อเนื่องโดยไม่พักอาจก่อให้เกิดปัญหาใดกับใบเจียรและชิ้นงาน", c:["ความร้อนสะสมสูงทำให้ใบเจียรสึกเร็วและชิ้นงานอาจเสียคุณสมบัติทางกลบริเวณที่ร้อนจัด","ทำให้ชิ้นงานแข็งแรงขึ้นเสมอ","ไม่มีผลกระทบใดๆ","ทำให้ใบเจียรมีอายุการใช้งานนานขึ้น"], a:0},
+  {q:"อุปกรณ์ป้องกันส่วนบุคคล (PPE) ที่จำเป็นเมื่อใช้เครื่องเจียรมือได้แก่ข้อใด", c:["แว่นตานิรภัย ที่ครอบหน้าใส ถุงมือ และอุปกรณ์ป้องกันเสียง","สวมรองเท้าแตะเพื่อความคล่องตัว","ไม่จำเป็นต้องสวมอุปกรณ์ป้องกันใดๆ หากทำงานเร็ว","สวมเสื้อแขนกว้างหลวมเพื่อความสบาย"], a:0},
+  {q:"ใบตัด (Cutting Disc) และใบเจียร (Grinding Disc) ต่างกันอย่างไรในการใช้งาน", c:["ใบตัดออกแบบมาบางเพื่อตัดชิ้นงานให้ขาด ส่วนใบเจียรหนากว่าเพื่อขัดลบมุมหรือปาดผิวงาน","ทั้งสองแบบใช้งานแทนกันได้เสมอโดยไม่มีข้อแตกต่าง","ใบตัดใช้เจียรผิวงานได้ดีกว่าใบเจียร","ใบเจียรใช้ตัดเหล็กหนาได้ดีกว่าใบตัดเสมอ"], a:0},
+  {q:"เหตุใดจึงไม่ควรใช้แรงกดเครื่องเจียรมือลงบนชิ้นงานมากเกินไป", c:["อาจทำให้ใบเจียรแตกหรือเครื่องเสียการควบคุม เสี่ยงเกิดอุบัติเหตุ","ทำให้งานเสร็จเร็วขึ้นโดยไม่มีความเสี่ยง","ไม่มีผลต่อความปลอดภัยเลย","ทำให้ใบเจียรมีอายุการใช้งานนานขึ้น"], a:0},
+  {q:"การเก็บรักษาใบเจียรที่ยังไม่ได้ใช้งานควรทำอย่างไร", c:["เก็บในที่แห้ง ไม่กระแทกหรือวางซ้อนทับจนแตกร้าว และเก็บให้พ้นความชื้น","แช่น้ำมันหล่อลื่นตลอดเวลา","วางตากแดดโดยตรงเพื่อฆ่าเชื้อ","ไม่มีข้อควรระวังในการเก็บรักษา"], a:0},
+];
+
+const SECTIONS = [
+  {key:'drill', label:'งานเจาะ', color:'#60a5fa', list: DRILL_Q},
+  {key:'thread', label:'งานทำเกลียว', color:'#fb923c', list: THREAD_Q},
+  {key:'bend', label:'งานดัดโลหะ', color:'#22c55e', list: BEND_Q},
+  {key:'rivet', label:'งานหมุดย้ำ', color:'#a78bfa', list: RIVET_Q},
+  {key:'assemble', label:'งานประกอบยึด', color:'#f472b6', list: ASSEMBLE_Q},
+  {key:'grind', label:'งานเจียร', color:'#facc15', list: GRIND_Q},
+];
+
+const MASTER_QUESTIONS = SECTIONS.flatMap(s => s.list.map(q => ({...q, sec: s.key, secTH: s.label, color: s.color})));
+const N = MASTER_QUESTIONS.length; // 60
+const PT_PER_Q = 200 / N;
+
+// ─── SHUFFLE (สุ่มลำดับข้อภายในแต่ละหัวข้อ + สุ่มลำดับตัวเลือก ต่อผู้เข้าสอบ 1 คน) ──
+function shuffled(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function buildExamQuestions(){
+  const out = [];
+  SECTIONS.forEach(({key, label, color, list})=>{
+    shuffled(list).forEach(q=>{
+      const order = shuffled([0,1,2,3]);
+      out.push({
+        q: q.q,
+        c: order.map(origIdx=>q.c[origIdx]),
+        a: order.indexOf(q.a),
+        sec: key, secTH: label, color,
+      });
+    });
+  });
+  return out;
+}
+let examQuestions = MASTER_QUESTIONS; // reassigned per attempt in startExam()
+
+// ─── GRADING (เกณฑ์: <50%=ไม่ผ่าน, 50-59%=เกรด1, 60-69%=เกรด2, 70-79%=เกรด3, 80%+=เกรด4) ──
+function gradeOf(pct){
+  if(pct >= 80) return {n:4, label:'เกรด 4', pass:true};
+  if(pct >= 70) return {n:3, label:'เกรด 3', pass:true};
+  if(pct >= 60) return {n:2, label:'เกรด 2', pass:true};
+  if(pct >= 50) return {n:1, label:'เกรด 1', pass:true};
+  return {n:0, label:'เกรด 0 (ไม่ผ่าน)', pass:false};
+}
+
+// ─── STATE ────────────────────────────────────────────
+let student = null;
+let answers = new Array(N).fill(-1);
+let currentQ = 0;
+let timeLeft = EXAM_SECONDS;
+let timerInterval = null;
+let submitted = false;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── LOGIN / START ────────────────────────────────────
+function startExam(){
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const dept = document.getElementById('dept').value.trim();
+  if(!fname || !lname || !dept){ alert('กรุณากรอก ชื่อ นามสกุล และแผนก ให้ครบ'); return; }
+  student = {fname, lname, dept};
+  document.getElementById('examWho').textContent = `${fname} ${lname} — ${dept}`;
+  examQuestions = buildExamQuestions();
+  buildNavGrid();
+  gotoQ(0);
+  show('s-exam');
+  timeLeft = EXAM_SECONDS;
+  updateTimerDisplay();
+  timerInterval = setInterval(tick, 1000);
+  window.addEventListener('beforeunload', beforeUnload);
+}
+
+function beforeUnload(e){
+  if(!submitted){ e.preventDefault(); e.returnValue=''; }
+}
+
+function tick(){
+  timeLeft--;
+  updateTimerDisplay();
+  if(timeLeft <= 0){ doSubmit(); }
+}
+
+function updateTimerDisplay(){
+  const h = Math.floor(timeLeft/3600), m = Math.floor((timeLeft%3600)/60), s = timeLeft%60;
+  const el = document.getElementById('timerNum');
+  el.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('warn', timeLeft <= 600 && timeLeft > 120);
+  el.classList.toggle('danger', timeLeft <= 120);
+}
+
+// ─── NAVIGATOR ────────────────────────────────────────
+function buildNavGrid(){
+  const grid = document.getElementById('navgrid');
+  grid.innerHTML = '';
+  for(let i=0;i<N;i++){
+    const b = document.createElement('button');
+    b.className = 'navbtn';
+    b.id = 'nav'+i;
+    b.textContent = i+1;
+    b.onclick = ()=>gotoQ(i);
+    grid.appendChild(b);
+  }
+}
+function refreshNavGrid(){
+  for(let i=0;i<N;i++){
+    const b = document.getElementById('nav'+i);
+    b.classList.toggle('answered', answers[i] !== -1);
+    b.classList.toggle('current', i === currentQ);
+  }
+}
+
+// ─── QUESTION RENDER ──────────────────────────────────
+function gotoQ(i){
+  if(i<0 || i>=N) return;
+  currentQ = i;
+  const item = examQuestions[i];
+  const badge = document.getElementById('qBadge');
+  badge.textContent = item.secTH;
+  badge.style.background = item.color;
+  document.getElementById('qNum').textContent = `ข้อที่ ${i+1} / ${N}`;
+  document.getElementById('qText').textContent = item.q;
+  const wrap = document.getElementById('qChoices');
+  wrap.innerHTML = '';
+  const letters = ['ก','ข','ค','ง'];
+  item.c.forEach((choice, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (answers[i]===idx ? ' sel' : '');
+    btn.innerHTML = `<span class="choice-ltr">${letters[idx]}</span><span>${choice}</span>`;
+    btn.onclick = ()=>{ answers[i]=idx; gotoQ(i); };
+    wrap.appendChild(btn);
+  });
+  document.getElementById('btnPrev').disabled = (i===0);
+  document.getElementById('btnNext').textContent = (i===N-1) ? '✓ ไปหน้าส่งข้อสอบ' : 'ข้อถัดไป →';
+  document.getElementById('btnNext').onclick = (i===N-1) ? confirmSubmit : ()=>gotoQ(currentQ+1);
+  refreshNavGrid();
+}
+
+// ─── SUBMIT ───────────────────────────────────────────
+function confirmSubmit(){
+  const unanswered = answers.filter(a=>a===-1).length;
+  const msg = unanswered>0
+    ? `ยังมีข้อที่ยังไม่ได้ตอบ ${unanswered} ข้อ ยืนยันส่งข้อสอบหรือไม่?`
+    : 'ยืนยันส่งข้อสอบหรือไม่?';
+  if(confirm(msg)) doSubmit();
+}
+
+async function doSubmit(){
+  if(submitted) return;
+  submitted = true;
+  clearInterval(timerInterval);
+  window.removeEventListener('beforeunload', beforeUnload);
+
+  const secCorrect = {};
+  SECTIONS.forEach(s=> secCorrect[s.key] = 0);
+  examQuestions.forEach((item, i)=>{ if(answers[i] === item.a) secCorrect[item.sec]++; });
+
+  const totalCorrect = SECTIONS.reduce((sum,s)=> sum + secCorrect[s.key], 0);
+  const totalPts = +(totalCorrect * PT_PER_Q).toFixed(1);
+  const scores = {};
+  SECTIONS.forEach(s=> scores[s.key] = +(secCorrect[s.key] * PT_PER_Q).toFixed(1));
+  const pct = +(totalPts/200*100).toFixed(1);
+  const usedSec = EXAM_SECONDS - Math.max(timeLeft,0);
+
+  const grade = gradeOf(pct);
+  const record = {
+    fname: student.fname, lname: student.lname, dept: student.dept,
+    scores: scores,
+    total: totalPts, pct: pct,
+    gradeN: grade.n, gradeLabel: grade.label, pass: grade.pass,
+    usedSec: usedSec,
+    submittedAt: Date.now(),
+  };
+
+  try{
+    await fetch(RESULTS_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(record)});
+  }catch(e){ /* เก็บผลไว้แสดงในเครื่องได้แม้ส่งขึ้นเซิร์ฟเวอร์ไม่สำเร็จ */ }
+
+  showResult(record);
+}
+
+let lastResult = null;
+function showResult(r){
+  lastResult = r;
+  document.getElementById('rScore').textContent = `${r.total} / 200 คะแนน`;
+  document.getElementById('rPct').textContent = `คิดเป็น ${r.pct}%`;
+  document.getElementById('rWho').textContent = `${r.fname} ${r.lname} — ${r.dept}`;
+  document.getElementById('rGrade').innerHTML = `<span class="grade-badge g${r.gradeN}">${r.pass ? '✅' : '❌'} ${r.gradeLabel}</span>`;
+  document.getElementById('rEmoji').textContent = r.pct>=80 ? '🏆' : r.pct>=50 ? '👍' : '📘';
+  const maxPerSec = +(10 * PT_PER_Q).toFixed(1);
+  document.getElementById('rBreakdown').innerHTML = SECTIONS.map(s=>{
+    const val = r.scores[s.key];
+    return `
+    <div class="sec-row">
+      <div class="sec-label">${s.label}</div>
+      <div class="sec-bar-wrap"><div class="sec-bar" style="width:${(val/maxPerSec*100)}%;background:${s.color}"></div></div>
+      <div class="sec-val">${val} / ${maxPerSec}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('btnCert').style.display = r.pass ? 'block' : 'none';
+  show('s-result');
+}
+
+// ─── CERTIFICATE (ออกให้อัตโนมัติเมื่อสอบผ่าน) ─────────
+async function downloadCertificate(overrideResult){
+  const r = overrideResult || lastResult;
+  if(!r || !r.pass) return;
+  // ใช้ Web Share API (แชร์ไฟล์ตรง) เป็นหลักถ้ารองรับ — เชื่อถือได้สุดบนมือถือ ไม่ติดปัญหา popup/download attribute/in-app browser
+  const canWebShareFile = (() => {
+    try { return !!(navigator.canShare && navigator.share && navigator.canShare({files:[new File([''], 't.png', {type:'image/png'})]})); }
+    catch(e){ return false; }
+  })();
+  // ถ้าไม่รองรับ Web Share ค่อยเปิดแท็บใหม่แบบ synchronous ก่อน await ใดๆ (กันมือถือบล็อก popup)
+  const certWindow = canWebShareFile ? null : window.open('', '_blank');
+  if(document.fonts && document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} }
+
+  const canvas = document.getElementById('certCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // พื้นหลัง
+  ctx.fillStyle = '#fdfaf3';
+  ctx.fillRect(0,0,W,H);
+
+  // กรอบคู่ตกแต่ง
+  ctx.strokeStyle = '#0b2d4a';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(30,30,W-60,H-60);
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(50,50,W-100,H-100);
+
+  ctx.textAlign = 'center';
+
+  // หัวเรื่อง
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "800 60px 'Sarabun', sans-serif";
+  ctx.fillText('ใบประกาศเกียรติคุณ', W/2, 175);
+  ctx.fillStyle = '#c9a227';
+  ctx.font = "700 24px 'Sarabun', sans-serif";
+  ctx.fillText('CERTIFICATE OF ACHIEVEMENT', W/2, 215);
+
+  ctx.fillStyle = '#333';
+  ctx.font = "400 26px 'Sarabun', sans-serif";
+  ctx.fillText('มอบให้เพื่อแสดงว่า', W/2, 300);
+
+  // ชื่อ
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "800 52px 'Sarabun', sans-serif";
+  ctx.fillText(`${r.fname} ${r.lname}`, W/2, 375);
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(W/2-260,400); ctx.lineTo(W/2+260,400); ctx.stroke();
+
+  ctx.fillStyle = '#333';
+  ctx.font = "400 24px 'Sarabun', sans-serif";
+  ctx.fillText(`แผนก / ชั้นปี ${r.dept}`, W/2, 445);
+
+  ctx.font = "400 26px 'Sarabun', sans-serif";
+  const bodyLines = [
+    'ได้สอบผ่านการทดสอบปลายภาคเรียนที่ 1 ปีการศึกษา 2569',
+    'วิชางานฝึกฝีมือ (20100-1003)',
+  ];
+  bodyLines.forEach((line,i)=> ctx.fillText(line, W/2, 495 + i*38));
+
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "700 30px 'Sarabun', sans-serif";
+  ctx.fillText(`คะแนน ${r.total} / 200 (${r.pct}%)  —  ${r.gradeLabel}`, W/2, 605);
+
+  const dateTH = new Date(r.submittedAt || Date.now()).toLocaleDateString('th-TH-u-ca-buddhist', {day:'numeric', month:'long', year:'numeric'});
+  ctx.fillStyle = '#555';
+  ctx.font = "400 22px 'Sarabun', sans-serif";
+  ctx.fillText(`ให้ไว้ ณ วันที่ ${dateTH}`, W/2, 660);
+
+  // ลายเซ็น (รูปจริง พื้นขาว ผสมด้วย multiply เพื่อให้พื้นขาวกลืนกับพื้นใบประกาศ)
+  try{
+    const sigImg = new Image();
+    await new Promise((res, rej) => { sigImg.onload = res; sigImg.onerror = rej; sigImg.src = 'data:image/png;base64,' + SIGNATURE_PNG_B64; });
+    const sigW = 210, sigH = sigW * (sigImg.naturalHeight / sigImg.naturalWidth);
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.drawImage(sigImg, W/2 - sigW/2, 840 - sigH - 8, sigW, sigH);
+    ctx.globalCompositeOperation = 'source-over';
+  }catch(e){ /* ไม่มีรูปลายเซ็น ใช้เส้นว่างแทน */ }
+
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(W/2-190,840); ctx.lineTo(W/2+190,840); ctx.stroke();
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "700 24px 'Sarabun', sans-serif";
+  ctx.fillText('(นายธานี ชมสุข)', W/2, 875);
+  ctx.fillStyle = '#555';
+  ctx.font = "400 20px 'Sarabun', sans-serif";
+  ctx.fillText('ครูผู้สอน วิทยาลัยการอาชีพบุรีรัมย์', W/2, 905);
+
+  const fileName = `certificate-handskill-final-${r.fname}-${r.lname}.png`;
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+
+  if(canWebShareFile){
+    try{
+      await navigator.share({files:[new File([blob], fileName, {type:'image/png'})], title:'ใบประกาศเกียรติคุณ', text: `${r.fname} ${r.lname}`});
+    }catch(e){ /* ผู้ใช้กดยกเลิกการแชร์ หรือแชร์ไม่สำเร็จ — ถือเป็นการตัดสินใจของผู้ใช้ ไม่ต้องทำอะไรเพิ่ม */ }
+    return;
+  }
+
+  const blobUrl = URL.createObjectURL(blob);
+  if(certWindow){
+    certWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบประกาศ - ${r.fname} ${r.lname}</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;background:#111;font-family:'Sarabun',sans-serif;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px}p{color:#fff;text-align:center;margin:0 0 14px;font-size:15px;line-height:1.8}img{max-width:100%;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5)}</style></head><body><p>📱 มือถือ: แตะค้างที่รูปด้านล่าง แล้วเลือก "บันทึกรูปภาพ"<br>💻 คอมพิวเตอร์: คลิกขวาที่รูป แล้วเลือก "บันทึกรูปภาพเป็น"</p><img src="${blobUrl}" alt="certificate"></body></html>`);
+    certWindow.document.close();
+  }else{
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = blobUrl;
+    link.click();
+    alert('เบราว์เซอร์บล็อกการเปิดหน้าต่างใหม่ กรุณาอนุญาต Pop-up ของเว็บนี้แล้วลองใหม่');
+  }
+}
+
+// ─── REPORT (สำหรับครู) ───────────────────────────────
+let reportData = [];
+let currentReportRows = [];
+function downloadCertificateForRow(i){ downloadCertificate(currentReportRows[i]); }
+function openReport(){
+  const pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผลสอบ:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  show('s-report');
+  loadReport();
+}
+function backToLogin(){ show('s-login'); }
+
+async function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  try{
+    const res = await fetch(RESULTS_URL, {cache:'no-store'});
+    const data = await res.json();
+    reportData = data ? Object.values(data).sort((a,b)=>b.submittedAt-a.submittedAt) : [];
+  }catch(e){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+    return;
+  }
+  renderReport();
+}
+
+function renderReport(){
+  const filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  const rows = reportData.filter(r=>{
+    if(!filter) return true;
+    return (`${r.fname} ${r.lname} ${r.dept}`).toLowerCase().includes(filter);
+  });
+  const wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีนักเรียนสอบ หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  const gradeFor = r => r.gradeN != null ? {n:r.gradeN, label:r.gradeLabel} : (()=>{ const g=gradeOf(r.pct); return {n:g.n, label:g.label}; })();
+  currentReportRows = rows;
+  wrap.innerHTML = `<table class="rpt"><thead><tr>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th>${SECTIONS.map(s=>`<th>${s.label}</th>`).join('')}<th>รวม</th><th>%</th><th>เกรด</th><th>ใบประกาศ</th>
+  </tr></thead><tbody>
+  ${rows.map((r,i)=>{ const g = gradeFor(r); return `<tr>
+    <td>${fmtTime(r.submittedAt)}</td>
+    <td>${r.fname} ${r.lname}</td>
+    <td>${r.dept}</td>
+    ${SECTIONS.map(s=>`<td>${r.scores ? r.scores[s.key] : ''}</td>`).join('')}
+    <td class="rpt-total">${r.total}</td>
+    <td>${r.pct}%</td>
+    <td class="rpt-grade g${g.n}">${g.label}</td>
+    <td>${r.pass ? `<button class="rpt-cert-btn" onclick="downloadCertificateForRow(${i})">🎓 ดาวน์โหลด</button>` : '—'}</td>
+  </tr>`; }).join('')}
+  </tbody></table>
+  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ — เกณฑ์ผ่าน: 50% ขึ้นไป (เกรด 1-4)</div>`;
+}
+
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก', ...SECTIONS.map(s=>s.label), 'รวม','เปอร์เซ็นต์','เกรด'];
+  const lines = [header.join(',')];
+  reportData.forEach(r=>{
+    const ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    const gradeLabel = r.gradeLabel != null ? r.gradeLabel : gradeOf(r.pct).label;
+    const secVals = SECTIONS.map(s=> r.scores ? r.scores[s.key] : '');
+    lines.push([ts, r.fname, r.lname, r.dept, ...secVals, r.total, r.pct, gradeLabel].map(v=>`"${v}"`).join(','));
+  });
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'exam-report-handskill-final-2569.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

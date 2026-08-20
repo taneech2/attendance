@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ชุดข้อสอบปลายภาคเรียนที่ 1/2569 — นายธานี ชมสุข</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#22d3ee;--cyd:#0891b2;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0a0f 0%,#0d1420 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.wrap{max-width:980px;margin:0 auto;padding:32px 20px 60px}
+
+/* HEADER */
+.head{text-align:center;margin-bottom:28px}
+.head .badge{font-size:48px;margin-bottom:8px}
+.head h1{font-size:26px;font-weight:800;color:var(--cy);line-height:1.5}
+.head .who{font-size:16px;color:var(--tx);margin-top:6px;font-weight:700}
+.head .org{font-size:14px;color:var(--mut);margin-top:2px}
+.head .date{font-size:13px;color:var(--mut);margin-top:10px}
+
+/* SUMMARY */
+.summary{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:28px}
+.summary h2{font-size:15px;color:var(--yw);margin-bottom:10px}
+.summary ul{margin:0;padding-left:20px;font-size:14px;line-height:2;color:var(--tx)}
+.summary b{color:var(--cy)}
+.stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px}
+.stat{flex:1;min-width:120px;background:#0d1a1e;border:1px solid var(--cyd);border-radius:10px;padding:12px 14px;text-align:center}
+.stat .n{font-size:24px;font-weight:800;color:var(--cy)}
+.stat .l{font-size:12px;color:var(--mut);margin-top:2px}
+
+/* EXAM GRID */
+.grid-title{font-size:16px;font-weight:800;color:var(--tx);margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px}
+.exam-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:10px;transition:.15s}
+.exam-card:hover{border-color:var(--cyd);transform:translateY(-2px)}
+.exam-card .top{display:flex;align-items:flex-start;gap:12px}
+.exam-card .emoji{font-size:32px;flex-shrink:0}
+.exam-card .name{font-size:15px;font-weight:800;color:var(--tx);line-height:1.4}
+.exam-card .code{font-size:12px;color:var(--mut);margin-top:2px}
+.exam-card .meta{display:flex;gap:8px;flex-wrap:wrap;font-size:11px}
+.exam-card .meta span{background:#1a1a26;border:1px solid var(--line);border-radius:20px;padding:3px 10px;color:var(--mut)}
+.exam-card .btn{display:block;text-align:center;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#001;text-decoration:none;font-weight:800;font-size:13px;border-radius:8px;padding:10px;margin-top:4px}
+.exam-card .btn:active{transform:scale(.98)}
+
+/* REPORT TABLE (สำหรับพิมพ์/ส่งรายงาน) */
+.table-title{font-size:16px;font-weight:800;color:var(--tx);margin-bottom:14px}
+.report-table-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;overflow-x:auto;margin-bottom:24px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+th{text-align:left;color:var(--yw);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--cyd);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid #1a1a26;color:var(--tx)}
+tr:hover td{background:#161622}
+td a{color:var(--cy);text-decoration:none}
+td a:hover{text-decoration:underline}
+
+/* FOOTER */
+.foot{text-align:center;font-size:12px;color:var(--mut);line-height:1.9;margin-top:20px}
+.foot b{color:var(--tx)}
+
+/* PRINT — ให้พิมพ์ออกมาเป็นรายงานสะอาด อ่านง่าย */
+@media print{
+  body{background:#fff !important;color:#111}
+  .wrap{max-width:100%;padding:0}
+  .grid{display:none}
+  .grid-title{display:none}
+  .head .badge{display:none}
+  .head h1{color:#111}
+  .summary,.report-table-wrap{background:#fff;border:1px solid #ccc}
+  .summary h2{color:#111}
+  .summary ul{color:#111}
+  .summary b{color:#111}
+  .stat{background:#f5f5f5;border:1px solid #ccc}
+  .stat .n{color:#111}
+  th{color:#111;border-bottom:2px solid #111}
+  td{color:#111;border-bottom:1px solid #ddd}
+  td a{color:#111}
+  .foot{color:#555}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="head">
+    <div class="badge">📚</div>
+    <h1>ชุดข้อสอบปลายภาคเรียนที่ 1/2569</h1>
+    <div class="who">นายธานี ชมสุข</div>
+    <div class="org">ครูผู้สอน — วิทยาลัยการอาชีพบุรีรัมย์</div>
+    <div class="date">จัดทำระบบข้อสอบออนไลน์ ณ วันที่ 21 สิงหาคม 2569</div>
+  </div>
+
+  <div class="summary">
+    <h2>รายละเอียดระบบ (ใช้ร่วมกันทุกวิชา)</h2>
+    <ul>
+      <li>ข้อสอบปรนัย <b>60 ข้อ</b> ต่อวิชา คะแนนเต็ม <b>200 คะแนน</b> เวลาสอบ <b>2 ชั่วโมง</b></li>
+      <li>เนื้อหาครอบคลุมครึ่งหลังของภาคเรียน (สัปดาห์หลังสอบกลางภาคจนถึงสัปดาห์สุดท้าย) ไม่ซ้ำกับข้อสอบกลางภาค</li>
+      <li>สุ่มลำดับข้อสอบและตัวเลือกต่อผู้เข้าสอบ 1 คน เพื่อป้องกันการลอกกัน</li>
+      <li>ตัดเกรดอัตโนมัติ 0-4 (เกณฑ์ผ่าน 50% ขึ้นไป) พร้อมออกใบประกาศเกียรติคุณให้ผู้สอบผ่าน</li>
+      <li>บันทึกผลสอบขึ้นฐานข้อมูลกลาง เข้าดูรายงานผลได้ทุกวิชาด้วยรหัสผ่านเดียวกัน (<b>2569</b>)</li>
+    </ul>
+    <div class="stat-row">
+      <div class="stat"><div class="n">7</div><div class="l">วิชา</div></div>
+      <div class="stat"><div class="n">420</div><div class="l">ข้อสอบทั้งหมด (7×60)</div></div>
+      <div class="stat"><div class="n">200</div><div class="l">คะแนนเต็มต่อวิชา</div></div>
+      <div class="stat"><div class="n">2 ชม.</div><div class="l">เวลาสอบต่อวิชา</div></div>
+    </div>
+  </div>
+
+  <div class="grid-title">รายวิชาทั้งหมด — คลิกเพื่อเข้าสอบ</div>
+  <div class="grid" id="examGrid"></div>
+
+  <div class="table-title">ตารางสรุปสำหรับรายงาน</div>
+  <div class="report-table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>รายวิชา</th><th>รหัสวิชา</th><th>จำนวนข้อ</th><th>หัวข้อ</th><th>ลิงก์เข้าสอบ</th></tr></thead>
+      <tbody id="reportTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="foot">
+    จัดทำโดย <b>นายธานี ชมสุข</b> ครูผู้สอน วิทยาลัยการอาชีพบุรีรัมย์<br>
+    ระบบข้อสอบออนไลน์ทั้งหมดพัฒนาแบบ Static Web ไม่มีค่าใช้จ่าย โฮสต์บน GitHub Pages<br>
+    รายงานผลสอบ (สำหรับครู) เข้าได้จากปุ่มในหน้าล็อกอินของแต่ละวิชา ใช้รหัสผ่านเดียวกันทุกวิชา<br>
+    ดูชุดข้อสอบกลางภาคได้ที่ <a href="exam-hub-2569.html" style="color:var(--cy)">exam-hub-2569.html</a>
+  </div>
+
+</div>
+
+<script>
+const EXAMS = [
+  {emoji:'💻', name:'การใช้เทคโนโลยีดิจิทัลเพื่ออาชีพ', sub:'Google Workspace • อินเทอร์เน็ต • การสื่อสารดิจิทัล', code:'20001-1005', topics:3, url:'it-final-2569-quiz.html'},
+  {emoji:'🔩', name:'วัสดุงานช่างอุตสาหกรรม', sub:'', code:'20100-1002', topics:6, url:'material-final-2569-quiz.html'},
+  {emoji:'🛠️', name:'งานฝึกฝีมือ', sub:'', code:'20100-1003', topics:6, url:'handskill-final-2569-quiz.html'},
+  {emoji:'🎨', name:'งานออกแบบผลิตภัณฑ์', sub:'', code:'20103-2028', topics:5, url:'productdesign-final-2569-quiz.html'},
+  {emoji:'🧮', name:'คณิตศาสตร์ช่างเชื่อม', sub:'', code:'20103-2010', topics:4, url:'weldingmath-final-2569-quiz.html'},
+  {emoji:'📐', name:'เขียนแบบงานเชื่อมและโลหะแผ่นด้วยโปรแกรมคอมพิวเตอร์', sub:'', code:'20103-2013', topics:4, url:'cadwelding-final-2569-quiz.html'},
+  {emoji:'⚜️', name:'กิจกรรมลูกเสือวิสามัญ 1', sub:'', code:'20000-2001', topics:6, url:'scout-final-2569-quiz.html'},
+];
+
+const grid = document.getElementById('examGrid');
+grid.innerHTML = EXAMS.map(e => `
+  <div class="exam-card">
+    <div class="top">
+      <div class="emoji">${e.emoji}</div>
+      <div>
+        <div class="name">${e.name}</div>
+        ${e.code ? `<div class="code">รหัสวิชา ${e.code}</div>` : ''}
+        ${e.sub ? `<div class="code">${e.sub}</div>` : ''}
+      </div>
+    </div>
+    <div class="meta"><span>60 ข้อ</span><span>200 คะแนน</span><span>${e.topics} หัวข้อ</span><span>2 ชม.</span></div>
+    <a class="btn" href="${e.url}" target="_blank" rel="noopener">🚀 เข้าสอบ / ดูรายงานผล</a>
+  </div>
+`).join('');
+
+const tbody = document.getElementById('reportTableBody');
+tbody.innerHTML = EXAMS.map((e,i) => `
+  <tr>
+    <td>${i+1}</td>
+    <td>${e.name}${e.sub ? ' ('+e.sub+')' : ''}</td>
+    <td>${e.code || '—'}</td>
+    <td>60 ข้อ / 200 คะแนน</td>
+    <td>${e.topics} หัวข้อ</td>
+    <td><a href="${e.url}" target="_blank" rel="noopener">${e.url}</a></td>
+  </tr>
+`).join('');
+</script>
+</body>
+</html>

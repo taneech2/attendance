@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ข้อสอบปลายภาค 1/2569 — วัสดุงานช่างอุตสาหกรรม</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#22d3ee;--cyd:#0891b2;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--pp:#a78bfa;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0a0f 0%,#0d1420 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.wrap{max-width:760px;margin:0 auto;padding:20px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* LOGIN */
+#s-login{align-items:center;justify-content:center;min-height:100vh;padding:12px}
+#s-login.active{display:flex}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px 24px;width:100%;max-width:440px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.login-emblem{font-size:44px;text-align:center;margin-bottom:6px}
+.login-h1{text-align:center;font-size:20px;font-weight:800;color:var(--cy);line-height:1.4}
+.login-sub{text-align:center;font-size:13px;color:var(--mut);margin:4px 0 18px}
+.rules-box{background:#0d1a1e;border:1px solid var(--cyd);border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.9;color:var(--cy)}
+.rules-box b{color:var(--yw)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:#aab;margin-bottom:6px}
+.field input{width:100%;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:14px}
+.field input:focus{outline:none;border-color:var(--cy)}
+.btn-primary{display:block;width:100%;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#001;border:none;border-radius:10px;padding:14px;font-size:17px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{display:block;width:100%;background:none;border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:10px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:10px}
+
+/* EXAM TOPBAR */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(10,10,15,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:16px}
+.topbar-inner{max-width:760px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.topbar h1{font-size:15px;color:var(--cy);font-weight:800}
+.topbar .sub{font-size:11px;color:var(--mut)}
+.timer{display:flex;align-items:center;gap:8px}
+.timer-num{font-size:20px;font-weight:800;color:var(--gr);font-variant-numeric:tabular-nums;background:#0d1a1e;border:1px solid var(--cyd);border-radius:8px;padding:4px 12px}
+.timer-num.warn{color:var(--yw);border-color:var(--yw)}
+.timer-num.danger{color:var(--rd);border-color:var(--rd);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn-submit{background:var(--rd);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer}
+
+/* NAVIGATOR */
+.navgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-bottom:18px}
+.navbtn{aspect-ratio:1;border-radius:6px;border:1.5px solid var(--line);background:#161622;color:var(--mut);font-size:11px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.navbtn.answered{background:rgba(34,211,238,.15);border-color:var(--cyd);color:var(--cy)}
+.navbtn.current{border-color:var(--yw);color:var(--yw);box-shadow:0 0 0 2px rgba(250,204,21,.3)}
+
+/* QUESTION CARD */
+.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px 20px;max-width:720px;margin:0 auto 20px}
+.q-badge{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:4px 12px;margin-bottom:10px;color:#001}
+.q-num{font-size:12px;color:var(--mut);margin-bottom:4px}
+.q-text{font-size:16px;font-weight:700;line-height:1.65;margin-bottom:16px;min-height:50px}
+.choices{display:grid;gap:9px;margin-bottom:18px}
+.choice-btn{display:flex;align-items:center;gap:11px;background:#161622;border:2px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;text-align:left;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;color:var(--tx);width:100%;transition:.12s}
+.choice-btn:active{transform:scale(.98)}
+.choice-ltr{width:26px;height:26px;background:var(--cyd);color:#001;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.choice-btn.sel{background:rgba(34,211,238,.12);border-color:var(--cy)}
+.choice-btn.sel .choice-ltr{background:var(--cy)}
+.nav-row{display:flex;gap:10px}
+.btn-nav{flex:1;background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:13px;font-size:14px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer}
+.btn-nav.primary{background:var(--cyd);border-color:var(--cyd);color:#001}
+.btn-nav:disabled{opacity:.4;cursor:default}
+
+/* RESULT */
+.result-emoji{font-size:56px;text-align:center;margin-bottom:6px}
+.result-score{text-align:center;font-size:34px;font-weight:800;color:var(--cy);margin-bottom:2px}
+.result-pct{text-align:center;font-size:14px;color:var(--mut);margin-bottom:20px}
+.result-who{text-align:center;font-size:14px;color:var(--tx);margin-bottom:20px}
+.sec-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:8px}
+.sec-bar-wrap{background:#1a1a26;border-radius:20px;height:10px;overflow:hidden;flex:1;margin:0 10px}
+.sec-bar{height:100%;border-radius:20px}
+.sec-label{width:130px;color:var(--mut);flex-shrink:0}
+.sec-val{width:70px;text-align:right;color:var(--tx);font-weight:700;flex-shrink:0}
+
+/* REPORT */
+.report-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:13px}
+.report-tools button{background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
+table.rpt th{text-align:left;color:var(--mut);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;white-space:nowrap}
+table.rpt tr:hover td{background:#161622}
+.rpt-total{color:var(--cy);font-weight:800}
+.rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+.rpt-cert-btn{background:var(--cyd);color:#001;border:none;border-radius:6px;padding:5px 10px;font-family:'Sarabun',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.rpt-cert-btn:active{transform:scale(.96)}
+
+/* GRADE */
+.result-grade{text-align:center;margin-bottom:16px}
+.grade-badge{display:inline-block;border-radius:20px;padding:6px 18px;font-size:15px;font-weight:800}
+.grade-badge.g4{background:rgba(34,197,94,.15);color:var(--gr);border:1.5px solid var(--gr)}
+.grade-badge.g3{background:rgba(34,211,238,.15);color:var(--cy);border:1.5px solid var(--cyd)}
+.grade-badge.g2{background:rgba(250,204,21,.15);color:var(--yw);border:1.5px solid var(--yw)}
+.grade-badge.g1{background:rgba(251,146,60,.15);color:#fb923c;border:1.5px solid #fb923c}
+.grade-badge.g0{background:rgba(244,63,94,.15);color:var(--rd);border:1.5px solid var(--rd)}
+.rpt-grade{font-weight:800}
+.rpt-grade.g4{color:var(--gr)}
+.rpt-grade.g3{color:var(--cy)}
+.rpt-grade.g2{color:var(--yw)}
+.rpt-grade.g1{color:#fb923c}
+.rpt-grade.g0{color:var(--rd)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="login-card">
+    <div class="login-emblem">🔩</div>
+    <div class="login-h1">ข้อสอบปลายภาค 1/2569<br>วิชาวัสดุงานช่างอุตสาหกรรม</div>
+    <div class="login-sub">รหัสวิชา 20100-1002</div>
+    <div class="rules-box">
+      • ข้อสอบทั้งหมด <b>60 ข้อ</b> (6 หัวข้อ หัวข้อละ 10 ข้อ)<br>
+      • คะแนนเต็ม <b>200 คะแนน</b><br>
+      • เวลาสอบ <b>2 ชั่วโมง</b> — หมดเวลาระบบจะส่งข้อสอบให้อัตโนมัติ<br>
+      • สอบเสร็จ ระบบแสดงผลคะแนนทันที
+    </div>
+    <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+    <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+    <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
+    <button class="btn-primary" onclick="startExam()">🚀 เริ่มสอบ</button>
+    <button class="btn-ghost" onclick="openReport()">📊 รายงานผลสอบ (สำหรับครู)</button>
+  </div>
+</div>
+
+<!-- EXAM -->
+<div id="s-exam" class="screen">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <h1>ข้อสอบปลายภาค 1/2569 — วัสดุงานช่างอุตสาหกรรม</h1>
+        <div class="sub" id="examWho"></div>
+      </div>
+      <div class="timer">
+        <div class="timer-num" id="timerNum">2:00:00</div>
+        <button class="btn-submit" onclick="confirmSubmit()">ส่งข้อสอบ</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="navgrid" id="navgrid"></div>
+    <div class="quiz-card">
+      <div class="q-badge" id="qBadge"></div>
+      <div class="q-num" id="qNum"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="choices" id="qChoices"></div>
+      <div class="nav-row">
+        <button class="btn-nav" id="btnPrev" onclick="gotoQ(currentQ-1)">← ข้อก่อนหน้า</button>
+        <button class="btn-nav primary" id="btnNext" onclick="gotoQ(currentQ+1)">ข้อถัดไป →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="wrap">
+    <div class="quiz-card">
+      <div class="result-emoji" id="rEmoji">🏆</div>
+      <div class="result-score" id="rScore"></div>
+      <div class="result-pct" id="rPct"></div>
+      <div class="result-grade" id="rGrade"></div>
+      <div class="result-who" id="rWho"></div>
+      <div id="rBreakdown"></div>
+      <button class="btn-primary" id="btnCert" style="display:none;margin-top:6px" onclick="downloadCertificate()">🎓 ดาวน์โหลดใบประกาศ</button>
+      <button class="btn-primary" onclick="location.reload()" style="margin-top:10px">🔄 กลับหน้าแรก</button>
+    </div>
+  </div>
+</div>
+<canvas id="certCanvas" width="1400" height="990" style="display:none"></canvas>
+
+<!-- REPORT -->
+<div id="s-report" class="screen">
+  <div class="wrap">
+    <div class="topbar" style="position:static;margin-bottom:16px;padding:0">
+      <div class="topbar-inner" style="padding:0">
+        <h1 style="font-size:18px">📊 รายงานผลสอบ — ปลายภาค 1/2569</h1>
+        <button class="btn-nav" style="flex:none" onclick="backToLogin()">← กลับหน้าแรก</button>
+      </div>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── FIREBASE (ใช้โปรเจกต์เดียวกับระบบเช็คชื่อ, path แยกต่างหาก) ─────
+const DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+const RESULTS_URL = DB_BASE + '/examResults/material_final_2569.json';
+const REPORT_PIN = '2569';
+const EXAM_SECONDS = 2 * 60 * 60;
+const SIGNATURE_PNG_B64 = "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";
+
+// ─── QUESTION BANK (6 หัวข้อ x 10 ข้อ — ครึ่งหลังเทอม) ───────────────
+const CORR_Q = [
+  {q:"การกัดกร่อน (Corrosion) ของโลหะเกิดจากสาเหตุหลักใด", c:["ปฏิกิริยาทางเคมีหรือไฟฟ้าเคมีระหว่างโลหะกับสิ่งแวดล้อม","แรงกดทางกลเพียงอย่างเดียว","ความเย็นจัดของอากาศ","การสั่นสะเทือนของเครื่องจักร"], a:0},
+  {q:"สนิมเหล็ก (Rust) เกิดจากปฏิกิริยาของเหล็กกับสิ่งใดเป็นหลัก", c:["ออกซิเจนและความชื้น","แสงแดดเพียงอย่างเดียว","ความร้อนสูงเท่านั้น","สารหล่อลื่น"], a:0},
+  {q:"การกัดกร่อนแบบกัลวานิก (Galvanic Corrosion) เกิดขึ้นเมื่อใด", c:["โลหะสองชนิดที่ต่างศักย์ไฟฟ้าสัมผัสกันในสภาวะที่มีอิเล็กโทรไลต์","โลหะชนิดเดียวกันสัมผัสกันเอง","โลหะอยู่ในสุญญากาศ","โลหะถูกเก็บในที่แห้งสนิท"], a:0},
+  {q:"แอโนดเสียสละ (Sacrificial Anode) ใช้ป้องกันการกัดกร่อนได้อย่างไร", c:["ใช้โลหะที่ทำปฏิกิริยาง่ายกว่าเป็นตัวกัดกร่อนแทนโลหะหลักที่ต้องการปกป้อง","เคลือบสีทับผิวโลหะ","เพิ่มความหนาของโลหะ","ลดอุณหภูมิของโลหะ"], a:0},
+  {q:"การกัดกร่อนแบบบ่อ (Pitting Corrosion) มีลักษณะอย่างไร", c:["กัดกร่อนกระจายทั่วผิวสม่ำเสมอ","กัดกร่อนเฉพาะจุดเล็กๆ ลึกลงไปในเนื้อโลหะ","เกิดเฉพาะที่รอยเชื่อมเท่านั้น","เกิดเฉพาะในอากาศแห้ง"], a:1},
+  {q:"เหล็กกล้าไร้สนิม (Stainless Steel) ต้านทานการกัดกร่อนได้ดีเพราะเกิดชั้นใดปกคลุมผิว", c:["ชั้นออกไซด์ของโครเมียมที่บางและเสถียร (Passive layer)","ชั้นน้ำมันหล่อลื่น","ชั้นเคลือบสังกะสี","ชั้นฝุ่นละออง"], a:0},
+  {q:"ปัจจัยใดที่ทำให้อัตราการกัดกร่อนของโลหะเพิ่มขึ้น", c:["ความชื้นสูง อุณหภูมิสูง และมีสารเคมี/เกลือปนเปื้อน","อากาศแห้งและเย็น","การเก็บในที่มืดสนิท","การทาสีป้องกันอย่างสม่ำเสมอ"], a:0},
+  {q:"วิธีป้องกันการกัดกร่อนของเหล็กที่นิยมใช้ในงานโครงสร้างกลางแจ้งคือข้อใด", c:["การชุบกัลวาไนซ์หรือทาสีกันสนิม","การเพิ่มความเร็วรอบเครื่องจักร","การลดขนาดชิ้นงาน","การเพิ่มความชื้นรอบชิ้นงาน"], a:0},
+  {q:"การเกิดสนิมของเหล็กจัดเป็นการกัดกร่อนประเภทใด", c:["การกัดกร่อนทางเคมี/ไฟฟ้าเคมี (Oxidation)","การกัดกร่อนทางกล","การกัดกร่อนจากความร้อนอย่างเดียว","การกัดกร่อนจากแสง UV เท่านั้น"], a:0},
+  {q:"เหตุใดจึงไม่ควรใช้โลหะสองชนิดที่มีศักย์ไฟฟ้าต่างกันมากต่อกันโดยตรงในสภาพแวดล้อมชื้น", c:["ทำให้เกิดการกัดกร่อนแบบกัลวานิกเร่งให้โลหะที่ว่องไวกว่าสึกกร่อนเร็วขึ้น","ทำให้โลหะทั้งสองแข็งขึ้น","ทำให้น้ำหนักโลหะเบาลง","ไม่มีผลใดๆ ต่อโลหะทั้งสอง"], a:0},
+];
+const HEATTREAT_Q = [
+  {q:"การอบอ่อน (Annealing) มีวัตถุประสงค์หลักเพื่ออะไร", c:["ลดความแข็งและความเค้นภายใน ทำให้เหล็กนิ่มลงและขึ้นรูปง่ายขึ้น","เพิ่มความแข็งสูงสุดให้เหล็ก","เพิ่มน้ำหนักของเหล็ก","เปลี่ยนสีของเหล็ก"], a:0},
+  {q:"การชุบแข็ง (Quenching) คือกระบวนการใด", c:["เผาเหล็กให้ร้อนถึงอุณหภูมิวิกฤตแล้วทำให้เย็นตัวอย่างรวดเร็วเพื่อเพิ่มความแข็ง","ปล่อยให้เหล็กเย็นตัวช้าๆ ในเตา","เคลือบผิวเหล็กด้วยสี","การรีดเหล็กให้บาง"], a:0},
+  {q:"หลังการชุบแข็ง เหล็กมักมีความเปราะสูงและต้องผ่านกระบวนการใดต่อเพื่อลดความเปราะ", c:["การอบคืนตัว (Tempering)","การรีดร้อน","การหล่อ","การเชื่อม"], a:0},
+  {q:"การอบปกติ (Normalizing) แตกต่างจากการอบอ่อน (Annealing) อย่างไร", c:["Normalizing ปล่อยให้เย็นตัวในอากาศ ส่วน Annealing ปล่อยให้เย็นตัวช้าๆ ในเตา ทำให้ Normalizing ได้เนื้อโลหะที่ละเอียดและแข็งแรงกว่าเล็กน้อย","ทั้งสองกระบวนการเหมือนกันทุกประการ","Normalizing ใช้กับพลาสติกเท่านั้น","Annealing ทำให้เหล็กแข็งกว่า Quenching"], a:0},
+  {q:"การชุบผิวแข็ง (Case Hardening) ทำให้ผิวชิ้นงานมีคุณสมบัติอย่างไร", c:["ผิวนอกแข็งทนการสึกหรอ ขณะที่แกนในยังคงเหนียว","ทั้งชิ้นแข็งเปราะทั้งหมด","ทั้งชิ้นอ่อนนิ่มทั้งหมด","ผิวนอกอ่อนกว่าแกนใน"], a:0},
+  {q:"อุณหภูมิวิกฤต (Critical Temperature) ในกระบวนการอบชุบเหล็กมีความสำคัญอย่างไร", c:["เป็นอุณหภูมิที่โครงสร้างผลึกของเหล็กเปลี่ยนเฟส จำเป็นต้องเผาให้ถึงก่อนทำการชุบ","เป็นอุณหภูมิห้องปกติ","เป็นอุณหภูมิที่ทำให้เหล็กละลายเป็นของเหลว","ไม่มีผลต่อกระบวนการอบชุบ"], a:0},
+  {q:"อัตราการเย็นตัว (Cooling Rate) มีผลต่อโครงสร้างและความแข็งของเหล็กอย่างไร", c:["เย็นตัวเร็วมักทำให้เหล็กแข็งขึ้นแต่เปราะขึ้น ส่วนเย็นตัวช้าทำให้เหล็กนิ่มลง","ไม่มีผลต่อความแข็งเลย","เย็นตัวช้าทำให้แข็งกว่าเสมอ","อัตราการเย็นตัวมีผลต่อสีเหล็กเท่านั้น"], a:0},
+  {q:"สื่อชุบ (Quenching Medium) เช่นน้ำ น้ำมัน อากาศ มีผลต่อกระบวนการชุบแข็งอย่างไร", c:["แต่ละชนิดให้อัตราการเย็นตัวต่างกัน ส่งผลต่อความแข็งและโอกาสเกิดรอยร้าวที่ต่างกัน","ทุกชนิดให้ผลลัพธ์เหมือนกันทุกประการ","ใช้เพื่อเปลี่ยนสีเหล็กเท่านั้น","ไม่มีผลต่อกระบวนการชุบ"], a:0},
+  {q:"เหตุใดเครื่องมือตัด เช่น มีด สิ่ว จึงมักต้องผ่านการชุบแข็งและอบคืนตัว", c:["เพื่อให้ผิวมีความแข็งทนการสึกหรอ ขณะที่ยังคงความเหนียวพอไม่แตกหักง่าย","เพื่อให้มีน้ำหนักเบาลง","เพื่อให้เปลี่ยนสีสวยงาม","เพื่อลดต้นทุนการผลิต"], a:0},
+  {q:"การอบคืนตัว (Tempering) ทำโดยการเผาเหล็กที่ผ่านการชุบแข็งแล้วที่อุณหภูมิเช่นไร", c:["อุณหภูมิต่ำกว่าอุณหภูมิวิกฤต แล้วปล่อยให้เย็นตัว เพื่อลดความเปราะและความเค้นภายใน","อุณหภูมิสูงกว่าจุดหลอมเหลวของเหล็ก","อุณหภูมิห้องโดยไม่ให้ความร้อนเพิ่ม","อุณหภูมิติดลบ"], a:0},
+];
+const COATING_Q = [
+  {q:"การชุบเคลือบผิวด้วยไฟฟ้า (Electroplating) คือกระบวนการใด", c:["การใช้กระแสไฟฟ้าเคลือบชั้นโลหะบางๆ ลงบนผิวชิ้นงานเพื่อป้องกันสนิมหรือเพิ่มความสวยงาม","การพ่นสีด้วยลม","การอบชุบด้วยความร้อน","การรีดขึ้นรูปโลหะ"], a:0},
+  {q:"การพ่นสีฝุ่น (Powder Coating) มีข้อดีอย่างไรเมื่อเทียบกับการทาสีน้ำมันทั่วไป", c:["ให้ผิวเคลือบที่ทนทาน สม่ำเสมอ และเป็นมิตรต่อสิ่งแวดล้อมมากกว่า","มีต้นทุนแพงกว่าเสมอโดยไม่มีข้อดี","ใช้เวลานานกว่ามากในทุกกรณี","ไม่สามารถเคลือบโลหะได้"], a:0},
+  {q:"การชุบกัลวาไนซ์ (Galvanizing) คือการเคลือบผิวเหล็กด้วยโลหะใด", c:["สังกะสี","ทองแดง","ตะกั่ว","ทองคำ"], a:0},
+  {q:"การชุบอโนไดซ์ (Anodizing) นิยมใช้กับโลหะชนิดใดเป็นหลัก", c:["อะลูมิเนียม","เหล็กกล้าคาร์บอน","ตะกั่ว","ทองแดง"], a:0},
+  {q:"วัตถุประสงค์หลักของการเคลือบผิวโลหะคือข้อใด", c:["ป้องกันการกัดกร่อนและเพิ่มความสวยงามหรือคุณสมบัติพิเศษของผิวชิ้นงาน","ทำให้ชิ้นงานหนักขึ้น","ลดความแข็งแรงของชิ้นงาน","เปลี่ยนจุดหลอมเหลวของโลหะ"], a:0},
+  {q:"การทาสีกันสนิม (Painting) ทำหน้าที่ป้องกันการกัดกร่อนโดยหลักการใด", c:["สร้างชั้นฟิล์มกั้นไม่ให้ความชื้นและออกซิเจนสัมผัสกับผิวโลหะโดยตรง","เปลี่ยนโครงสร้างผลึกของโลหะ","เพิ่มความแข็งของโลหะ","ลดน้ำหนักของโลหะ"], a:0},
+  {q:"ข้อใดคือความแตกต่างหลักระหว่างการชุบไฟฟ้า (Electroplating) กับการชุบกัลวาไนซ์แบบจุ่มร้อน (Hot-dip Galvanizing)", c:["Electroplating ใช้กระแสไฟฟ้าเคลือบชั้นบาง ส่วน Hot-dip Galvanizing คือการจุ่มชิ้นงานในสังกะสีหลอมเหลวได้ชั้นเคลือบหนากว่า","ทั้งสองวิธีเหมือนกันทุกประการ","Electroplating ใช้กับพลาสติกเท่านั้น","Hot-dip Galvanizing ไม่สามารถป้องกันสนิมได้"], a:0},
+  {q:"เหตุใดเหล็กโครงสร้างกลางแจ้ง (เช่น เสาไฟฟ้า รั้ว) จึงนิยมชุบกัลวาไนซ์ก่อนนำไปใช้งาน", c:["เพื่อป้องกันสนิมจากความชื้นและสภาพอากาศเป็นเวลานานโดยไม่ต้องทาสีซ้ำบ่อย","เพื่อให้มีน้ำหนักเบาลง","เพื่อให้เหล็กนำไฟฟ้าได้ดีขึ้น","เพื่อให้ราคาถูกลง"], a:0},
+  {q:"การเตรียมผิวชิ้นงาน เช่น การขัดหรือพ่นทราย (Sandblasting) ก่อนเคลือบผิวมีความสำคัญอย่างไร", c:["ช่วยให้ชั้นเคลือบยึดเกาะกับผิวโลหะได้ดีขึ้นและทนทานขึ้น","ทำให้เคลือบผิวไม่ติดเลย","ไม่มีผลต่อคุณภาพการเคลือบ","ทำให้โลหะแข็งขึ้นโดยตรง"], a:0},
+  {q:"สีรองพื้นกันสนิม (Anti-rust Primer) ที่ใช้ทาก่อนสีจริงมีหน้าที่หลักคืออะไร", c:["ยึดเกาะผิวโลหะได้ดีและป้องกันการเกิดสนิมก่อนทาสีชั้นสุดท้าย","ทำให้สีชั้นบนมีสีสดใสขึ้นเท่านั้น","เพิ่มความแข็งแรงเชิงโครงสร้าง","ไม่มีหน้าที่พิเศษใดๆ"], a:0},
+];
+const TEST_Q = [
+  {q:"การทดสอบแรงดึง (Tensile Test) ใช้หาคุณสมบัติใดของวัสดุ", c:["ความแข็งแรงดึง ความเค้นคราก และเปอร์เซ็นต์การยืดตัว","ความแข็งผิวเพียงอย่างเดียว","จุดหลอมเหลว","การนำไฟฟ้า"], a:0},
+  {q:"การทดสอบความแข็งแบบบริเนล (Brinell Hardness Test) ใช้หัวกดลักษณะใด", c:["ลูกบอลเหล็กกล้าหรือคาร์ไบด์ทรงกลม","เพชรทรงพีระมิด","เข็มแหลม","แผ่นแบน"], a:0},
+  {q:"การทดสอบแบบไม่ทำลาย (Non-Destructive Testing, NDT) มีข้อดีอย่างไรเมื่อเทียบกับการทดสอบแบบทำลาย", c:["สามารถตรวจสอบชิ้นงานจริงได้โดยไม่ทำให้ชิ้นงานเสียหายหรือใช้งานต่อไม่ได้","ให้ผลแม่นยำกว่าเสมอ","ราคาถูกกว่าเสมอทุกกรณี","ใช้เวลาน้อยกว่าเสมอ"], a:0},
+  {q:"การตรวจสอบรอยร้าวภายในชิ้นงานเชื่อมด้วยรังสีเอกซ์ เรียกว่าวิธีใด", c:["การถ่ายภาพด้วยรังสี (Radiographic Testing, RT)","การทดสอบแรงดึง","การทดสอบความแข็ง","การทดสอบแรงกระแทก"], a:0},
+  {q:"การทดสอบด้วยผงแม่เหล็ก (Magnetic Particle Testing) เหมาะสำหรับตรวจหาข้อบกพร่องบนผิวของวัสดุประเภทใด", c:["วัสดุที่เป็นแม่เหล็ก (Ferromagnetic) เช่น เหล็กกล้า","พลาสติกทุกชนิด","อะลูมิเนียมเท่านั้น","ยางทุกชนิด"], a:0},
+  {q:"การทดสอบด้วยสารแทรกซึม (Dye Penetrant Testing) ใช้ตรวจหาข้อบกพร่องลักษณะใด", c:["รอยแตกร้าวหรือรอยแยกที่เปิดออกสู่ผิวชิ้นงาน","ข้อบกพร่องที่อยู่ลึกภายในเนื้อโลหะเท่านั้น","ความแข็งของผิวชิ้นงาน","จุดหลอมเหลวของวัสดุ"], a:0},
+  {q:"การทดสอบแรงกระแทก (Impact Test) เช่น Charpy Test ใช้วัดคุณสมบัติใด", c:["พลังงานที่วัสดุดูดซับได้ก่อนแตกหักจากแรงกระแทก (ความเหนียว)","ความแข็งผิว","จุดหลอมเหลว","การนำความร้อน"], a:0},
+  {q:"เหตุใดจึงต้องทดสอบรอยเชื่อมด้วยวิธี NDT ก่อนนำโครงสร้างไปใช้งานจริง เช่น ถังแรงดันหรือโครงสร้างเรือ", c:["เพื่อตรวจสอบความสมบูรณ์ของรอยเชื่อมและความปลอดภัยโดยไม่ต้องทำลายชิ้นงาน","เพื่อให้โครงสร้างมีน้ำหนักเบาลง","เพื่อเปลี่ยนสีของรอยเชื่อม","เพื่อลดต้นทุนวัสดุ"], a:0},
+  {q:"การทดสอบความแข็งแบบร็อกเวลล์ (Rockwell Hardness Test) วัดค่าความแข็งจากอะไร", c:["ความลึกของรอยกดที่เกิดจากหัวกดภายใต้แรงกดที่กำหนด","สีของวัสดุ","น้ำหนักของชิ้นงาน","ความเร็วในการกด"], a:0},
+  {q:"การทดสอบด้วยคลื่นเสียงความถี่สูง (Ultrasonic Testing, UT) เหมาะสำหรับตรวจหาข้อบกพร่องลักษณะใด", c:["ข้อบกพร่องหรือรอยแตกที่อยู่ลึกภายในเนื้อวัสดุ","สีของผิวชิ้นงาน","อุณหภูมิของชิ้นงาน","น้ำหนักของชิ้นงาน"], a:0},
+];
+const STANDARD_Q = [
+  {q:"มาตรฐาน มอก. ย่อมาจากอะไร และมีหน่วยงานใดรับผิดชอบ", c:["มาตรฐานผลิตภัณฑ์อุตสาหกรรม ดูแลโดยสำนักงานมาตรฐานผลิตภัณฑ์อุตสาหกรรมของไทย","มาตรฐานการเกษตรของไทย","มาตรฐานการก่อสร้างของญี่ปุ่น","มาตรฐานความปลอดภัยของสหรัฐอเมริกา"], a:0},
+  {q:"มาตรฐาน JIS เป็นมาตรฐานอุตสาหกรรมของประเทศใด", c:["ญี่ปุ่น","สหรัฐอเมริกา","เยอรมนี","จีน"], a:0},
+  {q:"มาตรฐาน ASTM เป็นมาตรฐานที่ใช้กันแพร่หลายในประเทศใดเป็นหลัก", c:["สหรัฐอเมริกา","ญี่ปุ่น","ไทย","เกาหลีใต้"], a:0},
+  {q:"ใบรับรองคุณภาพวัสดุ (Mill Certificate) ที่แนบมากับเหล็กที่สั่งซื้อ ใช้ระบุข้อมูลใด", c:["ส่วนผสมทางเคมีและคุณสมบัติทางกลของเหล็กล็อตนั้นๆ","ราคาขายของเหล็ก","สีของบรรจุภัณฑ์","วันหมดอายุการรับประกันร้านค้า"], a:0},
+  {q:"เหตุใดงานเชื่อมโครงสร้างสำคัญ เช่น ถังแรงดันหรือสะพาน จึงต้องเลือกวัสดุตามมาตรฐานที่กำหนด", c:["เพื่อรับประกันคุณสมบัติทางกลและความปลอดภัยของโครงสร้างตามที่ออกแบบไว้","เพื่อให้ราคาถูกที่สุดเท่านั้น","เพื่อให้มีสีสันสวยงาม","ไม่มีความจำเป็นต้องอ้างอิงมาตรฐานใดๆ"], a:0},
+  {q:"ระบบเลข AISI/SAE ที่ใช้เรียกเกรดเหล็กกล้า เช่น เหล็ก AISI 1045 ตัวเลข 45 ในทางปฏิบัติสื่อถึงอะไรโดยประมาณ", c:["ปริมาณคาร์บอนโดยประมาณ 0.45%","น้ำหนักของเหล็กเป็นกิโลกรัม","ปีที่ผลิตเหล็ก","ความยาวของแท่งเหล็กเป็นเมตร"], a:0},
+  {q:"มาตรฐาน ISO มีลักษณะการใช้งานอย่างไรเมื่อเทียบกับมาตรฐานประจำชาติ เช่น JIS หรือ มอก.", c:["เป็นมาตรฐานสากลที่หลายประเทศทั่วโลกยอมรับและนำไปอ้างอิงร่วมกัน","ใช้ได้เฉพาะในประเทศไทยเท่านั้น","ใช้ได้เฉพาะกับพลาสติกเท่านั้น","เป็นมาตรฐานที่เลิกใช้แล้ว"], a:0},
+  {q:"การระบุเกรดวัสดุตามมาตรฐานบนแบบงาน (Drawing) มีประโยชน์อย่างไรต่อการจัดซื้อวัสดุ", c:["ทำให้ผู้จัดซื้อและผู้ผลิตเข้าใจตรงกันถึงคุณสมบัติวัสดุที่ต้องการโดยไม่คลาดเคลื่อน","ทำให้ราคาสินค้าสูงขึ้นเสมอ","ไม่มีผลต่อการจัดซื้อ","ทำให้ใช้เวลาผลิตนานขึ้นเสมอ"], a:0},
+  {q:"หากผลิตภัณฑ์เหล็กมีเครื่องหมาย มอก. บังคับ หมายความว่าอย่างไร", c:["ผลิตภัณฑ์นั้นต้องผ่านมาตรฐานตามที่กฎหมายกำหนดก่อนจำหน่ายในประเทศไทย","ผลิตภัณฑ์นั้นผลิตในต่างประเทศเท่านั้น","ผลิตภัณฑ์นั้นมีราคาถูกที่สุด","เป็นเพียงเครื่องหมายการค้าทั่วไปไม่มีข้อบังคับ"], a:0},
+  {q:"เหตุใดช่างเชื่อมจึงควรตรวจสอบเกรดวัสดุตามมาตรฐานก่อนเลือกลวดเชื่อมหรือกรรมวิธีเชื่อม", c:["เพื่อเลือกลวดเชื่อมและกรรมวิธีที่เหมาะสมกับส่วนผสมทางเคมีและคุณสมบัติของโลหะฐาน ป้องกันปัญหารอยเชื่อมแตกร้าวหรือคุณภาพต่ำ","เพราะไม่มีผลใดๆ ต่อการเชื่อม","เพื่อให้งานเชื่อมเสร็จเร็วขึ้นเท่านั้น","เพื่อให้ราคาลวดเชื่อมถูกลง"], a:0},
+];
+const SELECT_Q = [
+  {q:"ปัจจัยสำคัญอันดับต้นๆ ในการเลือกวัสดุสำหรับงานเชื่อมโครงสร้างคือข้อใด", c:["ความสามารถในการเชื่อมได้ (Weldability) และคุณสมบัติทางกลที่ต้องการ","สีของวัสดุ","น้ำหนักที่เบาที่สุดเท่านั้น","ราคาที่ถูกที่สุดโดยไม่พิจารณาอื่น"], a:0},
+  {q:"ความสามารถในการเชื่อมได้ (Weldability) หมายถึงอะไร", c:["ความง่ายในการเชื่อมโลหะให้ได้รอยเชื่อมที่มีคุณภาพดีโดยไม่เกิดปัญหา เช่น รอยร้าวหรือรูพรุน","ความสามารถในการทนน้ำหนักของโลหะ","ความสามารถในการนำไฟฟ้าของโลหะ","สีสันของรอยเชื่อม"], a:0},
+  {q:"เหล็กกล้าคาร์บอนสูงมักมีปัญหาใดเมื่อนำมาเชื่อม", c:["เสี่ยงเกิดรอยร้าวบริเวณรอยเชื่อมและบริเวณกระทบร้อน (HAZ) ได้ง่าย จึงมักต้องอุ่นชิ้นงานก่อนเชื่อม (Preheat)","เชื่อมได้ง่ายที่สุดโดยไม่มีข้อควรระวัง","ไม่สามารถเชื่อมได้เลยในทุกกรณี","มีราคาถูกที่สุดในบรรดาเหล็กกล้า"], a:0},
+  {q:"การอุ่นชิ้นงานก่อนเชื่อม (Preheat) มีวัตถุประสงค์หลักเพื่ออะไร", c:["ลดอัตราการเย็นตัวหลังเชื่อมเพื่อลดความเสี่ยงการเกิดรอยร้าว","เพิ่มความแข็งของรอยเชื่อมให้สูงที่สุด","ทำให้รอยเชื่อมมีสีสวยงาม","ลดปริมาณลวดเชื่อมที่ใช้"], a:0},
+  {q:"การเลือกลวดเชื่อม (Filler Metal) ให้เหมาะสมควรพิจารณาสิ่งใดเป็นหลัก", c:["ให้มีคุณสมบัติทางเคมีและทางกลใกล้เคียงหรือเข้ากันได้กับโลหะฐานที่จะเชื่อม","เลือกราคาถูกที่สุดโดยไม่สนใจชนิดโลหะฐาน","เลือกสีที่ตรงกับโลหะฐาน","เลือกขนาดใหญ่ที่สุดเสมอ"], a:0},
+  {q:"เหตุใดการเชื่อมเหล็กกล้าไร้สนิม (Stainless Steel) จึงต้องพิถีพิถันเรื่องความสะอาดของผิวงานเป็นพิเศษ", c:["สิ่งปนเปื้อน เช่น เศษเหล็กหรือฝุ่น อาจทำให้ชั้นป้องกันสนิม (Passive Layer) เสียหายและเกิดสนิมบริเวณรอยเชื่อม","ไม่มีผลใดๆ ต่อคุณภาพรอยเชื่อม","ทำให้เชื่อมเร็วขึ้นเท่านั้น","ทำให้ประหยัดลวดเชื่อมมากขึ้น"], a:0},
+  {q:"งานเชื่อมที่ต้องใช้ในสภาพแวดล้อมกัดกร่อนสูง เช่น งานทางทะเลหรือโรงงานเคมี ควรเลือกใช้วัสดุประเภทใดเป็นพิเศษ", c:["วัสดุที่มีความต้านทานการกัดกร่อนสูง เช่น เหล็กกล้าไร้สนิมหรือโลหะผสมพิเศษ","วัสดุราคาถูกที่สุดโดยไม่พิจารณาการกัดกร่อน","ไม้เนื้อแข็ง","พลาสติกทั่วไปเสมอ"], a:0},
+  {q:"เขตกระทบร้อน (Heat Affected Zone, HAZ) ในงานเชื่อมคืออะไร", c:["บริเวณโลหะฐานใกล้รอยเชื่อมที่ได้รับผลกระทบจากความร้อนจนโครงสร้างและคุณสมบัติเปลี่ยนไป แม้จะไม่หลอมละลาย","บริเวณที่ไม่ได้รับความร้อนใดๆ เลย","บริเวณลวดเชื่อมที่ยังไม่ได้ใช้งาน","บริเวณที่เย็นที่สุดของชิ้นงาน"], a:0},
+  {q:"หากเลือกใช้วัสดุที่มีความหนาแตกต่างกันมากมาเชื่อมต่อกัน อาจเกิดปัญหาใด", c:["การเย็นตัวไม่สม่ำเสมอ ทำให้เกิดความเค้นตกค้างและโอกาสบิดงอหรือแตกร้าวสูงขึ้น","ไม่มีผลกระทบใดๆ ต่องานเชื่อม","ทำให้ประหยัดเวลาการเชื่อมมากขึ้น","ทำให้รอยเชื่อมแข็งแรงขึ้นเสมอ"], a:0},
+  {q:"ข้อใดคือแนวทางที่ถูกต้องในการเลือกใช้วัสดุสำหรับงานเชื่อมให้เหมาะสมกับลักษณะงาน", c:["พิจารณาคุณสมบัติทางกล ความสามารถในการเชื่อม สภาพแวดล้อมใช้งาน และมาตรฐานที่เกี่ยวข้องประกอบกัน","เลือกวัสดุที่มีสีสวยที่สุดเพียงอย่างเดียว","เลือกวัสดุที่หาซื้อได้ง่ายที่สุดโดยไม่พิจารณาคุณสมบัติ","เลือกวัสดุที่มีราคาแพงที่สุดเสมอเพื่อความปลอดภัย"], a:0},
+];
+
+const SECTIONS = [
+  {key:'corr', label:'การกัดกร่อน', color:'#f43f5e', list: CORR_Q},
+  {key:'heat', label:'การอบชุบความร้อน', color:'#fb923c', list: HEATTREAT_Q},
+  {key:'coat', label:'การเคลือบผิว', color:'#60a5fa', list: COATING_Q},
+  {key:'test', label:'การทดสอบวัสดุ', color:'#22c55e', list: TEST_Q},
+  {key:'std', label:'มาตรฐานวัสดุ', color:'#a78bfa', list: STANDARD_Q},
+  {key:'select', label:'การเลือกใช้วัสดุ', color:'#facc15', list: SELECT_Q},
+];
+
+const MASTER_QUESTIONS = SECTIONS.flatMap(s => s.list.map(q => ({...q, sec: s.key, secTH: s.label, color: s.color})));
+const N = MASTER_QUESTIONS.length; // 60
+const PT_PER_Q = 200 / N;
+
+// ─── SHUFFLE (สุ่มลำดับข้อภายในแต่ละหัวข้อ + สุ่มลำดับตัวเลือก ต่อผู้เข้าสอบ 1 คน) ──
+function shuffled(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function buildExamQuestions(){
+  const out = [];
+  SECTIONS.forEach(({key, label, color, list})=>{
+    shuffled(list).forEach(q=>{
+      const order = shuffled([0,1,2,3]);
+      out.push({
+        q: q.q,
+        c: order.map(origIdx=>q.c[origIdx]),
+        a: order.indexOf(q.a),
+        sec: key, secTH: label, color,
+      });
+    });
+  });
+  return out;
+}
+let examQuestions = MASTER_QUESTIONS; // reassigned per attempt in startExam()
+
+// ─── GRADING (เกณฑ์: <50%=ไม่ผ่าน, 50-59%=เกรด1, 60-69%=เกรด2, 70-79%=เกรด3, 80%+=เกรด4) ──
+function gradeOf(pct){
+  if(pct >= 80) return {n:4, label:'เกรด 4', pass:true};
+  if(pct >= 70) return {n:3, label:'เกรด 3', pass:true};
+  if(pct >= 60) return {n:2, label:'เกรด 2', pass:true};
+  if(pct >= 50) return {n:1, label:'เกรด 1', pass:true};
+  return {n:0, label:'เกรด 0 (ไม่ผ่าน)', pass:false};
+}
+
+// ─── STATE ────────────────────────────────────────────
+let student = null;
+let answers = new Array(N).fill(-1);
+let currentQ = 0;
+let timeLeft = EXAM_SECONDS;
+let timerInterval = null;
+let submitted = false;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── LOGIN / START ────────────────────────────────────
+function startExam(){
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const dept = document.getElementById('dept').value.trim();
+  if(!fname || !lname || !dept){ alert('กรุณากรอก ชื่อ นามสกุล และแผนก ให้ครบ'); return; }
+  student = {fname, lname, dept};
+  document.getElementById('examWho').textContent = `${fname} ${lname} — ${dept}`;
+  examQuestions = buildExamQuestions();
+  buildNavGrid();
+  gotoQ(0);
+  show('s-exam');
+  timeLeft = EXAM_SECONDS;
+  updateTimerDisplay();
+  timerInterval = setInterval(tick, 1000);
+  window.addEventListener('beforeunload', beforeUnload);
+}
+
+function beforeUnload(e){
+  if(!submitted){ e.preventDefault(); e.returnValue=''; }
+}
+
+function tick(){
+  timeLeft--;
+  updateTimerDisplay();
+  if(timeLeft <= 0){ doSubmit(); }
+}
+
+function updateTimerDisplay(){
+  const h = Math.floor(timeLeft/3600), m = Math.floor((timeLeft%3600)/60), s = timeLeft%60;
+  const el = document.getElementById('timerNum');
+  el.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('warn', timeLeft <= 600 && timeLeft > 120);
+  el.classList.toggle('danger', timeLeft <= 120);
+}
+
+// ─── NAVIGATOR ────────────────────────────────────────
+function buildNavGrid(){
+  const grid = document.getElementById('navgrid');
+  grid.innerHTML = '';
+  for(let i=0;i<N;i++){
+    const b = document.createElement('button');
+    b.className = 'navbtn';
+    b.id = 'nav'+i;
+    b.textContent = i+1;
+    b.onclick = ()=>gotoQ(i);
+    grid.appendChild(b);
+  }
+}
+function refreshNavGrid(){
+  for(let i=0;i<N;i++){
+    const b = document.getElementById('nav'+i);
+    b.classList.toggle('answered', answers[i] !== -1);
+    b.classList.toggle('current', i === currentQ);
+  }
+}
+
+// ─── QUESTION RENDER ──────────────────────────────────
+function gotoQ(i){
+  if(i<0 || i>=N) return;
+  currentQ = i;
+  const item = examQuestions[i];
+  const badge = document.getElementById('qBadge');
+  badge.textContent = item.secTH;
+  badge.style.background = item.color;
+  document.getElementById('qNum').textContent = `ข้อที่ ${i+1} / ${N}`;
+  document.getElementById('qText').textContent = item.q;
+  const wrap = document.getElementById('qChoices');
+  wrap.innerHTML = '';
+  const letters = ['ก','ข','ค','ง'];
+  item.c.forEach((choice, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (answers[i]===idx ? ' sel' : '');
+    btn.innerHTML = `<span class="choice-ltr">${letters[idx]}</span><span>${choice}</span>`;
+    btn.onclick = ()=>{ answers[i]=idx; gotoQ(i); };
+    wrap.appendChild(btn);
+  });
+  document.getElementById('btnPrev').disabled = (i===0);
+  document.getElementById('btnNext').textContent = (i===N-1) ? '✓ ไปหน้าส่งข้อสอบ' : 'ข้อถัดไป →';
+  document.getElementById('btnNext').onclick = (i===N-1) ? confirmSubmit : ()=>gotoQ(currentQ+1);
+  refreshNavGrid();
+}
+
+// ─── SUBMIT ───────────────────────────────────────────
+function confirmSubmit(){
+  const unanswered = answers.filter(a=>a===-1).length;
+  const msg = unanswered>0
+    ? `ยังมีข้อที่ยังไม่ได้ตอบ ${unanswered} ข้อ ยืนยันส่งข้อสอบหรือไม่?`
+    : 'ยืนยันส่งข้อสอบหรือไม่?';
+  if(confirm(msg)) doSubmit();
+}
+
+async function doSubmit(){
+  if(submitted) return;
+  submitted = true;
+  clearInterval(timerInterval);
+  window.removeEventListener('beforeunload', beforeUnload);
+
+  const secCorrect = {};
+  SECTIONS.forEach(s=> secCorrect[s.key] = 0);
+  examQuestions.forEach((item, i)=>{ if(answers[i] === item.a) secCorrect[item.sec]++; });
+
+  const totalCorrect = SECTIONS.reduce((sum,s)=> sum + secCorrect[s.key], 0);
+  const totalPts = +(totalCorrect * PT_PER_Q).toFixed(1);
+  const scores = {};
+  SECTIONS.forEach(s=> scores[s.key] = +(secCorrect[s.key] * PT_PER_Q).toFixed(1));
+  const pct = +(totalPts/200*100).toFixed(1);
+  const usedSec = EXAM_SECONDS - Math.max(timeLeft,0);
+
+  const grade = gradeOf(pct);
+  const record = {
+    fname: student.fname, lname: student.lname, dept: student.dept,
+    scores: scores,
+    total: totalPts, pct: pct,
+    gradeN: grade.n, gradeLabel: grade.label, pass: grade.pass,
+    usedSec: usedSec,
+    submittedAt: Date.now(),
+  };
+
+  try{
+    await fetch(RESULTS_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(record)});
+  }catch(e){ /* เก็บผลไว้แสดงในเครื่องได้แม้ส่งขึ้นเซิร์ฟเวอร์ไม่สำเร็จ */ }
+
+  showResult(record);
+}
+
+let lastResult = null;
+function showResult(r){
+  lastResult = r;
+  document.getElementById('rScore').textContent = `${r.total} / 200 คะแนน`;
+  document.getElementById('rPct').textContent = `คิดเป็น ${r.pct}%`;
+  document.getElementById('rWho').textContent = `${r.fname} ${r.lname} — ${r.dept}`;
+  document.getElementById('rGrade').innerHTML = `<span class="grade-badge g${r.gradeN}">${r.pass ? '✅' : '❌'} ${r.gradeLabel}</span>`;
+  document.getElementById('rEmoji').textContent = r.pct>=80 ? '🏆' : r.pct>=50 ? '👍' : '📘';
+  const maxPerSec = +(10 * PT_PER_Q).toFixed(1);
+  document.getElementById('rBreakdown').innerHTML = SECTIONS.map(s=>{
+    const val = r.scores[s.key];
+    return `
+    <div class="sec-row">
+      <div class="sec-label">${s.label}</div>
+      <div class="sec-bar-wrap"><div class="sec-bar" style="width:${(val/maxPerSec*100)}%;background:${s.color}"></div></div>
+      <div class="sec-val">${val} / ${maxPerSec}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('btnCert').style.display = r.pass ? 'block' : 'none';
+  show('s-result');
+}
+
+// ─── CERTIFICATE (ออกให้อัตโนมัติเมื่อสอบผ่าน) ─────────
+async function downloadCertificate(overrideResult){
+  const r = overrideResult || lastResult;
+  if(!r || !r.pass) return;
+  // ใช้ Web Share API (แชร์ไฟล์ตรง) เป็นหลักถ้ารองรับ — เชื่อถือได้สุดบนมือถือ ไม่ติดปัญหา popup/download attribute/in-app browser
+  const canWebShareFile = (() => {
+    try { return !!(navigator.canShare && navigator.share && navigator.canShare({files:[new File([''], 't.png', {type:'image/png'})]})); }
+    catch(e){ return false; }
+  })();
+  // ถ้าไม่รองรับ Web Share ค่อยเปิดแท็บใหม่แบบ synchronous ก่อน await ใดๆ (กันมือถือบล็อก popup)
+  const certWindow = canWebShareFile ? null : window.open('', '_blank');
+  if(document.fonts && document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} }
+
+  const canvas = document.getElementById('certCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // พื้นหลัง
+  ctx.fillStyle = '#fdfaf3';
+  ctx.fillRect(0,0,W,H);
+
+  // กรอบคู่ตกแต่ง
+  ctx.strokeStyle = '#0b2d4a';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(30,30,W-60,H-60);
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(50,50,W-100,H-100);
+
+  ctx.textAlign = 'center';
+
+  // หัวเรื่อง
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "800 60px 'Sarabun', sans-serif";
+  ctx.fillText('ใบประกาศเกียรติคุณ', W/2, 175);
+  ctx.fillStyle = '#c9a227';
+  ctx.font = "700 24px 'Sarabun', sans-serif";
+  ctx.fillText('CERTIFICATE OF ACHIEVEMENT', W/2, 215);
+
+  ctx.fillStyle = '#333';
+  ctx.font = "400 26px 'Sarabun', sans-serif";
+  ctx.fillText('มอบให้เพื่อแสดงว่า', W/2, 300);
+
+  // ชื่อ
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "800 52px 'Sarabun', sans-serif";
+  ctx.fillText(`${r.fname} ${r.lname}`, W/2, 375);
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(W/2-260,400); ctx.lineTo(W/2+260,400); ctx.stroke();
+
+  ctx.fillStyle = '#333';
+  ctx.font = "400 24px 'Sarabun', sans-serif";
+  ctx.fillText(`แผนก / ชั้นปี ${r.dept}`, W/2, 445);
+
+  ctx.font = "400 26px 'Sarabun', sans-serif";
+  const bodyLines = [
+    'ได้สอบผ่านการทดสอบปลายภาคเรียนที่ 1 ปีการศึกษา 2569',
+    'วิชาวัสดุงานช่างอุตสาหกรรม (20100-1002)',
+  ];
+  bodyLines.forEach((line,i)=> ctx.fillText(line, W/2, 495 + i*38));
+
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "700 30px 'Sarabun', sans-serif";
+  ctx.fillText(`คะแนน ${r.total} / 200 (${r.pct}%)  —  ${r.gradeLabel}`, W/2, 605);
+
+  const dateTH = new Date(r.submittedAt || Date.now()).toLocaleDateString('th-TH-u-ca-buddhist', {day:'numeric', month:'long', year:'numeric'});
+  ctx.fillStyle = '#555';
+  ctx.font = "400 22px 'Sarabun', sans-serif";
+  ctx.fillText(`ให้ไว้ ณ วันที่ ${dateTH}`, W/2, 660);
+
+  // ลายเซ็น (รูปจริง พื้นขาว ผสมด้วย multiply เพื่อให้พื้นขาวกลืนกับพื้นใบประกาศ)
+  try{
+    const sigImg = new Image();
+    await new Promise((res, rej) => { sigImg.onload = res; sigImg.onerror = rej; sigImg.src = 'data:image/png;base64,' + SIGNATURE_PNG_B64; });
+    const sigW = 210, sigH = sigW * (sigImg.naturalHeight / sigImg.naturalWidth);
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.drawImage(sigImg, W/2 - sigW/2, 840 - sigH - 8, sigW, sigH);
+    ctx.globalCompositeOperation = 'source-over';
+  }catch(e){ /* ไม่มีรูปลายเซ็น ใช้เส้นว่างแทน */ }
+
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(W/2-190,840); ctx.lineTo(W/2+190,840); ctx.stroke();
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "700 24px 'Sarabun', sans-serif";
+  ctx.fillText('(นายธานี ชมสุข)', W/2, 875);
+  ctx.fillStyle = '#555';
+  ctx.font = "400 20px 'Sarabun', sans-serif";
+  ctx.fillText('ครูผู้สอน วิทยาลัยการอาชีพบุรีรัมย์', W/2, 905);
+
+  const fileName = `certificate-material-final-${r.fname}-${r.lname}.png`;
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+
+  if(canWebShareFile){
+    try{
+      await navigator.share({files:[new File([blob], fileName, {type:'image/png'})], title:'ใบประกาศเกียรติคุณ', text: `${r.fname} ${r.lname}`});
+    }catch(e){ /* ผู้ใช้กดยกเลิกการแชร์ หรือแชร์ไม่สำเร็จ — ถือเป็นการตัดสินใจของผู้ใช้ ไม่ต้องทำอะไรเพิ่ม */ }
+    return;
+  }
+
+  const blobUrl = URL.createObjectURL(blob);
+  if(certWindow){
+    certWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบประกาศ - ${r.fname} ${r.lname}</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;background:#111;font-family:'Sarabun',sans-serif;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px}p{color:#fff;text-align:center;margin:0 0 14px;font-size:15px;line-height:1.8}img{max-width:100%;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5)}</style></head><body><p>📱 มือถือ: แตะค้างที่รูปด้านล่าง แล้วเลือก "บันทึกรูปภาพ"<br>💻 คอมพิวเตอร์: คลิกขวาที่รูป แล้วเลือก "บันทึกรูปภาพเป็น"</p><img src="${blobUrl}" alt="certificate"></body></html>`);
+    certWindow.document.close();
+  }else{
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = blobUrl;
+    link.click();
+    alert('เบราว์เซอร์บล็อกการเปิดหน้าต่างใหม่ กรุณาอนุญาต Pop-up ของเว็บนี้แล้วลองใหม่');
+  }
+}
+
+// ─── REPORT (สำหรับครู) ───────────────────────────────
+let reportData = [];
+let currentReportRows = [];
+function downloadCertificateForRow(i){ downloadCertificate(currentReportRows[i]); }
+function openReport(){
+  const pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผลสอบ:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  show('s-report');
+  loadReport();
+}
+function backToLogin(){ show('s-login'); }
+
+async function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  try{
+    const res = await fetch(RESULTS_URL, {cache:'no-store'});
+    const data = await res.json();
+    reportData = data ? Object.values(data).sort((a,b)=>b.submittedAt-a.submittedAt) : [];
+  }catch(e){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+    return;
+  }
+  renderReport();
+}
+
+function renderReport(){
+  const filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  const rows = reportData.filter(r=>{
+    if(!filter) return true;
+    return (`${r.fname} ${r.lname} ${r.dept}`).toLowerCase().includes(filter);
+  });
+  const wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีนักเรียนสอบ หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  const gradeFor = r => r.gradeN != null ? {n:r.gradeN, label:r.gradeLabel} : (()=>{ const g=gradeOf(r.pct); return {n:g.n, label:g.label}; })();
+  currentReportRows = rows;
+  wrap.innerHTML = `<table class="rpt"><thead><tr>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th>${SECTIONS.map(s=>`<th>${s.label}</th>`).join('')}<th>รวม</th><th>%</th><th>เกรด</th><th>ใบประกาศ</th>
+  </tr></thead><tbody>
+  ${rows.map((r,i)=>{ const g = gradeFor(r); return `<tr>
+    <td>${fmtTime(r.submittedAt)}</td>
+    <td>${r.fname} ${r.lname}</td>
+    <td>${r.dept}</td>
+    ${SECTIONS.map(s=>`<td>${r.scores ? r.scores[s.key] : ''}</td>`).join('')}
+    <td class="rpt-total">${r.total}</td>
+    <td>${r.pct}%</td>
+    <td class="rpt-grade g${g.n}">${g.label}</td>
+    <td>${r.pass ? `<button class="rpt-cert-btn" onclick="downloadCertificateForRow(${i})">🎓 ดาวน์โหลด</button>` : '—'}</td>
+  </tr>`; }).join('')}
+  </tbody></table>
+  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ — เกณฑ์ผ่าน: 50% ขึ้นไป (เกรด 1-4)</div>`;
+}
+
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก', ...SECTIONS.map(s=>s.label), 'รวม','เปอร์เซ็นต์','เกรด'];
+  const lines = [header.join(',')];
+  reportData.forEach(r=>{
+    const ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    const gradeLabel = r.gradeLabel != null ? r.gradeLabel : gradeOf(r.pct).label;
+    const secVals = SECTIONS.map(s=> r.scores ? r.scores[s.key] : '');
+    lines.push([ts, r.fname, r.lname, r.dept, ...secVals, r.total, r.pct, gradeLabel].map(v=>`"${v}"`).join(','));
+  });
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'exam-report-material-final-2569.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
