@@ -461,14 +461,43 @@ const storageProvider = {
       }
     }
 
-    // Always save to local storage as fallback
+    // Always save to local storage too, tagged with sync state so a later
+    // visit can retry any entry that didn't make it to the cloud this time
+    entry._synced = savedToCloud;
     try {
-      localStorage.setItem(key, val);
+      localStorage.setItem(key, JSON.stringify(entry));
     } catch(e){}
 
     return true;
   }
 };
+
+// ---------- Auto-sync leftover local-only submissions (e.g. saved before the cloud DB was connected) ----------
+async function syncLocalSubmissions(){
+  const dbUrl = getCloudDbUrl().replace(/\/$/, '');
+  if (!dbUrl) return;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith('motherday_submissions:')) continue;
+    let entry;
+    try { entry = JSON.parse(localStorage.getItem(k)); } catch(e) { continue; }
+    if (!entry || entry._synced || !entry.img) continue;
+    try {
+      const res = await fetch(`${dbUrl}/motherday-submissions.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
+      });
+      if (res.ok) {
+        entry._synced = true;
+        localStorage.setItem(k, JSON.stringify(entry));
+      }
+    } catch(e) {
+      // offline or blocked — will retry on the next visit
+    }
+  }
+}
+syncLocalSubmissions();
 
 // ---------- Camera (Strict Live Capture) ----------
 $('openCamBtn').addEventListener('click', async () => {
