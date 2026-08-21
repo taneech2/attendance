@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>นาฬิกาสะสมเวลานั่งสมาธิ — ชมรมลูกเสือ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#191009;
+    --bg2:#241609;
+    --panel:#2a1b10;
+    --sand:#ecdcc0;
+    --sand-soft:#b9a488;
+    --sage:#8fae72;
+    --sage-glow:rgba(143,174,114,0.45);
+    --saffron:#e0a458;
+    --ember:#c9694a;
+    --ember-glow:rgba(201,105,74,0.4);
+    --line:#3c2a17;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(224,164,88,0.10), transparent 55%),
+      linear-gradient(180deg, var(--bg), var(--bg2));
+    color:var(--sand);
+    font-family:'Sarabun',sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:22px 14px 50px;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+  .app{ width:100%; max-width:460px; }
+
+  .eyebrow{
+    text-align:center;
+    font-size:12.5px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--saffron);
+    font-weight:600;
+  }
+  h1{
+    font-family:'Noto Serif Thai',serif;
+    font-weight:800;
+    font-size:26px;
+    text-align:center;
+    margin:6px 0 2px;
+    color:var(--sand);
+  }
+  .sub{
+    text-align:center;
+    font-size:13.5px;
+    color:var(--sand-soft);
+    margin:0 0 20px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+
+  label{ display:block; font-size:13px; color:var(--sand-soft); margin-bottom:6px; }
+  input[type=text]{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+    color:var(--sand);
+    padding:12px 14px;
+    font-size:16px;
+    font-family:'Sarabun',sans-serif;
+  }
+  input[type=text]:focus{ outline:2px solid var(--saffron); outline-offset:1px; }
+
+  button{
+    font-family:'Sarabun',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    padding:13px 16px;
+    cursor:pointer;
+    background:var(--bg);
+    color:var(--sand);
+  }
+  button:focus-visible{ outline:2px solid var(--saffron); outline-offset:2px; }
+  .btn-main{
+    width:100%;
+    background:linear-gradient(180deg, #d99a4e, var(--saffron));
+    color:#241609;
+    border:none;
+    margin-top:14px;
+  }
+  .btn-main:disabled{ opacity:.5; cursor:default; }
+  .btn-row{ display:flex; gap:10px; margin-top:12px; }
+  .btn-row button{ flex:1; }
+  .btn-stop{ background:var(--ember); color:#fff; border:none; }
+
+  /* --- setup screen --- */
+  #setupView .card p{ font-size:13.5px; color:var(--sand-soft); line-height:1.6; margin:0; }
+
+  /* --- session screen --- */
+  #sessionView{ display:none; }
+
+  .camWrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:3/4;
+    border-radius:18px;
+    overflow:hidden;
+    background:#000;
+    border:3px solid var(--line);
+    transition:border-color .4s, box-shadow .4s;
+  }
+  .camWrap.st-active{ border-color:var(--sage); box-shadow:0 0 34px var(--sage-glow); }
+  .camWrap.st-paused{ border-color:var(--saffron); box-shadow:0 0 28px rgba(224,164,88,0.35); }
+  .camWrap.st-noface{ border-color:var(--ember); box-shadow:0 0 28px var(--ember-glow); }
+  video{ width:100%; height:100%; object-fit:cover; transform:scaleX(-1); display:block; }
+
+  .statusPill{
+    position:absolute; top:12px; left:50%; transform:translateX(-50%);
+    padding:7px 16px; border-radius:999px;
+    font-size:13px; font-weight:600; letter-spacing:.02em;
+    background:rgba(25,16,9,0.72); backdrop-filter:blur(3px);
+    display:flex; align-items:center; gap:7px;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .dot{ width:8px; height:8px; border-radius:50%; }
+  .st-active .dot{ background:var(--sage); box-shadow:0 0 8px var(--sage); }
+  .st-paused .dot{ background:var(--saffron); box-shadow:0 0 8px var(--saffron); }
+  .st-noface .dot{ background:var(--ember); box-shadow:0 0 8px var(--ember); }
+
+  .calibBanner{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(25,16,9,0.72); text-align:center; padding:24px; font-size:15px;
+  }
+  .calibBanner b{ display:block; font-size:22px; color:var(--saffron); margin-bottom:6px; font-family:'Noto Serif Thai',serif; }
+
+  .timerBlock{ text-align:center; margin-top:18px; }
+  .timerLbl{ font-size:12.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--sand-soft); }
+  .timerNum{
+    font-family:'Sarabun',sans-serif;
+    font-weight:700;
+    font-size:52px;
+    color:var(--sand);
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 26px rgba(236,220,192,0.18);
+  }
+  .totalRow{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-top:16px; padding-top:14px; border-top:1px solid var(--line);
+    font-size:13.5px; color:var(--sand-soft);
+  }
+  .totalRow b{ color:var(--sage); font-variant-numeric:tabular-nums; font-size:15px; }
+
+  .note{ font-size:12px; color:var(--sand-soft); line-height:1.6; text-align:center; margin-top:14px; }
+  .syncMsg{ font-size:12.5px; text-align:center; margin-top:10px; min-height:16px; color:var(--sand-soft); }
+  .syncMsg.ok{ color:var(--sage); }
+  .syncMsg.err{ color:var(--ember); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="eyebrow">ชมรมลูกเสือ</div>
+  <h1>สะสมเวลานั่งสมาธิ</h1>
+  <p class="sub">เปิดกล้อง หลับตา นั่งนิ่ง ให้ระบบช่วยจับเวลาสมาธิของคุณ</p>
+
+  <div id="setupView">
+    <div class="card">
+      <label for="nameInput">ชื่อ-นามสกุล นักเรียน</label>
+      <input type="text" id="nameInput" placeholder="เช่น ด.ช. สมชาย ใจดี" autocomplete="off">
+      <button class="btn-main" id="startBtn">เปิดกล้อง เริ่มนั่งสมาธิ</button>
+    </div>
+    <div class="card">
+      <p>📷 กล้องประมวลผล "หลับตา" และ "ท่านั่ง" อยู่ในเครื่องเท่านั้น ไม่มีวิดีโอหรือภาพหน้าถูกส่งขึ้นคลาวด์ — ที่บันทึกขึ้นคลาวด์มีแค่ชื่อกับตัวเลขเวลาสะสม (วินาที)<br><br>
+      ⚠️ การตรวจจับเป็นแบบประมาณ (ไม่ใช่ระดับการแพทย์) ใช้เพื่อสร้างแรงจูงใจ ไม่ใช่เครื่องมือวัดผลอย่างเป็นทางการ</p>
+    </div>
+  </div>
+
+  <div id="sessionView">
+    <div class="camWrap st-noface" id="camWrap">
+      <video id="video" playsinline muted></video>
+      <div class="statusPill" id="statusPill"><span class="dot"></span><span id="statusText">กำลังเปิดกล้อง…</span></div>
+      <div class="calibBanner" id="calibBanner" style="display:none;">
+        <div><b id="calibCount">3</b>นั่งตัวตรง ลืมตามองกล้องนิ่งๆ<br>เพื่อปรับเทียบท่านั่ง</div>
+      </div>
+    </div>
+
+    <div class="timerBlock">
+      <div class="timerLbl">เวลานั่งสมาธิรอบนี้</div>
+      <div class="timerNum" id="sessionTime">00:00:00</div>
+    </div>
+
+    <div class="totalRow">
+      <span>สะสมรวมทั้งหมด (ทุกครั้ง)</span>
+      <b id="totalTime">–</b>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-stop" id="stopBtn">หยุด &amp; บันทึกผล</button>
+    </div>
+    <div class="syncMsg" id="syncMsg"></div>
+    <div class="note" id="detectNote">กำลังโหลดโมเดลตรวจจับใบหน้า…</div>
+  </div>
+</div>
+
+<script type="module">
+import { FilesetResolver, FaceLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+const $ = id => document.getElementById(id);
+const DB_URL = 'https://gps-photo-app-19249-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+let faceLandmarker = null;
+let video = $('video');
+let stream = null;
+let running = false;
+let calibrating = false;
+let baseRoll = 0, basePitch = 0;
+let emaBlink = 0, emaRoll = 0, emaPitch = 0, primed = false;
+let sessionSeconds = 0;
+let totalSecondsAtStart = 0;
+let studentKey = '';
+let studentName = '';
+let tickHandle = null;
+
+function keyify(name){
+  return name.trim().replace(/[.#$\[\]\/]/g, '_').slice(0, 80);
+}
+function fmt(sec){
+  sec = Math.max(0, Math.floor(sec));
+  const h = String(Math.floor(sec/3600)).padStart(2,'0');
+  const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
+  const s = String(sec%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+function fmtShort(sec){
+  sec = Math.max(0, Math.floor(sec));
+  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60);
+  if (h > 0) return `${h} ชม. ${m} นาที`;
+  return `${m} นาที`;
+}
+
+async function loadModel(){
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+  );
+  faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+      delegate: "GPU"
+    },
+    outputFaceBlendshapes: true,
+    outputFacialTransformationMatrixes: true,
+    runningMode: "VIDEO",
+    numFaces: 1
+  });
+}
+
+function poseAngles(matrixData){
+  const m = matrixData;
+  const roll = Math.atan2(m[1], m[0]) * 180/Math.PI;
+  const pitch = Math.asin(Math.max(-1, Math.min(1, -m[9]))) * 180/Math.PI;
+  return { roll, pitch };
+}
+
+function setStatus(state, text){
+  $('camWrap').className = 'camWrap st-' + state;
+  $('statusPill').className = 'statusPill st-' + state;
+  $('statusText').textContent = text;
+}
+
+let lastDetectTs = 0;
+function detectLoop(ts){
+  if (!running) return;
+  requestAnimationFrame(detectLoop);
+  if (ts - lastDetectTs < 200) return;
+  lastDetectTs = ts;
+  if (video.readyState < 2) return;
+
+  const result = faceLandmarker.detectForVideo(video, ts);
+  const hasFace = result.faceBlendshapes && result.faceBlendshapes.length > 0;
+
+  if (!hasFace){
+    primed = false;
+    if (!calibrating) setStatus('noface', 'ไม่พบใบหน้าในกล้อง');
+    return;
+  }
+
+  const cats = result.faceBlendshapes[0].categories;
+  const blinkL = cats.find(c => c.categoryName === 'eyeBlinkLeft')?.score ?? 0;
+  const blinkR = cats.find(c => c.categoryName === 'eyeBlinkRight')?.score ?? 0;
+  const blink = (blinkL + blinkR) / 2;
+  const { roll, pitch } = poseAngles(result.facialTransformationMatrixes[0].data);
+
+  if (!primed){ emaBlink = blink; emaRoll = roll; emaPitch = pitch; primed = true; }
+  else {
+    emaBlink = emaBlink*0.6 + blink*0.4;
+    emaRoll = emaRoll*0.7 + roll*0.3;
+    emaPitch = emaPitch*0.7 + pitch*0.3;
+  }
+
+  if (calibrating){ baseRoll = emaRoll; basePitch = emaPitch; return; }
+
+  const eyesClosed = emaBlink > 0.5;
+  const postureOk = Math.abs(emaRoll - baseRoll) < 15 && Math.abs(emaPitch - basePitch) < 15;
+
+  if (eyesClosed && postureOk) setStatus('active', 'กำลังนั่งสมาธิ');
+  else if (!postureOk) setStatus('paused', 'ท่านั่งเปลี่ยนไป — นั่งตัวตรง');
+  else setStatus('paused', 'ลืมตาอยู่ — หลับตาเพื่อเริ่มนับ');
+}
+
+function isCounting(){
+  return $('camWrap').classList.contains('st-active');
+}
+
+function startTicker(){
+  tickHandle = setInterval(() => {
+    if (isCounting()) sessionSeconds++;
+    $('sessionTime').textContent = fmt(sessionSeconds);
+  }, 1000);
+}
+
+async function fetchTotal(key){
+  try{
+    const res = await fetch(`${DB_URL}/meditation/${key}/totalSeconds.json`);
+    if (res.ok){
+      const val = await res.json();
+      return typeof val === 'number' ? val : 0;
+    }
+  } catch(e){ console.error('fetchTotal failed', e); }
+  return 0;
+}
+
+async function saveProgress(){
+  const newTotal = totalSecondsAtStart + sessionSeconds;
+  $('syncMsg').textContent = 'กำลังบันทึกขึ้นคลาวด์…';
+  $('syncMsg').className = 'syncMsg';
+  try{
+    await fetch(`${DB_URL}/meditation/${studentKey}.json`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: studentName, totalSeconds: newTotal, updatedAt: new Date().toISOString() })
+    });
+    await fetch(`${DB_URL}/meditation/${studentKey}/log.json`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: new Date().toISOString(), seconds: sessionSeconds })
+    });
+    totalSecondsAtStart = newTotal;
+    $('totalTime').textContent = fmtShort(newTotal);
+    $('syncMsg').textContent = '✓ บันทึกแล้ว';
+    $('syncMsg').className = 'syncMsg ok';
+  } catch(e){
+    $('syncMsg').textContent = 'บันทึกขึ้นคลาวด์ไม่สำเร็จ — ลองใหม่อีกครั้ง';
+    $('syncMsg').className = 'syncMsg err';
+  }
+}
+
+function stopCamera(){
+  if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
+  running = false;
+  if (tickHandle) clearInterval(tickHandle);
+}
+
+$('startBtn').addEventListener('click', async () => {
+  const name = $('nameInput').value.trim();
+  if (!name){ $('nameInput').focus(); return; }
+  studentName = name;
+  studentKey = keyify(name);
+  $('startBtn').disabled = true;
+  $('startBtn').textContent = 'กำลังเตรียมกล้อง…';
+
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+  } catch(e){
+    alert('เปิดกล้องไม่ได้ — โปรดอนุญาตการเข้าถึงกล้องในเบราว์เซอร์ แล้วลองใหม่');
+    $('startBtn').disabled = false;
+    $('startBtn').textContent = 'เปิดกล้อง เริ่มนั่งสมาธิ';
+    return;
+  }
+
+  video.srcObject = stream;
+  await video.play();
+
+  $('setupView').style.display = 'none';
+  $('sessionView').style.display = 'block';
+
+  totalSecondsAtStart = await fetchTotal(studentKey);
+  $('totalTime').textContent = fmtShort(totalSecondsAtStart);
+
+  if (!faceLandmarker){
+    $('detectNote').textContent = 'กำลังโหลดโมเดลตรวจจับใบหน้า…';
+    await loadModel();
+  }
+  $('detectNote').textContent = 'ตรวจจับ "หลับตา" และ "ท่านั่ง" แบบประมาณ ไม่ใช่ระดับการแพทย์';
+
+  running = true;
+  startTicker();
+  requestAnimationFrame(detectLoop);
+
+  // 3-second posture calibration
+  calibrating = true;
+  $('calibBanner').style.display = 'flex';
+  let count = 3;
+  $('calibCount').textContent = count;
+  const calibTimer = setInterval(() => {
+    count--;
+    if (count <= 0){
+      clearInterval(calibTimer);
+      calibrating = false;
+      $('calibBanner').style.display = 'none';
+    } else {
+      $('calibCount').textContent = count;
+    }
+  }, 1000);
+});
+
+$('stopBtn').addEventListener('click', async () => {
+  $('stopBtn').disabled = true;
+  await saveProgress();
+  stopCamera();
+  $('sessionView').style.display = 'none';
+  $('setupView').style.display = 'block';
+  $('startBtn').disabled = false;
+  $('startBtn').textContent = 'เปิดกล้อง เริ่มนั่งสมาธิ';
+  $('stopBtn').disabled = false;
+  sessionSeconds = 0;
+  primed = false;
+});
+
+// autosave every 60s while a session is running, without stopping it
+setInterval(() => {
+  if (running && sessionSeconds > 0) saveProgress();
+}, 60000);
+</script>
+</body>
+</html>
