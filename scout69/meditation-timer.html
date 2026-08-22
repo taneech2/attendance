@@ -110,6 +110,7 @@
 
   /* --- session screen --- */
   #sessionView{ display:none; }
+  #resultView{ display:none; }
 
   .camWrap{
     position:relative;
@@ -210,6 +211,23 @@
     </div>
     <div class="syncMsg" id="syncMsg"></div>
     <div class="note" id="detectNote">กำลังโหลดโมเดลตรวจจับใบหน้า…</div>
+  </div>
+
+  <div id="resultView">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:40px;">🧘</div>
+      <div style="font-family:'Noto Serif Thai',serif; font-weight:700; font-size:19px; margin:6px 0 18px; color:var(--sand);">นั่งสมาธิเสร็จแล้ว</div>
+
+      <div class="timerLbl">รอบนี้นั่งได้</div>
+      <div class="timerNum" id="resultSessionTime" style="font-size:40px;">00:00:00</div>
+
+      <div class="totalRow" style="border-top:1px solid var(--line); margin-top:14px; padding-top:14px;">
+        <span>สะสมรวมทั้งหมด (ทุกครั้ง)</span>
+        <b id="resultTotalTime">–</b>
+      </div>
+      <div class="syncMsg" id="resultSyncMsg" style="margin-top:12px;"></div>
+    </div>
+    <button class="btn-main" id="againBtn">นั่งสมาธิอีกครั้ง</button>
   </div>
 </div>
 
@@ -340,10 +358,19 @@ async function fetchTotal(key){
   return 0;
 }
 
+function setSyncMsg(text, cls){
+  ['syncMsg', 'resultSyncMsg'].forEach(id => {
+    $(id).textContent = text;
+    $(id).className = 'syncMsg' + (cls ? ' ' + cls : '');
+  });
+}
+function setTotalDisplay(sec){
+  ['totalTime', 'resultTotalTime'].forEach(id => { $(id).textContent = fmtShort(sec); });
+}
+
 async function saveProgress(){
   const newTotal = totalSecondsAtStart + sessionSeconds;
-  $('syncMsg').textContent = 'กำลังบันทึกขึ้นคลาวด์…';
-  $('syncMsg').className = 'syncMsg';
+  setSyncMsg('กำลังบันทึกขึ้นคลาวด์…');
   try{
     await fetch(`${DB_URL}/meditation/${studentKey}.json`, {
       method: 'PATCH',
@@ -356,12 +383,10 @@ async function saveProgress(){
       body: JSON.stringify({ date: new Date().toISOString(), seconds: sessionSeconds })
     });
     totalSecondsAtStart = newTotal;
-    $('totalTime').textContent = fmtShort(newTotal);
-    $('syncMsg').textContent = '✓ บันทึกแล้ว';
-    $('syncMsg').className = 'syncMsg ok';
+    setTotalDisplay(newTotal);
+    setSyncMsg('✓ บันทึกแล้ว', 'ok');
   } catch(e){
-    $('syncMsg').textContent = 'บันทึกขึ้นคลาวด์ไม่สำเร็จ — ลองใหม่อีกครั้ง';
-    $('syncMsg').className = 'syncMsg err';
+    setSyncMsg('บันทึกขึ้นคลาวด์ไม่สำเร็จ — ลองใหม่อีกครั้ง', 'err');
   }
 }
 
@@ -395,7 +420,7 @@ $('startBtn').addEventListener('click', async () => {
   $('sessionView').style.display = 'block';
 
   totalSecondsAtStart = await fetchTotal(studentKey);
-  $('totalTime').textContent = fmtShort(totalSecondsAtStart);
+  setTotalDisplay(totalSecondsAtStart);
 
   if (!faceLandmarker){
     $('detectNote').textContent = 'กำลังโหลดโมเดลตรวจจับใบหน้า…';
@@ -426,15 +451,25 @@ $('startBtn').addEventListener('click', async () => {
 
 $('stopBtn').addEventListener('click', async () => {
   $('stopBtn').disabled = true;
+  const finalSessionSeconds = sessionSeconds;
   await saveProgress();
   stopCamera();
+
+  $('resultSessionTime').textContent = fmt(finalSessionSeconds);
   $('sessionView').style.display = 'none';
-  $('setupView').style.display = 'block';
-  $('startBtn').disabled = false;
-  $('startBtn').textContent = 'เปิดกล้อง เริ่มนั่งสมาธิ';
+  $('resultView').style.display = 'block';
+
   $('stopBtn').disabled = false;
   sessionSeconds = 0;
   primed = false;
+});
+
+$('againBtn').addEventListener('click', () => {
+  $('resultView').style.display = 'none';
+  $('setupView').style.display = 'block';
+  $('startBtn').disabled = false;
+  $('startBtn').textContent = 'เปิดกล้อง เริ่มนั่งสมาธิ';
+  $('nameInput').value = studentName;
 });
 
 // autosave every 60s while a session is running, without stopping it
