@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>อันดับเวลานั่งสมาธิ — ชมรมลูกเสือ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#191009;
+    --bg2:#241609;
+    --panel:#2a1b10;
+    --sand:#ecdcc0;
+    --sand-soft:#b9a488;
+    --sage:#8fae72;
+    --saffron:#e0a458;
+    --gold:#ffd77a;
+    --silver:#cfd8de;
+    --bronze:#d99a6a;
+    --line:#3c2a17;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(224,164,88,0.10), transparent 55%),
+      linear-gradient(180deg, var(--bg), var(--bg2));
+    color:var(--sand);
+    font-family:'Sarabun',sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:22px 14px 50px;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+  .app{ width:100%; max-width:480px; }
+
+  .eyebrow{
+    text-align:center;
+    font-size:12.5px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--saffron);
+    font-weight:600;
+  }
+  h1{
+    font-family:'Noto Serif Thai',serif;
+    font-weight:800;
+    font-size:25px;
+    text-align:center;
+    margin:6px 0 2px;
+    color:var(--sand);
+  }
+  .sub{
+    text-align:center;
+    font-size:13.5px;
+    color:var(--sand-soft);
+    margin:0 0 20px;
+  }
+
+  .toolbar{ display:flex; gap:10px; margin-bottom:16px; }
+  .toolbar a, .toolbar button{
+    flex:1;
+    font-family:'Sarabun',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    text-align:center;
+    text-decoration:none;
+    border-radius:12px;
+    border:1px solid var(--line);
+    padding:11px 12px;
+    cursor:pointer;
+    background:var(--panel);
+    color:var(--sand);
+  }
+  .toolbar .primary{ background:linear-gradient(180deg, #d99a4e, var(--saffron)); color:#241609; border:none; }
+
+  .list{ display:flex; flex-direction:column; gap:9px; }
+  .row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+  }
+  .rank{
+    width:34px; flex-shrink:0;
+    text-align:center;
+    font-weight:700;
+    font-size:15px;
+    color:var(--sand-soft);
+    font-variant-numeric:tabular-nums;
+  }
+  .row.r1 .rank{ color:var(--gold); font-size:20px; }
+  .row.r2 .rank{ color:var(--silver); font-size:18px; }
+  .row.r3 .rank{ color:var(--bronze); font-size:18px; }
+  .row.r1{ border-color:rgba(255,215,122,0.5); box-shadow:0 0 22px rgba(255,215,122,0.12); }
+
+  .info{ flex:1; min-width:0; }
+  .rname{ font-size:14.5px; font-weight:600; color:var(--sand); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar{ height:6px; border-radius:4px; background:var(--bg); margin-top:6px; overflow:hidden; }
+  .bar-fill{ height:100%; background:linear-gradient(90deg, var(--saffron), var(--sage)); border-radius:4px; }
+
+  .rtime{
+    flex-shrink:0;
+    font-size:14px;
+    font-weight:700;
+    color:var(--sage);
+    font-variant-numeric:tabular-nums;
+    text-align:right;
+    white-space:nowrap;
+  }
+
+  .empty, .loading{
+    text-align:center;
+    color:var(--sand-soft);
+    font-size:14px;
+    padding:40px 20px;
+  }
+
+  .updated{
+    text-align:center;
+    font-size:12px;
+    color:var(--sand-soft);
+    margin-top:18px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="eyebrow">ชมรมลูกเสือ</div>
+  <h1>อันดับเวลานั่งสมาธิ</h1>
+  <p class="sub">สะสมเวลารวมของทุกคนที่บันทึกไว้</p>
+
+  <div class="toolbar">
+    <a href="meditation-timer.html" class="primary">🧘 เริ่มนั่งสมาธิ</a>
+    <button id="refreshBtn">🔄 รีเฟรช</button>
+  </div>
+
+  <div class="list" id="list"><div class="loading">กำลังโหลดอันดับ…</div></div>
+  <div class="updated" id="updated"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const DB_URL = 'https://gps-photo-app-19249-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+function fmtShort(sec){
+  sec = Math.max(0, Math.floor(sec));
+  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60);
+  if (h > 0) return `${h} ชม. ${m} น.`;
+  if (m > 0) return `${m} นาที`;
+  return `${sec} วิ`;
+}
+
+async function loadLeaderboard(){
+  $('list').innerHTML = '<div class="loading">กำลังโหลดอันดับ…</div>';
+  try{
+    const res = await fetch(`${DB_URL}/meditation.json`);
+    const data = await res.json();
+    const entries = Object.values(data || {})
+      .filter(e => e && typeof e.totalSeconds === 'number' && e.totalSeconds > 0)
+      .sort((a, b) => b.totalSeconds - a.totalSeconds);
+
+    if (!entries.length){
+      $('list').innerHTML = '<div class="empty">ยังไม่มีใครบันทึกผลการนั่งสมาธิเลย</div>';
+      $('updated').textContent = '';
+      return;
+    }
+
+    const maxSec = entries[0].totalSeconds;
+    const medal = ['🥇', '🥈', '🥉'];
+    $('list').innerHTML = entries.map((e, i) => `
+      <div class="row r${i+1}">
+        <div class="rank">${medal[i] || (i+1)}</div>
+        <div class="info">
+          <div class="rname">${escapeHtml(e.name || 'ไม่ทราบชื่อ')}</div>
+          <div class="bar"><div class="bar-fill" style="width:${Math.max(4, e.totalSeconds/maxSec*100)}%"></div></div>
+        </div>
+        <div class="rtime">${fmtShort(e.totalSeconds)}</div>
+      </div>
+    `).join('');
+    $('updated').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  } catch(e){
+    $('list').innerHTML = '<div class="empty">โหลดข้อมูลไม่สำเร็จ — ลองรีเฟรชอีกครั้ง</div>';
+  }
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+$('refreshBtn').addEventListener('click', loadLeaderboard);
+loadLeaderboard();
+</script>
+</body>
+</html>
