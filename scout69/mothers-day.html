@@ -260,6 +260,18 @@
   }
   .status.show{display:block;}
 
+  .late-box{
+    margin-top:10px;
+    padding:12px 14px;
+    border:1px solid var(--brass);
+    background:rgba(181,117,79,0.08);
+    border-radius:2px;
+    font-size:12.5px;
+    line-height:1.7;
+    color:var(--ink);
+  }
+  .late-box b{ color:var(--stamp); }
+
   .divider{
     border:none;
     border-top:1px dashed var(--brass);
@@ -322,7 +334,7 @@
   </div>
 
   <div class="mandatory-badge">⚠️ กิจกรรมบังคับ — ลูกเสือวิสามัญทุกคนต้องดำเนินการ
-    <span>ส่งภายในวันอาทิตย์ที่ 23 สิงหาคม 2569 เวลา 22:00 น. — หากไม่ส่งภาพตามกำหนด จะถูกตัดสิน "มผ." (ไม่ผ่าน) ทันที</span>
+    <span>เลยเวลาเส้นตาย (23 ส.ค. 2569 22:00 น.) แล้ว แต่ยังส่งได้ — หักคะแนนความน่าเชื่อถือ 1 แต้ม/ชม.ที่ส่งช้า และเพิ่มชั่วโมงบำเพ็ญประโยชน์ 1 ชม. ทุก 24 ชม.ที่ส่งช้า</span>
   </div>
 
   <div class="body">
@@ -398,6 +410,7 @@
       <button class="primary" id="submitBtn" style="width:100%;" disabled>ยืนยันและบันทึก</button>
     </div>
     <div class="status" id="statusMsg"></div>
+    <div class="late-box" id="lateResultBox" style="display:none;"></div>
   </div>
 
   <div class="teacher-toggle">
@@ -434,6 +447,18 @@ const $ = id => document.getElementById(id);
 let stream = null;
 let capturedDataUrl = null;
 let gpsData = null; // {lat, lon, acc}
+
+// ---------- Late penalty policy ----------
+// เส้นตาย 23 ส.ค. 2569 22:00 น. — ส่งช้ายังส่งได้ แต่หักคะแนนความน่าเชื่อถือ 1 แต้ม/ชม.
+// และเพิ่มชั่วโมงบำเพ็ญประโยชน์ 1 ชม. ทุกๆ 24 ชม.ที่ส่งช้า
+const SUBMISSION_DEADLINE = new Date(2026, 7, 23, 22, 0, 0);
+function computeLatePolicy(now){
+  const hoursLate = Math.max(0, (now - SUBMISSION_DEADLINE) / 3600000);
+  const hoursLateRounded = Math.ceil(hoursLate);
+  const creditScore = Math.max(0, 100 - hoursLateRounded);
+  const serviceHours = hoursLateRounded > 0 ? Math.ceil(hoursLateRounded / 24) : 0;
+  return { isLate: hoursLateRounded > 0, hoursLate: hoursLateRounded, creditScore, serviceHours };
+}
 
 // ---------- Cloud DB Configuration ----------
 // ใช้ Firebase เดิมของโครงการเยี่ยมบ้าน (gps-photo-app.html) ร่วมกัน — เขียนข้อมูลแยกที่ path /motherday-submissions ไม่ปนกับ /submissions เดิม
@@ -671,6 +696,7 @@ $('submitBtn').addEventListener('click', async () => {
   $('submitBtn').textContent = 'กำลังประทับตราและบันทึก…';
 
   const stampedUrl = await stampImage(capturedDataUrl, gpsData, $('sname').value.trim(), $('sclass').value.trim());
+  const late = computeLatePolicy(new Date());
 
   const entry = {
     name: $('sname').value.trim(),
@@ -681,7 +707,11 @@ $('submitBtn').addEventListener('click', async () => {
     lon: gpsData.lon,
     acc: Math.round(gpsData.acc),
     time: new Date().toISOString(),
-    img: stampedUrl
+    img: stampedUrl,
+    isLate: late.isLate,
+    hoursLate: late.hoursLate,
+    creditScore: late.creditScore,
+    serviceHours: late.serviceHours
   };
 
   try {
@@ -690,6 +720,7 @@ $('submitBtn').addEventListener('click', async () => {
     if (!res) throw new Error('save failed');
     setStatus('บันทึกสำเร็จ — ขอบคุณครับ/ค่ะ', false);
     $('submitBtn').textContent = 'ส่งแล้ว ✓';
+    showLateResult(late);
     loadGallery();
   } catch (e) {
     setStatus('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง', true);
@@ -697,6 +728,20 @@ $('submitBtn').addEventListener('click', async () => {
     $('submitBtn').textContent = 'ยืนยันและบันทึก';
   }
 });
+
+function showLateResult(late){
+  const box = $('lateResultBox');
+  if (!late.isLate){
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  box.innerHTML = `
+    ⏰ <b>ส่งช้า ${late.hoursLate} ชั่วโมง</b> จากเส้นตาย<br>
+    คะแนนความน่าเชื่อถือ: <b>${late.creditScore}/100</b> (หัก ${late.hoursLate} แต้ม)<br>
+    บำเพ็ญประโยชน์เพิ่ม: <b>${late.serviceHours} ชั่วโมง</b>
+  `;
+}
 
 function setStatus(msg, isErr){
   const el = $('statusMsg');
@@ -882,6 +927,9 @@ async function loadGallery(){
         it.phone ? `📱 <a href="tel:${escapeHtml(it.phone)}">${escapeHtml(it.phone)}</a>` : '',
         it.parentPhone ? `ผู้ปกครอง <a href="tel:${escapeHtml(it.parentPhone)}">${escapeHtml(it.parentPhone)}</a>` : ''
       ].filter(Boolean).join(' · ');
+      const lateLine = it.isLate
+        ? `<span style="color:var(--stamp); font-weight:600;">⏰ ช้า ${it.hoursLate} ชม. — เครดิต ${it.creditScore}/100 · บำเพ็ญประโยชน์ +${it.serviceHours} ชม.</span><br>`
+        : '';
       return `<div class="entry">
         <img src="${it.img}" alt="">
         <div class="meta">
@@ -889,6 +937,7 @@ async function loadGallery(){
           ${phoneLine ? phoneLine + '<br>' : ''}
           ${it.lat.toFixed(6)}, ${it.lon.toFixed(6)} (±${it.acc}m)<br>
           ${t}<br>
+          ${lateLine}
           <a href="${mapUrl}" target="_blank" rel="noopener">เปิดใน Google Maps →</a>
         </div>
       </div>`;
