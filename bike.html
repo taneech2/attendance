@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ชมสุข69 Bike — สะสมระยะปั่น ชาเลนจ์ &amp; อันดับ</title>
+<meta name="theme-color" content="#c9a84c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ชมสุข69 Bike">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --bg:#0a0f1e; --bg2:#0d1530;
+  --gold:#c9a84c; --gold-soft:#c9a84c88;
+  --bike:#2fb8e0; --bike-soft:#2fb8e033;
+  --ok:#4caf8a; --err:#e05a5a;
+  --text:#c4d4e0; --text-dim:#6a86a0;
+  --card:#0d1e35; --card2:#0a1628;
+  --line:#ffffff12;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 14px 90px;}
+.page{max-width:520px;margin:0 auto;}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+/* HEADER */
+.header{text-align:center;padding:18px 10px 20px;}
+.logo-circle{
+  width:72px;height:72px;border-radius:50%;border:3px solid var(--bike);
+  margin:0 auto 12px;background:radial-gradient(circle,#1a2b40,#0d1e30);
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+  box-shadow:0 0 24px rgba(47,184,224,.35);
+}
+.app-title{
+  font-size:23px;font-weight:800;
+  background:linear-gradient(135deg,#8adfff,var(--bike),#5cc8f0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:4px;
+}
+.app-sub{color:var(--text-dim);font-size:12.5px;letter-spacing:.3px;}
+.profile-chip{
+  display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+  background:var(--card);border:1px solid var(--gold-soft);border-radius:20px;
+  padding:6px 14px;font-size:12.5px;color:var(--gold);cursor:pointer;
+}
+.profile-chip .edit{color:var(--text-dim);font-size:11px;}
+
+/* TABBAR */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  background:linear-gradient(0deg,#0a0f1e 70%,transparent);
+  padding:10px 14px 14px;
+}
+.tabbar-inner{
+  max-width:520px;margin:0 auto;display:flex;gap:6px;
+  background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+.tab-btn{
+  flex:1;text-align:center;padding:9px 4px;border-radius:11px;cursor:pointer;
+  color:var(--text-dim);font-size:10.5px;font-weight:600;border:1px solid transparent;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.tab-btn .ic{font-size:18px;}
+.tab-btn.active{color:var(--gold);background:#c9a84c14;border-color:var(--gold-soft);}
+
+/* SCREENS */
+.screen{display:none;}
+.screen.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.section-title{
+  display:flex;align-items:center;gap:8px;color:var(--gold);font-size:14px;font-weight:700;
+  margin:22px 0 12px;letter-spacing:.3px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(to right,var(--gold-soft),transparent);}
+.section-title:first-child{margin-top:4px;}
+
+/* RIDE SCREEN */
+#map{height:230px;border-radius:14px;border:1px solid var(--line);margin-bottom:14px;overflow:hidden;}
+.gps-status{
+  text-align:center;font-size:11.5px;color:var(--text-dim);margin-bottom:14px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.gps-dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);}
+.gps-dot.live{background:var(--err);box-shadow:0 0 8px var(--err);animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
+.stat-box{
+  background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);
+  border-radius:14px;padding:14px 8px;text-align:center;
+}
+.stat-box .val{font-size:22px;font-weight:800;color:#fff;font-family:'JetBrains Mono',monospace;}
+.stat-box .lbl{font-size:10.5px;color:var(--text-dim);margin-top:4px;letter-spacing:.3px;}
+
+.ride-controls{display:flex;gap:10px;}
+.btn{
+  flex:1;border:none;border-radius:14px;padding:16px 10px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:'Sarabun',sans-serif;transition:transform .1s;
+}
+.btn:active{transform:scale(.97);}
+.btn-start{background:linear-gradient(135deg,#5ce09a,var(--ok));color:#04180f;}
+.btn-pause{background:linear-gradient(135deg,#ffd479,var(--gold));color:#241a05;}
+.btn-resume{background:linear-gradient(135deg,#5ce09a,var(--ok));color:#04180f;}
+.btn-stop{background:linear-gradient(135deg,#ff8a6e,var(--err));color:#2a0808;}
+.btn-ghost{background:var(--card);border:1px solid var(--line);color:var(--text);}
+
+/* CHALLENGE CARDS */
+.chal-card{
+  background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);
+  border-radius:14px;padding:14px 16px;margin-bottom:10px;position:relative;
+}
+.chal-card.done{border-color:var(--ok);}
+.chal-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.chal-ic{font-size:22px;}
+.chal-name{font-size:13.5px;font-weight:600;color:#fff;flex:1;}
+.chal-check{color:var(--ok);font-size:16px;display:none;}
+.chal-card.done .chal-check{display:block;}
+.chal-bar-wrap{height:8px;background:#ffffff10;border-radius:5px;overflow:hidden;}
+.chal-bar{height:100%;background:linear-gradient(90deg,var(--bike),var(--gold));border-radius:5px;transition:width .4s;}
+.chal-card.done .chal-bar{background:linear-gradient(90deg,#5ce09a,var(--ok));}
+.chal-txt{font-size:11px;color:var(--text-dim);margin-top:6px;font-family:'JetBrains Mono',monospace;}
+
+/* LEADERBOARD */
+.lb-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.lb-tab{
+  flex:1;text-align:center;padding:9px 4px;border-radius:10px;font-size:12px;font-weight:600;
+  color:var(--text-dim);background:var(--card);border:1px solid var(--line);cursor:pointer;
+}
+.lb-tab.active{color:#241a05;background:linear-gradient(135deg,#ffd479,var(--gold));border-color:var(--gold);}
+.lb-row{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;
+}
+.lb-rank{width:28px;text-align:center;font-weight:800;font-size:15px;color:var(--text-dim);}
+.lb-row.top1{border-color:#ffd479;}
+.lb-row.top2{border-color:#cfd8e0;}
+.lb-row.top3{border-color:#d69a63;}
+.lb-info{flex:1;min-width:0;}
+.lb-name{font-size:13.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-dept{font-size:10.5px;color:var(--text-dim);}
+.lb-dist{text-align:right;}
+.lb-dist .km{font-size:16px;font-weight:800;color:var(--gold);font-family:'JetBrains Mono',monospace;}
+.lb-dist .cnt{font-size:10px;color:var(--text-dim);}
+.empty-state{text-align:center;color:var(--text-dim);font-size:13px;padding:40px 10px;}
+.err-state{text-align:center;color:var(--err);font-size:12.5px;padding:20px 10px;}
+
+/* HISTORY */
+.hist-row{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;
+}
+.hist-date{width:52px;text-align:center;}
+.hist-date .d{font-size:17px;font-weight:800;color:#fff;line-height:1;}
+.hist-date .m{font-size:10px;color:var(--text-dim);}
+.hist-mid{flex:1;}
+.hist-mid .km{font-size:15px;font-weight:700;color:var(--gold);}
+.hist-mid .meta{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.hist-del{color:var(--err);font-size:12px;cursor:pointer;padding:6px;}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(5,8,16,.82);z-index:100;
+  display:none;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(3px);
+}
+.modal-overlay.active{display:flex;}
+.modal{
+  background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--gold-soft);
+  border-radius:18px;padding:24px 22px;max-width:380px;width:100%;
+}
+.modal h3{color:var(--gold);font-size:17px;margin-bottom:6px;}
+.modal p{color:var(--text-dim);font-size:12.5px;margin-bottom:16px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:11.5px;color:var(--text-dim);margin-bottom:5px;}
+.field input{
+  width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--line);
+  background:#050810;color:#fff;font-family:'Sarabun',sans-serif;font-size:14px;
+}
+.field input:focus{outline:none;border-color:var(--gold);}
+
+.footer{text-align:center;color:#2a3a50;font-size:10.5px;margin-top:32px;letter-spacing:.4px;}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="header">
+    <div class="logo-circle">🚴</div>
+    <div class="app-title">ชมสุข69 Bike</div>
+    <div class="app-sub">สะสมระยะปั่น · ชาเลนจ์ · อันดับ · GPS สด</div>
+    <div class="profile-chip" onclick="openProfileModal()">
+      <span id="profileChipTxt">👤 ตั้งค่าโปรไฟล์</span>
+      <span class="edit">แก้ไข</span>
+    </div>
+  </div>
+
+  <!-- ═══════ RIDE SCREEN ═══════ -->
+  <div class="screen active" id="screen-ride">
+    <div class="section-title">📍 บันทึกการปั่นด้วย GPS</div>
+    <div id="map"></div>
+    <div class="gps-status">
+      <span class="gps-dot" id="gpsDot"></span>
+      <span id="gpsStatusTxt">พร้อมเริ่มปั่น — กดเริ่ม เพื่อขอสิทธิ์ตำแหน่ง</span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-box"><div class="val" id="statDist">0.00</div><div class="lbl">กิโลเมตร</div></div>
+      <div class="stat-box"><div class="val" id="statTime">00:00</div><div class="lbl">เวลา</div></div>
+      <div class="stat-box"><div class="val" id="statSpeed">0.0</div><div class="lbl">กม./ชม. เฉลี่ย</div></div>
+    </div>
+
+    <div class="ride-controls" id="rideControls">
+      <button class="btn btn-start" onclick="handleStart()">▶ เริ่มปั่น</button>
+    </div>
+  </div>
+
+  <!-- ═══════ CHALLENGE SCREEN ═══════ -->
+  <div class="screen" id="screen-challenge">
+    <div class="section-title">🏆 ชาเลนจ์ของฉัน</div>
+    <div id="challengeList"></div>
+  </div>
+
+  <!-- ═══════ LEADERBOARD SCREEN ═══════ -->
+  <div class="screen" id="screen-leaderboard">
+    <div class="section-title">📊 กระดานผู้นำ</div>
+    <div class="lb-tabs">
+      <div class="lb-tab active" data-period="week" onclick="switchLbTab('week')">สัปดาห์นี้</div>
+      <div class="lb-tab" data-period="month" onclick="switchLbTab('month')">เดือนนี้</div>
+      <div class="lb-tab" data-period="all" onclick="switchLbTab('all')">ตลอดกาล</div>
+    </div>
+    <div id="lbList"><div class="empty-state">กำลังโหลด...</div></div>
+  </div>
+
+  <!-- ═══════ HISTORY SCREEN ═══════ -->
+  <div class="screen" id="screen-history">
+    <div class="section-title">📜 ประวัติการปั่น</div>
+    <div id="histList"></div>
+  </div>
+
+  <div class="footer">บริษัทชมสุข69 · วิทยาลัยการอาชีพบุรีรัมย์<br>พัฒนาโดย ธานี ชมสุข แผนกช่างเชื่อมโลหะ</div>
+</div>
+
+<!-- TABBAR -->
+<div class="tabbar">
+  <div class="tabbar-inner">
+    <div class="tab-btn active" data-screen="ride" onclick="switchScreen('ride')"><span class="ic">🚴</span>ปั่น</div>
+    <div class="tab-btn" data-screen="challenge" onclick="switchScreen('challenge')"><span class="ic">🏆</span>ชาเลนจ์</div>
+    <div class="tab-btn" data-screen="leaderboard" onclick="switchScreen('leaderboard')"><span class="ic">📊</span>อันดับ</div>
+    <div class="tab-btn" data-screen="history" onclick="switchScreen('history')"><span class="ic">📜</span>ประวัติ</div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <h3>👤 ตั้งค่าโปรไฟล์นักปั่น</h3>
+    <p>ชื่อของคุณจะแสดงบนกระดานผู้นำ ข้อมูลนี้เก็บไว้ในเครื่องนี้เท่านั้น</p>
+    <div class="field">
+      <label>ชื่อ-สกุล</label>
+      <input type="text" id="inpName" placeholder="เช่น ธานี ชมสุข">
+    </div>
+    <div class="field">
+      <label>แผนกวิชา / ห้อง</label>
+      <input type="text" id="inpDept" placeholder="เช่น ช่างเชื่อมโลหะ ปี 1">
+    </div>
+    <button class="btn btn-start" style="width:100%" onclick="saveProfileModal()">บันทึกโปรไฟล์</button>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────────────
+var DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+var RIDES_PATH = DB_BASE + '/bike/rides';
+var FALLBACK_CENTER = [14.9958, 103.1140]; // บุรีรัมย์
+
+var CHALLENGES = [
+  {id:'c10',   icon:'🥉', title:'10 กิโลเมตรแรก',                  target:10,   type:'total'},
+  {id:'c50',   icon:'🎖️', title:'สะสมครบ 50 กิโลเมตร',             target:50,   type:'total'},
+  {id:'c100',  icon:'🥈', title:'สะสมครบ 100 กิโลเมตร',            target:100,  type:'total'},
+  {id:'c500',  icon:'🥇', title:'สะสมครบ 500 กิโลเมตร',            target:500,  type:'total'},
+  {id:'c1000', icon:'💯', title:'ชมรมพันกิโล',                     target:1000, type:'total'},
+  {id:'csing', icon:'🚀', title:'ปั่นเดี่ยวไกล 50 กม. ในครั้งเดียว', target:50,  type:'single'},
+  {id:'cstrk', icon:'🔥', title:'ปั่นต่อเนื่อง 7 วันติด',           target:7,    type:'streak'}
+];
+
+// ─── STATE ──────────────────────────────────────────────
+var map, polyline, marker, watchId=null;
+var tracking=false, hasFix=false;
+var routeCoords=[], lastPt=null, totalDistanceKm=0;
+var startTime=null, elapsedBeforePause=0, timerInterval=null;
+var currentLbPeriod='week';
+
+// ─── PROFILE ────────────────────────────────────────────
+function getProfile(){ try{ return JSON.parse(localStorage.getItem('bikeProfile')||'null'); }catch(e){ return null; } }
+function saveProfile(p){ localStorage.setItem('bikeProfile', JSON.stringify(p)); }
+function openProfileModal(){
+  var p = getProfile();
+  document.getElementById('inpName').value = p ? p.name : '';
+  document.getElementById('inpDept').value = p ? p.dept : '';
+  document.getElementById('profileModal').classList.add('active');
+}
+function saveProfileModal(){
+  var name = document.getElementById('inpName').value.trim();
+  var dept = document.getElementById('inpDept').value.trim();
+  if(!name){ alert('กรุณากรอกชื่อ-สกุล'); return; }
+  saveProfile({name:name, dept:dept});
+  document.getElementById('profileModal').classList.remove('active');
+  renderProfileChip();
+}
+function renderProfileChip(){
+  var p = getProfile();
+  document.getElementById('profileChipTxt').innerText = p ? ('👤 ' + p.name + (p.dept ? ' · '+p.dept : '')) : '👤 ตั้งค่าโปรไฟล์';
+}
+
+// ─── LOCAL RIDES ────────────────────────────────────────
+function getLocalRides(){ try{ return JSON.parse(localStorage.getItem('bikeRides')||'[]'); }catch(e){ return []; } }
+function saveLocalRides(arr){ localStorage.setItem('bikeRides', JSON.stringify(arr)); }
+
+// ─── TABS / SCREENS ─────────────────────────────────────
+function switchScreen(name){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelector('.tab-btn[data-screen="'+name+'"]').classList.add('active');
+  if(name==='ride'){ initMap(); setTimeout(function(){ if(map) map.invalidateSize(); },80); }
+  if(name==='challenge') renderChallenges();
+  if(name==='leaderboard') loadLeaderboard(currentLbPeriod);
+  if(name==='history') renderHistory();
+}
+
+// ─── MAP ────────────────────────────────────────────────
+function initMap(){
+  if(map) return;
+  map = L.map('map', {zoomControl:false, attributionControl:false}).setView(FALLBACK_CENTER, 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
+  polyline = L.polyline([], {color:'#2fb8e0', weight:5, opacity:.9}).addTo(map);
+  marker = L.circleMarker(FALLBACK_CENTER, {radius:7, color:'#c9a84c', fillColor:'#ffd479', fillOpacity:1, weight:2}).addTo(map);
+}
+
+// ─── HAVERSINE ──────────────────────────────────────────
+function haversineKm(lat1,lon1,lat2,lon2){
+  var R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ─── GPS TRACKING ───────────────────────────────────────
+function handleStart(){
+  var p = getProfile();
+  if(!p){ openProfileModal(); return; }
+  if(!navigator.geolocation){ alert('อุปกรณ์นี้ไม่รองรับ GPS'); return; }
+  initMap();
+  tracking = true; hasFix = false;
+  routeCoords = []; lastPt = null; totalDistanceKm = 0;
+  polyline.setLatLngs([]);
+  startTime = Date.now(); elapsedBeforePause = 0;
+  updateStatsDisplay();
+  setGpsStatus('🛰️ กำลังค้นหาสัญญาณ GPS...', false);
+  watchId = navigator.geolocation.watchPosition(onPosition, onGpsError, {enableHighAccuracy:true, maximumAge:1000, timeout:20000});
+  timerInterval = setInterval(updateTimer, 1000);
+  renderRideControls('tracking');
+}
+function handlePause(){
+  tracking = false;
+  if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+  clearInterval(timerInterval);
+  elapsedBeforePause += Date.now() - startTime;
+  setGpsStatus('⏸ หยุดชั่วคราว', false);
+  renderRideControls('paused');
+}
+function handleResume(){
+  tracking = true;
+  lastPt = null; // ไม่นับระยะกระโดดข้ามช่วงหยุด
+  startTime = Date.now();
+  setGpsStatus('🛰️ กำลังค้นหาสัญญาณ GPS...', false);
+  watchId = navigator.geolocation.watchPosition(onPosition, onGpsError, {enableHighAccuracy:true, maximumAge:1000, timeout:20000});
+  timerInterval = setInterval(updateTimer, 1000);
+  renderRideControls('tracking');
+}
+function handleStop(){
+  if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+  clearInterval(timerInterval);
+  var finalElapsedMs = elapsedBeforePause + (tracking ? Date.now()-startTime : 0);
+  tracking = false;
+  if(totalDistanceKm < 0.1){
+    if(!confirm('ระยะที่ปั่นได้น้อยมาก (' + totalDistanceKm.toFixed(2) + ' กม.) ต้องการบันทึกหรือไม่?')){
+      resetRideState();
+      return;
+    }
+  }
+  saveRide(finalElapsedMs);
+  resetRideState();
+}
+function resetRideState(){
+  routeCoords=[]; lastPt=null; totalDistanceKm=0; elapsedBeforePause=0; startTime=null; hasFix=false;
+  if(polyline) polyline.setLatLngs([]);
+  updateStatsDisplay();
+  setGpsStatus('พร้อมเริ่มปั่น — กดเริ่ม เพื่อขอสิทธิ์ตำแหน่ง', false);
+  renderRideControls('idle');
+}
+function onPosition(pos){
+  hasFix = true;
+  var lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
+  setGpsStatus('🛰️ สัญญาณดี · ความแม่นยำ ~' + Math.round(acc) + ' ม.', true);
+  if(acc > 50) return; // ทิ้งพิกัดที่ไม่แม่นยำ
+  var latlng = [lat, lng];
+  if(lastPt){
+    var d = haversineKm(lastPt[0], lastPt[1], lat, lng);
+    if(d > 0 && d < 0.5){ totalDistanceKm += d; }
+    if(d < 0.5){ routeCoords.push(latlng); polyline.addLatLng(latlng); }
+  } else {
+    routeCoords.push(latlng);
+    polyline.addLatLng(latlng);
+  }
+  lastPt = latlng;
+  marker.setLatLng(latlng);
+  map.panTo(latlng);
+  updateStatsDisplay();
+}
+function onGpsError(err){
+  var msg = 'ไม่สามารถรับตำแหน่ง GPS ได้';
+  if(err.code === 1) msg = '⚠️ กรุณาอนุญาตการเข้าถึงตำแหน่ง GPS ในเบราว์เซอร์';
+  else if(err.code === 2) msg = '⚠️ ไม่พบสัญญาณ GPS ลองออกไปที่โล่งแจ้ง';
+  else if(err.code === 3) msg = '⚠️ ค้นหาตำแหน่งใช้เวลานานเกินไป';
+  setGpsStatus(msg, false);
+}
+function setGpsStatus(txt, live){
+  document.getElementById('gpsStatusTxt').innerText = txt;
+  document.getElementById('gpsDot').classList.toggle('live', !!live);
+}
+
+function fmtTime(sec){
+  sec = Math.max(0, Math.floor(sec));
+  var h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+  return (h>0 ? String(h).padStart(2,'0')+':' : '') + String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function updateTimer(){
+  var elapsedSec = (elapsedBeforePause + (tracking ? Date.now()-startTime : 0)) / 1000;
+  document.getElementById('statTime').innerText = fmtTime(elapsedSec);
+  var speedKmh = elapsedSec > 0 ? totalDistanceKm / (elapsedSec/3600) : 0;
+  document.getElementById('statSpeed').innerText = speedKmh.toFixed(1);
+}
+function updateStatsDisplay(){
+  document.getElementById('statDist').innerText = totalDistanceKm.toFixed(2);
+  updateTimer();
+}
+function renderRideControls(state){
+  var el = document.getElementById('rideControls');
+  if(state==='idle'){
+    el.innerHTML = '<button class="btn btn-start" onclick="handleStart()">▶ เริ่มปั่น</button>';
+  } else if(state==='tracking'){
+    el.innerHTML = '<button class="btn btn-pause" onclick="handlePause()">⏸ หยุดพัก</button><button class="btn btn-stop" onclick="handleStop()">⏹ จบการปั่น</button>';
+  } else if(state==='paused'){
+    el.innerHTML = '<button class="btn btn-resume" onclick="handleResume()">▶ ปั่นต่อ</button><button class="btn btn-stop" onclick="handleStop()">⏹ จบการปั่น</button>';
+  }
+}
+
+// ─── SAVE RIDE ──────────────────────────────────────────
+function saveRide(elapsedMs){
+  var p = getProfile();
+  var durationSec = Math.round(elapsedMs/1000);
+  var run = {
+    id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    name: p.name, dept: p.dept || '',
+    distanceKm: +totalDistanceKm.toFixed(3),
+    durationSec: durationSec,
+    avgSpeedKmh: durationSec > 0 ? +(totalDistanceKm / (durationSec/3600)).toFixed(1) : 0,
+    date: Date.now()
+  };
+  var local = getLocalRides();
+  local.unshift(run);
+  saveLocalRides(local);
+  fetch(RIDES_PATH + '/' + run.id + '.json', {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(run)
+  }).catch(function(){});
+  alert('🎉 บันทึกการปั่นแล้ว! ระยะทาง ' + run.distanceKm.toFixed(2) + ' กม. เวลา ' + fmtTime(durationSec));
+}
+
+// ─── CHALLENGES ─────────────────────────────────────────
+function computeStreak(rides){
+  var days = {};
+  rides.forEach(function(r){ days[new Date(r.date).toDateString()] = true; });
+  var streak = 0, d = new Date();
+  if(!days[d.toDateString()]) d.setDate(d.getDate()-1);
+  while(days[d.toDateString()]){ streak++; d.setDate(d.getDate()-1); }
+  return streak;
+}
+function renderChallenges(){
+  var rides = getLocalRides();
+  var total = rides.reduce(function(s,r){ return s+r.distanceKm; }, 0);
+  var maxSingle = rides.reduce(function(m,r){ return Math.max(m,r.distanceKm); }, 0);
+  var streak = computeStreak(rides);
+  var html = '';
+  CHALLENGES.forEach(function(c){
+    var val = c.type==='total' ? total : (c.type==='single' ? maxSingle : streak);
+    var pct = Math.min(100, Math.round((val/c.target)*100));
+    var done = val >= c.target;
+    var unit = c.type==='streak' ? 'วัน' : 'กม.';
+    html += '<div class="chal-card '+(done?'done':'')+'">'
+      + '<div class="chal-top"><div class="chal-ic">'+c.icon+'</div><div class="chal-name">'+c.title+'</div><div class="chal-check">✔ สำเร็จ</div></div>'
+      + '<div class="chal-bar-wrap"><div class="chal-bar" style="width:'+pct+'%"></div></div>'
+      + '<div class="chal-txt">'+val.toFixed(c.type==='streak'?0:2)+' / '+c.target+' '+unit+' ('+pct+'%)</div>'
+      + '</div>';
+  });
+  document.getElementById('challengeList').innerHTML = html;
+}
+
+// ─── LEADERBOARD ────────────────────────────────────────
+function switchLbTab(period){
+  currentLbPeriod = period;
+  document.querySelectorAll('.lb-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.period===period); });
+  loadLeaderboard(period);
+}
+function loadLeaderboard(period){
+  document.getElementById('lbList').innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  fetch(RIDES_PATH + '.json', {cache:'no-store'}).then(function(res){ return res.json(); }).then(function(data){
+    var rides = data ? Object.keys(data).map(function(k){ return data[k]; }) : [];
+    var now = Date.now(), cutoff = 0;
+    if(period==='week') cutoff = now - 7*86400000;
+    else if(period==='month') cutoff = now - 30*86400000;
+    var filtered = rides.filter(function(r){ return r.date >= cutoff; });
+    var agg = {};
+    filtered.forEach(function(r){
+      var key = r.name + '|' + (r.dept||'');
+      if(!agg[key]) agg[key] = {name:r.name, dept:r.dept||'', total:0, count:0};
+      agg[key].total += r.distanceKm;
+      agg[key].count += 1;
+    });
+    var list = Object.keys(agg).map(function(k){ return agg[k]; }).sort(function(a,b){ return b.total - a.total; });
+    renderLeaderboardList(list);
+  }).catch(function(){
+    document.getElementById('lbList').innerHTML = '<div class="err-state">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+  });
+}
+function renderLeaderboardList(list){
+  if(list.length===0){
+    document.getElementById('lbList').innerHTML = '<div class="empty-state">ยังไม่มีข้อมูลการปั่นในช่วงนี้</div>';
+    return;
+  }
+  var medals = ['🥇','🥈','🥉'];
+  var html = '';
+  list.forEach(function(r, i){
+    var rankCls = i===0?'top1':(i===1?'top2':(i===2?'top3':''));
+    html += '<div class="lb-row '+rankCls+'">'
+      + '<div class="lb-rank">'+(medals[i]||(i+1))+'</div>'
+      + '<div class="lb-info"><div class="lb-name">'+escapeHtml(r.name)+'</div><div class="lb-dept">'+escapeHtml(r.dept)+'</div></div>'
+      + '<div class="lb-dist"><div class="km">'+r.total.toFixed(2)+' กม.</div><div class="cnt">'+r.count+' ครั้ง</div></div>'
+      + '</div>';
+  });
+  document.getElementById('lbList').innerHTML = html;
+}
+function escapeHtml(s){ var d=document.createElement('div'); d.innerText = s||''; return d.innerHTML; }
+
+// ─── HISTORY ────────────────────────────────────────────
+var MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function renderHistory(){
+  var rides = getLocalRides();
+  if(rides.length===0){
+    document.getElementById('histList').innerHTML = '<div class="empty-state">ยังไม่มีประวัติการปั่น เริ่มปั่นครั้งแรกกันเลย!</div>';
+    return;
+  }
+  var html = '';
+  rides.forEach(function(r){
+    var dt = new Date(r.date);
+    html += '<div class="hist-row">'
+      + '<div class="hist-date"><div class="d">'+dt.getDate()+'</div><div class="m">'+MONTHS_TH[dt.getMonth()]+'</div></div>'
+      + '<div class="hist-mid"><div class="km">'+r.distanceKm.toFixed(2)+' กม.</div><div class="meta">'+fmtTime(r.durationSec)+' · เฉลี่ย '+r.avgSpeedKmh.toFixed(1)+' กม./ชม.</div></div>'
+      + '<div class="hist-del" onclick="deleteRide(\''+r.id+'\')">🗑</div>'
+      + '</div>';
+  });
+  document.getElementById('histList').innerHTML = html;
+}
+function deleteRide(id){
+  if(!confirm('ลบประวัติการปั่นนี้หรือไม่?')) return;
+  var rides = getLocalRides().filter(function(r){ return r.id !== id; });
+  saveLocalRides(rides);
+  renderHistory();
+}
+
+// ─── INIT ───────────────────────────────────────────────
+(function init(){
+  renderProfileChip();
+  if(!getProfile()) openProfileModal();
+  initMap();
+  renderRideControls('idle');
+})();
+</script>
+</body>
+</html>
