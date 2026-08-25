@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>การคิดราคา ค่าแรง ค่าวัสดุงาน — คณิตช่างเชื่อม</title>
+<title>การคิดราคา ค่าแรง ค่าวัสดุงาน — สัปดาห์ 15-18</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
 :root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#f2b84b;--cyd:#c9820a;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--r:16px}
@@ -140,7 +140,7 @@ table.rpt tr:hover td{background:#161622}
 <div id="s-login" class="screen active">
   <div class="login-card">
     <div class="login-h1">💰 การคิดราคา ค่าแรง ค่าวัสดุงาน</div>
-    <div class="login-sub">ครูผู้สอน ธานี ชมสุข — วิชาคณิตศาสตร์ช่างเชื่อม (20103-2010)</div>
+    <div class="login-sub">ครูผู้สอน ธานี ชมสุข — สัปดาห์ที่ 15-18</div>
     <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
     <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
     <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
@@ -162,7 +162,7 @@ table.rpt tr:hover td{background:#161622}
     </div>
     <div class="report-card">
       <div class="report-tools">
-        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก / บทที่..." oninput="renderReport()">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก / สัปดาห์..." oninput="renderReport()">
         <button onclick="loadReport()">🔄 รีเฟรช</button>
         <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
       </div>
@@ -267,14 +267,14 @@ function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min }
 
 // ─── CONTENT DATA ────────────────────────────────────
 const WEEKS = [
-  {id:1, label:'บทที่ 1', title:'บทที่ 1 — ค่าวัสดุ (เหล็ก)', desc:'คำนวณน้ำหนักเหล็กแผ่น เหล็กเส้นกลม และค่าวัสดุจากขนาดชิ้นงานจริง'},
-  {id:2, label:'บทที่ 2', title:'บทที่ 2 — วัสดุสิ้นเปลืองและพลังงาน', desc:'ค่าลวดเชื่อม ค่าไฟฟ้าเครื่องเชื่อม และค่าแก๊สตัด/เชื่อม'},
-  {id:3, label:'บทที่ 3', title:'บทที่ 3 — ค่าแรง', desc:'คำนวณค่าแรงช่างเชื่อมแบบรายวัน รายชั่วโมง และแบบทีม'},
-  {id:4, label:'บทที่ 4', title:'บทที่ 4 — ต้นทุนรวมและราคาขาย', desc:'รวมต้นทุนทุกส่วน บวกกำไร และคิดภาษีมูลค่าเพิ่ม (VAT)'},
+  {id:15, label:'สัปดาห์ 15', title:'สัปดาห์ที่ 15 — บทที่ 9', desc:'ค่าวัสดุ (เหล็ก) — คำนวณน้ำหนักเหล็กแผ่น เหล็กเส้นกลม และค่าวัสดุจากขนาดชิ้นงานจริง'},
+  {id:16, label:'สัปดาห์ 16', title:'สัปดาห์ที่ 16 — บทที่ 10', desc:'วัสดุสิ้นเปลืองและพลังงาน — ค่าลวดเชื่อม ค่าไฟฟ้าเครื่องเชื่อม และค่าแก๊สตัด/เชื่อม'},
+  {id:17, label:'สัปดาห์ 17', title:'สัปดาห์ที่ 17 — บทที่ 11', desc:'ค่าแรง — คำนวณค่าแรงช่างเชื่อมแบบรายวัน รายชั่วโมง และแบบทีม'},
+  {id:18, label:'สัปดาห์ 18', title:'สัปดาห์ที่ 18 — บทที่ 12', desc:'ต้นทุนรวมและราคาขาย — รวมต้นทุนทุกส่วน บวกกำไร และคิดภาษีมูลค่าเพิ่ม (VAT)'},
 ];
 
 const SIM_CONFIGS = {
-  1:{ title:'ลองคำนวณเอง — ค่าวัสดุ', desc:'ปรับขนาดเหล็กแผ่นและราคาต่อกก. ดูน้ำหนักและค่าวัสดุแบบเรียลไทม์',
+  15:{ title:'ลองคำนวณเอง — ค่าวัสดุ', desc:'ปรับขนาดเหล็กแผ่นและราคาต่อกก. ดูน้ำหนักและค่าวัสดุแบบเรียลไทม์',
     inputs:[
       {id:'t', label:'ความหนา (มม.)', def:6, min:1, max:25, step:1},
       {id:'w', label:'กว้าง (ม.)', def:1, min:0.1, max:2, step:0.1},
@@ -286,7 +286,7 @@ const SIM_CONFIGS = {
       const cost = W*v.price;
       return [`น้ำหนักเหล็ก = ${W.toFixed(2)} กก.`, `ค่าวัสดุ = ${cost.toFixed(2)} บาท`];
     }},
-  2:{ title:'ลองคำนวณเอง — วัสดุสิ้นเปลือง', desc:'ปรับปริมาณลวดเชื่อมและการใช้ไฟฟ้า ดูค่าใช้จ่ายแบบเรียลไทม์',
+  16:{ title:'ลองคำนวณเอง — วัสดุสิ้นเปลือง', desc:'ปรับปริมาณลวดเชื่อมและการใช้ไฟฟ้า ดูค่าใช้จ่ายแบบเรียลไทม์',
     inputs:[
       {id:'wireQty', label:'ปริมาณลวดเชื่อม (กก.)', def:2, min:0.1, max:10, step:0.1},
       {id:'wirePrice', label:'ราคาลวดเชื่อม (บาท/กก.)', def:100, min:60, max:180, step:5},
@@ -299,7 +299,7 @@ const SIM_CONFIGS = {
       const elecCost = v.kw*v.hr*v.rate;
       return [`ค่าลวดเชื่อม = ${wireCost.toFixed(2)} บาท`, `ค่าไฟฟ้า = ${elecCost.toFixed(2)} บาท`, `รวมวัสดุสิ้นเปลือง = ${(wireCost+elecCost).toFixed(2)} บาท`];
     }},
-  3:{ title:'ลองคำนวณเอง — ค่าแรง', desc:'ปรับอัตราค่าแรง จำนวนช่าง และจำนวนวัน ดูค่าแรงรวมแบบเรียลไทม์',
+  17:{ title:'ลองคำนวณเอง — ค่าแรง', desc:'ปรับอัตราค่าแรง จำนวนช่าง และจำนวนวัน ดูค่าแรงรวมแบบเรียลไทม์',
     inputs:[
       {id:'rate', label:'อัตราค่าแรง (บาท/วัน/คน)', def:450, min:300, max:800, step:10},
       {id:'people', label:'จำนวนช่าง (คน)', def:1, min:1, max:8, step:1},
@@ -309,7 +309,7 @@ const SIM_CONFIGS = {
       const total = v.rate*v.people*v.days;
       return [`ค่าแรงรวม = ${v.rate}×${v.people}×${v.days} = ${total.toFixed(2)} บาท`];
     }},
-  4:{ title:'ลองคำนวณเอง — ต้นทุนรวมและราคาขาย', desc:'ปรับต้นทุนแต่ละส่วนและ % กำไร ดูราคาขายแบบเรียลไทม์',
+  18:{ title:'ลองคำนวณเอง — ต้นทุนรวมและราคาขาย', desc:'ปรับต้นทุนแต่ละส่วนและ % กำไร ดูราคาขายแบบเรียลไทม์',
     inputs:[
       {id:'mat', label:'ค่าวัสดุ (บาท)', def:1000, min:100, max:5000, step:50},
       {id:'labor', label:'ค่าแรง (บาท)', def:1000, min:100, max:5000, step:50},
@@ -326,7 +326,7 @@ const SIM_CONFIGS = {
 
 const TOPICS = [
   // ── บทที่ 1: ค่าวัสดุ (เหล็ก) ──
-  {id:'plate_weight', week:1, nameTH:'น้ำหนักเหล็กแผ่น',
+  {id:'plate_weight', week:15, nameTH:'น้ำหนักเหล็กแผ่น',
     formula:'W = หนา (มม.) × กว้าง (ม.) × ยาว (ม.) × 7.85  [kg]',
     desc:'7.85 คือค่าคงที่ความหนาแน่นของเหล็กที่ช่างใช้คำนวณน้ำหนักเหล็กแผ่นจากขนาดจริง',
     generate(){
@@ -336,7 +336,7 @@ const TOPICS = [
         answer:W, unit:'kg',
         steps:`W = ${t}×${w}×${l}×7.85 = ${W} kg`};
     }},
-  {id:'plate_cost', week:1, nameTH:'ค่าวัสดุจากน้ำหนักเหล็ก',
+  {id:'plate_cost', week:15, nameTH:'ค่าวัสดุจากน้ำหนักเหล็ก',
     formula:'ค่าเหล็ก = น้ำหนัก (kg) × ราคาต่อกก. (บาท)',
     desc:'เมื่อทราบน้ำหนักเหล็กแล้ว คูณด้วยราคาเหล็กต่อกิโลกรัมจะได้ค่าวัสดุที่ต้องจ่าย',
     generate(){
@@ -346,7 +346,7 @@ const TOPICS = [
         answer:cost, unit:'บาท',
         steps:`ค่าเหล็ก = ${W}×${price} = ${cost} บาท`};
     }},
-  {id:'round_bar_weight', week:1, nameTH:'น้ำหนักเหล็กเส้นกลม',
+  {id:'round_bar_weight', week:15, nameTH:'น้ำหนักเหล็กเส้นกลม',
     formula:'W = D² × 0.006165 × L  [kg]  (D=มม., L=ม.)',
     desc:'สูตรมาตรฐานสำหรับหาน้ำหนักเหล็กเส้นกลมจากเส้นผ่านศูนย์กลางและความยาว',
     generate(){
@@ -358,7 +358,7 @@ const TOPICS = [
     }},
 
   // ── บทที่ 2: วัสดุสิ้นเปลืองและพลังงาน ──
-  {id:'welding_wire_cost', week:2, nameTH:'ค่าลวดเชื่อม',
+  {id:'welding_wire_cost', week:16, nameTH:'ค่าลวดเชื่อม',
     formula:'ค่าลวดเชื่อม = ปริมาณลวด (kg) × ราคาต่อกก.',
     desc:'ลวดเชื่อมเป็นวัสดุสิ้นเปลืองที่ต้องคิดต้นทุนแยกจากค่าเหล็ก',
     generate(){
@@ -368,7 +368,7 @@ const TOPICS = [
         answer:cost, unit:'บาท',
         steps:`ค่าลวดเชื่อม = ${qty}×${price} = ${cost} บาท`};
     }},
-  {id:'electricity_cost', week:2, nameTH:'ค่าไฟฟ้าเครื่องเชื่อม',
+  {id:'electricity_cost', week:16, nameTH:'ค่าไฟฟ้าเครื่องเชื่อม',
     formula:'ค่าไฟฟ้า = กำลังไฟ (kW) × ชั่วโมงใช้งาน × ค่าไฟต่อหน่วย',
     desc:'เครื่องเชื่อมกินไฟตามพิกัด kW คูณเวลาที่เปิดใช้งานจริง',
     generate(){
@@ -378,7 +378,7 @@ const TOPICS = [
         answer:cost, unit:'บาท',
         steps:`ค่าไฟฟ้า = ${kw}×${hr}×${rate} = ${cost} บาท`};
     }},
-  {id:'gas_cost', week:2, nameTH:'ค่าแก๊สตัด/เชื่อม',
+  {id:'gas_cost', week:16, nameTH:'ค่าแก๊สตัด/เชื่อม',
     formula:'ค่าแก๊ส = สัดส่วนที่ใช้ × ราคาแก๊สเต็มถัง',
     desc:'ประมาณจากเปอร์เซ็นต์แก๊สที่ใช้ไปเทียบกับราคาถังเต็ม',
     generate(){
@@ -390,7 +390,7 @@ const TOPICS = [
     }},
 
   // ── บทที่ 3: ค่าแรง ──
-  {id:'labor_day', week:3, nameTH:'ค่าแรงรายวัน',
+  {id:'labor_day', week:17, nameTH:'ค่าแรงรายวัน',
     formula:'ค่าแรง = อัตรา/วัน × จำนวนวัน',
     desc:'วิธีคิดค่าแรงที่ใช้บ่อยที่สุดสำหรับงานเชื่อมทั่วไป',
     generate(){
@@ -400,7 +400,7 @@ const TOPICS = [
         answer:cost, unit:'บาท',
         steps:`ค่าแรง = ${rate}×${days} = ${cost} บาท`};
     }},
-  {id:'labor_hour', week:3, nameTH:'ค่าแรงรายชั่วโมง',
+  {id:'labor_hour', week:17, nameTH:'ค่าแรงรายชั่วโมง',
     formula:'ค่าแรง = อัตรา/ชม. × จำนวนชั่วโมง',
     desc:'ใช้เมื่อคิดค่าแรงเป็นชั่วโมงสำหรับงานระยะสั้น',
     generate(){
@@ -410,7 +410,7 @@ const TOPICS = [
         answer:cost, unit:'บาท',
         steps:`ค่าแรง = ${rate}×${hr} = ${cost} บาท`};
     }},
-  {id:'labor_team', week:3, nameTH:'ค่าแรงทีมช่าง',
+  {id:'labor_team', week:17, nameTH:'ค่าแรงทีมช่าง',
     formula:'ค่าแรงรวม = อัตรา/วัน × จำนวนคน × จำนวนวัน',
     desc:'งานใหญ่ต้องใช้ช่างหลายคน ต้องคูณจำนวนคนเข้าไปด้วย',
     generate(){
@@ -422,7 +422,7 @@ const TOPICS = [
     }},
 
   // ── บทที่ 4: ต้นทุนรวมและราคาขาย ──
-  {id:'total_cost', week:4, nameTH:'ต้นทุนรวม',
+  {id:'total_cost', week:18, nameTH:'ต้นทุนรวม',
     formula:'ต้นทุนรวม = ค่าวัสดุ + ค่าแรง + ค่าใช้จ่ายอื่น',
     desc:'รวมทุกส่วนของต้นทุนก่อนบวกกำไรเสมอ',
     generate(){
@@ -432,7 +432,7 @@ const TOPICS = [
         answer:total, unit:'บาท',
         steps:`ต้นทุนรวม = ${mat}+${labor}+${other} = ${total} บาท`};
     }},
-  {id:'sale_price', week:4, nameTH:'ราคาขาย (บวกกำไร)',
+  {id:'sale_price', week:18, nameTH:'ราคาขาย (บวกกำไร)',
     formula:'ราคาขาย = ต้นทุนรวม × (1 + %กำไร)',
     desc:'สูตรหลักในการตั้งราคาขายให้ไม่ขาดทุนและมีกำไรตามต้องการ',
     generate(){
@@ -442,7 +442,7 @@ const TOPICS = [
         answer:price, unit:'บาท',
         steps:`ราคาขาย = ${cost}×(1+${profit}÷100) = ${price} บาท`};
     }},
-  {id:'price_vat', week:4, nameTH:'ราคารวมภาษีมูลค่าเพิ่ม (VAT 7%)',
+  {id:'price_vat', week:18, nameTH:'ราคารวมภาษีมูลค่าเพิ่ม (VAT 7%)',
     formula:'ราคารวม VAT = ราคาขาย × 1.07',
     desc:'ใช้เมื่อออกใบกำกับภาษีให้ลูกค้าที่ต้องการหักภาษี',
     generate(){
@@ -508,7 +508,7 @@ function renderSim(week){
 
 // ─── STATE ───────────────────────────────────────────
 let mode = 'learn';
-let learnWeek = 1;
+let learnWeek = 15;
 let g = {};
 let userFirst='', userLast='', userDept='';
 
@@ -612,7 +612,7 @@ function buildQuizCats(){
   const allCard = document.createElement('div');
   allCard.className = 'quiz-cat-card';
   const minW = Math.min(...WEEKS.map(w=>w.id)), maxW = Math.max(...WEEKS.map(w=>w.id));
-  allCard.innerHTML = `<h3>ทั้งหมด (${minW}-${maxW})</h3><p>สุ่มทุกบทคละกัน</p>`;
+  allCard.innerHTML = `<h3>ทั้งหมด (${minW}-${maxW})</h3><p>สุ่มทุกสัปดาห์คละกัน</p>`;
   allCard.onclick = ()=>startQuiz('all');
   wrap.appendChild(allCard);
 }
@@ -641,7 +641,7 @@ function renderQuestion(){
   document.getElementById('hud-progress').textContent = `ข้อที่ ${cur+1} / ${qs.length}`;
   document.getElementById('hud-score').textContent = `${score} คะแนน`;
   document.getElementById('prog').style.width = (cur/qs.length*100)+'%';
-  document.getElementById('q-badge').textContent = `${q.topic.nameTH} (บทที่ ${q.topic.week})`;
+  document.getElementById('q-badge').textContent = `${q.topic.nameTH} (สัปดาห์ ${q.topic.week})`;
   document.getElementById('q-text').textContent = q.question;
   document.getElementById('q-formula').textContent = `(สูตร: ${q.topic.formula})`;
   document.getElementById('ans-input').value = '';
@@ -750,7 +750,7 @@ function renderReport(){
   }
   const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
   wrap.innerHTML = `<table class="rpt"><thead><tr>
-    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>บทที่</th><th>ถูก/ทั้งหมด</th><th>คะแนน</th><th>%</th>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>สัปดาห์</th><th>ถูก/ทั้งหมด</th><th>คะแนน</th><th>%</th>
   </tr></thead><tbody>
   ${rows.map(r=>`<tr>
     <td>${fmtTime(r.submittedAt)}</td>
@@ -767,7 +767,7 @@ function renderReport(){
 
 function downloadCSV(){
   if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
-  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','บทที่','ถูก','ทั้งหมด','คะแนน','เปอร์เซ็นต์'];
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','สัปดาห์','ถูก','ทั้งหมด','คะแนน','เปอร์เซ็นต์'];
   const lines = [header.join(',')];
   reportData.forEach(r=>{
     const ts = new Date(r.submittedAt).toLocaleString('th-TH');
