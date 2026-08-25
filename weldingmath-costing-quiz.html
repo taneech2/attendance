@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>การคิดราคา ค่าแรง ค่าวัสดุงาน — สัปดาห์ 15-18</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#f2b84b;--cyd:#c9820a;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(242,184,75,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(242,184,75,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0a0f 0%,#1a1408 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.wrap{max-width:960px;margin:0 auto;padding:20px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* LOGIN */
+#s-login{align-items:center;justify-content:center;min-height:100vh;padding:12px}
+#s-login.active{display:flex}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px 24px;width:100%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.login-h1{text-align:center;font-size:22px;font-weight:800;color:var(--cy)}
+.login-sub{text-align:center;font-size:13px;color:var(--mut);margin:4px 0 20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:#aab;margin-bottom:6px}
+.field input{width:100%;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:14px}
+.field input:focus{outline:none;border-color:var(--cy)}
+.btn-primary{display:block;width:100%;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#001;border:none;border-radius:10px;padding:14px;font-size:17px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:scale(.98)}
+
+/* HEADER */
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+.topbar h1{font-size:22px;color:var(--cy);font-weight:800}
+.topbar .sub{font-size:13px;color:var(--mut);margin-top:2px}
+.nav-btns{display:flex;gap:8px}
+.nav-btn{border:1px solid var(--line);background:#1a1a26;color:var(--tx);padding:9px 16px;border-radius:8px;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+.nav-btn.on{border-color:var(--cy);color:var(--cy);background:rgba(242,184,75,.1)}
+
+/* WEEK TABS */
+.week-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.week-tab{border:1px solid var(--line);background:#1a1a26;color:var(--tx);padding:10px 16px;border-radius:20px;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-align:center}
+.week-tab.on{background:var(--cyd);border-color:var(--cyd);color:#001}
+.week-title{font-size:16px;font-weight:700;color:var(--cy);margin-bottom:2px}
+.week-desc{font-size:13px;color:var(--mut);margin-bottom:18px}
+
+/* INTERACTIVE SIMULATOR */
+.sim-panel{background:var(--card);border:1px solid var(--cyd);border-radius:12px;padding:18px;margin-bottom:20px}
+.sim-panel h3{color:var(--cy);font-size:16px;margin-bottom:12px}
+.sim-body{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.sim-svg{width:260px;height:260px;flex-shrink:0;background:#0a0a12;border-radius:10px;border:1px solid var(--line);touch-action:none}
+.sim-controls{flex:1;min-width:220px;display:flex;flex-direction:column;gap:14px}
+.sim-controls label{font-size:13px;color:#aab;display:block}
+.sim-controls label b{color:var(--cy)}
+.sim-controls input[type=range]{width:100%;margin-top:6px;accent-color:var(--cy)}
+.sim-readout{background:#0d1a1e;border:1px solid var(--cyd);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--cy);line-height:1.8}
+.sim-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#aab}
+.sim-hint{font-size:12px;color:var(--mut);margin-top:-6px}
+
+/* LEARN CARDS */
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.topic-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.topic-card h3{color:var(--cy);font-size:16px;margin-bottom:8px}
+.topic-desc{font-size:13px;color:var(--mut);margin-bottom:10px;line-height:1.6}
+.formula-box{background:#0d1a1e;border:1px solid var(--cyd);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--cy);margin-bottom:8px;line-height:1.7}
+.example-box{background:#161622;border-radius:8px;padding:10px 12px;font-size:13px;color:#bbc;line-height:1.7}
+.example-box b{color:var(--gr)}
+
+/* QUIZ PRE-SCREEN */
+.quiz-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.quiz-cat-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;cursor:pointer;text-align:center}
+.quiz-cat-card:hover{border-color:var(--cy)}
+.quiz-cat-card h3{color:var(--cy);font-size:17px;margin-bottom:6px}
+.quiz-cat-card p{font-size:13px;color:var(--mut)}
+
+/* QUIZ PLAY */
+.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;max-width:560px;margin:0 auto}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;color:var(--mut)}
+.hud b{color:var(--cy)}
+.progress-wrap{height:6px;background:#1a1a26;border-radius:10px;margin-bottom:18px;overflow:hidden}
+.progress-fill{height:100%;background:var(--cy);border-radius:10px;transition:width .3s}
+.q-badge{display:inline-block;background:var(--cyd);color:#001;font-size:12px;font-weight:700;border-radius:20px;padding:3px 12px;margin-bottom:10px}
+.q-text{font-size:16px;font-weight:700;line-height:1.6;margin-bottom:14px}
+.q-formula{font-size:13px;color:var(--cy);margin-bottom:16px}
+.answer-row{display:flex;gap:10px;margin-bottom:12px}
+.answer-row input{flex:1;background:#1a1a26;border:2px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:15px}
+.answer-row input:focus{outline:none;border-color:var(--cy)}
+.btn-answer{background:var(--cyd);color:#001;border:none;border-radius:10px;padding:0 22px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;font-size:15px}
+.feedback{border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.7;display:none;margin-bottom:12px}
+.feedback.ok{background:rgba(34,197,94,.12);color:#4ade80;border:1.5px solid var(--gr)}
+.feedback.ng{background:rgba(244,63,94,.12);color:#fb7185;border:1.5px solid var(--rd)}
+.btn-next{display:none;width:100%;background:var(--cyd);color:#001;border:none;border-radius:10px;padding:12px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;font-size:15px}
+
+/* RESULT */
+.result-emoji{font-size:52px;text-align:center;margin-bottom:6px}
+.result-grade{text-align:center;font-size:26px;font-weight:800;margin-bottom:4px}
+.result-score{text-align:center;font-size:15px;color:var(--mut);margin-bottom:16px}
+.bar-wrap{background:#1a1a26;border-radius:20px;height:12px;margin-bottom:18px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--cyd),var(--cy));border-radius:20px;transition:width 1s ease}
+.btn-replay{display:block;width:100%;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#001;border:none;border-radius:10px;padding:14px;font-size:16px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer}
+
+/* CALCULATOR */
+.calc-fab{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;background:var(--cy);color:#001;border:none;font-size:26px;cursor:pointer;box-shadow:0 6px 20px rgba(242,184,75,.4);z-index:1000;display:flex;align-items:center;justify-content:center}
+.calc-fab:active{transform:scale(.94)}
+.calc-panel{position:fixed;right:20px;bottom:86px;width:260px;background:var(--card);border:1px solid var(--cyd);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.6);z-index:1000;display:none;overflow:hidden}
+.calc-panel.open{display:block}
+.calc-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.calc-head span{font-size:13px;font-weight:700;color:var(--cy)}
+.calc-head button{background:none;border:none;color:var(--mut);font-size:18px;cursor:pointer;line-height:1}
+.calc-display{padding:14px;text-align:right}
+.calc-expr{font-size:12px;color:var(--mut);min-height:16px;overflow-x:auto;white-space:nowrap}
+.calc-value{font-size:26px;font-weight:800;color:var(--tx);overflow-x:auto;white-space:nowrap}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+.calc-grid button{background:#1a1a26;color:var(--tx);border:none;padding:14px 0;font-size:15px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer}
+.calc-grid button:active{background:#232336}
+.calc-grid button.op{color:var(--cy)}
+.calc-grid button.eq{background:var(--cyd);color:#001}
+.calc-grid button.clr{color:var(--rd)}
+
+/* REPORT */
+.btn-ghost{display:block;width:100%;background:none;border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:10px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:10px}
+.report-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:13px}
+.report-tools button{background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:13px;min-width:700px}
+table.rpt th{text-align:left;color:var(--mut);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;white-space:nowrap}
+table.rpt tr:hover td{background:#161622}
+.rpt-total{color:var(--cy);font-weight:800}
+.rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="login-card">
+    <div class="login-h1">💰 การคิดราคา ค่าแรง ค่าวัสดุงาน</div>
+    <div class="login-sub">ครูผู้สอน ธานี ชมสุข — สัปดาห์ที่ 15-18</div>
+    <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+    <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+    <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
+    <button class="btn-primary" onclick="login()">เข้าสู่ระบบ (Enter)</button>
+    <button class="btn-ghost" onclick="openReport()">📊 รายงานผลสอบ (สำหรับครู)</button>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div id="s-report" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1 style="font-size:18px">📊 รายงานผลสอบ — การคิดราคา ค่าแรง ค่าวัสดุงาน</h1>
+      </div>
+      <div class="nav-btns">
+        <button class="nav-btn" onclick="showScreen('s-login')">← กลับหน้าแรก</button>
+      </div>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก / สัปดาห์..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="s-main" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>💰 การคิดราคา ค่าแรง ค่าวัสดุงาน</h1>
+        <div class="sub" id="userline"></div>
+      </div>
+      <div class="nav-btns">
+        <button class="nav-btn" id="btn-learn" onclick="setMode('learn')">📖 เรียนรู้ (Learn)</button>
+        <button class="nav-btn" id="btn-quiz" onclick="setMode('quiz')">▶ ทดสอบ (Quiz)</button>
+      </div>
+    </div>
+
+    <!-- LEARN VIEW -->
+    <div id="view-learn">
+      <div class="week-tabs" id="learn-week-tabs"></div>
+      <div class="week-title" id="learn-week-title"></div>
+      <div class="week-desc" id="learn-week-desc"></div>
+      <div id="learn-sim"></div>
+      <div class="topic-grid" id="learn-topics"></div>
+    </div>
+
+    <!-- QUIZ PRE-SCREEN -->
+    <div id="view-quiz-pre">
+      <h2 style="margin-bottom:16px">เลือกหมวดหมู่ที่ต้องการทดสอบ</h2>
+      <div class="quiz-cats" id="quiz-cats"></div>
+    </div>
+
+    <!-- QUIZ PLAY -->
+    <div id="view-quiz-play">
+      <div class="quiz-card">
+        <div class="hud"><span id="hud-progress"></span><b id="hud-score">0 คะแนน</b></div>
+        <div class="progress-wrap"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+        <div class="q-badge" id="q-badge"></div>
+        <div class="q-text" id="q-text"></div>
+        <div class="q-formula" id="q-formula"></div>
+        <div class="answer-row">
+          <input type="number" step="any" id="ans-input" placeholder="พิมพ์คำตอบ..." onkeydown="if(event.key==='Enter')submitAnswer()">
+          <button class="btn-answer" onclick="submitAnswer()">ตอบ</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="btn-next" id="btn-next" onclick="nextQuestion()">ข้อถัดไป →</button>
+      </div>
+    </div>
+
+    <!-- QUIZ RESULT -->
+    <div id="view-quiz-result">
+      <div class="quiz-card">
+        <div class="result-emoji" id="r-emoji">🏆</div>
+        <div class="result-grade" id="r-grade"></div>
+        <div class="result-score" id="r-score"></div>
+        <div class="bar-wrap"><div class="bar-fill" id="r-bar" style="width:0%"></div></div>
+        <button class="btn-replay" onclick="backToQuizPre()">🔄 เริ่มใหม่</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CALCULATOR -->
+<button class="calc-fab" id="calc-fab" onclick="toggleCalc()">🧮</button>
+<div class="calc-panel" id="calc-panel">
+  <div class="calc-head"><span>เครื่องคิดเลข</span><button onclick="toggleCalc()">✕</button></div>
+  <div class="calc-display">
+    <div class="calc-expr" id="calc-expr">&nbsp;</div>
+    <div class="calc-value" id="calc-value">0</div>
+  </div>
+  <div class="calc-grid">
+    <button class="clr" onclick="calcClear()">C</button>
+    <button onclick="calcPi()">π</button>
+    <button onclick="calcBackspace()">⌫</button>
+    <button class="op" onclick="calcOp('÷')">÷</button>
+    <button onclick="calcDigit('7')">7</button>
+    <button onclick="calcDigit('8')">8</button>
+    <button onclick="calcDigit('9')">9</button>
+    <button class="op" onclick="calcOp('×')">×</button>
+    <button onclick="calcDigit('4')">4</button>
+    <button onclick="calcDigit('5')">5</button>
+    <button onclick="calcDigit('6')">6</button>
+    <button class="op" onclick="calcOp('-')">−</button>
+    <button onclick="calcDigit('1')">1</button>
+    <button onclick="calcDigit('2')">2</button>
+    <button onclick="calcDigit('3')">3</button>
+    <button class="op" onclick="calcOp('+')">+</button>
+    <button onclick="calcDigit('0')">0</button>
+    <button onclick="calcDot()">.</button>
+    <button class="eq" onclick="calcEquals()" style="grid-column:span 2">=</button>
+  </div>
+</div>
+
+<script>
+// ─── HELPERS ─────────────────────────────────────────
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min }
+
+// ─── CONTENT DATA ────────────────────────────────────
+const WEEKS = [
+  {id:15, label:'สัปดาห์ 15', title:'สัปดาห์ที่ 15 — บทที่ 9', desc:'ค่าวัสดุ (เหล็ก) — คำนวณน้ำหนักเหล็กแผ่น เหล็กเส้นกลม และค่าวัสดุจากขนาดชิ้นงานจริง'},
+  {id:16, label:'สัปดาห์ 16', title:'สัปดาห์ที่ 16 — บทที่ 10', desc:'วัสดุสิ้นเปลืองและพลังงาน — ค่าลวดเชื่อม ค่าไฟฟ้าเครื่องเชื่อม และค่าแก๊สตัด/เชื่อม'},
+  {id:17, label:'สัปดาห์ 17', title:'สัปดาห์ที่ 17 — บทที่ 11', desc:'ค่าแรง — คำนวณค่าแรงช่างเชื่อมแบบรายวัน รายชั่วโมง และแบบทีม'},
+  {id:18, label:'สัปดาห์ 18', title:'สัปดาห์ที่ 18 — บทที่ 12', desc:'ต้นทุนรวมและราคาขาย — รวมต้นทุนทุกส่วน บวกกำไร และคิดภาษีมูลค่าเพิ่ม (VAT)'},
+];
+
+const SIM_CONFIGS = {
+  15:{ title:'ลองคำนวณเอง — ค่าวัสดุ', desc:'ปรับขนาดเหล็กแผ่นและราคาต่อกก. ดูน้ำหนักและค่าวัสดุแบบเรียลไทม์',
+    inputs:[
+      {id:'t', label:'ความหนา (มม.)', def:6, min:1, max:25, step:1},
+      {id:'w', label:'กว้าง (ม.)', def:1, min:0.1, max:2, step:0.1},
+      {id:'l', label:'ยาว (ม.)', def:2, min:0.1, max:6, step:0.1},
+      {id:'price', label:'ราคาเหล็ก (บาท/กก.)', def:28, min:15, max:45, step:1},
+    ],
+    compute(v){
+      const W = v.t*v.w*v.l*7.85;
+      const cost = W*v.price;
+      return [`น้ำหนักเหล็ก = ${W.toFixed(2)} กก.`, `ค่าวัสดุ = ${cost.toFixed(2)} บาท`];
+    }},
+  16:{ title:'ลองคำนวณเอง — วัสดุสิ้นเปลือง', desc:'ปรับปริมาณลวดเชื่อมและการใช้ไฟฟ้า ดูค่าใช้จ่ายแบบเรียลไทม์',
+    inputs:[
+      {id:'wireQty', label:'ปริมาณลวดเชื่อม (กก.)', def:2, min:0.1, max:10, step:0.1},
+      {id:'wirePrice', label:'ราคาลวดเชื่อม (บาท/กก.)', def:100, min:60, max:180, step:5},
+      {id:'kw', label:'กำลังไฟเครื่องเชื่อม (kW)', def:5, min:1, max:10, step:0.5},
+      {id:'hr', label:'ชั่วโมงใช้งาน (ชม.)', def:6, min:1, max:20, step:1},
+      {id:'rate', label:'ค่าไฟฟ้า (บาท/หน่วย)', def:4.5, min:3, max:6, step:0.1},
+    ],
+    compute(v){
+      const wireCost = v.wireQty*v.wirePrice;
+      const elecCost = v.kw*v.hr*v.rate;
+      return [`ค่าลวดเชื่อม = ${wireCost.toFixed(2)} บาท`, `ค่าไฟฟ้า = ${elecCost.toFixed(2)} บาท`, `รวมวัสดุสิ้นเปลือง = ${(wireCost+elecCost).toFixed(2)} บาท`];
+    }},
+  17:{ title:'ลองคำนวณเอง — ค่าแรง', desc:'ปรับอัตราค่าแรง จำนวนช่าง และจำนวนวัน ดูค่าแรงรวมแบบเรียลไทม์',
+    inputs:[
+      {id:'rate', label:'อัตราค่าแรง (บาท/วัน/คน)', def:450, min:300, max:800, step:10},
+      {id:'people', label:'จำนวนช่าง (คน)', def:1, min:1, max:8, step:1},
+      {id:'days', label:'จำนวนวันทำงาน', def:3, min:1, max:15, step:1},
+    ],
+    compute(v){
+      const total = v.rate*v.people*v.days;
+      return [`ค่าแรงรวม = ${v.rate}×${v.people}×${v.days} = ${total.toFixed(2)} บาท`];
+    }},
+  18:{ title:'ลองคำนวณเอง — ต้นทุนรวมและราคาขาย', desc:'ปรับต้นทุนแต่ละส่วนและ % กำไร ดูราคาขายแบบเรียลไทม์',
+    inputs:[
+      {id:'mat', label:'ค่าวัสดุ (บาท)', def:1000, min:100, max:5000, step:50},
+      {id:'labor', label:'ค่าแรง (บาท)', def:1000, min:100, max:5000, step:50},
+      {id:'other', label:'ค่าใช้จ่ายอื่น (บาท)', def:150, min:0, max:1000, step:10},
+      {id:'profit', label:'กำไรที่ต้องการ (%)', def:20, min:5, max:40, step:1},
+    ],
+    compute(v){
+      const totalCost = v.mat+v.labor+v.other;
+      const salePrice = totalCost*(1+v.profit/100);
+      const withVat = salePrice*1.07;
+      return [`ต้นทุนรวม = ${totalCost.toFixed(2)} บาท`, `ราคาขาย = ${salePrice.toFixed(2)} บาท`, `ราคารวม VAT 7% = ${withVat.toFixed(2)} บาท`];
+    }},
+};
+
+const TOPICS = [
+  // ── บทที่ 1: ค่าวัสดุ (เหล็ก) ──
+  {id:'plate_weight', week:15, nameTH:'น้ำหนักเหล็กแผ่น',
+    formula:'W = หนา (มม.) × กว้าง (ม.) × ยาว (ม.) × 7.85  [kg]',
+    desc:'7.85 คือค่าคงที่ความหนาแน่นของเหล็กที่ช่างใช้คำนวณน้ำหนักเหล็กแผ่นจากขนาดจริง',
+    generate(){
+      const t=randInt(2,12), w=+(randInt(3,15)/10).toFixed(1), l=+(randInt(10,30)/10).toFixed(1);
+      const W=+(t*w*l*7.85).toFixed(2);
+      return {question:`เหล็กแผ่นหนา ${t} มม. กว้าง ${w} ม. ยาว ${l} ม. มีน้ำหนักเท่าไร?`,
+        answer:W, unit:'kg',
+        steps:`W = ${t}×${w}×${l}×7.85 = ${W} kg`};
+    }},
+  {id:'plate_cost', week:15, nameTH:'ค่าวัสดุจากน้ำหนักเหล็ก',
+    formula:'ค่าเหล็ก = น้ำหนัก (kg) × ราคาต่อกก. (บาท)',
+    desc:'เมื่อทราบน้ำหนักเหล็กแล้ว คูณด้วยราคาเหล็กต่อกิโลกรัมจะได้ค่าวัสดุที่ต้องจ่าย',
+    generate(){
+      const W=+(randInt(50,3000)/10).toFixed(1); const price=randInt(20,40);
+      const cost=+(W*price).toFixed(2);
+      return {question:`เหล็กชิ้นหนึ่งหนัก ${W} กก. ราคาเหล็กกก.ละ ${price} บาท ค่าเหล็กทั้งหมดเท่าไร?`,
+        answer:cost, unit:'บาท',
+        steps:`ค่าเหล็ก = ${W}×${price} = ${cost} บาท`};
+    }},
+  {id:'round_bar_weight', week:15, nameTH:'น้ำหนักเหล็กเส้นกลม',
+    formula:'W = D² × 0.006165 × L  [kg]  (D=มม., L=ม.)',
+    desc:'สูตรมาตรฐานสำหรับหาน้ำหนักเหล็กเส้นกลมจากเส้นผ่านศูนย์กลางและความยาว',
+    generate(){
+      const D=randInt(6,25), L=+(randInt(10,60)/10).toFixed(1);
+      const W=+((D*D)*0.006165*L).toFixed(2);
+      return {question:`เหล็กเส้นกลมผ่านศูนย์กลาง ${D} มม. ยาว ${L} ม. มีน้ำหนักเท่าไร?`,
+        answer:W, unit:'kg',
+        steps:`W = ${D}²×0.006165×${L} = ${W} kg`};
+    }},
+
+  // ── บทที่ 2: วัสดุสิ้นเปลืองและพลังงาน ──
+  {id:'welding_wire_cost', week:16, nameTH:'ค่าลวดเชื่อม',
+    formula:'ค่าลวดเชื่อม = ปริมาณลวด (kg) × ราคาต่อกก.',
+    desc:'ลวดเชื่อมเป็นวัสดุสิ้นเปลืองที่ต้องคิดต้นทุนแยกจากค่าเหล็ก',
+    generate(){
+      const qty=+(randInt(2,50)/10).toFixed(1); const price=randInt(80,150);
+      const cost=+(qty*price).toFixed(2);
+      return {question:`งานหนึ่งใช้ลวดเชื่อม ${qty} กก. ราคาลวดกก.ละ ${price} บาท ค่าลวดเชื่อมเท่าไร?`,
+        answer:cost, unit:'บาท',
+        steps:`ค่าลวดเชื่อม = ${qty}×${price} = ${cost} บาท`};
+    }},
+  {id:'electricity_cost', week:16, nameTH:'ค่าไฟฟ้าเครื่องเชื่อม',
+    formula:'ค่าไฟฟ้า = กำลังไฟ (kW) × ชั่วโมงใช้งาน × ค่าไฟต่อหน่วย',
+    desc:'เครื่องเชื่อมกินไฟตามพิกัด kW คูณเวลาที่เปิดใช้งานจริง',
+    generate(){
+      const kw=+(randInt(30,80)/10).toFixed(1); const hr=randInt(2,10); const rate=+(randInt(40,50)/10).toFixed(1);
+      const cost=+(kw*hr*rate).toFixed(2);
+      return {question:`เครื่องเชื่อมกินไฟ ${kw} kW ใช้งาน ${hr} ชั่วโมง ค่าไฟหน่วยละ ${rate} บาท ค่าไฟฟ้าทั้งหมดเท่าไร?`,
+        answer:cost, unit:'บาท',
+        steps:`ค่าไฟฟ้า = ${kw}×${hr}×${rate} = ${cost} บาท`};
+    }},
+  {id:'gas_cost', week:16, nameTH:'ค่าแก๊สตัด/เชื่อม',
+    formula:'ค่าแก๊ส = สัดส่วนที่ใช้ × ราคาแก๊สเต็มถัง',
+    desc:'ประมาณจากเปอร์เซ็นต์แก๊สที่ใช้ไปเทียบกับราคาถังเต็ม',
+    generate(){
+      const pct=randInt(5,60); const tank=randInt(600,1200);
+      const cost=+((pct/100)*tank).toFixed(2);
+      return {question:`งานหนึ่งใช้แก๊สไป ${pct}% ของถัง ราคาแก๊สเต็มถัง ${tank} บาท ค่าแก๊สที่ใช้ไปเท่าไร?`,
+        answer:cost, unit:'บาท',
+        steps:`ค่าแก๊ส = (${pct}÷100)×${tank} = ${cost} บาท`};
+    }},
+
+  // ── บทที่ 3: ค่าแรง ──
+  {id:'labor_day', week:17, nameTH:'ค่าแรงรายวัน',
+    formula:'ค่าแรง = อัตรา/วัน × จำนวนวัน',
+    desc:'วิธีคิดค่าแรงที่ใช้บ่อยที่สุดสำหรับงานเชื่อมทั่วไป',
+    generate(){
+      const rate=randInt(350,600); const days=randInt(1,10);
+      const cost=rate*days;
+      return {question:`ช่างเชื่อมอัตราค่าแรง ${rate} บาท/วัน ทำงาน ${days} วัน ค่าแรงรวมเท่าไร?`,
+        answer:cost, unit:'บาท',
+        steps:`ค่าแรง = ${rate}×${days} = ${cost} บาท`};
+    }},
+  {id:'labor_hour', week:17, nameTH:'ค่าแรงรายชั่วโมง',
+    formula:'ค่าแรง = อัตรา/ชม. × จำนวนชั่วโมง',
+    desc:'ใช้เมื่อคิดค่าแรงเป็นชั่วโมงสำหรับงานระยะสั้น',
+    generate(){
+      const rate=randInt(50,120); const hr=randInt(3,40);
+      const cost=rate*hr;
+      return {question:`ช่างเชื่อมอัตราค่าแรง ${rate} บาท/ชั่วโมง ทำงาน ${hr} ชั่วโมง ค่าแรงรวมเท่าไร?`,
+        answer:cost, unit:'บาท',
+        steps:`ค่าแรง = ${rate}×${hr} = ${cost} บาท`};
+    }},
+  {id:'labor_team', week:17, nameTH:'ค่าแรงทีมช่าง',
+    formula:'ค่าแรงรวม = อัตรา/วัน × จำนวนคน × จำนวนวัน',
+    desc:'งานใหญ่ต้องใช้ช่างหลายคน ต้องคูณจำนวนคนเข้าไปด้วย',
+    generate(){
+      const rate=randInt(350,550); const people=randInt(2,6); const days=randInt(1,7);
+      const cost=rate*people*days;
+      return {question:`ทีมช่างเชื่อม ${people} คน อัตราค่าแรงคนละ ${rate} บาท/วัน ทำงาน ${days} วัน ค่าแรงรวมทั้งทีมเท่าไร?`,
+        answer:cost, unit:'บาท',
+        steps:`ค่าแรงรวม = ${rate}×${people}×${days} = ${cost} บาท`};
+    }},
+
+  // ── บทที่ 4: ต้นทุนรวมและราคาขาย ──
+  {id:'total_cost', week:18, nameTH:'ต้นทุนรวม',
+    formula:'ต้นทุนรวม = ค่าวัสดุ + ค่าแรง + ค่าใช้จ่ายอื่น',
+    desc:'รวมทุกส่วนของต้นทุนก่อนบวกกำไรเสมอ',
+    generate(){
+      const mat=randInt(300,2000); const labor=randInt(300,2000); const other=randInt(50,400);
+      const total=mat+labor+other;
+      return {question:`งานหนึ่งมีค่าวัสดุ ${mat} บาท ค่าแรง ${labor} บาท และค่าใช้จ่ายอื่น ${other} บาท ต้นทุนรวมเท่าไร?`,
+        answer:total, unit:'บาท',
+        steps:`ต้นทุนรวม = ${mat}+${labor}+${other} = ${total} บาท`};
+    }},
+  {id:'sale_price', week:18, nameTH:'ราคาขาย (บวกกำไร)',
+    formula:'ราคาขาย = ต้นทุนรวม × (1 + %กำไร)',
+    desc:'สูตรหลักในการตั้งราคาขายให้ไม่ขาดทุนและมีกำไรตามต้องการ',
+    generate(){
+      const cost=randInt(500,5000); const profit=randInt(10,30);
+      const price=+(cost*(1+profit/100)).toFixed(2);
+      return {question:`ต้นทุนรวมของงาน ${cost} บาท ต้องการกำไร ${profit}% ควรตั้งราคาขายเท่าไร?`,
+        answer:price, unit:'บาท',
+        steps:`ราคาขาย = ${cost}×(1+${profit}÷100) = ${price} บาท`};
+    }},
+  {id:'price_vat', week:18, nameTH:'ราคารวมภาษีมูลค่าเพิ่ม (VAT 7%)',
+    formula:'ราคารวม VAT = ราคาขาย × 1.07',
+    desc:'ใช้เมื่อออกใบกำกับภาษีให้ลูกค้าที่ต้องการหักภาษี',
+    generate(){
+      const price=randInt(500,8000);
+      const withVat=+(price*1.07).toFixed(2);
+      return {question:`ราคาขายงานก่อนภาษีเท่ากับ ${price} บาท ลูกค้าขอใบกำกับภาษี ราคารวม VAT 7% เท่าไร?`,
+        answer:withVat, unit:'บาท',
+        steps:`ราคารวม VAT = ${price}×1.07 = ${withVat} บาท`};
+    }},
+];
+
+// ─── INTERACTIVE CALCULATOR (learn view) ─────────────
+function renderSim(week){
+  const cfg = SIM_CONFIGS[week];
+  const host = document.getElementById('learn-sim');
+  host.innerHTML = '';
+  if(!cfg) return;
+
+  const panel = document.createElement('div');
+  panel.className = 'sim-panel';
+  panel.innerHTML = `<h3>🧮 ${cfg.title}</h3><div class="sim-hint">${cfg.desc}</div>`;
+
+  const body = document.createElement('div');
+  body.className = 'sim-body';
+  const controls = document.createElement('div');
+  controls.className = 'sim-controls';
+  body.appendChild(controls);
+  panel.appendChild(body);
+  host.appendChild(panel);
+
+  const values = {};
+  cfg.inputs.forEach(inp=>{ values[inp.id] = inp.def });
+
+  const readout = document.createElement('div');
+  readout.className = 'sim-readout';
+
+  function update(){
+    readout.innerHTML = cfg.compute(values).join('<br>');
+  }
+
+  cfg.inputs.forEach(inp=>{
+    const label = document.createElement('label');
+    const textNode = document.createTextNode(inp.label + ': ');
+    const valSpan = document.createElement('b');
+    valSpan.textContent = values[inp.id];
+    const range = document.createElement('input');
+    range.type = 'range';
+    range.min = inp.min; range.max = inp.max; range.step = inp.step; range.value = inp.def;
+    range.addEventListener('input', ()=>{
+      values[inp.id] = parseFloat(range.value);
+      valSpan.textContent = range.value;
+      update();
+    });
+    label.appendChild(textNode);
+    label.appendChild(valSpan);
+    label.appendChild(document.createElement('br'));
+    label.appendChild(range);
+    controls.appendChild(label);
+  });
+  controls.appendChild(readout);
+  update();
+}
+
+// ─── STATE ───────────────────────────────────────────
+let mode = 'learn';
+let learnWeek = 15;
+let g = {};
+let userFirst='', userLast='', userDept='';
+
+// ─── FIREBASE (ใช้โปรเจกต์เดียวกับระบบเช็คชื่อ/สอบกลางภาค, path แยกเฉพาะควิซนี้) ─────
+const DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+const RESULTS_URL = DB_BASE + '/examResults/weldingmath_costing_quiz.json';
+const REPORT_PIN = '2569';
+
+function login(){
+  const fn=document.getElementById('fname').value.trim();
+  const ln=document.getElementById('lname').value.trim();
+  const dp=document.getElementById('dept').value.trim();
+  if(!fn||!ln){ alert('กรุณากรอกชื่อและนามสกุล'); return }
+  userFirst=fn; userLast=ln; userDept=dp;
+  document.getElementById('userline').textContent = `ผู้ใช้งาน: ${fn} ${ln}${dp?' ('+dp+')':''}`;
+  showScreen('s-main');
+  buildLearnWeekTabs();
+  setMode('learn');
+}
+
+function submitResult(weekLabel, correct, total, score, pct){
+  fetch(RESULTS_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      fname:userFirst, lname:userLast, dept:userDept,
+      week:weekLabel, correct, total, score, pct:+pct.toFixed(1),
+      submittedAt:Date.now()
+    })
+  }).catch(()=>{});
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── MODE SWITCH ─────────────────────────────────────
+function setMode(m){
+  mode = m;
+  document.getElementById('btn-learn').className = 'nav-btn'+(m==='learn'?' on':'');
+  document.getElementById('btn-quiz').className = 'nav-btn'+(m==='quiz'?' on':'');
+  document.getElementById('view-learn').style.display = m==='learn'?'block':'none';
+  document.getElementById('view-quiz-pre').style.display = m==='quiz'?'block':'none';
+  document.getElementById('view-quiz-play').style.display = 'none';
+  document.getElementById('view-quiz-result').style.display = 'none';
+  if(m==='quiz'){ buildQuizCats() }
+  else renderSim(learnWeek);
+}
+
+// ─── LEARN VIEW ──────────────────────────────────────
+function buildLearnWeekTabs(){
+  const wrap = document.getElementById('learn-week-tabs');
+  wrap.innerHTML = '';
+  WEEKS.forEach(w=>{
+    const btn = document.createElement('button');
+    btn.className = 'week-tab'+(w.id===learnWeek?' on':'');
+    btn.textContent = w.label;
+    btn.onclick = ()=>{ learnWeek=w.id; renderLearn() };
+    wrap.appendChild(btn);
+  });
+  renderLearn();
+}
+
+function renderLearn(){
+  document.querySelectorAll('#learn-week-tabs .week-tab').forEach((b,i)=>{
+    b.className = 'week-tab'+(WEEKS[i].id===learnWeek?' on':'');
+  });
+  const w = WEEKS.find(w=>w.id===learnWeek);
+  document.getElementById('learn-week-title').textContent = w.title;
+  document.getElementById('learn-week-desc').textContent = w.desc;
+  renderSim(learnWeek);
+
+  const grid = document.getElementById('learn-topics');
+  grid.innerHTML = '';
+  TOPICS.filter(t=>t.week===learnWeek).forEach(t=>{
+    const ex = t.generate();
+    const card = document.createElement('div');
+    card.className = 'topic-card';
+    card.innerHTML = `
+      <h3>${t.nameTH}</h3>
+      <div class="topic-desc">${t.desc}</div>
+      <div class="formula-box">สูตร: ${t.formula}</div>
+      <div class="example-box">ตัวอย่าง: ${ex.question}<br>วิธีทำ: ${ex.steps} <b>← ${ex.answer} ${ex.unit}</b></div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ─── QUIZ PRE-SCREEN ─────────────────────────────────
+function buildQuizCats(){
+  const wrap = document.getElementById('quiz-cats');
+  wrap.innerHTML = '';
+  WEEKS.forEach(w=>{
+    const card = document.createElement('div');
+    card.className = 'quiz-cat-card';
+    card.innerHTML = `<h3>${w.label}</h3><p>${w.desc}</p>`;
+    card.onclick = ()=>startQuiz(w.id);
+    wrap.appendChild(card);
+  });
+  const allCard = document.createElement('div');
+  allCard.className = 'quiz-cat-card';
+  const minW = Math.min(...WEEKS.map(w=>w.id)), maxW = Math.max(...WEEKS.map(w=>w.id));
+  allCard.innerHTML = `<h3>ทั้งหมด (${minW}-${maxW})</h3><p>สุ่มทุกสัปดาห์คละกัน</p>`;
+  allCard.onclick = ()=>startQuiz('all');
+  wrap.appendChild(allCard);
+}
+
+// ─── QUIZ PLAY ────────────────────────────────────────
+function startQuiz(weekFilter){
+  const pool = weekFilter==='all' ? TOPICS : TOPICS.filter(t=>t.week===weekFilter);
+  const N = 15;
+  const qs = [];
+  for(let i=0;i<N;i++){
+    const topic = pool[Math.floor(Math.random()*pool.length)];
+    const q = topic.generate();
+    qs.push({topic, ...q});
+  }
+  const weekLabel = weekFilter==='all' ? `ทั้งหมด` : (WEEKS.find(w=>w.id===weekFilter)?.label || weekFilter);
+  g = {qs, cur:0, score:0, correct:0, answered:false, weekLabel};
+  document.getElementById('view-quiz-pre').style.display='none';
+  document.getElementById('view-quiz-play').style.display='block';
+  document.getElementById('view-quiz-result').style.display='none';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const {qs, cur, score} = g;
+  const q = qs[cur];
+  document.getElementById('hud-progress').textContent = `ข้อที่ ${cur+1} / ${qs.length}`;
+  document.getElementById('hud-score').textContent = `${score} คะแนน`;
+  document.getElementById('prog').style.width = (cur/qs.length*100)+'%';
+  document.getElementById('q-badge').textContent = `${q.topic.nameTH} (สัปดาห์ ${q.topic.week})`;
+  document.getElementById('q-text').textContent = q.question;
+  document.getElementById('q-formula').textContent = `(สูตร: ${q.topic.formula})`;
+  document.getElementById('ans-input').value = '';
+  document.getElementById('ans-input').disabled = false;
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'none';
+  g.answered = false;
+  document.getElementById('ans-input').focus();
+}
+
+function checkAnswer(given, expected){
+  const tol = Math.max(Math.abs(expected*0.02), 0.05);
+  return Math.abs(given-expected) <= tol;
+}
+
+function submitAnswer(){
+  if(g.answered) return;
+  const input = document.getElementById('ans-input');
+  const val = parseFloat(input.value);
+  if(isNaN(val)) return;
+  g.answered = true;
+  input.disabled = true;
+  const q = g.qs[g.cur];
+  const ok = checkAnswer(val, q.answer);
+  const fb = document.getElementById('feedback');
+  if(ok){
+    const pts = 100;
+    g.score += pts; g.correct++;
+    fb.className = 'feedback ok';
+    fb.textContent = `✅ ถูกต้อง! +${pts} คะแนน — ${q.steps}`;
+  } else {
+    fb.className = 'feedback ng';
+    fb.textContent = `❌ ยังไม่ถูก คำตอบที่ถูกคือ ${q.answer} ${q.unit} — ${q.steps}`;
+  }
+  fb.style.display = 'block';
+  document.getElementById('hud-score').textContent = `${g.score} คะแนน`;
+  document.getElementById('btn-next').style.display = 'block';
+}
+
+function nextQuestion(){
+  g.cur++;
+  if(g.cur >= g.qs.length) endQuiz();
+  else renderQuestion();
+}
+
+function endQuiz(){
+  const {qs,correct,score,weekLabel} = g;
+  const total = qs.length;
+  const pct = correct/total*100;
+  document.getElementById('view-quiz-play').style.display='none';
+  document.getElementById('view-quiz-result').style.display='block';
+  submitResult(weekLabel, correct, total, score, pct);
+
+  let emoji,grade,color;
+  if(pct>=90){emoji='🏆';grade='เยี่ยมมาก!';color='#facc15'}
+  else if(pct>=75){emoji='⭐';grade='ดีมาก';color='#f2b84b'}
+  else if(pct>=60){emoji='👍';grade='ดี';color='#4ade80'}
+  else if(pct>=50){emoji='📚';grade='ผ่าน';color='#fb923c'}
+  else{emoji='💪';grade='ต้องฝึกเพิ่ม';color='#f43f5e'}
+
+  document.getElementById('r-emoji').textContent = emoji;
+  const g2 = document.getElementById('r-grade'); g2.textContent = grade; g2.style.color = color;
+  document.getElementById('r-score').textContent = `${correct} / ${total} ข้อ — ${score.toLocaleString()} คะแนน (${pct.toFixed(0)}%)`;
+  setTimeout(()=>{ document.getElementById('r-bar').style.width = pct+'%' }, 100);
+}
+
+function backToQuizPre(){
+  document.getElementById('view-quiz-result').style.display='none';
+  document.getElementById('view-quiz-pre').style.display='block';
+  buildQuizCats();
+}
+
+// ─── REPORT (สำหรับครู) ────────────────────────────────
+let reportData = [];
+function openReport(){
+  const pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผลสอบ:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  showScreen('s-report');
+  loadReport();
+}
+
+async function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  try{
+    const res = await fetch(RESULTS_URL, {cache:'no-store'});
+    const data = await res.json();
+    reportData = data ? Object.values(data).sort((a,b)=>b.submittedAt-a.submittedAt) : [];
+  }catch(e){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+    return;
+  }
+  renderReport();
+}
+
+function renderReport(){
+  const filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  const rows = reportData.filter(r=>{
+    if(!filter) return true;
+    return (`${r.fname} ${r.lname} ${r.dept} ${r.week}`).toLowerCase().includes(filter);
+  });
+  const wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีนักเรียนทำแบบทดสอบ หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  wrap.innerHTML = `<table class="rpt"><thead><tr>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>สัปดาห์</th><th>ถูก/ทั้งหมด</th><th>คะแนน</th><th>%</th>
+  </tr></thead><tbody>
+  ${rows.map(r=>`<tr>
+    <td>${fmtTime(r.submittedAt)}</td>
+    <td>${r.fname} ${r.lname}</td>
+    <td>${r.dept||'-'}</td>
+    <td>${r.week}</td>
+    <td>${r.correct} / ${r.total}</td>
+    <td class="rpt-total">${r.score}</td>
+    <td>${r.pct}%</td>
+  </tr>`).join('')}
+  </tbody></table>
+  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ</div>`;
+}
+
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก','สัปดาห์','ถูก','ทั้งหมด','คะแนน','เปอร์เซ็นต์'];
+  const lines = [header.join(',')];
+  reportData.forEach(r=>{
+    const ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    lines.push([ts, r.fname, r.lname, r.dept, r.week, r.correct, r.total, r.score, r.pct].map(v=>`"${v}"`).join(','));
+  });
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'exam-report-welding-costing.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── CALCULATOR (floating, available in Learn & Quiz) ─
+let calcCur='0', calcAcc=null, calcPending=null, calcFresh=false;
+
+function toggleCalc(){ document.getElementById('calc-panel').classList.toggle('open') }
+function trimNum(n){ return `${+n.toFixed(6)}` }
+function calcRender(){
+  document.getElementById('calc-value').textContent = calcCur;
+  document.getElementById('calc-expr').innerHTML = calcAcc!=null ? `${trimNum(calcAcc)} ${calcPending}` : '&nbsp;';
+}
+function calcDigit(d){
+  if(calcFresh){ calcCur=d; calcFresh=false }
+  else calcCur = calcCur==='0' ? d : calcCur+d;
+  calcRender();
+}
+function calcDot(){
+  if(calcFresh){ calcCur='0.'; calcFresh=false; calcRender(); return }
+  if(calcCur.indexOf('.')===-1) calcCur += '.';
+  calcRender();
+}
+function calcPi(){ calcCur=String(Math.PI); calcFresh=true; calcRender() }
+function calcBackspace(){
+  if(calcFresh) return;
+  calcCur = calcCur.length>1 ? calcCur.slice(0,-1) : '0';
+  calcRender();
+}
+function calcClear(){ calcCur='0'; calcAcc=null; calcPending=null; calcFresh=false; calcRender() }
+function calcCompute(){
+  const cur = parseFloat(calcCur);
+  if(calcAcc==null) return cur;
+  if(calcPending==='+') return calcAcc+cur;
+  if(calcPending==='-') return calcAcc-cur;
+  if(calcPending==='×') return calcAcc*cur;
+  if(calcPending==='÷') return calcAcc/cur;
+  return cur;
+}
+function calcOp(op){
+  calcAcc = calcCompute();
+  calcPending = op;
+  calcCur = trimNum(calcAcc);
+  calcFresh = true;
+  calcRender();
+}
+function calcEquals(){
+  const result = calcCompute();
+  calcCur = trimNum(result);
+  calcAcc = null;
+  calcPending = null;
+  calcFresh = true;
+  calcRender();
+}
+</script>
+</body>
+</html>
