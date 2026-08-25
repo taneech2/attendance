@@ -55,6 +55,18 @@ body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
 .balance-card .amt span{font-size:16px;color:var(--mut);font-weight:600}
 .balance-card .pending-note{font-size:12.5px;color:var(--yw)}
 
+/* RANK BADGES */
+.rank-line{margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rank-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-weight:800;font-size:13px;border:1.5px solid currentColor;white-space:nowrap}
+.rank-bronze{color:#c98a4b}
+.rank-silver{color:#c9c9c9}
+.rank-gold{color:var(--gold)}
+.rank-platinum{color:#7fd8d0}
+.rank-diamond{color:#7ecbff}
+.rank-legend{color:#e879f9;background:linear-gradient(135deg,rgba(212,175,55,.18),rgba(232,121,249,.18))}
+.rank-progress{font-size:12px;color:var(--mut)}
+.lb-rankbadge{flex:none}
+
 /* CARDS / GRID */
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
@@ -185,6 +197,7 @@ textarea{resize:vertical;min-height:70px}
         <div>
           <div class="lbl">ยอดคงเหลือ (อนุมัติแล้ว)</div>
           <div class="amt"><span id="balDeposit">0</span> <span>แต้ม</span></div>
+          <div class="rank-line" id="rankDeposit"></div>
         </div>
         <div class="pending-note" id="pendingNoteDeposit"></div>
       </div>
@@ -209,6 +222,7 @@ textarea{resize:vertical;min-height:70px}
         <div>
           <div class="lbl">ยอดคงเหลือ (อนุมัติแล้ว)</div>
           <div class="amt"><span id="balPassbook">0</span> <span>แต้ม</span></div>
+          <div class="rank-line" id="rankPassbook"></div>
         </div>
         <div class="pending-note" id="pendingNotePassbook"></div>
       </div>
@@ -226,6 +240,7 @@ textarea{resize:vertical;min-height:70px}
         <div>
           <div class="lbl">แต้มที่ใช้แลกได้</div>
           <div class="amt"><span id="balRedeem">0</span> <span>แต้ม</span></div>
+          <div class="rank-line" id="rankRedeem"></div>
         </div>
       </div>
       <div class="grid" id="rewardGrid"></div>
@@ -267,6 +282,30 @@ const REWARDS = [
   {key:'cert', label:'ใบประกาศเกียรติคุณ "นักเรียนความดีเด่นประจำเดือน"', cost:150},
   {key:'bonus', label:'คะแนนพิเศษในรายวิชา (ต้องแจ้งครูผู้สอนวิชานั้นล่วงหน้า)', cost:100},
 ];
+
+// ยศ/เลเวล คิดจาก "แต้มสะสมตลอดชีพ" (ยอดฝากที่อนุมัติแล้วทั้งหมด ไม่ลดแม้แลกของรางวัลไปแล้ว)
+const RANK_TIERS = [
+  {key:'bronze', label:'บรอนซ์', emoji:'🥉', min:0},
+  {key:'silver', label:'ซิลเวอร์', emoji:'🥈', min:20},
+  {key:'gold', label:'โกลด์', emoji:'🥇', min:50},
+  {key:'platinum', label:'แพลตตินัม', emoji:'💠', min:100},
+  {key:'diamond', label:'ไดมอนด์', emoji:'💎', min:200},
+  {key:'legend', label:'ตำนาน', emoji:'👑', min:350},
+];
+function getRank(totalEarned){
+  let rank = RANK_TIERS[0];
+  for(const t of RANK_TIERS){ if(totalEarned >= t.min) rank = t; }
+  const idx = RANK_TIERS.indexOf(rank);
+  return {rank, next: RANK_TIERS[idx+1] || null};
+}
+function rankBadgeHTML(totalEarned){
+  const {rank, next} = getRank(totalEarned);
+  const badge = `<span class="rank-badge rank-${rank.key}">${rank.emoji} ${rank.label}</span>`;
+  const progress = next
+    ? `<span class="rank-progress">อีก ${next.min - totalEarned} แต้มถึง ${next.emoji} ${next.label}</span>`
+    : `<span class="rank-progress">🏆 ระดับสูงสุดแล้ว!</span>`;
+  return badge + progress;
+}
 
 // ─── STATE ───────────────────────────────────────────
 let userFirst='', userLast='', userDept='';
@@ -368,6 +407,9 @@ function computeBalance(txList){
   });
   return {approved, pending};
 }
+function computeLifetimeEarned(txList){
+  return txList.filter(t=>t.type==='deposit' && t.status==='approved').reduce((s,t)=>s+t.points,0);
+}
 
 function loadMyTx(){
   fetch(TX_PATH+'.json', {cache:'no-store'}).then(r=>r.json()).then(data=>{
@@ -379,6 +421,11 @@ function loadMyTx(){
     document.getElementById('balDeposit').textContent = bal.approved;
     document.getElementById('balPassbook').textContent = bal.approved;
     document.getElementById('balRedeem').textContent = bal.approved;
+    const earned = computeLifetimeEarned(allTx);
+    const badgeHTML = rankBadgeHTML(earned);
+    document.getElementById('rankDeposit').innerHTML = badgeHTML;
+    document.getElementById('rankPassbook').innerHTML = badgeHTML;
+    document.getElementById('rankRedeem').innerHTML = badgeHTML;
     const pendingText = bal.pending !== 0 ? `รอตรวจสอบอีก ${bal.pending>0?'+':''}${bal.pending} แต้ม` : '';
     document.getElementById('pendingNoteDeposit').textContent = pendingText;
     document.getElementById('pendingNotePassbook').textContent = pendingText;
@@ -452,17 +499,20 @@ function loadLeaderboard(){
     all.forEach(t=>{
       if(t.status!=='approved') return;
       const key = studentKey(t.name,t.lastname,t.dept);
-      if(!byStudent[key]) byStudent[key] = {name:t.name, lastname:t.lastname, dept:t.dept, points:0};
-      byStudent[key].points += (t.type==='deposit'?1:-1) * t.points;
+      if(!byStudent[key]) byStudent[key] = {name:t.name, lastname:t.lastname, dept:t.dept, earned:0, net:0};
+      const s = byStudent[key];
+      if(t.type==='deposit') s.earned += t.points;
+      s.net += (t.type==='deposit'?1:-1) * t.points;
     });
-    const list = Object.values(byStudent).sort((a,b)=>b.points-a.points).slice(0,30);
+    const list = Object.values(byStudent).sort((a,b)=>b.earned-a.earned).slice(0,30);
     if(list.length===0){ el.innerHTML = '<div class="empty-note">ยังไม่มีรายการที่อนุมัติ</div>'; return }
     el.innerHTML = list.map((s,i)=>{
       const rankCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
+      const tier = getRank(s.earned).rank;
       return `<div class="lb-row">
         <div class="lb-rank ${rankCls}">${i+1}</div>
-        <div class="lb-name">${s.name} ${s.lastname}<div class="lb-dept">${s.dept||'-'}</div></div>
-        <div class="lb-pts">${s.points}</div>
+        <div class="lb-name">${s.name} ${s.lastname} <span class="rank-badge rank-${tier.key} lb-rankbadge">${tier.emoji} ${tier.label}</span><div class="lb-dept">${s.dept||'-'} · คงเหลือ ${s.net} แต้ม</div></div>
+        <div class="lb-pts">${s.earned}</div>
       </div>`;
     }).join('');
   }).catch(()=>{ el.innerHTML = '<div class="empty-note">โหลดข้อมูลไม่สำเร็จ</div>'; });
