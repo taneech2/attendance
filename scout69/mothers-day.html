@@ -393,6 +393,7 @@
     <div id="reqHint" style="font-size:12px; color:var(--stamp); margin-top:6px; display:none;">โปรดติ๊กครบทุกข้อด้านบนก่อนถ่ายภาพ</div>
     <div class="btnrow" id="shootRow" style="display:none; margin-top:10px;">
       <button class="stamp-btn" id="shootBtn" type="button">ถ่ายภาพ</button>
+      <button class="ghost" id="switchCamBtn" type="button" title="สลับกล้องหน้า/หลัง">🔄 สลับกล้อง</button>
       <button class="ghost" id="cancelCamBtn" type="button">ยกเลิก</button>
     </div>
     <div class="btnrow" id="retakeRow" style="display:none; margin-top:10px;">
@@ -525,10 +526,19 @@ async function syncLocalSubmissions(){
 syncLocalSubmissions();
 
 // ---------- Camera (Strict Live Capture) ----------
+let currentFacingMode = 'environment';
+
+async function openCamera(facingMode){
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
+  currentFacingMode = facingMode;
+  $('video').srcObject = stream;
+  $('video').style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
+}
+
 $('openCamBtn').addEventListener('click', async () => {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    $('video').srcObject = stream;
+    await openCamera('environment');
     $('video').style.display = 'block';
     $('placeholder').style.display = 'none';
     $('preview').style.display = 'none';
@@ -541,6 +551,15 @@ $('openCamBtn').addEventListener('click', async () => {
   }
 });
 
+$('switchCamBtn').addEventListener('click', async () => {
+  const nextMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+  try {
+    await openCamera(nextMode);
+  } catch (e) {
+    setStatus('สลับกล้องไม่สำเร็จ — เครื่องนี้อาจมีกล้องเดียว', true);
+  }
+});
+
 $('shootBtn').addEventListener('click', () => {
   const video = $('video');
   const canvas = $('canvas');
@@ -548,7 +567,12 @@ $('shootBtn').addEventListener('click', () => {
   const h = video.videoHeight || 960;
   canvas.width = w;
   canvas.height = h;
-  canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+  const ctx = canvas.getContext('2d');
+  if (currentFacingMode === 'user') {
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(video, 0, 0, w, h);
   finishCapture(canvas.toDataURL('image/jpeg', 0.85));
   stopCamera();
 });
