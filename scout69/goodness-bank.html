@@ -58,12 +58,10 @@ body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
 /* RANK BADGES */
 .rank-line{margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .rank-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-weight:800;font-size:13px;border:1.5px solid currentColor;white-space:nowrap}
-.rank-bronze{color:#c98a4b}
-.rank-silver{color:#c9c9c9}
-.rank-gold{color:var(--gold)}
-.rank-platinum{color:#7fd8d0}
-.rank-diamond{color:#7ecbff}
-.rank-legend{color:#e879f9;background:linear-gradient(135deg,rgba(212,175,55,.18),rgba(232,121,249,.18))}
+.rank-sergeant{color:#c98a4b}
+.rank-lieutenant{color:#8ab4e0}
+.rank-major{color:var(--gold)}
+.rank-general{color:#e879f9;background:linear-gradient(135deg,rgba(212,175,55,.18),rgba(232,121,249,.18))}
 .rank-progress{font-size:12px;color:var(--mut)}
 .lb-rankbadge{flex:none}
 
@@ -284,13 +282,20 @@ const REWARDS = [
 ];
 
 // ยศ/เลเวล คิดจาก "แต้มสะสมตลอดชีพ" (ยอดฝากที่อนุมัติแล้วทั้งหมด ไม่ลดแม้แลกของรางวัลไปแล้ว)
+// ไล่ยศทหารไทย 4 ชั้น × 3 ระดับ (ตรี/โท/เอก) รวม 12 ระดับ
 const RANK_TIERS = [
-  {key:'bronze', label:'บรอนซ์', emoji:'🥉', min:0},
-  {key:'silver', label:'ซิลเวอร์', emoji:'🥈', min:20},
-  {key:'gold', label:'โกลด์', emoji:'🥇', min:50},
-  {key:'platinum', label:'แพลตตินัม', emoji:'💠', min:100},
-  {key:'diamond', label:'ไดมอนด์', emoji:'💎', min:200},
-  {key:'legend', label:'ตำนาน', emoji:'👑', min:350},
+  {key:'sgt1', label:'นายสิบตรี', emoji:'🎖️', cls:'sergeant', min:0},
+  {key:'sgt2', label:'นายสิบโท', emoji:'🎖️🎖️', cls:'sergeant', min:15},
+  {key:'sgt3', label:'นายสิบเอก', emoji:'🎖️🎖️🎖️', cls:'sergeant', min:30},
+  {key:'lt1', label:'ร้อยตรี', emoji:'⭐', cls:'lieutenant', min:50},
+  {key:'lt2', label:'ร้อยโท', emoji:'⭐⭐', cls:'lieutenant', min:75},
+  {key:'lt3', label:'ร้อยเอก', emoji:'⭐⭐⭐', cls:'lieutenant', min:105},
+  {key:'maj1', label:'พันตรี', emoji:'🌟', cls:'major', min:140},
+  {key:'maj2', label:'พันโท', emoji:'🌟🌟', cls:'major', min:180},
+  {key:'maj3', label:'พันเอก', emoji:'🌟🌟🌟', cls:'major', min:225},
+  {key:'gen1', label:'พลตรี', emoji:'👑', cls:'general', min:275},
+  {key:'gen2', label:'พลโท', emoji:'👑👑', cls:'general', min:330},
+  {key:'gen3', label:'พลเอก', emoji:'👑👑👑', cls:'general', min:400},
 ];
 function getRank(totalEarned){
   let rank = RANK_TIERS[0];
@@ -300,10 +305,10 @@ function getRank(totalEarned){
 }
 function rankBadgeHTML(totalEarned){
   const {rank, next} = getRank(totalEarned);
-  const badge = `<span class="rank-badge rank-${rank.key}">${rank.emoji} ${rank.label}</span>`;
+  const badge = `<span class="rank-badge rank-${rank.cls}">${rank.emoji} ${rank.label}</span>`;
   const progress = next
     ? `<span class="rank-progress">อีก ${next.min - totalEarned} แต้มถึง ${next.emoji} ${next.label}</span>`
-    : `<span class="rank-progress">🏆 ระดับสูงสุดแล้ว!</span>`;
+    : `<span class="rank-progress">🏆 ยศสูงสุดแล้ว!</span>`;
   return badge + progress;
 }
 
@@ -511,7 +516,7 @@ function loadLeaderboard(){
       const tier = getRank(s.earned).rank;
       return `<div class="lb-row">
         <div class="lb-rank ${rankCls}">${i+1}</div>
-        <div class="lb-name">${s.name} ${s.lastname} <span class="rank-badge rank-${tier.key} lb-rankbadge">${tier.emoji} ${tier.label}</span><div class="lb-dept">${s.dept||'-'} · คงเหลือ ${s.net} แต้ม</div></div>
+        <div class="lb-name">${s.name} ${s.lastname} <span class="rank-badge rank-${tier.cls} lb-rankbadge">${tier.emoji} ${tier.label}</span><div class="lb-dept">${s.dept||'-'} · คงเหลือ ${s.net} แต้ม</div></div>
         <div class="lb-pts">${s.earned}</div>
       </div>`;
     }).join('');
