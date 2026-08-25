@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ธนาคารความดี — ฝากความดี แลกของรางวัล</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+:root{--bg:#0a0f0c;--card:#121a15;--line:#26332a;--gold:#d4af37;--goldd:#a8842a;--tx:#eef1ec;--mut:#8a9a8a;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(212,175,55,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(212,175,55,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0f0c 0%,#0e1712 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.mono{font-family:'Space Mono',monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:960px;margin:0 auto;padding:20px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* LOGIN */
+#s-login{align-items:center;justify-content:center;min-height:100vh;padding:12px}
+#s-login.active{display:flex}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px 24px;width:100%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.login-h1{text-align:center;font-size:22px;font-weight:800;color:var(--gold)}
+.login-sub{text-align:center;font-size:13px;color:var(--mut);margin:4px 0 20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:#aab;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;background:#141d17;border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:14px}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--gold)}
+.btn-primary{display:block;width:100%;background:linear-gradient(135deg,var(--goldd),var(--gold));color:#1a1400;border:none;border-radius:10px;padding:14px;font-size:17px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+
+/* HEADER */
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+.topbar h1{font-size:22px;color:var(--gold);font-weight:800}
+.topbar .sub{font-size:13px;color:var(--mut);margin-top:2px}
+.nav-btns{display:flex;gap:8px;flex-wrap:wrap}
+.nav-btn{border:1px solid var(--line);background:#141d17;color:var(--tx);padding:9px 14px;border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13.5px;font-weight:700;cursor:pointer}
+.nav-btn.on{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.1)}
+.nav-btn.staff{border-color:var(--rd);color:var(--rd)}
+
+/* BALANCE CARD */
+.balance-card{
+  background:linear-gradient(135deg,#16241b,#0e1712);
+  border:1px solid var(--gold);border-radius:var(--r);
+  padding:22px 24px;margin-bottom:20px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+}
+.balance-card .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+.balance-card .amt{font-size:38px;font-weight:800;color:var(--gold)}
+.balance-card .amt span{font-size:16px;color:var(--mut);font-weight:600}
+.balance-card .pending-note{font-size:12.5px;color:var(--yw)}
+
+/* CARDS / GRID */
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.cat-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;transition:border-color .12s}
+.cat-card:hover{border-color:var(--gold)}
+.cat-card.sel{border-color:var(--gold);background:rgba(212,175,55,.08)}
+.cat-card h3{color:var(--gold);font-size:15px;margin-bottom:6px}
+.cat-card p{font-size:12.5px;color:var(--mut);line-height:1.6;margin-bottom:8px}
+.cat-card .pts{font-family:'Space Mono',monospace;font-weight:700;color:var(--yw);font-size:13px}
+
+.reward-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.reward-card h3{color:var(--gold);font-size:15.5px}
+.reward-card .cost{font-family:'Space Mono',monospace;font-weight:700;color:var(--yw);font-size:18px}
+.btn-redeem{background:var(--goldd);color:#1a1400;border:none;border-radius:8px;padding:10px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;font-size:14px}
+.btn-redeem:disabled{background:#2a2f28;color:var(--mut);cursor:not-allowed}
+
+/* PASSBOOK */
+.passbook{width:100%;border-collapse:collapse;font-size:13.5px}
+.passbook th{text-align:left;color:var(--mut);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.passbook td{padding:9px 8px;border-bottom:1px solid #1a2318;vertical-align:top}
+.passbook tr:hover td{background:#141d17}
+.pts-plus{color:var(--gr);font-weight:700;font-family:'Space Mono',monospace}
+.pts-minus{color:var(--rd);font-weight:700;font-family:'Space Mono',monospace}
+.status-pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.status-pending{background:rgba(250,204,21,.15);color:var(--yw)}
+.status-approved{background:rgba(34,197,94,.15);color:var(--gr)}
+.status-rejected{background:rgba(244,63,94,.15);color:var(--rd)}
+.empty-note{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+
+/* LEADERBOARD */
+.lb-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.lb-rank{font-family:'Space Mono',monospace;font-weight:700;font-size:18px;color:var(--mut);width:32px;text-align:center;flex:none}
+.lb-rank.top1{color:var(--gold)}
+.lb-rank.top2{color:#c9c9c9}
+.lb-rank.top3{color:#c98a4b}
+.lb-name{flex:1;font-size:14.5px;font-weight:700}
+.lb-dept{font-size:12px;color:var(--mut)}
+.lb-pts{font-family:'Space Mono',monospace;font-weight:800;color:var(--gold);font-size:16px}
+
+/* ADMIN */
+.admin-row{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.admin-row .top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.admin-row .who{font-weight:700;font-size:14.5px}
+.admin-row .meta{font-size:12px;color:var(--mut)}
+.admin-row .desc{font-size:13.5px;color:var(--tx);margin-bottom:10px;line-height:1.6}
+.admin-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.admin-actions input{width:80px;background:#141d17;border:1px solid var(--line);border-radius:6px;padding:7px 8px;color:var(--tx);font-family:'Space Mono',monospace;font-size:13px}
+.btn-approve{background:var(--gr);color:#04170a;border:none;border-radius:6px;padding:8px 14px;font-weight:800;cursor:pointer;font-size:13px}
+.btn-reject{background:transparent;border:1px solid var(--rd);color:var(--rd);border-radius:6px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13px}
+.pin-gate{max-width:360px;margin:60px auto;text-align:center}
+.pin-gate input{width:100%;text-align:center;font-size:22px;letter-spacing:.3em;background:#141d17;border:1px solid var(--line);border-radius:10px;padding:14px;color:var(--tx);margin:14px 0}
+
+.btn-ghost{display:block;width:100%;background:none;border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:10px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:10px}
+.section-title{font-size:16px;font-weight:700;color:var(--gold);margin:22px 0 12px}
+.section-title:first-child{margin-top:0}
+.hint{font-size:12.5px;color:var(--mut);margin-bottom:16px}
+textarea{resize:vertical;min-height:70px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="login-card">
+    <div class="login-h1">🏦 ธนาคารความดี</div>
+    <div class="login-sub">ฝากความดี สะสมแต้ม แลกของรางวัล — ครูธานี ชมสุข</div>
+    <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+    <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+    <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างกล 1/1..."></div>
+    <button class="btn-primary" onclick="login()">เข้าสู่ระบบ (Enter)</button>
+    <button class="btn-ghost" onclick="openStaff()">🔑 เจ้าหน้าที่ธนาคาร (สำหรับครู)</button>
+  </div>
+</div>
+
+<!-- STAFF PIN GATE -->
+<div class="screen" id="s-staff-pin">
+  <div class="wrap">
+    <div class="pin-gate">
+      <div class="login-h1">🔑 เจ้าหน้าที่ธนาคาร</div>
+      <p class="hint">ใส่รหัสผ่านสำหรับครู เพื่อตรวจสอบและอนุมัติรายการ</p>
+      <input type="password" id="staffPin" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter')checkStaffPin()">
+      <button class="btn-primary" onclick="checkStaffPin()">เข้าสู่ระบบเจ้าหน้าที่</button>
+      <button class="btn-ghost" onclick="showScreen('s-login')">← กลับหน้าแรก</button>
+    </div>
+  </div>
+</div>
+
+<!-- STAFF / ADMIN -->
+<div class="screen" id="s-staff">
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>🏦 เจ้าหน้าที่ธนาคารความดี</h1>
+        <div class="sub">ตรวจสอบและอนุมัติรายการฝาก/ถอน</div>
+      </div>
+      <div class="nav-btns">
+        <button class="nav-btn" onclick="loadStaffData()">🔄 รีเฟรช</button>
+        <button class="nav-btn" onclick="downloadLedgerCSV()">⬇️ ดาวน์โหลด CSV</button>
+        <button class="nav-btn" onclick="showScreen('s-login')">← กลับหน้าแรก</button>
+      </div>
+    </div>
+    <div class="section-title">⏳ รอตรวจสอบ</div>
+    <div id="staffPending"><div class="empty-note">กำลังโหลด...</div></div>
+    <div class="section-title">📜 ประวัติทั้งหมด (ล่าสุดก่อน)</div>
+    <div id="staffHistory"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="screen" id="s-main">
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>🏦 ธนาคารความดี</h1>
+        <div class="sub" id="userline"></div>
+      </div>
+      <div class="nav-btns">
+        <button class="nav-btn" id="btn-deposit" onclick="setView('deposit')">💰 ฝากความดี</button>
+        <button class="nav-btn" id="btn-passbook" onclick="setView('passbook')">📔 สมุดบัญชี</button>
+        <button class="nav-btn" id="btn-redeem" onclick="setView('redeem')">🎁 แลกของรางวัล</button>
+        <button class="nav-btn" id="btn-leaderboard" onclick="setView('leaderboard')">🏆 อันดับ</button>
+      </div>
+    </div>
+
+    <!-- DEPOSIT -->
+    <div id="view-deposit">
+      <div class="balance-card">
+        <div>
+          <div class="lbl">ยอดคงเหลือ (อนุมัติแล้ว)</div>
+          <div class="amt"><span id="balDeposit">0</span> <span>แต้ม</span></div>
+        </div>
+        <div class="pending-note" id="pendingNoteDeposit"></div>
+      </div>
+      <div class="section-title">เลือกประเภทความดี</div>
+      <div class="grid" id="categoryGrid"></div>
+      <div class="card" style="margin-top:14px">
+        <div class="field" id="customCategoryField" style="display:none">
+          <label>ระบุประเภทความดี</label>
+          <input id="customCategory" placeholder="เช่น ช่วยงานกิจกรรมโรงเรียน...">
+        </div>
+        <div class="field">
+          <label>รายละเอียด (อธิบายว่าทำอะไร ที่ไหน เมื่อไร)</label>
+          <textarea id="depositDesc" placeholder="อธิบายความดีที่ทำ..."></textarea>
+        </div>
+        <button class="btn-primary" id="btnDeposit" onclick="submitDeposit()" disabled>ฝากเข้าบัญชี (รอเจ้าหน้าที่ตรวจสอบ)</button>
+      </div>
+    </div>
+
+    <!-- PASSBOOK -->
+    <div id="view-passbook" style="display:none">
+      <div class="balance-card">
+        <div>
+          <div class="lbl">ยอดคงเหลือ (อนุมัติแล้ว)</div>
+          <div class="amt"><span id="balPassbook">0</span> <span>แต้ม</span></div>
+        </div>
+        <div class="pending-note" id="pendingNotePassbook"></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="passbook" id="passbookTable">
+          <thead><tr><th>วันที่</th><th>รายการ</th><th>ประเภท</th><th>แต้ม</th><th>สถานะ</th></tr></thead>
+          <tbody id="passbookBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REDEEM -->
+    <div id="view-redeem" style="display:none">
+      <div class="balance-card">
+        <div>
+          <div class="lbl">แต้มที่ใช้แลกได้</div>
+          <div class="amt"><span id="balRedeem">0</span> <span>แต้ม</span></div>
+        </div>
+      </div>
+      <div class="grid" id="rewardGrid"></div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div id="view-leaderboard" style="display:none">
+      <div class="card">
+        <div id="leaderboardList"><div class="empty-note">กำลังโหลด...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────
+const DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+const TX_PATH = DB_BASE + '/goodnessBank/transactions';
+const STAFF_PIN = '2569';
+
+const DEED_CATEGORIES = [
+  {key:'volunteer', label:'จิตอาสา / บำเพ็ญประโยชน์', points:5, hint:'เช่น เก็บขยะ ช่วยงานส่วนรวม ทำความสะอาดที่สาธารณะ'},
+  {key:'responsible', label:'ความรับผิดชอบ', points:3, hint:'เช่น ส่งงานตรงเวลา ดูแลรักษาเครื่องมือ/อุปกรณ์'},
+  {key:'kind', label:'ความมีน้ำใจ / ช่วยเหลือผู้อื่น', points:3, hint:'เช่น ช่วยเพื่อนเรียน ช่วยงานครู/รุ่นน้อง'},
+  {key:'honest', label:'ความซื่อสัตย์', points:5, hint:'เช่น เก็บของได้แล้วนำส่งคืนเจ้าของ'},
+  {key:'eco', label:'ประหยัด / รักษาสิ่งแวดล้อม', points:3, hint:'เช่น แยกขยะ ประหยัดน้ำ-ไฟ ปลูกต้นไม้'},
+  {key:'other', label:'อื่นๆ (ระบุเอง)', points:0, hint:'อธิบายรายละเอียด เจ้าหน้าที่จะเป็นผู้กำหนดแต้มตอนอนุมัติ'},
+];
+
+// แก้ไขรายการของรางวัลและแต้มที่ต้องใช้ได้ที่นี่
+const REWARDS = [
+  {key:'sticker', label:'ของที่ระลึกเล็กๆ (สติกเกอร์ / ดินสอ)', cost:20},
+  {key:'coupon', label:'บัตรกำนัลร้านสหกรณ์วิทยาลัย', cost:50},
+  {key:'priority', label:'สิทธิ์เลือกลำดับก่อนในกิจกรรม/ที่นั่งปฏิบัติงาน', cost:15},
+  {key:'cert', label:'ใบประกาศเกียรติคุณ "นักเรียนความดีเด่นประจำเดือน"', cost:150},
+  {key:'bonus', label:'คะแนนพิเศษในรายวิชา (ต้องแจ้งครูผู้สอนวิชานั้นล่วงหน้า)', cost:100},
+];
+
+// ─── STATE ───────────────────────────────────────────
+let userFirst='', userLast='', userDept='';
+let selectedCategory = null;
+let allTx = [];
+
+function studentKey(fname,lname,dept){
+  return (fname+'|'+lname+'|'+(dept||'')).trim().toLowerCase();
+}
+function myKey(){ return studentKey(userFirst,userLast,userDept); }
+
+function login(){
+  const fn=document.getElementById('fname').value.trim();
+  const ln=document.getElementById('lname').value.trim();
+  const dp=document.getElementById('dept').value.trim();
+  if(!fn||!ln){ alert('กรุณากรอกชื่อและนามสกุล'); return }
+  userFirst=fn; userLast=ln; userDept=dp;
+  document.getElementById('userline').textContent = `ผู้ใช้งาน: ${fn} ${ln}${dp?' ('+dp+')':''}`;
+  showScreen('s-main');
+  buildCategoryGrid();
+  buildRewardGrid();
+  setView('deposit');
+  loadMyTx();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── VIEW SWITCH ─────────────────────────────────────
+function setView(v){
+  ['deposit','passbook','redeem','leaderboard'].forEach(name=>{
+    document.getElementById('view-'+name).style.display = name===v ? 'block' : 'none';
+    document.getElementById('btn-'+name).className = 'nav-btn'+(name===v?' on':'');
+  });
+  if(v==='passbook') renderPassbook();
+  if(v==='redeem') renderRewardGrid();
+  if(v==='leaderboard') loadLeaderboard();
+}
+
+// ─── DEPOSIT ─────────────────────────────────────────
+function buildCategoryGrid(){
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = '';
+  DEED_CATEGORIES.forEach(cat=>{
+    const card = document.createElement('div');
+    card.className = 'cat-card';
+    card.innerHTML = `<h3>${cat.label}</h3><p>${cat.hint}</p><div class="pts">${cat.key==='other' ? 'แต้มโดยเจ้าหน้าที่' : '+'+cat.points+' แต้ม'}</div>`;
+    card.onclick = ()=>selectCategory(cat.key, card);
+    grid.appendChild(card);
+  });
+}
+function selectCategory(key, el){
+  selectedCategory = key;
+  document.querySelectorAll('#categoryGrid .cat-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('customCategoryField').style.display = key==='other' ? 'block' : 'none';
+  document.getElementById('btnDeposit').disabled = false;
+}
+function submitDeposit(){
+  const cat = DEED_CATEGORIES.find(c=>c.key===selectedCategory);
+  if(!cat){ alert('กรุณาเลือกประเภทความดี'); return }
+  const desc = document.getElementById('depositDesc').value.trim();
+  if(!desc){ alert('กรุณาอธิบายรายละเอียด'); return }
+  let label = cat.label;
+  if(cat.key==='other'){
+    const custom = document.getElementById('customCategory').value.trim();
+    if(!custom){ alert('กรุณาระบุประเภทความดี'); return }
+    label = custom;
+  }
+  const id = Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  const tx = {
+    id, name:userFirst, lastname:userLast, dept:userDept,
+    type:'deposit', category:label, description:desc,
+    points:cat.points, status:'pending',
+    submittedAt: Date.now(), reviewedAt:null, reviewNote:null
+  };
+  fetch(TX_PATH+'/'+id+'.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(tx)})
+    .then(()=>{
+      alert('ฝากเข้าบัญชีสำเร็จ! รอเจ้าหน้าที่ธนาคารตรวจสอบก่อนแต้มจะเข้าบัญชี');
+      document.getElementById('depositDesc').value = '';
+      document.getElementById('customCategory').value = '';
+      document.querySelectorAll('#categoryGrid .cat-card').forEach(c=>c.classList.remove('sel'));
+      selectedCategory = null;
+      document.getElementById('btnDeposit').disabled = true;
+      loadMyTx();
+    })
+    .catch(()=>alert('ส่งข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'));
+}
+
+// ─── LOAD MY TRANSACTIONS / BALANCE ──────────────────
+function computeBalance(txList){
+  let approved = 0, pending = 0;
+  txList.forEach(t=>{
+    const sign = t.type==='deposit' ? 1 : -1;
+    if(t.status==='approved') approved += sign * t.points;
+    else if(t.status==='pending') pending += sign * t.points;
+  });
+  return {approved, pending};
+}
+
+function loadMyTx(){
+  fetch(TX_PATH+'.json', {cache:'no-store'}).then(r=>r.json()).then(data=>{
+    const all = data ? Object.values(data) : [];
+    const key = myKey();
+    allTx = all.filter(t=>studentKey(t.name,t.lastname,t.dept)===key);
+    allTx.sort((a,b)=>b.submittedAt-a.submittedAt);
+    const bal = computeBalance(allTx);
+    document.getElementById('balDeposit').textContent = bal.approved;
+    document.getElementById('balPassbook').textContent = bal.approved;
+    document.getElementById('balRedeem').textContent = bal.approved;
+    const pendingText = bal.pending !== 0 ? `รอตรวจสอบอีก ${bal.pending>0?'+':''}${bal.pending} แต้ม` : '';
+    document.getElementById('pendingNoteDeposit').textContent = pendingText;
+    document.getElementById('pendingNotePassbook').textContent = pendingText;
+    renderPassbook();
+    renderRewardGrid();
+  }).catch(()=>{});
+}
+
+function renderPassbook(){
+  const tbody = document.getElementById('passbookBody');
+  if(!tbody) return;
+  if(allTx.length===0){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">ยังไม่มีรายการ ลองฝากความดีครั้งแรกได้เลย</td></tr>';
+    return;
+  }
+  const fmt = ts => new Date(ts).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'}) + ' ' + new Date(ts).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const statusLabel = {pending:'รอตรวจสอบ', approved:'อนุมัติแล้ว', rejected:'ปฏิเสธ'};
+  tbody.innerHTML = allTx.map(t=>{
+    const sign = t.type==='deposit' ? '+' : '-';
+    const cls = t.type==='deposit' ? 'pts-plus' : 'pts-minus';
+    return `<tr>
+      <td class="mono">${fmt(t.submittedAt)}</td>
+      <td>${t.category}${t.description?'<br><span style="color:var(--mut);font-size:12px">'+t.description+'</span>':''}${t.reviewNote?'<br><span style="color:var(--rd);font-size:12px">หมายเหตุ: '+t.reviewNote+'</span>':''}</td>
+      <td>${t.type==='deposit'?'ฝาก':'ถอน'}</td>
+      <td class="${cls}">${sign}${t.points}</td>
+      <td><span class="status-pill status-${t.status}">${statusLabel[t.status]}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── REDEEM ──────────────────────────────────────────
+function buildRewardGrid(){ renderRewardGrid(); }
+function renderRewardGrid(){
+  const grid = document.getElementById('rewardGrid');
+  if(!grid) return;
+  const bal = computeBalance(allTx).approved;
+  grid.innerHTML = REWARDS.map(r=>{
+    const can = bal >= r.cost;
+    return `<div class="reward-card">
+      <h3>${r.label}</h3>
+      <div class="cost">${r.cost} แต้ม</div>
+      <button class="btn-redeem" ${can?'':'disabled'} onclick="redeem('${r.key}')">${can ? 'แลกเลย' : 'แต้มไม่พอ'}</button>
+    </div>`;
+  }).join('');
+}
+function redeem(key){
+  const r = REWARDS.find(x=>x.key===key);
+  if(!r) return;
+  const bal = computeBalance(allTx).approved;
+  if(bal < r.cost){ alert('แต้มไม่พอสำหรับของรางวัลนี้'); return }
+  if(!confirm(`ยืนยันแลก "${r.label}" ด้วย ${r.cost} แต้ม?\n(แต้มจะถูกหักหลังเจ้าหน้าที่อนุมัติคำขอ)`)) return;
+  const id = Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  const tx = {
+    id, name:userFirst, lastname:userLast, dept:userDept,
+    type:'withdraw', category:r.label, description:'แลกของรางวัล: '+r.label,
+    points:r.cost, status:'pending',
+    submittedAt: Date.now(), reviewedAt:null, reviewNote:null
+  };
+  fetch(TX_PATH+'/'+id+'.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(tx)})
+    .then(()=>{ alert('ส่งคำขอแลกของรางวัลแล้ว รอเจ้าหน้าที่อนุมัติ'); loadMyTx(); })
+    .catch(()=>alert('ส่งข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'));
+}
+
+// ─── LEADERBOARD ─────────────────────────────────────
+function loadLeaderboard(){
+  const el = document.getElementById('leaderboardList');
+  el.innerHTML = '<div class="empty-note">กำลังโหลด...</div>';
+  fetch(TX_PATH+'.json', {cache:'no-store'}).then(r=>r.json()).then(data=>{
+    const all = data ? Object.values(data) : [];
+    const byStudent = {};
+    all.forEach(t=>{
+      if(t.status!=='approved') return;
+      const key = studentKey(t.name,t.lastname,t.dept);
+      if(!byStudent[key]) byStudent[key] = {name:t.name, lastname:t.lastname, dept:t.dept, points:0};
+      byStudent[key].points += (t.type==='deposit'?1:-1) * t.points;
+    });
+    const list = Object.values(byStudent).sort((a,b)=>b.points-a.points).slice(0,30);
+    if(list.length===0){ el.innerHTML = '<div class="empty-note">ยังไม่มีรายการที่อนุมัติ</div>'; return }
+    el.innerHTML = list.map((s,i)=>{
+      const rankCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
+      return `<div class="lb-row">
+        <div class="lb-rank ${rankCls}">${i+1}</div>
+        <div class="lb-name">${s.name} ${s.lastname}<div class="lb-dept">${s.dept||'-'}</div></div>
+        <div class="lb-pts">${s.points}</div>
+      </div>`;
+    }).join('');
+  }).catch(()=>{ el.innerHTML = '<div class="empty-note">โหลดข้อมูลไม่สำเร็จ</div>'; });
+}
+
+// ─── STAFF / ADMIN ───────────────────────────────────
+function openStaff(){ showScreen('s-staff-pin'); document.getElementById('staffPin').value=''; document.getElementById('staffPin').focus(); }
+function checkStaffPin(){
+  const pin = document.getElementById('staffPin').value;
+  if(pin !== STAFF_PIN){ alert('รหัสผ่านไม่ถูกต้อง'); return }
+  showScreen('s-staff');
+  loadStaffData();
+}
+
+let staffTx = [];
+function loadStaffData(){
+  document.getElementById('staffPending').innerHTML = '<div class="empty-note">กำลังโหลด...</div>';
+  fetch(TX_PATH+'.json', {cache:'no-store'}).then(r=>r.json()).then(data=>{
+    staffTx = data ? Object.values(data) : [];
+    staffTx.sort((a,b)=>b.submittedAt-a.submittedAt);
+    renderStaffPending();
+    renderStaffHistory();
+  }).catch(()=>{
+    document.getElementById('staffPending').innerHTML = '<div class="empty-note">โหลดข้อมูลไม่สำเร็จ</div>';
+  });
+}
+function renderStaffPending(){
+  const wrap = document.getElementById('staffPending');
+  const pending = staffTx.filter(t=>t.status==='pending');
+  if(pending.length===0){ wrap.innerHTML = '<div class="empty-note">ไม่มีรายการรอตรวจสอบ 🎉</div>'; return }
+  const fmt = ts => new Date(ts).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'}) + ' ' + new Date(ts).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  wrap.innerHTML = pending.map(t=>`
+    <div class="admin-row">
+      <div class="top">
+        <div class="who">${t.name} ${t.lastname} <span class="meta">(${t.dept||'-'})</span></div>
+        <div class="meta">${fmt(t.submittedAt)} · ${t.type==='deposit'?'ฝาก':'ถอน (แลกของรางวัล)'}</div>
+      </div>
+      <div class="desc"><b>${t.category}</b>${t.description?' — '+t.description:''}</div>
+      <div class="admin-actions">
+        <span class="meta">แต้ม:</span>
+        <input type="number" id="pts_${t.id}" value="${t.points}">
+        <button class="btn-approve" onclick="reviewTx('${t.id}','approved')">✅ อนุมัติ</button>
+        <button class="btn-reject" onclick="reviewTx('${t.id}','rejected')">❌ ปฏิเสธ</button>
+      </div>
+    </div>
+  `).join('');
+}
+function renderStaffHistory(){
+  const wrap = document.getElementById('staffHistory');
+  const done = staffTx.filter(t=>t.status!=='pending').slice(0,100);
+  if(done.length===0){ wrap.innerHTML = '<div class="empty-note">ยังไม่มีประวัติ</div>'; return }
+  const fmt = ts => new Date(ts).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'});
+  const statusLabel = {approved:'อนุมัติแล้ว', rejected:'ปฏิเสธ'};
+  wrap.innerHTML = `<div style="overflow-x:auto"><table class="passbook"><thead><tr>
+    <th>วันที่</th><th>ชื่อ-สกุล</th><th>แผนก</th><th>ประเภท</th><th>รายการ</th><th>แต้ม</th><th>สถานะ</th>
+  </tr></thead><tbody>
+  ${done.map(t=>`<tr>
+    <td class="mono">${fmt(t.submittedAt)}</td>
+    <td>${t.name} ${t.lastname}</td>
+    <td>${t.dept||'-'}</td>
+    <td>${t.type==='deposit'?'ฝาก':'ถอน'}</td>
+    <td>${t.category}</td>
+    <td class="${t.type==='deposit'?'pts-plus':'pts-minus'}">${t.type==='deposit'?'+':'-'}${t.points}</td>
+    <td><span class="status-pill status-${t.status}">${statusLabel[t.status]}</span></td>
+  </tr>`).join('')}
+  </tbody></table></div>`;
+}
+function reviewTx(id, status){
+  const t = staffTx.find(x=>x.id===id);
+  if(!t) return;
+  const ptsInput = document.getElementById('pts_'+id);
+  const points = ptsInput ? Math.max(0, parseInt(ptsInput.value,10) || 0) : t.points;
+  let reviewNote = null;
+  if(status==='rejected'){
+    reviewNote = prompt('เหตุผลที่ปฏิเสธ (ไม่บังคับ):') || null;
+  }
+  fetch(TX_PATH+'/'+id+'.json', {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({status, points, reviewedAt: Date.now(), reviewNote})
+  }).then(()=>loadStaffData())
+    .catch(()=>alert('บันทึกไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'));
+}
+function downloadLedgerCSV(){
+  if(staffTx.length===0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return }
+  const header = ['วันที่','ชื่อ','นามสกุล','แผนก','ประเภท','รายการ','รายละเอียด','แต้ม','สถานะ','หมายเหตุ'];
+  const lines = [header.join(',')];
+  staffTx.forEach(t=>{
+    const ts = new Date(t.submittedAt).toLocaleString('th-TH');
+    lines.push([ts, t.name, t.lastname, t.dept, t.type==='deposit'?'ฝาก':'ถอน', t.category, t.description||'', t.points, t.status, t.reviewNote||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  });
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'goodness-bank-ledger.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
