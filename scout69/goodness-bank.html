@@ -121,6 +121,10 @@ body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
 .section-title{font-size:16px;font-weight:700;color:var(--gold);margin:22px 0 12px}
 .section-title:first-child{margin-top:0}
 .hint{font-size:12.5px;color:var(--mut);margin-bottom:16px}
+.chain-result{font-size:13.5px;padding:10px 14px;border-radius:8px;margin-bottom:16px}
+.chain-result:empty{display:none}
+.chain-result.ok{background:rgba(34,197,94,.12);color:var(--gr);border:1px solid var(--gr)}
+.chain-result.bad{background:rgba(244,63,94,.12);color:var(--rd);border:1px solid var(--rd);font-weight:700}
 textarea{resize:vertical;min-height:70px}
 
 /* QR OVERLAYS */
@@ -174,9 +178,11 @@ textarea{resize:vertical;min-height:70px}
         <button class="nav-btn staff" onclick="openQrScanner()">📷 สแกน QR ให้แต้มทันที</button>
         <button class="nav-btn" onclick="loadStaffData()">🔄 รีเฟรช</button>
         <button class="nav-btn" onclick="downloadLedgerCSV()">⬇️ ดาวน์โหลด CSV</button>
+        <button class="nav-btn" onclick="verifyChain()">🔍 ตรวจสอบความถูกต้องของบัญชี</button>
         <button class="nav-btn" onclick="showScreen('s-login')">← กลับหน้าแรก</button>
       </div>
     </div>
+    <div id="chainVerifyResult" class="chain-result"></div>
     <div class="section-title">⏳ รอตรวจสอบ</div>
     <div id="staffPending"><div class="empty-note">กำลังโหลด...</div></div>
     <div class="section-title">📜 ประวัติทั้งหมด (ล่าสุดก่อน)</div>
@@ -644,7 +650,66 @@ function renderStaffHistory(){
   </tr>`).join('')}
   </tbody></table></div>`;
 }
-function reviewTx(id, status){
+
+// ─── HASH-CHAIN (tamper-evident ledger, no wallet/gas fee needed) ─
+// ทุกรายการที่ผ่านการอนุมัติ/ปฏิเสธ (หรือให้แต้มทันทีผ่าน QR) จะถูกฝัง
+// hash ของรายการก่อนหน้าไว้ด้วย ถ้ามีใครแก้ไขข้อมูลเก่าใน Firebase
+// ภายหลัง hash ที่คำนวณใหม่จะไม่ตรงกับที่บันทึกไว้ ตรวจจับได้ทันที
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function chainPayload(tx, prevHash){
+  return [prevHash, tx.id, tx.name, tx.lastname, tx.dept, tx.type, tx.category, tx.description||'', tx.points, tx.status, tx.reviewedAt, tx.reviewNote||''].join('|');
+}
+async function getChainTip(){
+  try{
+    const res = await fetch(TX_PATH+'.json', {cache:'no-store'});
+    const data = await res.json();
+    const all = data ? Object.values(data) : [];
+    const chained = all.filter(t=>t.hash).sort((a,b)=>a.reviewedAt-b.reviewedAt);
+    return chained.length ? chained[chained.length-1].hash : 'GENESIS';
+  }catch(e){
+    return 'GENESIS';
+  }
+}
+async function chainAndHash(tx){
+  const prevHash = await getChainTip();
+  const hash = await sha256Hex(chainPayload(tx, prevHash));
+  return {prevHash, hash};
+}
+async function verifyChain(){
+  const el = document.getElementById('chainVerifyResult');
+  el.textContent = '⏳ กำลังตรวจสอบ...';
+  el.className = 'chain-result';
+  try{
+    const res = await fetch(TX_PATH+'.json', {cache:'no-store'});
+    const data = await res.json();
+    const all = data ? Object.values(data) : [];
+    const chained = all.filter(t=>t.hash).sort((a,b)=>a.reviewedAt-b.reviewedAt);
+    if(chained.length === 0){
+      el.textContent = 'ℹ️ ยังไม่มีรายการที่อยู่ในห่วงโซ่ (เริ่มนับตั้งแต่เปิดใช้ฟีเจอร์นี้)';
+      return;
+    }
+    let prevHash = 'GENESIS';
+    for(const tx of chained){
+      const expected = await sha256Hex(chainPayload(tx, prevHash));
+      if(expected !== tx.hash){
+        el.textContent = `❌ พบความผิดปกติ! รายการของ ${tx.name} ${tx.lastname} (${tx.category}, ${tx.points} แต้ม) ถูกแก้ไขหลังอนุมัติแล้ว — ห่วงโซ่ขาดตอนตรงนี้`;
+        el.className = 'chain-result bad';
+        return;
+      }
+      prevHash = tx.hash;
+    }
+    el.textContent = `✅ ห่วงโซ่ครบถ้วน ไม่พบการแก้ไขย้อนหลัง (ตรวจสอบแล้ว ${chained.length} รายการ)`;
+    el.className = 'chain-result ok';
+  }catch(e){
+    el.textContent = '❌ ตรวจสอบไม่สำเร็จ: '+e.message;
+    el.className = 'chain-result bad';
+  }
+}
+
+async function reviewTx(id, status){
   const t = staffTx.find(x=>x.id===id);
   if(!t) return;
   const ptsInput = document.getElementById('pts_'+id);
@@ -653,11 +718,15 @@ function reviewTx(id, status){
   if(status==='rejected'){
     reviewNote = prompt('เหตุผลที่ปฏิเสธ (ไม่บังคับ):') || null;
   }
+  const buttons = document.querySelectorAll(`[onclick*="reviewTx('${id}'"]`);
+  buttons.forEach(b=>b.disabled = true);
+  const reviewedAt = Date.now();
+  const chained = await chainAndHash(Object.assign({}, t, {status, points, reviewedAt, reviewNote}));
   fetch(TX_PATH+'/'+id+'.json', {
     method:'PATCH', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({status, points, reviewedAt: Date.now(), reviewNote})
+    body: JSON.stringify({status, points, reviewedAt, reviewNote, prevHash:chained.prevHash, hash:chained.hash})
   }).then(()=>loadStaffData())
-    .catch(()=>alert('บันทึกไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'));
+    .catch(()=>{ alert('บันทึกไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'); buttons.forEach(b=>b.disabled=false); });
 }
 function downloadLedgerCSV(){
   if(staffTx.length===0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return }
@@ -802,7 +871,7 @@ function startAnotherScan(){
   closeQuickAward();
   openQrScanner();
 }
-function confirmQuickAward(){
+async function confirmQuickAward(){
   if(!quickAwardStudent) return;
   const key = document.getElementById('quickAwardCategory').value;
   const cat = DEED_CATEGORIES.find(c=>c.key===key);
@@ -810,12 +879,15 @@ function confirmQuickAward(){
   const note = document.getElementById('quickAwardNote').value.trim();
   const {fname, lastname, dept} = quickAwardStudent;
   const id = Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  const reviewedAt = Date.now();
   const tx = {
     id, name:fname, lastname, dept,
     type:'deposit', category:cat.label, description: note || 'ให้แต้มทันทีโดยเจ้าหน้าที่ (สแกน QR)',
     points, status:'approved',
-    submittedAt: Date.now(), reviewedAt: Date.now(), reviewNote:null
+    submittedAt: reviewedAt, reviewedAt, reviewNote:null
   };
+  const chained = await chainAndHash(tx);
+  Object.assign(tx, chained);
   fetch(TX_PATH+'/'+id+'.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(tx)})
     .then(()=>{
       alert(`✅ ให้ ${points} แต้มแก่ ${fname} ${lastname} แล้ว`);
