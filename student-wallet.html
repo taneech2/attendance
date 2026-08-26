@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>กระเป๋าเหรียญนักเรียน — Mission Wallet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+    display: flex;
+    justify-content: center;
+  }
+  .app {
+    width: 100%;
+    max-width: 460px;
+    min-height: 100vh;
+    background: #f7f7fb;
+    position: relative;
+    padding-bottom: 78px;
+  }
+  .hidden { display: none !important; }
+
+  /* ---------- Top brand bar ---------- */
+  .topbar {
+    background: linear-gradient(135deg,#FF7A00,#FF3D00);
+    color: #fff;
+    padding: 16px 18px 20px;
+    border-radius: 0 0 22px 22px;
+  }
+  .topbar .brand { display:flex; align-items:center; justify-content:space-between; }
+  .brand-name { font-weight:800; font-size:1.05rem; letter-spacing:.3px; }
+  .brand-sub { font-size:.72rem; opacity:.9; margin-top:2px; }
+  .avatar {
+    width:38px; height:38px; border-radius:50%;
+    background:rgba(255,255,255,.25); border:2px solid #fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:.9rem;
+  }
+
+  /* ---------- Generic screen padding ---------- */
+  .screen { padding: 18px; }
+  .center-screen {
+    min-height: 100vh;
+    display:flex; flex-direction:column; justify-content:center;
+    padding: 28px;
+  }
+
+  /* ---------- Auth / register ---------- */
+  .auth-card {
+    background:#fff; border-radius:20px; padding:26px 22px;
+    box-shadow:0 10px 30px rgba(255,90,0,.12);
+  }
+  .auth-title { font-size:1.3rem; font-weight:800; text-align:center; margin-bottom:4px; }
+  .auth-sub { font-size:.85rem; color:#8a8a99; text-align:center; margin-bottom:22px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:.8rem; color:#666; margin-bottom:6px; font-weight:600; }
+  .field input, .field select {
+    width:100%; padding:12px 14px; border-radius:12px;
+    border:1.5px solid #e6e6ee; font-family:'Sarabun',sans-serif; font-size:.95rem;
+    background:#fafafd;
+  }
+  .field input:focus, .field select:focus { outline:none; border-color:#FF7A00; background:#fff; }
+  .btn-primary {
+    width:100%; padding:14px; border:none; border-radius:14px;
+    background:linear-gradient(135deg,#FF7A00,#FF3D00); color:#fff;
+    font-family:'Sarabun',sans-serif; font-weight:700; font-size:1rem;
+    cursor:pointer; margin-top:6px;
+    box-shadow:0 8px 18px rgba(255,90,0,.3);
+  }
+  .btn-primary:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+  .btn-secondary {
+    width:100%; padding:12px; border:1.5px solid #e6e6ee; border-radius:14px;
+    background:#fff; color:#333; font-family:'Sarabun',sans-serif; font-weight:600;
+    font-size:.9rem; cursor:pointer; margin-top:10px;
+  }
+
+  /* ---------- Goal gate ---------- */
+  .goal-card {
+    background:#fff; border-radius:20px; padding:22px 20px; margin-top:16px;
+  }
+  .goal-progress-wrap { margin-bottom:18px; }
+  .goal-progress-bar {
+    width:100%; height:10px; background:#f0f0f5; border-radius:20px; overflow:hidden;
+  }
+  .goal-progress-fill {
+    height:100%; background:linear-gradient(90deg,#FF7A00,#FFB300); border-radius:20px;
+    transition:width .4s ease;
+  }
+  .goal-progress-label { font-size:.78rem; color:#888; margin-top:6px; text-align:right; }
+  .goal-item {
+    display:flex; align-items:center; gap:12px; padding:12px 4px;
+    border-bottom:1px solid #f2f2f6; cursor:pointer;
+  }
+  .goal-item:last-child { border-bottom:none; }
+  .goal-check {
+    width:26px; height:26px; border-radius:50%; border:2px solid #ddd;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-size:.8rem; color:#fff; transition:.2s;
+  }
+  .goal-check.done { background:#FF7A00; border-color:#FF7A00; }
+  .goal-text { flex:1; font-size:.9rem; }
+  .goal-text.done { color:#aaa; text-decoration:line-through; }
+  .lock-note {
+    display:flex; gap:10px; align-items:flex-start; background:#fff4ea;
+    border:1px solid #ffdcb0; border-radius:14px; padding:12px 14px; margin-top:16px;
+    font-size:.78rem; color:#a35c00; line-height:1.5;
+  }
+
+  /* ---------- Wallet main (TrueMoney-style) ---------- */
+  .balance-card {
+    margin: -34px 16px 0; position:relative; z-index:2;
+    background:#fff; border-radius:20px; padding:20px 22px;
+    box-shadow:0 12px 28px rgba(0,0,0,.08);
+  }
+  .balance-label { font-size:.8rem; color:#999; }
+  .balance-amount { font-size:2.1rem; font-weight:800; color:#FF3D00; margin:4px 0 2px; }
+  .balance-amount .unit { font-size:1rem; color:#999; font-weight:500; margin-left:4px; }
+  .balance-goal { font-size:.75rem; color:#aaa; }
+
+  .quick-actions {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+    padding: 18px 16px 6px;
+  }
+  .qa-btn {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:none; border:none; cursor:pointer; font-family:'Sarabun',sans-serif;
+  }
+  .qa-icon {
+    width:52px; height:52px; border-radius:16px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.35rem; color:#fff;
+    box-shadow:0 6px 14px rgba(0,0,0,.1);
+  }
+  .qa-icon.mission { background:linear-gradient(135deg,#FF7A00,#FF3D00); }
+  .qa-icon.redeem   { background:linear-gradient(135deg,#00C48C,#00A876); }
+  .qa-icon.transfer { background:linear-gradient(135deg,#3D8BFF,#1E5FDB); }
+  .qa-icon.history  { background:linear-gradient(135deg,#8A63FF,#6A3FE0); }
+  .qa-label { font-size:.72rem; color:#555; font-weight:600; }
+
+  .section-title {
+    font-size:.95rem; font-weight:700; margin:18px 16px 10px; display:flex;
+    justify-content:space-between; align-items:center;
+  }
+  .section-title .see-all { font-size:.75rem; color:#FF7A00; font-weight:600; cursor:pointer; }
+
+  .txn-list { padding: 0 16px; }
+  .txn-row {
+    display:flex; align-items:center; gap:12px; background:#fff;
+    border-radius:14px; padding:12px 14px; margin-bottom:8px;
+  }
+  .txn-icon {
+    width:38px; height:38px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:1rem; color:#fff;
+  }
+  .txn-icon.in { background:#00C48C; }
+  .txn-icon.out { background:#FF5C5C; }
+  .txn-body { flex:1; min-width:0; }
+  .txn-title { font-size:.85rem; font-weight:600; }
+  .txn-time { font-size:.7rem; color:#aaa; }
+  .txn-amt { font-size:.9rem; font-weight:700; white-space:nowrap; }
+  .txn-amt.in { color:#00A876; }
+  .txn-amt.out { color:#FF5C5C; }
+  .empty-note { text-align:center; color:#bbb; font-size:.82rem; padding:24px 0; }
+
+  /* ---------- Missions / Redeem lists ---------- */
+  .page-header {
+    display:flex; align-items:center; gap:10px; padding:16px 18px 6px;
+  }
+  .back-btn {
+    width:34px; height:34px; border-radius:10px; border:none; background:#fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.06); cursor:pointer; font-size:1rem;
+  }
+  .page-title { font-size:1.05rem; font-weight:700; }
+
+  .tier-label {
+    font-size:.75rem; color:#999; font-weight:700; margin:16px 16px 8px;
+    text-transform:uppercase; letter-spacing:.4px;
+  }
+  .mission-card, .redeem-card {
+    background:#fff; border-radius:16px; padding:14px 16px; margin:0 16px 10px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .mc-emoji { font-size:1.5rem; width:42px; text-align:center; flex-shrink:0; }
+  .mc-body { flex:1; min-width:0; }
+  .mc-title { font-size:.88rem; font-weight:700; }
+  .mc-desc { font-size:.74rem; color:#999; margin-top:2px; }
+  .mc-coin { font-size:.78rem; color:#FF7A00; font-weight:700; margin-top:4px; }
+  .mc-btn {
+    border:none; border-radius:10px; padding:8px 14px; font-size:.78rem; font-weight:700;
+    font-family:'Sarabun',sans-serif; cursor:pointer; white-space:nowrap; flex-shrink:0;
+  }
+  .mc-btn.do { background:linear-gradient(135deg,#FF7A00,#FF3D00); color:#fff; }
+  .mc-btn.done { background:#f0f0f5; color:#bbb; }
+  .mc-btn.redeem { background:linear-gradient(135deg,#00C48C,#00A876); color:#fff; }
+  .mc-btn.cant { background:#f0f0f5; color:#ccc; }
+
+  /* ---------- Transfer ---------- */
+  .transfer-box { background:#fff; border-radius:18px; padding:20px; margin:16px; }
+  .transfer-hint { font-size:.75rem; color:#999; margin-top:8px; line-height:1.5; }
+  .transfer-cap { font-size:.72rem; color:#FF7A00; margin-top:4px; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position:fixed; left:50%; bottom:92px; transform:translateX(-50%);
+    background:#1a1a2e; color:#fff; padding:10px 18px; border-radius:24px;
+    font-size:.82rem; opacity:0; pointer-events:none; transition:opacity .25s, bottom .25s;
+    z-index:50; white-space:nowrap;
+  }
+  .toast.show { opacity:1; bottom:104px; }
+
+  /* ---------- Bottom nav ---------- */
+  .bottom-nav {
+    position:fixed; left:50%; transform:translateX(-50%); bottom:0;
+    width:100%; max-width:460px; background:#fff;
+    display:flex; justify-content:space-around; align-items:center;
+    padding:10px 0 calc(10px + env(safe-area-inset-bottom));
+    box-shadow:0 -4px 16px rgba(0,0,0,.06); z-index:40;
+  }
+  .nav-btn {
+    background:none; border:none; display:flex; flex-direction:column; align-items:center;
+    gap:3px; font-family:'Sarabun',sans-serif; color:#bbb; font-size:.68rem; cursor:pointer;
+    font-weight:600;
+  }
+  .nav-btn .nav-icon { font-size:1.15rem; }
+  .nav-btn.active { color:#FF7A00; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ============ SCREEN: REGISTER ============ -->
+  <div class="screen center-screen" id="screen-register">
+    <div class="auth-card">
+      <div class="auth-title">🪙 Mission Wallet</div>
+      <div class="auth-sub">กระเป๋าเหรียญภารกิจนักเรียน<br>ชมสุข69 — สมัครสมาชิกเพื่อเริ่มต้น</div>
+      <div class="field">
+        <label>ชื่อ-นามสกุล</label>
+        <input type="text" id="reg-name" placeholder="เช่น ธานี ชมสุข">
+      </div>
+      <div class="field">
+        <label>รหัสนักเรียน</label>
+        <input type="text" id="reg-id" placeholder="เช่น 6912345678">
+      </div>
+      <div class="field">
+        <label>ระดับชั้น/แผนก</label>
+        <select id="reg-grade">
+          <option value="ชช.1">ชช.1</option>
+          <option value="ชช.2">ชช.2</option>
+          <option value="ลูกเสือ">ลูกเสือวิสามัญ</option>
+          <option value="อื่นๆ">อื่นๆ</option>
+        </select>
+      </div>
+      <button class="btn-primary" id="btn-register">สมัครสมาชิก</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN: GOAL GATE ============ -->
+  <div class="screen hidden" id="screen-goalgate">
+    <div class="topbar">
+      <div class="brand">
+        <div>
+          <div class="brand-name">สวัสดี, <span id="gg-name"></span></div>
+          <div class="brand-sub">ปลดล็อกสิทธิ์ใช้งานกระเป๋าเหรียญ</div>
+        </div>
+        <div class="avatar" id="gg-avatar"></div>
+      </div>
+    </div>
+    <div class="goal-card">
+      <div class="goal-progress-wrap">
+        <div class="goal-progress-bar"><div class="goal-progress-fill" id="goal-fill" style="width:0%"></div></div>
+        <div class="goal-progress-label" id="goal-count">0/3 เป้าหมายสำเร็จ</div>
+      </div>
+      <div id="goal-list"></div>
+    </div>
+    <div class="lock-note">
+      🔒 นักเรียนต้องทำเป้าหมาย (Goal) เริ่มต้นให้ครบก่อน จึงจะได้สิทธิ์ใช้งานกระเป๋าเหรียญ (Mission Wallet) เต็มรูปแบบ — แตะรายการเพื่อทำเครื่องหมายว่าสำเร็จ
+    </div>
+    <button class="btn-primary hidden" id="btn-unlock" style="margin:16px;width:calc(100% - 32px)">🎉 ปลดล็อกกระเป๋าเหรียญ</button>
+  </div>
+
+  <!-- ============ SCREEN: WALLET HOME ============ -->
+  <div class="screen hidden" id="screen-wallet" style="padding:0">
+    <div class="topbar">
+      <div class="brand">
+        <div>
+          <div class="brand-name" id="home-name">—</div>
+          <div class="brand-sub" id="home-grade">—</div>
+        </div>
+        <div class="avatar" id="home-avatar"></div>
+      </div>
+    </div>
+
+    <div class="balance-card">
+      <div class="balance-label">เหรียญสะสม (Mission Coin)</div>
+      <div class="balance-amount"><span id="home-balance">0</span><span class="unit">MC</span></div>
+      <div class="balance-goal">สมาชิกระดับ <b id="home-tier">ต้นกล้า</b></div>
+    </div>
+
+    <div class="quick-actions">
+      <button class="qa-btn" onclick="nav('missions')">
+        <div class="qa-icon mission">🎯</div>
+        <div class="qa-label">ภารกิจ</div>
+      </button>
+      <button class="qa-btn" onclick="nav('redeem')">
+        <div class="qa-icon redeem">🎁</div>
+        <div class="qa-label">แลกรางวัล</div>
+      </button>
+      <button class="qa-btn" onclick="nav('transfer')">
+        <div class="qa-icon transfer">↔️</div>
+        <div class="qa-label">โอนเหรียญ</div>
+      </button>
+      <button class="qa-btn" onclick="nav('history')">
+        <div class="qa-icon history">🧾</div>
+        <div class="qa-label">ประวัติ</div>
+      </button>
+    </div>
+
+    <div class="section-title">
+      <span>ธุรกรรมล่าสุด</span>
+      <span class="see-all" onclick="nav('history')">ดูทั้งหมด</span>
+    </div>
+    <div class="txn-list" id="home-txn-list"></div>
+    <div style="height:8px"></div>
+  </div>
+
+  <!-- ============ SCREEN: MISSIONS ============ -->
+  <div class="screen hidden" id="screen-missions">
+    <div class="page-header">
+      <button class="back-btn" onclick="nav('wallet')">←</button>
+      <div class="page-title">🎯 ภารกิจรับเหรียญ</div>
+    </div>
+    <div id="mission-list"></div>
+  </div>
+
+  <!-- ============ SCREEN: REDEEM ============ -->
+  <div class="screen hidden" id="screen-redeem">
+    <div class="page-header">
+      <button class="back-btn" onclick="nav('wallet')">←</button>
+      <div class="page-title">🎁 แลกของรางวัล</div>
+    </div>
+    <div id="redeem-list"></div>
+  </div>
+
+  <!-- ============ SCREEN: TRANSFER ============ -->
+  <div class="screen hidden" id="screen-transfer">
+    <div class="page-header">
+      <button class="back-btn" onclick="nav('wallet')">←</button>
+      <div class="page-title">↔️ โอนเหรียญให้เพื่อน</div>
+    </div>
+    <div class="transfer-box">
+      <div class="field">
+        <label>ชื่อเพื่อนผู้รับ</label>
+        <input type="text" id="tr-name" placeholder="เช่น สมชาย ใจดี">
+      </div>
+      <div class="field">
+        <label>จำนวนเหรียญ</label>
+        <input type="number" id="tr-amount" placeholder="0" min="1">
+      </div>
+      <button class="btn-primary" id="btn-transfer">โอนเหรียญ</button>
+      <div class="transfer-hint">
+        โอนได้สูงสุด <b>30%</b> ของยอดสะสมต่อครั้ง (กันการฟาร์ม/ยกเหรียญให้กันทั้งหมด) และต้องผ่านการอนุมัติของครูก่อนมีผลจริง — หน้านี้เป็นตัวอย่างการทำงาน (demo) ที่ยังไม่เชื่อมบัญชีเพื่อนจริง
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN: HISTORY ============ -->
+  <div class="screen hidden" id="screen-history">
+    <div class="page-header">
+      <button class="back-btn" onclick="nav('wallet')">←</button>
+      <div class="page-title">🧾 ประวัติธุรกรรมทั้งหมด</div>
+    </div>
+    <div class="txn-list" id="history-txn-list" style="padding-top:6px"></div>
+  </div>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <div class="bottom-nav hidden" id="bottom-nav">
+    <button class="nav-btn" data-nav="wallet" onclick="nav('wallet')"><span class="nav-icon">🏠</span>หน้าหลัก</button>
+    <button class="nav-btn" data-nav="missions" onclick="nav('missions')"><span class="nav-icon">🎯</span>ภารกิจ</button>
+    <button class="nav-btn" data-nav="redeem" onclick="nav('redeem')"><span class="nav-icon">🎁</span>แลกรางวัล</button>
+    <button class="nav-btn" data-nav="history" onclick="nav('history')"><span class="nav-icon">🧾</span>ประวัติ</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const LS_KEY = 'missionWalletData_v1';
+
+const GOALS = [
+  { id:'g1', text:'เข้าร่วมปฐมนิเทศระบบเหรียญภารกิจ' },
+  { id:'g2', text:'ทำภารกิจแรกให้สำเร็จ 1 อย่าง' },
+  { id:'g3', text:'ยอมรับกติกาการใช้เหรียญ (ห้ามฟาร์ม/โกงระบบ)' },
+];
+
+const MISSIONS = [
+  { id:'m1', tier:'รายวัน', emoji:'⏰', title:'เข้าเรียนตรงเวลา', desc:'มาถึงห้องก่อนเคารพธงชาติ', coin:5 },
+  { id:'m2', tier:'รายวัน', emoji:'🦺', title:'สวมอุปกรณ์ป้องกันครบ', desc:'PPE ครบตามมาตรฐานความปลอดภัย', coin:5 },
+  { id:'m3', tier:'รายชิ้นงาน', emoji:'🔧', title:'เชื่อมแนวตรงผ่านเกณฑ์', desc:'ชิ้นงานผ่านการตรวจสอบคุณภาพ', coin:20 },
+  { id:'m4', tier:'รายชิ้นงาน', emoji:'📐', title:'ส่งแบบเขียนแบบถูกสเกล', desc:'ตรงตามมาตรฐานเขียนแบบ', coin:15 },
+  { id:'m5', tier:'ท้าทาย', emoji:'🛠️', title:'ซ่อมงานที่พลาดเองจนผ่าน', desc:'แก้ไขงานเดิมจนได้มาตรฐาน', coin:40 },
+  { id:'m6', tier:'ท้าทาย', emoji:'🤝', title:'สอนเพื่อนที่ตามไม่ทัน', desc:'ช่วยเพื่อนในทีมจนเข้าใจ', coin:35 },
+  { id:'m7', tier:'พิเศษ', emoji:'🏕️', title:'เข้าร่วมกิจกรรมลูกเสือ/ชมรม', desc:'เข้าร่วมกิจกรรมนอกห้องเรียน', coin:25 },
+];
+
+const REDEEMS = [
+  { id:'r1', tier:'ของกิน', emoji:'🍪', title:'ขนม/เครื่องดื่ม', desc:'แลกได้ทันทีหลังคาบเรียน', coin:10 },
+  { id:'r2', tier:'เหรียญที่ระลึก', emoji:'🥇', title:'เหรียญที่ระลึกภารกิจ', desc:'สะสมแบบจับต้องได้', coin:60 },
+  { id:'r3', tier:'ถ้วยรางวัล', emoji:'🏆', title:'สิทธิ์เข้าชิงถ้วยรางวัลประจำเทอม', desc:'ต้องสะสมยอดสูงสุดในทีม', coin:150 },
+  { id:'r4', tier:'ใบประกาศ', emoji:'📜', title:'ใบรับรองผ่านเกณฑ์ทักษะ', desc:'ใช้แนบพอร์ตสมัครงาน/ฝึกงาน', coin:200 },
+];
+
+let state = loadState();
+
+function loadState(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    registered: false, name:'', studentId:'', grade:'',
+    goalsDone: {}, unlocked: false,
+    balance: 0, missionsDone: {}, transactions: []
+  };
+}
+function saveState(){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function fmtTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}) + ' ' + d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
+function tierName(balance){
+  if (balance >= 200) return 'ปรมาจารย์';
+  if (balance >= 100) return 'ช่างชำนาญ';
+  if (balance >= 40) return 'ช่างฝึกหัด';
+  return 'ต้นกล้า';
+}
+function addTxn(kind, title, amount){
+  state.transactions.unshift({ kind, title, amount, ts: Date.now() });
+  saveState();
+}
+
+/* ---------- Registration ---------- */
+document.getElementById('btn-register').addEventListener('click', () => {
+  const name = document.getElementById('reg-name').value.trim();
+  const id = document.getElementById('reg-id').value.trim();
+  const grade = document.getElementById('reg-grade').value;
+  if (!name || !id) { toast('กรอกชื่อและรหัสนักเรียนให้ครบ'); return; }
+  state.registered = true;
+  state.name = name;
+  state.studentId = id;
+  state.grade = grade;
+  saveState();
+  renderAll();
+});
+
+/* ---------- Goal gate ---------- */
+function renderGoalGate(){
+  document.getElementById('gg-name').textContent = state.name;
+  document.getElementById('gg-avatar').textContent = state.name.slice(0,1) || '?';
+  const list = document.getElementById('goal-list');
+  list.innerHTML = '';
+  let doneCount = 0;
+  GOALS.forEach(g => {
+    const done = !!state.goalsDone[g.id];
+    if (done) doneCount++;
+    const row = document.createElement('div');
+    row.className = 'goal-item';
+    row.innerHTML = `
+      <div class="goal-check ${done?'done':''}">${done?'✓':''}</div>
+      <div class="goal-text ${done?'done':''}">${g.text}</div>`;
+    row.addEventListener('click', () => {
+      state.goalsDone[g.id] = !state.goalsDone[g.id];
+      saveState();
+      renderGoalGate();
+    });
+    list.appendChild(row);
+  });
+  document.getElementById('goal-fill').style.width = (doneCount / GOALS.length * 100) + '%';
+  document.getElementById('goal-count').textContent = `${doneCount}/${GOALS.length} เป้าหมายสำเร็จ`;
+  document.getElementById('btn-unlock').classList.toggle('hidden', doneCount < GOALS.length);
+}
+document.getElementById('btn-unlock').addEventListener('click', () => {
+  state.unlocked = true;
+  addTxn('in', 'โบนัสปลดล็อกสมาชิกใหม่', 10);
+  state.balance += 10;
+  saveState();
+  toast('ปลดล็อกกระเป๋าเหรียญสำเร็จ! 🎉');
+  renderAll();
+});
+
+/* ---------- Wallet home ---------- */
+function renderWalletHome(){
+  document.getElementById('home-name').textContent = state.name;
+  document.getElementById('home-grade').textContent = state.grade + ' · ' + state.studentId;
+  document.getElementById('home-avatar').textContent = state.name.slice(0,1) || '?';
+  document.getElementById('home-balance').textContent = state.balance;
+  document.getElementById('home-tier').textContent = tierName(state.balance);
+  renderTxnList(document.getElementById('home-txn-list'), state.transactions.slice(0,5));
+}
+function renderTxnList(el, txns){
+  el.innerHTML = '';
+  if (!txns.length) {
+    el.innerHTML = '<div class="empty-note">ยังไม่มีธุรกรรม</div>';
+    return;
+  }
+  txns.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'txn-row';
+    row.innerHTML = `
+      <div class="txn-icon ${t.kind}">${t.kind==='in' ? '↓' : '↑'}</div>
+      <div class="txn-body">
+        <div class="txn-title">${t.title}</div>
+        <div class="txn-time">${fmtTime(t.ts)}</div>
+      </div>
+      <div class="txn-amt ${t.kind}">${t.kind==='in'?'+':'-'}${t.amount} MC</div>`;
+    el.appendChild(row);
+  });
+}
+
+/* ---------- Missions ---------- */
+function renderMissions(){
+  const el = document.getElementById('mission-list');
+  el.innerHTML = '';
+  let lastTier = null;
+  MISSIONS.forEach(m => {
+    if (m.tier !== lastTier) {
+      const label = document.createElement('div');
+      label.className = 'tier-label';
+      label.textContent = m.tier;
+      el.appendChild(label);
+      lastTier = m.tier;
+    }
+    const done = !!state.missionsDone[m.id];
+    const card = document.createElement('div');
+    card.className = 'mission-card';
+    card.innerHTML = `
+      <div class="mc-emoji">${m.emoji}</div>
+      <div class="mc-body">
+        <div class="mc-title">${m.title}</div>
+        <div class="mc-desc">${m.desc}</div>
+        <div class="mc-coin">+${m.coin} MC</div>
+      </div>
+      <button class="mc-btn ${done?'done':'do'}" ${done?'disabled':''}>${done?'สำเร็จแล้ว':'ทำสำเร็จ'}</button>`;
+    if (!done) {
+      card.querySelector('button').addEventListener('click', () => {
+        state.missionsDone[m.id] = true;
+        state.balance += m.coin;
+        addTxn('in', 'ภารกิจ: ' + m.title, m.coin);
+        toast(`ได้รับ ${m.coin} MC จากภารกิจ`);
+        renderAll();
+      });
+    }
+    el.appendChild(card);
+  });
+}
+
+/* ---------- Redeem ---------- */
+function renderRedeem(){
+  const el = document.getElementById('redeem-list');
+  el.innerHTML = '';
+  let lastTier = null;
+  REDEEMS.forEach(r => {
+    if (r.tier !== lastTier) {
+      const label = document.createElement('div');
+      label.className = 'tier-label';
+      label.textContent = r.tier;
+      el.appendChild(label);
+      lastTier = r.tier;
+    }
+    const canAfford = state.balance >= r.coin;
+    const card = document.createElement('div');
+    card.className = 'redeem-card';
+    card.innerHTML = `
+      <div class="mc-emoji">${r.emoji}</div>
+      <div class="mc-body">
+        <div class="mc-title">${r.title}</div>
+        <div class="mc-desc">${r.desc}</div>
+        <div class="mc-coin">${r.coin} MC</div>
+      </div>
+      <button class="mc-btn ${canAfford?'redeem':'cant'}" ${canAfford?'':'disabled'}>แลก</button>`;
+    if (canAfford) {
+      card.querySelector('button').addEventListener('click', () => {
+        state.balance -= r.coin;
+        addTxn('out', 'แลกรางวัล: ' + r.title, r.coin);
+        toast(`แลก "${r.title}" สำเร็จ`);
+        renderAll();
+      });
+    }
+    el.appendChild(card);
+  });
+}
+
+/* ---------- Transfer ---------- */
+document.getElementById('btn-transfer').addEventListener('click', () => {
+  const name = document.getElementById('tr-name').value.trim();
+  const amount = parseInt(document.getElementById('tr-amount').value, 10);
+  if (!name) { toast('กรอกชื่อผู้รับ'); return; }
+  if (!amount || amount <= 0) { toast('กรอกจำนวนเหรียญ'); return; }
+  const cap = Math.floor(state.balance * 0.3);
+  if (amount > state.balance) { toast('เหรียญไม่พอ'); return; }
+  if (amount > cap) { toast(`โอนได้สูงสุด ${cap} MC ต่อครั้ง (30% ของยอดสะสม)`); return; }
+  state.balance -= amount;
+  addTxn('out', 'โอนเหรียญให้ ' + name, amount);
+  toast(`โอน ${amount} MC ให้ ${name} แล้ว (รอครูอนุมัติ)`);
+  document.getElementById('tr-name').value = '';
+  document.getElementById('tr-amount').value = '';
+  renderAll();
+});
+
+/* ---------- History ---------- */
+function renderHistory(){
+  renderTxnList(document.getElementById('history-txn-list'), state.transactions);
+}
+
+/* ---------- Navigation ---------- */
+function nav(target){
+  ['register','goalgate','wallet','missions','redeem','transfer','history'].forEach(s => {
+    document.getElementById('screen-' + s).classList.add('hidden');
+  });
+  document.getElementById('screen-' + target).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === target);
+  });
+  window.scrollTo(0,0);
+  if (target === 'wallet') renderWalletHome();
+  if (target === 'missions') renderMissions();
+  if (target === 'redeem') renderRedeem();
+  if (target === 'history') renderHistory();
+}
+
+function renderAll(){
+  const bottomNav = document.getElementById('bottom-nav');
+  if (!state.registered) {
+    nav('register');
+    bottomNav.classList.add('hidden');
+  } else if (!state.unlocked) {
+    nav('goalgate');
+    renderGoalGate();
+    bottomNav.classList.add('hidden');
+  } else {
+    bottomNav.classList.remove('hidden');
+    nav('wallet');
+  }
+}
+
+renderAll();
+</script>
+</body>
+</html>
