@@ -228,6 +228,62 @@
   }
   .nav-btn .nav-icon { font-size:1.15rem; }
   .nav-btn.active { color:#FF7A00; }
+
+  /* ---------- Settings gear ---------- */
+  .gear-btn {
+    width:34px; height:34px; border-radius:50%; border:none;
+    background:rgba(255,255,255,.22); color:#fff; font-size:1rem; cursor:pointer;
+  }
+
+  /* ---------- Location settings screen ---------- */
+  .loc-card { background:#fff; border-radius:16px; padding:16px; margin:0 16px 12px; }
+  .loc-name { font-size:.92rem; font-weight:700; }
+  .loc-coord { font-size:.76rem; color:#999; margin-top:2px; font-family:monospace; }
+  .loc-row { display:flex; gap:10px; align-items:center; margin-top:10px; }
+  .loc-row input {
+    width:90px; padding:9px 10px; border-radius:10px; border:1.5px solid #e6e6ee;
+    font-family:'Sarabun',sans-serif; font-size:.85rem;
+  }
+  .loc-row label { font-size:.76rem; color:#888; }
+  .btn-cap {
+    flex:1; border:none; border-radius:10px; padding:9px 10px; font-size:.8rem;
+    font-weight:700; font-family:'Sarabun',sans-serif; cursor:pointer;
+    background:linear-gradient(135deg,#3D8BFF,#1E5FDB); color:#fff;
+  }
+  .settings-note {
+    font-size:.75rem; color:#999; line-height:1.5; padding:0 16px 16px;
+  }
+
+  /* ---------- GPS check-in modal ---------- */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    display:flex; align-items:flex-end; justify-content:center; z-index:60;
+  }
+  .modal-overlay .app-width { width:100%; max-width:460px; }
+  .checkin-sheet {
+    background:#fff; border-radius:22px 22px 0 0; padding:22px 20px calc(22px + env(safe-area-inset-bottom));
+  }
+  .checkin-title { font-size:1.05rem; font-weight:800; text-align:center; }
+  .checkin-target { font-size:.8rem; color:#999; text-align:center; margin-top:2px; }
+  .gps-status {
+    margin:18px 0; padding:16px; border-radius:16px; background:#f7f7fb;
+    text-align:center;
+  }
+  .gps-dot {
+    width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:6px;
+    background:#ccc;
+  }
+  .gps-dot.wait { background:#FFB300; animation:pulse 1s infinite; }
+  .gps-dot.ok { background:#00C48C; }
+  .gps-dot.bad { background:#FF5C5C; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+  .gps-line { font-size:.85rem; margin-top:6px; color:#555; }
+  .gps-dist { font-size:1.4rem; font-weight:800; margin-top:6px; }
+  .gps-dist.ok { color:#00A876; }
+  .gps-dist.bad { color:#FF5C5C; }
+  .checkin-actions { display:flex; gap:10px; margin-top:6px; }
+  .checkin-actions .btn-secondary { margin-top:0; }
+  .checkin-actions .btn-primary { margin-top:0; }
 </style>
 </head>
 <body>
@@ -291,7 +347,10 @@
           <div class="brand-name" id="home-name">—</div>
           <div class="brand-sub" id="home-grade">—</div>
         </div>
-        <div class="avatar" id="home-avatar"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="gear-btn" onclick="nav('locsettings')" title="ตั้งค่าพิกัดจุดเช็คอิน (โหมดครู)">⚙️</button>
+          <div class="avatar" id="home-avatar"></div>
+        </div>
       </div>
     </div>
 
@@ -346,6 +405,18 @@
     <div id="redeem-list"></div>
   </div>
 
+  <!-- ============ SCREEN: LOCATION SETTINGS (โหมดครู) ============ -->
+  <div class="screen hidden" id="screen-locsettings">
+    <div class="page-header">
+      <button class="back-btn" onclick="nav('wallet')">←</button>
+      <div class="page-title">⚙️ ตั้งค่าพิกัดจุดเช็คอิน (โหมดครู)</div>
+    </div>
+    <div id="loc-settings-list"></div>
+    <div class="settings-note">
+      ให้ครูยืนอยู่ ณ จุดจริง (ห้องเรียน/จุดกิจกรรม/จุดบำเพ็ญประโยชน์) แล้วกด "ใช้พิกัดปัจจุบัน" เพื่อบันทึกพิกัดของจุดนั้นไว้เป็นค่าอ้างอิง — นักเรียนที่เช็คอินภารกิจต้องอยู่ในรัศมีที่กำหนดจึงจะยืนยันสำเร็จได้ (ตั้งค่านี้อยู่ในเครื่อง/เบราว์เซอร์นี้เท่านั้น ยังไม่ใช่ค่ากลางที่ทุกเครื่องเห็นตรงกัน)
+    </div>
+  </div>
+
   <!-- ============ SCREEN: TRANSFER ============ -->
   <div class="screen hidden" id="screen-transfer">
     <div class="page-header">
@@ -385,6 +456,25 @@
     <button class="nav-btn" data-nav="history" onclick="nav('history')"><span class="nav-icon">🧾</span>ประวัติ</button>
   </div>
 
+  <!-- ============ GPS CHECK-IN MODAL ============ -->
+  <div class="modal-overlay hidden" id="checkin-modal">
+    <div class="app-width">
+      <div class="checkin-sheet">
+        <div class="checkin-title">📍 เช็คอินตำแหน่งเพื่อรับเหรียญ</div>
+        <div class="checkin-target">จุดเป้าหมาย: <span id="ci-loc-name">—</span> (รัศมี <span id="ci-loc-radius">—</span> ม.)</div>
+        <div class="gps-status">
+          <div><span class="gps-dot wait" id="ci-dot"></span><span id="ci-status-text">กำลังขอตำแหน่ง GPS…</span></div>
+          <div class="gps-line" id="ci-coord-line">&nbsp;</div>
+          <div class="gps-dist" id="ci-dist">—</div>
+        </div>
+        <div class="checkin-actions">
+          <button class="btn-secondary" id="ci-cancel">ยกเลิก</button>
+          <button class="btn-primary" id="ci-confirm" disabled>ยืนยันเช็คอิน</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 </div>
 
@@ -398,13 +488,14 @@ const GOALS = [
 ];
 
 const MISSIONS = [
-  { id:'m1', tier:'รายวัน', emoji:'⏰', title:'เข้าเรียนตรงเวลา', desc:'มาถึงห้องก่อนเคารพธงชาติ', coin:5 },
+  { id:'m1', tier:'รายวัน', emoji:'⏰', title:'เข้าเรียนตรงเวลา', desc:'เช็คอิน GPS ที่ห้องเรียน/ห้องปฏิบัติงาน', coin:5, geo:'classroom' },
   { id:'m2', tier:'รายวัน', emoji:'🦺', title:'สวมอุปกรณ์ป้องกันครบ', desc:'PPE ครบตามมาตรฐานความปลอดภัย', coin:5 },
   { id:'m3', tier:'รายชิ้นงาน', emoji:'🔧', title:'เชื่อมแนวตรงผ่านเกณฑ์', desc:'ชิ้นงานผ่านการตรวจสอบคุณภาพ', coin:20 },
   { id:'m4', tier:'รายชิ้นงาน', emoji:'📐', title:'ส่งแบบเขียนแบบถูกสเกล', desc:'ตรงตามมาตรฐานเขียนแบบ', coin:15 },
   { id:'m5', tier:'ท้าทาย', emoji:'🛠️', title:'ซ่อมงานที่พลาดเองจนผ่าน', desc:'แก้ไขงานเดิมจนได้มาตรฐาน', coin:40 },
   { id:'m6', tier:'ท้าทาย', emoji:'🤝', title:'สอนเพื่อนที่ตามไม่ทัน', desc:'ช่วยเพื่อนในทีมจนเข้าใจ', coin:35 },
-  { id:'m7', tier:'พิเศษ', emoji:'🏕️', title:'เข้าร่วมกิจกรรมลูกเสือ/ชมรม', desc:'เข้าร่วมกิจกรรมนอกห้องเรียน', coin:25 },
+  { id:'m7', tier:'พิเศษ', emoji:'🏕️', title:'เข้าร่วมกิจกรรมลูกเสือ/ชมรม', desc:'เช็คอิน GPS ที่จุดจัดกิจกรรม', coin:25, geo:'activity' },
+  { id:'m8', tier:'พิเศษ', emoji:'🤲', title:'บำเพ็ญประโยชน์ในชุมชน', desc:'เช็คอิน GPS ที่จุดบำเพ็ญประโยชน์', coin:30, geo:'service' },
 ];
 
 const REDEEMS = [
@@ -413,6 +504,33 @@ const REDEEMS = [
   { id:'r3', tier:'ถ้วยรางวัล', emoji:'🏆', title:'สิทธิ์เข้าชิงถ้วยรางวัลประจำเทอม', desc:'ต้องสะสมยอดสูงสุดในทีม', coin:150 },
   { id:'r4', tier:'ใบประกาศ', emoji:'📜', title:'ใบรับรองผ่านเกณฑ์ทักษะ', desc:'ใช้แนบพอร์ตสมัครงาน/ฝึกงาน', coin:200 },
 ];
+
+const LOC_LS_KEY = 'missionWalletLocations_v1';
+const DEFAULT_LOCATIONS = {
+  classroom: { name:'ห้องเรียน/ห้องปฏิบัติงาน', lat:null, lon:null, radius:150 },
+  activity:  { name:'จุดกิจกรรม (ลูกเสือ/ชมรม)', lat:null, lon:null, radius:200 },
+  service:   { name:'จุดบำเพ็ญประโยชน์', lat:null, lon:null, radius:300 },
+};
+function loadLocations(){
+  try {
+    const raw = localStorage.getItem(LOC_LS_KEY);
+    if (raw) return Object.assign({}, DEFAULT_LOCATIONS, JSON.parse(raw));
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_LOCATIONS));
+}
+function saveLocations(){
+  try { localStorage.setItem(LOC_LS_KEY, JSON.stringify(locations)); } catch(e) {}
+}
+let locations = loadLocations();
+
+function haversineMeters(lat1, lon1, lat2, lon2){
+  const R = 6371000;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
 
 let state = loadState();
 
@@ -543,6 +661,7 @@ function renderMissions(){
       lastTier = m.tier;
     }
     const done = !!state.missionsDone[m.id];
+    const btnLabel = done ? 'สำเร็จแล้ว' : (m.geo ? '📍 เช็คอิน' : 'ทำสำเร็จ');
     const card = document.createElement('div');
     card.className = 'mission-card';
     card.innerHTML = `
@@ -552,16 +671,130 @@ function renderMissions(){
         <div class="mc-desc">${m.desc}</div>
         <div class="mc-coin">+${m.coin} MC</div>
       </div>
-      <button class="mc-btn ${done?'done':'do'}" ${done?'disabled':''}>${done?'สำเร็จแล้ว':'ทำสำเร็จ'}</button>`;
+      <button class="mc-btn ${done?'done':'do'}" ${done?'disabled':''}>${btnLabel}</button>`;
     if (!done) {
       card.querySelector('button').addEventListener('click', () => {
-        state.missionsDone[m.id] = true;
-        state.balance += m.coin;
-        addTxn('in', 'ภารกิจ: ' + m.title, m.coin);
-        toast(`ได้รับ ${m.coin} MC จากภารกิจ`);
-        renderAll();
+        if (m.geo) { openCheckin(m); }
+        else { completeMission(m); }
       });
     }
+    el.appendChild(card);
+  });
+}
+
+function completeMission(m, geoInfo){
+  state.missionsDone[m.id] = true;
+  state.balance += m.coin;
+  const note = geoInfo ? ` (เช็คอิน GPS ${geoInfo.dist.toFixed(0)}ม. จากจุด)` : '';
+  addTxn('in', 'ภารกิจ: ' + m.title + note, m.coin);
+  toast(`ได้รับ ${m.coin} MC จากภารกิจ`);
+  renderAll();
+}
+
+/* ---------- GPS check-in ---------- */
+let checkinWatch = null;
+let checkinLastFix = null;
+
+function openCheckin(mission){
+  const loc = locations[mission.geo];
+  document.getElementById('ci-loc-name').textContent = loc.name;
+  document.getElementById('ci-loc-radius').textContent = loc.radius;
+  document.getElementById('ci-dot').className = 'gps-dot wait';
+  document.getElementById('ci-status-text').textContent = 'กำลังขอตำแหน่ง GPS…';
+  document.getElementById('ci-coord-line').innerHTML = '&nbsp;';
+  document.getElementById('ci-dist').textContent = '—';
+  document.getElementById('ci-dist').className = 'gps-dist';
+  const confirmBtn = document.getElementById('ci-confirm');
+  confirmBtn.disabled = true;
+  checkinLastFix = null;
+  document.getElementById('checkin-modal').classList.remove('hidden');
+
+  if (loc.lat == null || loc.lon == null) {
+    document.getElementById('ci-dot').className = 'gps-dot bad';
+    document.getElementById('ci-status-text').textContent = 'ยังไม่ได้ตั้งค่าพิกัดจุดนี้ — แจ้งครูให้ตั้งค่าที่ ⚙️ ก่อน';
+    confirmBtn.onclick = null;
+    document.getElementById('ci-cancel').onclick = closeCheckin;
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    document.getElementById('ci-dot').className = 'gps-dot bad';
+    document.getElementById('ci-status-text').textContent = 'อุปกรณ์นี้ไม่รองรับ GPS';
+    document.getElementById('ci-cancel').onclick = closeCheckin;
+    return;
+  }
+
+  checkinWatch = navigator.geolocation.watchPosition((pos) => {
+    const dist = haversineMeters(pos.coords.latitude, pos.coords.longitude, loc.lat, loc.lon);
+    const within = dist <= loc.radius;
+    checkinLastFix = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy, dist };
+    document.getElementById('ci-coord-line').textContent =
+      `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} (±${Math.round(pos.coords.accuracy)}ม.)`;
+    const distEl = document.getElementById('ci-dist');
+    distEl.textContent = `ห่างจากจุด ${dist.toFixed(0)} ม.`;
+    if (within) {
+      document.getElementById('ci-dot').className = 'gps-dot ok';
+      document.getElementById('ci-status-text').textContent = 'อยู่ในพื้นที่ ✓';
+      distEl.className = 'gps-dist ok';
+      confirmBtn.disabled = false;
+    } else {
+      document.getElementById('ci-dot').className = 'gps-dot bad';
+      document.getElementById('ci-status-text').textContent = 'อยู่นอกรัศมีที่กำหนด';
+      distEl.className = 'gps-dist bad';
+      confirmBtn.disabled = true;
+    }
+  }, (err) => {
+    document.getElementById('ci-dot').className = 'gps-dot bad';
+    document.getElementById('ci-status-text').textContent = 'ขอตำแหน่งไม่สำเร็จ — โปรดอนุญาตการเข้าถึงตำแหน่งที่ตั้ง';
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 });
+
+  confirmBtn.onclick = () => {
+    if (!checkinLastFix) return;
+    closeCheckin();
+    completeMission(mission, checkinLastFix);
+  };
+  document.getElementById('ci-cancel').onclick = closeCheckin;
+}
+
+function closeCheckin(){
+  if (checkinWatch !== null) { navigator.geolocation.clearWatch(checkinWatch); checkinWatch = null; }
+  document.getElementById('checkin-modal').classList.add('hidden');
+}
+
+/* ---------- Location settings (โหมดครู) ---------- */
+function renderLocSettings(){
+  const el = document.getElementById('loc-settings-list');
+  el.innerHTML = '';
+  Object.keys(locations).forEach(key => {
+    const loc = locations[key];
+    const card = document.createElement('div');
+    card.className = 'loc-card';
+    const coordText = (loc.lat != null && loc.lon != null)
+      ? `${loc.lat.toFixed(6)}, ${loc.lon.toFixed(6)}`
+      : 'ยังไม่ได้ตั้งค่าพิกัด';
+    card.innerHTML = `
+      <div class="loc-name">${loc.name}</div>
+      <div class="loc-coord" id="loc-coord-${key}">${coordText}</div>
+      <div class="loc-row">
+        <button class="btn-cap">📍 ใช้พิกัดปัจจุบัน</button>
+        <label>รัศมี(ม.)</label>
+        <input type="number" min="10" value="${loc.radius}" id="loc-radius-${key}">
+      </div>`;
+    card.querySelector('.btn-cap').addEventListener('click', () => {
+      if (!navigator.geolocation) { toast('อุปกรณ์นี้ไม่รองรับ GPS'); return; }
+      toast('กำลังขอตำแหน่ง GPS…');
+      navigator.geolocation.getCurrentPosition((pos) => {
+        loc.lat = pos.coords.latitude;
+        loc.lon = pos.coords.longitude;
+        saveLocations();
+        toast(`บันทึกพิกัด "${loc.name}" แล้ว`);
+        renderLocSettings();
+      }, () => toast('ขอตำแหน่งไม่สำเร็จ — โปรดอนุญาตการเข้าถึงตำแหน่งที่ตั้ง'), { enableHighAccuracy: true, timeout: 15000 });
+    });
+    card.querySelector(`#loc-radius-${key}`).addEventListener('change', (e) => {
+      const v = parseInt(e.target.value, 10);
+      if (v > 0) { loc.radius = v; saveLocations(); }
+    });
     el.appendChild(card);
   });
 }
@@ -626,7 +859,7 @@ function renderHistory(){
 
 /* ---------- Navigation ---------- */
 function nav(target){
-  ['register','goalgate','wallet','missions','redeem','transfer','history'].forEach(s => {
+  ['register','goalgate','wallet','missions','redeem','transfer','history','locsettings'].forEach(s => {
     document.getElementById('screen-' + s).classList.add('hidden');
   });
   document.getElementById('screen-' + target).classList.remove('hidden');
@@ -638,6 +871,7 @@ function nav(target){
   if (target === 'missions') renderMissions();
   if (target === 'redeem') renderRedeem();
   if (target === 'history') renderHistory();
+  if (target === 'locsettings') renderLocSettings();
 }
 
 function renderAll(){
