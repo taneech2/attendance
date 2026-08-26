@@ -284,6 +284,38 @@
   .checkin-actions { display:flex; gap:10px; margin-top:6px; }
   .checkin-actions .btn-secondary { margin-top:0; }
   .checkin-actions .btn-primary { margin-top:0; }
+
+  /* ---------- Celebration overlay ---------- */
+  .celebrate-overlay {
+    position:fixed; inset:0; background:rgba(20,10,0,.55);
+    display:flex; align-items:center; justify-content:center; z-index:80;
+    overflow:hidden;
+  }
+  .confetti-piece {
+    position:absolute; top:-24px; font-size:1.3rem;
+    animation:confetti-fall linear forwards;
+  }
+  @keyframes confetti-fall {
+    to { transform:translateY(110vh) rotate(360deg); opacity:.9; }
+  }
+  .celebrate-card {
+    position:relative; z-index:2; background:#fff; border-radius:24px;
+    padding:32px 26px; text-align:center; width:min(88vw, 340px);
+    box-shadow:0 20px 50px rgba(0,0,0,.3);
+    animation:pop-in .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes pop-in {
+    from { transform:scale(.7); opacity:0; }
+    to { transform:scale(1); opacity:1; }
+  }
+  .celebrate-emoji { font-size:3.2rem; line-height:1; }
+  .celebrate-title { font-size:1.25rem; font-weight:800; margin-top:10px; color:#1a1a2e; }
+  .celebrate-sub { font-size:.85rem; color:#888; margin-top:6px; line-height:1.5; }
+  .celebrate-close {
+    margin-top:20px; width:100%; border:none; border-radius:14px; padding:12px;
+    background:linear-gradient(135deg,#FF7A00,#FF3D00); color:#fff;
+    font-family:'Sarabun',sans-serif; font-weight:700; font-size:.92rem; cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -475,6 +507,17 @@
     </div>
   </div>
 
+  <!-- ============ CELEBRATION OVERLAY ============ -->
+  <div class="celebrate-overlay hidden" id="celebrate-overlay">
+    <div id="confetti-layer"></div>
+    <div class="celebrate-card">
+      <div class="celebrate-emoji" id="cel-emoji">🎉</div>
+      <div class="celebrate-title" id="cel-title">ยินดีด้วย!</div>
+      <div class="celebrate-sub" id="cel-sub"></div>
+      <button class="celebrate-close" id="cel-close">เยี่ยม!</button>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 </div>
 
@@ -569,6 +612,56 @@ function addTxn(kind, title, amount){
   saveState();
 }
 
+/* ---------- Celebration (คะแนน/รางวัล/เหรียญ/ระดับก้าวหน้า) ---------- */
+const COIN_MILESTONES = [10, 50, 100, 250, 500, 1000, 2000, 5000];
+
+function spawnConfetti(){
+  const layer = document.getElementById('confetti-layer');
+  layer.innerHTML = '';
+  const pieces = ['🎉','🎊','⭐','🥇','✨'];
+  for (let i = 0; i < 28; i++) {
+    const span = document.createElement('span');
+    span.className = 'confetti-piece';
+    span.textContent = pieces[Math.floor(Math.random() * pieces.length)];
+    span.style.left = (Math.random() * 100) + '%';
+    span.style.animationDuration = (1.6 + Math.random() * 1.4) + 's';
+    span.style.animationDelay = (Math.random() * 0.5) + 's';
+    layer.appendChild(span);
+  }
+}
+function celebrate({ emoji, title, sub }){
+  document.getElementById('cel-emoji').textContent = emoji || '🎉';
+  document.getElementById('cel-title').textContent = title || 'ยินดีด้วย!';
+  document.getElementById('cel-sub').textContent = sub || '';
+  spawnConfetti();
+  document.getElementById('celebrate-overlay').classList.remove('hidden');
+}
+document.getElementById('cel-close').addEventListener('click', () => {
+  document.getElementById('celebrate-overlay').classList.add('hidden');
+});
+
+function checkProgressCelebration(oldBalance, newBalance){
+  const oldTier = tierName(oldBalance);
+  const newTier = tierName(newBalance);
+  if (newTier !== oldTier) {
+    celebrate({
+      emoji: '🏅',
+      title: `เลื่อนระดับสมาชิก: ${newTier}!`,
+      sub: `ยอดสะสม ${newBalance} MC — ก้าวหน้าขึ้นอีกขั้นแล้ว สู้ต่อไป!`
+    });
+    return;
+  }
+  const crossed = COIN_MILESTONES.filter(m => oldBalance < m && newBalance >= m);
+  if (crossed.length) {
+    const m = crossed[crossed.length - 1];
+    celebrate({
+      emoji: '🎯',
+      title: `ยินดีด้วย! ครบ ${m} MC`,
+      sub: 'คะแนนสะสมของเธอมาถึงหลักสำคัญแล้ว เก็บต่อไปเพื่อแลกรางวัลใหญ่ขึ้น!'
+    });
+  }
+}
+
 /* ---------- Registration ---------- */
 document.getElementById('btn-register').addEventListener('click', () => {
   const name = document.getElementById('reg-name').value.trim();
@@ -614,8 +707,12 @@ document.getElementById('btn-unlock').addEventListener('click', () => {
   addTxn('in', 'โบนัสปลดล็อกสมาชิกใหม่', 10);
   state.balance += 10;
   saveState();
-  toast('ปลดล็อกกระเป๋าเหรียญสำเร็จ! 🎉');
   renderAll();
+  celebrate({
+    emoji: '🎉',
+    title: 'ปลดล็อกกระเป๋าเหรียญสำเร็จ!',
+    sub: 'ยินดีต้อนรับสู่ Mission Wallet ได้รับโบนัสต้อนรับ 10 MC เริ่มทำภารกิจแรกได้เลย!'
+  });
 });
 
 /* ---------- Wallet home ---------- */
@@ -683,12 +780,17 @@ function renderMissions(){
 }
 
 function completeMission(m, geoInfo){
+  const oldBalance = state.balance;
   state.missionsDone[m.id] = true;
   state.balance += m.coin;
   const note = geoInfo ? ` (เช็คอิน GPS ${geoInfo.dist.toFixed(0)}ม. จากจุด)` : '';
   addTxn('in', 'ภารกิจ: ' + m.title + note, m.coin);
-  toast(`ได้รับ ${m.coin} MC จากภารกิจ`);
   renderAll();
+  checkProgressCelebration(oldBalance, state.balance);
+  if (tierName(oldBalance) === tierName(state.balance) &&
+      !COIN_MILESTONES.some(v => oldBalance < v && state.balance >= v)) {
+    toast(`ได้รับ ${m.coin} MC จากภารกิจ`);
+  }
 }
 
 /* ---------- GPS check-in ---------- */
@@ -827,8 +929,16 @@ function renderRedeem(){
       card.querySelector('button').addEventListener('click', () => {
         state.balance -= r.coin;
         addTxn('out', 'แลกรางวัล: ' + r.title, r.coin);
-        toast(`แลก "${r.title}" สำเร็จ`);
         renderAll();
+        if (r.tier === 'ของกิน') {
+          toast(`แลก "${r.title}" สำเร็จ`);
+        } else {
+          celebrate({
+            emoji: r.emoji,
+            title: `ยินดีด้วย! ได้รับ "${r.title}"`,
+            sub: `แลกด้วย ${r.coin} MC — ${r.tier} เป็นรางวัลที่ตั้งใจสะสมมา ภูมิใจได้เลย!`
+          });
+        }
       });
     }
     el.appendChild(card);
