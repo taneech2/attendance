@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<!-- ╔══════════════════════════════════════════════════════╗ -->
+<!-- ║  ต้นแบบระบบใบสั่งงาน — ร้านเชื่อมชมสุข69              ║ -->
+<!-- ║  Phase 1 prototype: ใบสั่งงาน + ลูกค้า + การเงิน       ║ -->
+<!-- ║  เก็บข้อมูลในเครื่องนี้เท่านั้น (localStorage) ไม่ขึ้นคลาวด์ ║ -->
+<!-- ╚══════════════════════════════════════════════════════╝ -->
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ใบสั่งงาน — ชมสุข69</title>
+<meta name="theme-color" content="#2E5FE8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ใบสั่งงาน ชมสุข69">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F4F5F7; --surface:#FFFFFF; --surface-2:#FAFBFC;
+    --ink:#1A2130; --ink-muted:#5B6472; --ink-faint:#8890A0;
+    --accent:#2E5FE8; --accent-ink:#FFFFFF; --accent-soft:#EAF0FF;
+    --line:#DEE2E8;
+    --good:#1F8A57; --good-soft:#E7F5EC;
+    --warn:#B4590F; --warn-soft:#FBEEE0;
+    --bad:#C0392B; --bad-soft:#FBEAE8;
+    --neutral-soft:#EEF0F3;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(20,24,34,.06), 0 8px 24px rgba(20,24,34,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#10141C; --surface:#171C26; --surface-2:#1D232F;
+      --ink:#E7EAF0; --ink-muted:#9098A8; --ink-faint:#666F80;
+      --accent:#6E9BFF; --accent-ink:#0B1220; --accent-soft:#1B2740;
+      --line:#2A3140;
+      --good:#5FC68A; --good-soft:#152520;
+      --warn:#E5A455; --warn-soft:#2A2013;
+      --bad:#E8695D; --bad-soft:#2A1717;
+      --neutral-soft:#1D222D;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+    padding-bottom:64px;
+  }
+  .mono{font-family:"IBM Plex Mono",Consolas,monospace;}
+  button{font-family:inherit;}
+  input,textarea{font-family:inherit;}
+  h1,h2,h3{text-wrap:balance;margin:0;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .wrap{max-width:720px;margin:0 auto;padding:16px 14px 8px;}
+
+  /* ===== Lock screen ===== */
+  #lockScreen{
+    position:fixed;inset:0;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;z-index:100;
+  }
+  .lock-card{
+    width:100%;max-width:340px;background:var(--surface);
+    border:1px solid var(--line);border-radius:16px;
+    padding:28px 24px;box-shadow:var(--shadow);text-align:center;
+  }
+  .lock-badge{
+    width:52px;height:52px;border-radius:50%;background:var(--accent-soft);
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    margin:0 auto 14px;color:var(--accent);
+  }
+  .lock-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+  .lock-sub{font-size:12.5px;color:var(--ink-faint);margin-bottom:18px;}
+  #pinInput{
+    width:100%;text-align:center;font-size:22px;letter-spacing:.3em;
+    padding:12px 10px;border-radius:10px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--ink);margin-bottom:12px;
+  }
+  #pinError{color:var(--bad);font-size:12.5px;min-height:18px;margin-bottom:6px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    border-radius:10px;padding:11px 16px;font-size:14px;font-weight:600;
+    cursor:pointer;transition:background-color .15s ease;
+  }
+  .btn:hover{background:var(--surface-2);}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .btn-primary:hover{filter:brightness(1.05);}
+  .btn-block{width:100%;}
+  .btn-ghost{border-color:transparent;background:transparent;}
+  .btn-ghost:hover{background:var(--neutral-soft);}
+  .btn-danger{color:var(--bad);}
+
+  /* ===== App header ===== */
+  #app{display:none;}
+  header.appbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:4px 0 14px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:36px;height:36px;border-radius:9px;background:var(--accent);
+    color:var(--accent-ink);display:flex;align-items:center;justify-content:center;
+    font-size:16px;font-weight:700;
+  }
+  .brand-name{font-size:16px;font-weight:700;}
+  .brand-sub{font-size:11px;color:var(--ink-faint);}
+  .appbar-actions{display:flex;gap:6px;}
+  .icon-btn{
+    width:36px;height:36px;border-radius:9px;border:1px solid var(--line);
+    background:var(--surface);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;font-size:15px;
+  }
+  .icon-btn:hover{background:var(--surface-2);}
+
+  /* ===== Stats ===== */
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+  .stat-tile{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:12px 12px 11px;
+  }
+  .stat-label{font-size:10.5px;color:var(--ink-faint);letter-spacing:.02em;margin-bottom:6px;}
+  .stat-value{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .stat-value.small{font-size:16px;}
+
+  /* ===== Toolbar ===== */
+  .toolbar{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+  #searchInput{
+    width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);font-size:14px;
+  }
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;}
+  .tab{
+    flex:none;padding:7px 12px;border-radius:20px;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink-muted);font-size:12.5px;font-weight:600;
+    cursor:pointer;white-space:nowrap;
+  }
+  .tab.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+
+  /* ===== Job list ===== */
+  #jobList{display:flex;flex-direction:column;gap:10px;}
+  .job-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:13px 14px;
+  }
+  .job-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;}
+  .job-customer{font-size:15px;font-weight:700;}
+  .job-phone{font-size:11.5px;color:var(--ink-faint);margin-top:1px;}
+  .job-price{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .job-desc{font-size:13px;color:var(--ink-muted);margin-bottom:10px;white-space:pre-wrap;word-break:break-word;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .chip{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;
+  }
+  .chip-new{background:var(--neutral-soft);color:var(--ink-muted);}
+  .chip-inprogress{background:var(--accent-soft);color:var(--accent);}
+  .chip-done{background:var(--good-soft);color:var(--good);}
+  .chip-delivered{background:var(--good-soft);color:var(--good);}
+  .chip-paid{background:var(--good-soft);color:var(--good);}
+  .chip-unpaid{background:var(--warn-soft);color:var(--warn);}
+  .job-actions{display:flex;flex-wrap:wrap;gap:6px;}
+  .job-actions .btn{padding:8px 12px;font-size:12.5px;}
+  .empty-state{
+    text-align:center;color:var(--ink-faint);font-size:13px;
+    padding:48px 20px;border:1px dashed var(--line);border-radius:12px;
+  }
+
+  /* ===== FAB ===== */
+  #addFab{
+    position:fixed;right:18px;bottom:18px;z-index:40;
+    width:56px;height:56px;border-radius:50%;
+    background:var(--accent);color:var(--accent-ink);border:none;
+    font-size:26px;box-shadow:0 6px 18px rgba(46,95,232,.4);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ===== Modal ===== */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(10,14,22,.5);
+    display:none;align-items:flex-end;justify-content:center;z-index:80;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    width:100%;max-width:480px;background:var(--surface);
+    border-radius:16px 16px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+    max-height:90vh;overflow-y:auto;
+  }
+  @media (min-width:560px){
+    .modal-backdrop{align-items:center;}
+    .modal{border-radius:16px;}
+  }
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .modal-title{font-size:16px;font-weight:700;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:5px;}
+  .field input, .field textarea{
+    width:100%;padding:10px 11px;border-radius:9px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--ink);font-size:14px;
+  }
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .modal-actions{display:flex;gap:8px;margin-top:16px;}
+  .modal-actions .btn{flex:1;}
+
+  .toast{
+    position:fixed;left:50%;bottom:88px;transform:translateX(-50%);
+    background:var(--ink);color:var(--bg);font-size:13px;font-weight:600;
+    padding:9px 16px;border-radius:20px;z-index:90;opacity:0;pointer-events:none;
+    transition:opacity .2s ease;
+  }
+  .toast.show{opacity:1;}
+
+  .footnote{
+    margin-top:24px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:11px;color:var(--ink-faint);line-height:1.7;
+  }
+  .footnote .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .footnote button{font-size:11.5px;padding:6px 10px;}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== LOCK SCREEN ===================== -->
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-badge">🔒</div>
+    <div class="lock-title">ใบสั่งงาน ชมสุข69</div>
+    <div class="lock-sub">ใส่ PIN เพื่อเข้าใช้งาน (เริ่มต้น 1234 — เปลี่ยนได้หลังปลดล็อก)</div>
+    <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="••••">
+    <div id="pinError"></div>
+    <button id="unlockBtn" class="btn btn-primary btn-block">ปลดล็อก</button>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app">
+  <div class="wrap">
+
+    <header class="appbar">
+      <div class="brand">
+        <div class="brand-mark">ชช</div>
+        <div>
+          <div class="brand-name">ใบสั่งงาน</div>
+          <div class="brand-sub">ร้านเชื่อมชมสุข69</div>
+        </div>
+      </div>
+      <div class="appbar-actions">
+        <button class="icon-btn" id="lockBtn" title="ล็อกหน้าจอ">🔒</button>
+        <button class="icon-btn" id="menuBtn" title="ตั้งค่า/สำรองข้อมูล">⚙️</button>
+      </div>
+    </header>
+
+    <div class="stat-row">
+      <div class="stat-tile">
+        <div class="stat-label mono">งานค้าง</div>
+        <div class="stat-value" id="statOpen">0</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label mono">ยอดค้างชำระ</div>
+        <div class="stat-value small" id="statDue">฿0</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label mono">รายได้เดือนนี้</div>
+        <div class="stat-value small" id="statMonth">฿0</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input id="searchInput" type="text" placeholder="ค้นหาชื่อลูกค้า หรือ รายละเอียดงาน...">
+      <div class="tabs" id="statusTabs">
+        <button class="tab active" data-status="all">ทั้งหมด</button>
+        <button class="tab" data-status="new">รับงาน</button>
+        <button class="tab" data-status="inprogress">กำลังทำ</button>
+        <button class="tab" data-status="done">เสร็จแล้ว</button>
+        <button class="tab" data-status="delivered">ส่งมอบแล้ว</button>
+      </div>
+    </div>
+
+    <div id="jobList"></div>
+
+    <div class="footnote">
+      ข้อมูลทั้งหมดเก็บใน<strong>เครื่องนี้เครื่องเดียว</strong> (localStorage) ไม่ส่งขึ้นอินเทอร์เน็ต — กดสำรองข้อมูลเป็นระยะเพื่อกันข้อมูลหาย
+      <div class="row">
+        <button class="btn" id="exportJsonBtn">⬇️ สำรองข้อมูล (JSON)</button>
+        <button class="btn" id="importJsonBtn">⬆️ กู้คืนข้อมูล</button>
+        <button class="btn" id="exportCsvBtn">📊 ส่งออก CSV</button>
+        <button class="btn" id="changePinBtn">เปลี่ยน PIN</button>
+        <input type="file" id="importFileInput" accept="application/json" style="display:none;">
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<button id="addFab" title="เพิ่มงานใหม่">+</button>
+
+<!-- ===================== ADD/EDIT MODAL ===================== -->
+<div class="modal-backdrop" id="jobModalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="jobModalTitle">เพิ่มงานใหม่</div>
+      <button class="icon-btn" id="jobModalClose">✕</button>
+    </div>
+    <div class="field">
+      <label for="fCustomer">ชื่อลูกค้า *</label>
+      <input id="fCustomer" type="text" maxlength="80" placeholder="เช่น คุณสมชาย">
+    </div>
+    <div class="field">
+      <label for="fPhone">เบอร์โทร</label>
+      <input id="fPhone" type="tel" maxlength="20" placeholder="08x-xxx-xxxx">
+    </div>
+    <div class="field">
+      <label for="fDesc">รายละเอียดงาน *</label>
+      <textarea id="fDesc" maxlength="500" placeholder="เช่น เชื่อมซ่อมโครงเหล็กประตูรั้ว"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="fPrice">ราคา (บาท) *</label>
+        <input id="fPrice" type="number" min="0" step="1" inputmode="decimal" placeholder="0">
+      </div>
+      <div class="field">
+        <label for="fStatus">สถานะ</label>
+        <select id="fStatus" style="width:100%;padding:10px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:14px;">
+          <option value="new">รับงาน</option>
+          <option value="inprogress">กำลังทำ</option>
+          <option value="done">เสร็จแล้ว</option>
+          <option value="delivered">ส่งมอบแล้ว</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="fNote">หมายเหตุ</label>
+      <textarea id="fNote" maxlength="300" placeholder="ไม่บังคับ"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="jobModalCancel">ยกเลิก</button>
+      <button class="btn btn-primary" id="jobModalSave">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- safe DOM helper (never uses innerHTML for user data) ---------- */
+  function h(tag, attrs, children){
+    var node = document.createElement(tag);
+    attrs = attrs || {};
+    for (var k in attrs){
+      if (k === "class") node.className = attrs[k];
+      else if (k === "text") node.textContent = attrs[k];
+      else if (k.indexOf("on") === 0 && typeof attrs[k] === "function") node.addEventListener(k.slice(2), attrs[k]);
+      else node.setAttribute(k, attrs[k]);
+    }
+    (children || []).forEach(function(c){
+      if (c == null) return;
+      node.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    });
+    return node;
+  }
+
+  /* ---------- storage ---------- */
+  var DATA_KEY = "chomsuk69JobsData_v1";
+  var PIN_KEY  = "chomsuk69JobsPinHash_v1";
+  var SALT = "chomsuk69-jobs-static-salt-v1";
+
+  function loadJobs(){
+    try{
+      var raw = localStorage.getItem(DATA_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function saveJobs(jobs){
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(jobs)); }
+    catch(e){ toast("⚠️ บันทึกไม่สำเร็จ พื้นที่เก็บข้อมูลเต็มหรือถูกปิดกั้น"); }
+  }
+  var jobs = loadJobs();
+
+  /* ---------- PIN (SHA-256 hash, never stored/shown in plaintext) ---------- */
+  function sha256(text){
+    var enc = new TextEncoder().encode(SALT + ":" + text);
+    return crypto.subtle.digest("SHA-256", enc).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){
+        return b.toString(16).padStart(2, "0");
+      }).join("");
+    });
+  }
+  function getPinHash(){ return localStorage.getItem(PIN_KEY); }
+  function setPinHash(hash){ localStorage.setItem(PIN_KEY, hash); }
+
+  var FAIL_KEY = "chomsuk69JobsPinFail_v1";
+  function getFailState(){
+    try{ return JSON.parse(sessionStorage.getItem(FAIL_KEY) || "{}"); }catch(e){ return {}; }
+  }
+  function setFailState(s){ sessionStorage.setItem(FAIL_KEY, JSON.stringify(s)); }
+
+  var lockScreen = document.getElementById("lockScreen");
+  var pinInput = document.getElementById("pinInput");
+  var pinError = document.getElementById("pinError");
+  var unlockBtn = document.getElementById("unlockBtn");
+  var appEl = document.getElementById("app");
+
+  function showApp(){
+    lockScreen.style.display = "none";
+    appEl.style.display = "block";
+    sessionStorage.setItem("chomsuk69JobsUnlocked", "1");
+    render();
+  }
+
+  function tryUnlock(){
+    var fail = getFailState();
+    var now = Date.now();
+    if (fail.lockedUntil && now < fail.lockedUntil){
+      var secs = Math.ceil((fail.lockedUntil - now) / 1000);
+      pinError.textContent = "ลองผิดหลายครั้งเกินไป กรุณารออีก " + secs + " วินาที";
+      return;
+    }
+    var entered = pinInput.value.trim();
+    if (!entered){ pinError.textContent = "กรุณาใส่ PIN"; return; }
+
+    var existingHash = getPinHash();
+    var checkPromise = existingHash
+      ? sha256(entered)
+      : sha256("1234"); // ค่าเริ่มต้นก่อนตั้ง PIN ครั้งแรก
+
+    checkPromise.then(function(hash){
+      if (!existingHash){
+        // ครั้งแรก: ยอมรับเฉพาะค่าเริ่มต้น 1234 แล้วบันทึก hash จริงทันที
+        if (entered === "1234"){
+          sha256("1234").then(function(h){ setPinHash(h); showApp(); });
+          return;
+        }
+      } else if (hash === existingHash){
+        setFailState({});
+        showApp();
+        return;
+      }
+      var f = getFailState();
+      f.count = (f.count || 0) + 1;
+      if (f.count >= 5){
+        f.lockedUntil = Date.now() + 30000;
+        f.count = 0;
+        pinError.textContent = "ผิด PIN 5 ครั้ง — ล็อกชั่วคราว 30 วินาที";
+      } else {
+        pinError.textContent = "PIN ไม่ถูกต้อง (" + f.count + "/5)";
+      }
+      setFailState(f);
+      pinInput.value = "";
+      pinInput.focus();
+    });
+  }
+
+  unlockBtn.addEventListener("click", tryUnlock);
+  pinInput.addEventListener("keydown", function(e){ if (e.key === "Enter") tryUnlock(); });
+
+  document.getElementById("lockBtn").addEventListener("click", function(){
+    sessionStorage.removeItem("chomsuk69JobsUnlocked");
+    location.reload();
+  });
+
+  document.getElementById("changePinBtn").addEventListener("click", function(){
+    var current = prompt("ใส่ PIN ปัจจุบันเพื่อยืนยันตัวตน:");
+    if (current == null) return;
+    sha256(current).then(function(hash){
+      if (hash !== getPinHash()){ toast("❌ PIN ปัจจุบันไม่ถูกต้อง"); return; }
+      var np = prompt("ตั้ง PIN ใหม่ (อย่างน้อย 4 ตัว):");
+      if (np == null) return;
+      if (np.length < 4){ toast("❌ PIN ต้องมีอย่างน้อย 4 ตัว"); return; }
+      sha256(np).then(function(h){ setPinHash(h); toast("🔑 เปลี่ยน PIN แล้ว"); });
+    });
+  });
+
+  document.getElementById("menuBtn").addEventListener("click", function(){
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  });
+
+  /* ---------- toast ---------- */
+  var toastEl = document.getElementById("toast");
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2200);
+  }
+
+  /* ---------- formatting ---------- */
+  var thb = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 });
+  function money(n){ return "฿" + thb.format(n || 0); }
+  var statusLabel = { new:"รับงาน", inprogress:"กำลังทำ", done:"เสร็จแล้ว", delivered:"ส่งมอบแล้ว" };
+  var nextStatus  = { new:"inprogress", inprogress:"done", done:"delivered", delivered:null };
+  var nextLabel   = { new:"เริ่มงาน →", inprogress:"งานเสร็จ →", done:"ส่งมอบแล้ว →" };
+
+  /* ---------- stats + render ---------- */
+  var currentTab = "all";
+  var searchQuery = "";
+
+  function computeStats(){
+    var open = 0, due = 0, monthRevenue = 0;
+    var now = new Date();
+    var ym = now.getFullYear() + "-" + now.getMonth();
+    jobs.forEach(function(j){
+      if (j.status !== "delivered") open++;
+      if (!j.paid) due += (j.price || 0);
+      if (j.paid && j.paidAt){
+        var d = new Date(j.paidAt);
+        if ((d.getFullYear() + "-" + d.getMonth()) === ym) monthRevenue += (j.price || 0);
+      }
+    });
+    document.getElementById("statOpen").textContent = open;
+    document.getElementById("statDue").textContent = money(due);
+    document.getElementById("statMonth").textContent = money(monthRevenue);
+  }
+
+  function filteredJobs(){
+    return jobs
+      .filter(function(j){ return currentTab === "all" || j.status === currentTab; })
+      .filter(function(j){
+        if (!searchQuery) return true;
+        var q = searchQuery.toLowerCase();
+        return (j.customer||"").toLowerCase().indexOf(q) > -1 ||
+               (j.desc||"").toLowerCase().indexOf(q) > -1;
+      })
+      .sort(function(a,b){ return (b.updatedAt||0) - (a.updatedAt||0); });
+  }
+
+  function jobCard(j){
+    var chips = h("div", { class:"chip-row" }, [
+      h("span", { class:"chip chip-" + j.status, text: statusLabel[j.status] }),
+      h("span", { class:"chip " + (j.paid ? "chip-paid" : "chip-unpaid"), text: j.paid ? "ชำระแล้ว" : "ค้างชำระ" })
+    ]);
+
+    var actions = h("div", { class:"job-actions" });
+    if (nextStatus[j.status]){
+      actions.appendChild(h("button", { class:"btn", onclick: function(){ advanceStatus(j.id); } }, [nextLabel[j.status]]));
+    }
+    actions.appendChild(h("button", { class:"btn", onclick: function(){ togglePaid(j.id); } }, [j.paid ? "ยกเลิกชำระ" : "รับชำระแล้ว"]));
+    actions.appendChild(h("button", { class:"btn", onclick: function(){ openEdit(j.id); } }, ["แก้ไข"]));
+    actions.appendChild(h("button", { class:"btn btn-danger", onclick: function(){ removeJob(j.id); } }, ["ลบ"]));
+
+    var children = [
+      h("div", { class:"job-top" }, [
+        h("div", null, [
+          h("div", { class:"job-customer", text: j.customer || "(ไม่ระบุชื่อ)" }),
+          j.phone ? h("div", { class:"job-phone mono", text: j.phone }) : null
+        ]),
+        h("div", { class:"job-price mono", text: money(j.price) })
+      ]),
+      h("div", { class:"job-desc", text: j.desc || "" }),
+      chips,
+      actions
+    ];
+    if (j.note){
+      children.splice(2, 0, h("div", { class:"job-desc", text: "หมายเหตุ: " + j.note }));
+    }
+    return h("div", { class:"job-card" }, children);
+  }
+
+  function render(){
+    computeStats();
+    var list = document.getElementById("jobList");
+    list.textContent = "";
+    var items = filteredJobs();
+    if (!items.length){
+      list.appendChild(h("div", { class:"empty-state", text: "ยังไม่มีงานในหมวดนี้ — กดปุ่ม + เพื่อเพิ่มงานใหม่" }));
+      return;
+    }
+    items.forEach(function(j){ list.appendChild(jobCard(j)); });
+  }
+
+  /* ---------- mutations ---------- */
+  function advanceStatus(id){
+    var j = jobs.find(function(x){ return x.id === id; });
+    if (!j || !nextStatus[j.status]) return;
+    j.status = nextStatus[j.status];
+    j.updatedAt = Date.now();
+    saveJobs(jobs); render(); toast("อัปเดตสถานะแล้ว");
+  }
+  function togglePaid(id){
+    var j = jobs.find(function(x){ return x.id === id; });
+    if (!j) return;
+    j.paid = !j.paid;
+    j.paidAt = j.paid ? Date.now() : null;
+    j.updatedAt = Date.now();
+    saveJobs(jobs); render(); toast(j.paid ? "บันทึกการรับชำระแล้ว" : "ยกเลิกสถานะชำระแล้ว");
+  }
+  function removeJob(id){
+    var j = jobs.find(function(x){ return x.id === id; });
+    if (!j) return;
+    if (!confirm("ลบงานของ \"" + (j.customer || "ลูกค้ารายนี้") + "\" ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้")) return;
+    jobs = jobs.filter(function(x){ return x.id !== id; });
+    saveJobs(jobs); render(); toast("ลบงานแล้ว");
+  }
+
+  /* ---------- add/edit modal ---------- */
+  var modalBackdrop = document.getElementById("jobModalBackdrop");
+  var editingId = null;
+  var fCustomer = document.getElementById("fCustomer");
+  var fPhone = document.getElementById("fPhone");
+  var fDesc = document.getElementById("fDesc");
+  var fPrice = document.getElementById("fPrice");
+  var fStatus = document.getElementById("fStatus");
+  var fNote = document.getElementById("fNote");
+
+  function openAdd(){
+    editingId = null;
+    document.getElementById("jobModalTitle").textContent = "เพิ่มงานใหม่";
+    fCustomer.value = ""; fPhone.value = ""; fDesc.value = "";
+    fPrice.value = ""; fStatus.value = "new"; fNote.value = "";
+    modalBackdrop.classList.add("open");
+    setTimeout(function(){ fCustomer.focus(); }, 50);
+  }
+  function openEdit(id){
+    var j = jobs.find(function(x){ return x.id === id; });
+    if (!j) return;
+    editingId = id;
+    document.getElementById("jobModalTitle").textContent = "แก้ไขงาน";
+    fCustomer.value = j.customer || ""; fPhone.value = j.phone || "";
+    fDesc.value = j.desc || ""; fPrice.value = j.price || "";
+    fStatus.value = j.status || "new"; fNote.value = j.note || "";
+    modalBackdrop.classList.add("open");
+  }
+  function closeModal(){ modalBackdrop.classList.remove("open"); editingId = null; }
+
+  document.getElementById("addFab").addEventListener("click", openAdd);
+  document.getElementById("jobModalClose").addEventListener("click", closeModal);
+  document.getElementById("jobModalCancel").addEventListener("click", closeModal);
+  modalBackdrop.addEventListener("click", function(e){ if (e.target === modalBackdrop) closeModal(); });
+
+  document.getElementById("jobModalSave").addEventListener("click", function(){
+    var customer = fCustomer.value.trim().slice(0, 80);
+    var desc = fDesc.value.trim().slice(0, 500);
+    var priceNum = parseFloat(fPrice.value);
+
+    if (!customer){ toast("⚠️ กรุณาใส่ชื่อลูกค้า"); fCustomer.focus(); return; }
+    if (!desc){ toast("⚠️ กรุณาใส่รายละเอียดงาน"); fDesc.focus(); return; }
+    if (!(priceNum >= 0)){ toast("⚠️ กรุณาใส่ราคาที่ถูกต้อง"); fPrice.focus(); return; }
+
+    var payload = {
+      customer: customer,
+      phone: fPhone.value.trim().slice(0, 20),
+      desc: desc,
+      price: Math.round(priceNum),
+      status: fStatus.value,
+      note: fNote.value.trim().slice(0, 300),
+      updatedAt: Date.now()
+    };
+
+    if (editingId){
+      var j = jobs.find(function(x){ return x.id === editingId; });
+      Object.assign(j, payload);
+      if (j.status === "delivered" || j.status === "done") {} // no-op; paid stays manual
+      toast("บันทึกการแก้ไขแล้ว");
+    } else {
+      payload.id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+      payload.createdAt = Date.now();
+      payload.paid = false;
+      payload.paidAt = null;
+      jobs.push(payload);
+      toast("เพิ่มงานใหม่แล้ว");
+    }
+    saveJobs(jobs);
+    closeModal();
+    render();
+  });
+
+  /* ---------- search + tabs ---------- */
+  document.getElementById("searchInput").addEventListener("input", function(e){
+    searchQuery = e.target.value;
+    render();
+  });
+  document.getElementById("statusTabs").addEventListener("click", function(e){
+    var btn = e.target.closest(".tab");
+    if (!btn) return;
+    document.querySelectorAll(".tab").forEach(function(t){ t.classList.remove("active"); });
+    btn.classList.add("active");
+    currentTab = btn.dataset.status;
+    render();
+  });
+
+  /* ---------- backup: export / import / CSV ---------- */
+  function downloadFile(filename, content, mime){
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById("exportJsonBtn").addEventListener("click", function(){
+    var stamp = new Date().toISOString().slice(0,10);
+    downloadFile("chomsuk69-jobs-backup-" + stamp + ".json", JSON.stringify(jobs, null, 2), "application/json");
+    toast("ดาวน์โหลดไฟล์สำรองแล้ว");
+  });
+
+  document.getElementById("importJsonBtn").addEventListener("click", function(){
+    document.getElementById("importFileInput").click();
+  });
+  document.getElementById("importFileInput").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var data = JSON.parse(reader.result);
+        if (!Array.isArray(data)) throw new Error("bad format");
+        var clean = data.filter(function(j){ return j && typeof j === "object" && typeof j.customer === "string"; })
+          .map(function(j){
+            return {
+              id: String(j.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random())),
+              customer: String(j.customer || "").slice(0,80),
+              phone: String(j.phone || "").slice(0,20),
+              desc: String(j.desc || "").slice(0,500),
+              price: Math.max(0, Math.round(Number(j.price) || 0)),
+              status: ["new","inprogress","done","delivered"].indexOf(j.status) > -1 ? j.status : "new",
+              note: String(j.note || "").slice(0,300),
+              paid: !!j.paid,
+              paidAt: j.paidAt || null,
+              createdAt: Number(j.createdAt) || Date.now(),
+              updatedAt: Number(j.updatedAt) || Date.now()
+            };
+          });
+        if (!confirm("พบข้อมูล " + clean.length + " งานในไฟล์ — แทนที่ข้อมูลปัจจุบันทั้งหมดหรือไม่?")) return;
+        jobs = clean;
+        saveJobs(jobs); render();
+        toast("กู้คืนข้อมูลแล้ว");
+      }catch(err){
+        toast("❌ ไฟล์ไม่ถูกต้อง กู้คืนไม่สำเร็จ");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+
+  function csvField(v){
+    var s = String(v == null ? "" : v);
+    // กันสูตร CSV injection เวลาเปิดด้วย Excel/Sheets
+    if (/^[=+\-@]/.test(s)) s = "'" + s;
+    s = s.replace(/"/g, '""');
+    return '"' + s + '"';
+  }
+  document.getElementById("exportCsvBtn").addEventListener("click", function(){
+    var rows = [["วันที่รับงาน","ลูกค้า","เบอร์โทร","รายละเอียด","ราคา","สถานะ","ชำระเงิน","หมายเหตุ"]];
+    jobs.slice().sort(function(a,b){ return (a.createdAt||0)-(b.createdAt||0); }).forEach(function(j){
+      rows.push([
+        new Date(j.createdAt).toLocaleDateString("th-TH"),
+        j.customer, j.phone, j.desc, j.price,
+        statusLabel[j.status] || j.status,
+        j.paid ? "ชำระแล้ว" : "ค้างชำระ",
+        j.note || ""
+      ]);
+    });
+    var csv = "﻿" + rows.map(function(r){ return r.map(csvField).join(","); }).join("\r\n");
+    var stamp = new Date().toISOString().slice(0,10);
+    downloadFile("chomsuk69-jobs-" + stamp + ".csv", csv, "text/csv;charset=utf-8");
+    toast("ส่งออก CSV แล้ว");
+  });
+
+  /* ---------- boot ---------- */
+  if (sessionStorage.getItem("chomsuk69JobsUnlocked") === "1"){
+    showApp();
+  } else {
+    pinInput.focus();
+  }
+})();
+</script>
+</body>
+</html>
