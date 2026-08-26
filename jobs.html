@@ -141,6 +141,16 @@
     cursor:pointer;white-space:nowrap;
   }
   .tab.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .tabs.tabs-sub .tab{padding:6px 11px;font-size:12px;}
+
+  /* ===== Segmented control (job type) ===== */
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .seg-btn{
+    padding:10px 8px;border-radius:9px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--ink-muted);font-size:13px;font-weight:600;
+    cursor:pointer;
+  }
+  .seg-btn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
 
   /* ===== Job list ===== */
   #jobList{display:flex;flex-direction:column;gap:10px;}
@@ -284,6 +294,11 @@
         <button class="tab" data-status="done">เสร็จแล้ว</button>
         <button class="tab" data-status="delivered">ส่งมอบแล้ว</button>
       </div>
+      <div class="tabs tabs-sub" id="typeTabs">
+        <button class="tab active" data-type="all">ทุกประเภท</button>
+        <button class="tab" data-type="custom">📋 รับงานตามสั่ง</button>
+        <button class="tab" data-type="stock">🏭 ผลิตเองไว้ขาย</button>
+      </div>
     </div>
 
     <div id="jobList"></div>
@@ -312,7 +327,14 @@
       <button class="icon-btn" id="jobModalClose">✕</button>
     </div>
     <div class="field">
-      <label for="fCustomer">ชื่อลูกค้า *</label>
+      <label>ประเภทงาน</label>
+      <div class="seg" id="fTypeSeg">
+        <button type="button" class="seg-btn active" data-type="custom">📋 รับงานตามสั่ง</button>
+        <button type="button" class="seg-btn" data-type="stock">🏭 ผลิตเองไว้ขาย</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="fCustomer" id="fCustomerLabel">ชื่อลูกค้า *</label>
       <input id="fCustomer" type="text" maxlength="80" placeholder="เช่น คุณสมชาย">
     </div>
     <div class="field">
@@ -501,12 +523,22 @@
   /* ---------- formatting ---------- */
   var thb = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 });
   function money(n){ return "฿" + thb.format(n || 0); }
-  var statusLabel = { new:"รับงาน", inprogress:"กำลังทำ", done:"เสร็จแล้ว", delivered:"ส่งมอบแล้ว" };
   var nextStatus  = { new:"inprogress", inprogress:"done", done:"delivered", delivered:null };
-  var nextLabel   = { new:"เริ่มงาน →", inprogress:"งานเสร็จ →", done:"ส่งมอบแล้ว →" };
+  var statusLabelByType = {
+    custom: { new:"รับงาน",    inprogress:"กำลังทำ",   done:"เสร็จแล้ว",  delivered:"ส่งมอบแล้ว" },
+    stock:  { new:"เริ่มผลิต", inprogress:"กำลังผลิต", done:"พร้อมขาย",  delivered:"ขายแล้ว" }
+  };
+  var nextLabelByType = {
+    custom: { new:"เริ่มงาน →",   inprogress:"งานเสร็จ →",  done:"ส่งมอบแล้ว →" },
+    stock:  { new:"เริ่มผลิต →",  inprogress:"พร้อมขาย →",  done:"ขายแล้ว →" }
+  };
+  function typeOf(j){ return j.jobType === "stock" ? "stock" : "custom"; }
+  function statusLabelOf(j){ return statusLabelByType[typeOf(j)][j.status] || j.status; }
+  function nextLabelOf(j){ return nextLabelByType[typeOf(j)][j.status]; }
 
   /* ---------- stats + render ---------- */
   var currentTab = "all";
+  var currentTypeFilter = "all";
   var searchQuery = "";
 
   function computeStats(){
@@ -529,6 +561,7 @@
   function filteredJobs(){
     return jobs
       .filter(function(j){ return currentTab === "all" || j.status === currentTab; })
+      .filter(function(j){ return currentTypeFilter === "all" || typeOf(j) === currentTypeFilter; })
       .filter(function(j){
         if (!searchQuery) return true;
         var q = searchQuery.toLowerCase();
@@ -540,22 +573,24 @@
 
   function jobCard(j){
     var chips = h("div", { class:"chip-row" }, [
-      h("span", { class:"chip chip-" + j.status, text: statusLabel[j.status] }),
+      h("span", { class:"chip chip-" + j.status, text: statusLabelOf(j) }),
       h("span", { class:"chip " + (j.paid ? "chip-paid" : "chip-unpaid"), text: j.paid ? "ชำระแล้ว" : "ค้างชำระ" })
     ]);
 
     var actions = h("div", { class:"job-actions" });
     if (nextStatus[j.status]){
-      actions.appendChild(h("button", { class:"btn", onclick: function(){ advanceStatus(j.id); } }, [nextLabel[j.status]]));
+      actions.appendChild(h("button", { class:"btn", onclick: function(){ advanceStatus(j.id); } }, [nextLabelOf(j)]));
     }
     actions.appendChild(h("button", { class:"btn", onclick: function(){ togglePaid(j.id); } }, [j.paid ? "ยกเลิกชำระ" : "รับชำระแล้ว"]));
     actions.appendChild(h("button", { class:"btn", onclick: function(){ openEdit(j.id); } }, ["แก้ไข"]));
     actions.appendChild(h("button", { class:"btn btn-danger", onclick: function(){ removeJob(j.id); } }, ["ลบ"]));
 
+    var typeIcon = typeOf(j) === "stock" ? "🏭" : "📋";
+    var customerText = j.customer || (typeOf(j) === "stock" ? "สินค้าคงคลัง (ยังไม่มีผู้ซื้อ)" : "(ไม่ระบุชื่อ)");
     var children = [
       h("div", { class:"job-top" }, [
         h("div", null, [
-          h("div", { class:"job-customer", text: j.customer || "(ไม่ระบุชื่อ)" }),
+          h("div", { class:"job-customer", text: typeIcon + " " + customerText }),
           j.phone ? h("div", { class:"job-phone mono", text: j.phone }) : null
         ]),
         h("div", { class:"job-price mono", text: money(j.price) })
@@ -609,6 +644,9 @@
   /* ---------- add/edit modal ---------- */
   var modalBackdrop = document.getElementById("jobModalBackdrop");
   var editingId = null;
+  var fType = "custom";
+  var fTypeSeg = document.getElementById("fTypeSeg");
+  var fCustomerLabel = document.getElementById("fCustomerLabel");
   var fCustomer = document.getElementById("fCustomer");
   var fPhone = document.getElementById("fPhone");
   var fDesc = document.getElementById("fDesc");
@@ -616,11 +654,31 @@
   var fStatus = document.getElementById("fStatus");
   var fNote = document.getElementById("fNote");
 
+  function setFormType(type){
+    fType = type;
+    fTypeSeg.querySelectorAll(".seg-btn").forEach(function(b){
+      b.classList.toggle("active", b.dataset.type === type);
+    });
+    if (type === "stock"){
+      fCustomerLabel.textContent = "ชื่อผู้ซื้อ (กรอกภายหลังตอนขายได้)";
+      fCustomer.placeholder = "เว้นว่างได้จนกว่าจะขาย";
+    } else {
+      fCustomerLabel.textContent = "ชื่อลูกค้า *";
+      fCustomer.placeholder = "เช่น คุณสมชาย";
+    }
+  }
+  fTypeSeg.addEventListener("click", function(e){
+    var btn = e.target.closest(".seg-btn");
+    if (!btn) return;
+    setFormType(btn.dataset.type);
+  });
+
   function openAdd(){
     editingId = null;
     document.getElementById("jobModalTitle").textContent = "เพิ่มงานใหม่";
     fCustomer.value = ""; fPhone.value = ""; fDesc.value = "";
     fPrice.value = ""; fStatus.value = "new"; fNote.value = "";
+    setFormType("custom");
     modalBackdrop.classList.add("open");
     setTimeout(function(){ fCustomer.focus(); }, 50);
   }
@@ -632,6 +690,7 @@
     fCustomer.value = j.customer || ""; fPhone.value = j.phone || "";
     fDesc.value = j.desc || ""; fPrice.value = j.price || "";
     fStatus.value = j.status || "new"; fNote.value = j.note || "";
+    setFormType(typeOf(j));
     modalBackdrop.classList.add("open");
   }
   function closeModal(){ modalBackdrop.classList.remove("open"); editingId = null; }
@@ -646,11 +705,12 @@
     var desc = fDesc.value.trim().slice(0, 500);
     var priceNum = parseFloat(fPrice.value);
 
-    if (!customer){ toast("⚠️ กรุณาใส่ชื่อลูกค้า"); fCustomer.focus(); return; }
+    if (fType === "custom" && !customer){ toast("⚠️ กรุณาใส่ชื่อลูกค้า"); fCustomer.focus(); return; }
     if (!desc){ toast("⚠️ กรุณาใส่รายละเอียดงาน"); fDesc.focus(); return; }
     if (!(priceNum >= 0)){ toast("⚠️ กรุณาใส่ราคาที่ถูกต้อง"); fPrice.focus(); return; }
 
     var payload = {
+      jobType: fType,
       customer: customer,
       phone: fPhone.value.trim().slice(0, 20),
       desc: desc,
@@ -686,9 +746,17 @@
   document.getElementById("statusTabs").addEventListener("click", function(e){
     var btn = e.target.closest(".tab");
     if (!btn) return;
-    document.querySelectorAll(".tab").forEach(function(t){ t.classList.remove("active"); });
+    this.querySelectorAll(".tab").forEach(function(t){ t.classList.remove("active"); });
     btn.classList.add("active");
     currentTab = btn.dataset.status;
+    render();
+  });
+  document.getElementById("typeTabs").addEventListener("click", function(e){
+    var btn = e.target.closest(".tab");
+    if (!btn) return;
+    this.querySelectorAll(".tab").forEach(function(t){ t.classList.remove("active"); });
+    btn.classList.add("active");
+    currentTypeFilter = btn.dataset.type;
     render();
   });
 
@@ -728,6 +796,7 @@
               desc: String(j.desc || "").slice(0,500),
               price: Math.max(0, Math.round(Number(j.price) || 0)),
               status: ["new","inprogress","done","delivered"].indexOf(j.status) > -1 ? j.status : "new",
+              jobType: j.jobType === "stock" ? "stock" : "custom",
               note: String(j.note || "").slice(0,300),
               paid: !!j.paid,
               paidAt: j.paidAt || null,
@@ -755,12 +824,13 @@
     return '"' + s + '"';
   }
   document.getElementById("exportCsvBtn").addEventListener("click", function(){
-    var rows = [["วันที่รับงาน","ลูกค้า","เบอร์โทร","รายละเอียด","ราคา","สถานะ","ชำระเงิน","หมายเหตุ"]];
+    var rows = [["วันที่รับงาน","ประเภทงาน","ลูกค้า","เบอร์โทร","รายละเอียด","ราคา","สถานะ","ชำระเงิน","หมายเหตุ"]];
     jobs.slice().sort(function(a,b){ return (a.createdAt||0)-(b.createdAt||0); }).forEach(function(j){
       rows.push([
         new Date(j.createdAt).toLocaleDateString("th-TH"),
+        typeOf(j) === "stock" ? "ผลิตเองไว้ขาย" : "รับงานตามสั่ง",
         j.customer, j.phone, j.desc, j.price,
-        statusLabel[j.status] || j.status,
+        statusLabelOf(j),
         j.paid ? "ชำระแล้ว" : "ค้างชำระ",
         j.note || ""
       ]);
