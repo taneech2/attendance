@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ข้อสอบ 40 ข้อ (แนวมาตรฐานฝีมือแรงงานแห่งชาติ) — หุ่นยนต์เชื่อมอุตสาหกรรม</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#22d3ee;--cyd:#0891b2;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--pp:#a78bfa;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0a0f 0%,#0d1420 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.wrap{max-width:760px;margin:0 auto;padding:20px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* LOGIN */
+#s-login{align-items:center;justify-content:center;min-height:100vh;padding:12px}
+#s-login.active{display:flex}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px 24px;width:100%;max-width:440px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.login-emblem{font-size:44px;text-align:center;margin-bottom:6px}
+.login-h1{text-align:center;font-size:20px;font-weight:800;color:var(--cy);line-height:1.4}
+.login-sub{text-align:center;font-size:13px;color:var(--mut);margin:4px 0 18px}
+.rules-box{background:#0d1a1e;border:1px solid var(--cyd);border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.9;color:var(--cy)}
+.rules-box b{color:var(--yw)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:#aab;margin-bottom:6px}
+.field input{width:100%;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:14px}
+.field input:focus{outline:none;border-color:var(--cy)}
+.btn-primary{display:block;width:100%;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#001;border:none;border-radius:10px;padding:14px;font-size:17px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{display:block;width:100%;background:none;border:1px solid var(--line);color:var(--mut);border-radius:10px;padding:10px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;margin-top:10px}
+
+/* EXAM TOPBAR */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(10,10,15,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:16px}
+.topbar-inner{max-width:760px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.topbar h1{font-size:15px;color:var(--cy);font-weight:800}
+.topbar .sub{font-size:11px;color:var(--mut)}
+.timer{display:flex;align-items:center;gap:8px}
+.timer-num{font-size:20px;font-weight:800;color:var(--gr);font-variant-numeric:tabular-nums;background:#0d1a1e;border:1px solid var(--cyd);border-radius:8px;padding:4px 12px}
+.timer-num.warn{color:var(--yw);border-color:var(--yw)}
+.timer-num.danger{color:var(--rd);border-color:var(--rd);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn-submit{background:var(--rd);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer}
+
+/* NAVIGATOR */
+.navgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-bottom:18px}
+.navbtn{aspect-ratio:1;border-radius:6px;border:1.5px solid var(--line);background:#161622;color:var(--mut);font-size:11px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.navbtn.answered{background:rgba(34,211,238,.15);border-color:var(--cyd);color:var(--cy)}
+.navbtn.current{border-color:var(--yw);color:var(--yw);box-shadow:0 0 0 2px rgba(250,204,21,.3)}
+
+/* QUESTION CARD */
+.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px 20px;max-width:720px;margin:0 auto 20px}
+.q-badge{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:4px 12px;margin-bottom:10px;color:#001}
+.q-num{font-size:12px;color:var(--mut);margin-bottom:4px}
+.q-text{font-size:16px;font-weight:700;line-height:1.65;margin-bottom:16px;min-height:50px}
+.choices{display:grid;gap:9px;margin-bottom:18px}
+.choice-btn{display:flex;align-items:center;gap:11px;background:#161622;border:2px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;text-align:left;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;color:var(--tx);width:100%;transition:.12s}
+.choice-btn:active{transform:scale(.98)}
+.choice-ltr{width:26px;height:26px;background:var(--cyd);color:#001;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.choice-btn.sel{background:rgba(34,211,238,.12);border-color:var(--cy)}
+.choice-btn.sel .choice-ltr{background:var(--cy)}
+.nav-row{display:flex;gap:10px}
+.btn-nav{flex:1;background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:13px;font-size:14px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer}
+.btn-nav.primary{background:var(--cyd);border-color:var(--cyd);color:#001}
+.btn-nav:disabled{opacity:.4;cursor:default}
+
+/* RESULT */
+.result-emoji{font-size:56px;text-align:center;margin-bottom:6px}
+.result-score{text-align:center;font-size:34px;font-weight:800;color:var(--cy);margin-bottom:2px}
+.result-pct{text-align:center;font-size:14px;color:var(--mut);margin-bottom:20px}
+.result-who{text-align:center;font-size:14px;color:var(--tx);margin-bottom:20px}
+.sec-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:8px}
+.sec-bar-wrap{background:#1a1a26;border-radius:20px;height:10px;overflow:hidden;flex:1;margin:0 10px}
+.sec-bar{height:100%;border-radius:20px}
+.sec-label{width:130px;color:var(--mut);flex-shrink:0}
+.sec-val{width:70px;text-align:right;color:var(--tx);font-weight:700;flex-shrink:0}
+
+/* REPORT */
+.report-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:100%;overflow-x:auto}
+.report-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.report-tools input{flex:1;min-width:160px;background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--tx);font-family:'Sarabun',sans-serif;font-size:13px}
+.report-tools button{background:#1a1a26;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+table.rpt{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
+table.rpt th{text-align:left;color:var(--mut);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rpt td{padding:8px;border-bottom:1px solid #1a1a26;white-space:nowrap}
+table.rpt tr:hover td{background:#161622}
+.rpt-total{color:var(--cy);font-weight:800}
+.rpt-empty{text-align:center;color:var(--mut);padding:30px;font-size:13px}
+.rpt-cert-btn{background:var(--cyd);color:#001;border:none;border-radius:6px;padding:5px 10px;font-family:'Sarabun',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.rpt-cert-btn:active{transform:scale(.96)}
+
+/* GRADE */
+.result-grade{text-align:center;margin-bottom:16px}
+.grade-badge{display:inline-block;border-radius:20px;padding:6px 18px;font-size:15px;font-weight:800}
+.grade-badge.g4{background:rgba(34,197,94,.15);color:var(--gr);border:1.5px solid var(--gr)}
+.grade-badge.g3{background:rgba(34,211,238,.15);color:var(--cy);border:1.5px solid var(--cyd)}
+.grade-badge.g2{background:rgba(250,204,21,.15);color:var(--yw);border:1.5px solid var(--yw)}
+.grade-badge.g1{background:rgba(251,146,60,.15);color:#fb923c;border:1.5px solid #fb923c}
+.grade-badge.g0{background:rgba(244,63,94,.15);color:var(--rd);border:1.5px solid var(--rd)}
+.rpt-grade{font-weight:800}
+.rpt-grade.g4{color:var(--gr)}
+.rpt-grade.g3{color:var(--cy)}
+.rpt-grade.g2{color:var(--yw)}
+.rpt-grade.g1{color:#fb923c}
+.rpt-grade.g0{color:var(--rd)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="login-card">
+    <div class="login-emblem" id="loginEmblem">🦾</div>
+    <div class="login-h1" id="loginH1">ข้อสอบ 40 ข้อ<br>หุ่นยนต์เชื่อมอุตสาหกรรม (Robot Welding)</div>
+    <div class="login-sub" id="loginSub">แนวข้อสอบมาตรฐานฝีมือแรงงานแห่งชาติ (จำลอง)</div>
+    <div class="rules-box" id="rulesBox">
+      <!-- เติมอัตโนมัติจาก SECTIONS ด้านล่าง -->
+    </div>
+    <div class="field"><label>ชื่อ (First Name)</label><input id="fname" placeholder="กรอกชื่อ..."></div>
+    <div class="field"><label>นามสกุล (Last Name)</label><input id="lname" placeholder="กรอกนามสกุล..."></div>
+    <div class="field"><label>แผนก / ชั้นปี (Department / Class)</label><input id="dept" placeholder="เช่น ช่างเชื่อม 1/1..."></div>
+    <button class="btn-primary" onclick="startExam()">🚀 เริ่มสอบ</button>
+    <button class="btn-ghost" onclick="openReport()">📊 รายงานผลสอบ (สำหรับครู)</button>
+  </div>
+</div>
+
+<!-- EXAM -->
+<div id="s-exam" class="screen">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <h1 id="examTopbarTitle">ข้อสอบ 40 ข้อ — หุ่นยนต์เชื่อมอุตสาหกรรม</h1>
+        <div class="sub" id="examWho"></div>
+      </div>
+      <div class="timer">
+        <div class="timer-num" id="timerNum">1:00:00</div>
+        <button class="btn-submit" onclick="confirmSubmit()">ส่งข้อสอบ</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="navgrid" id="navgrid"></div>
+    <div class="quiz-card">
+      <div class="q-badge" id="qBadge"></div>
+      <div class="q-num" id="qNum"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="choices" id="qChoices"></div>
+      <div class="nav-row">
+        <button class="btn-nav" id="btnPrev" onclick="gotoQ(currentQ-1)">← ข้อก่อนหน้า</button>
+        <button class="btn-nav primary" id="btnNext" onclick="gotoQ(currentQ+1)">ข้อถัดไป →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="wrap">
+    <div class="quiz-card">
+      <div class="result-emoji" id="rEmoji">🏆</div>
+      <div class="result-score" id="rScore"></div>
+      <div class="result-pct" id="rPct"></div>
+      <div class="result-grade" id="rGrade"></div>
+      <div class="result-who" id="rWho"></div>
+      <div id="rBreakdown"></div>
+      <button class="btn-primary" id="btnCert" style="display:none;margin-top:6px" onclick="downloadCertificate()">🎓 ดาวน์โหลดใบประกาศ</button>
+      <button class="btn-primary" onclick="location.reload()" style="margin-top:10px">🔄 กลับหน้าแรก</button>
+    </div>
+  </div>
+</div>
+<canvas id="certCanvas" width="1400" height="990" style="display:none"></canvas>
+
+<!-- REPORT -->
+<div id="s-report" class="screen">
+  <div class="wrap">
+    <div class="topbar" style="position:static;margin-bottom:16px;padding:0">
+      <div class="topbar-inner" style="padding:0">
+        <h1 style="font-size:18px">📊 รายงานผลสอบ — หุ่นยนต์เชื่อมอุตสาหกรรม</h1>
+        <button class="btn-nav" style="flex:none" onclick="backToLogin()">← กลับหน้าแรก</button>
+      </div>
+    </div>
+    <div class="report-card">
+      <div class="report-tools">
+        <input id="rptFilter" placeholder="ค้นหาชื่อ / แผนก..." oninput="renderReport()">
+        <button onclick="loadReport()">🔄 รีเฟรช</button>
+        <button onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <div id="rptTableWrap"><div class="rpt-empty">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const EXAM_EMOJI = '🦾';
+const SUBJECT_NAME = 'หุ่นยนต์เชื่อมอุตสาหกรรม (Robot Welding – KUKA)';
+const SUBJECT_CODE = 'แนวข้อสอบมาตรฐานฝีมือแรงงานแห่งชาติ (จำลอง)';
+const CERT_BODY_LINE2 = 'หุ่นยนต์เชื่อมอุตสาหกรรม (Robot Welding) — แนวข้อสอบมาตรฐานฝีมือแรงงานแห่งชาติ';
+const DOWNLOAD_PREFIX = 'robot-welding-national';
+
+const DB_BASE = 'https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app';
+const RESULTS_URL = DB_BASE + '/examResults/robot_welding_national_2569.json';
+const REPORT_PIN = '2569';
+const EXAM_SECONDS = 60 * 60; // 1 ชั่วโมง
+
+const SIGNATURE_PNG_B64 = "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";
+
+// ═══════════════════════════════════════════════════════════════
+// SECTIONS — ธนาคารข้อสอบ 40 ข้อ (5 หัวข้อ x 8 ข้อ)
+// ═══════════════════════════════════════════════════════════════
+const COMPONENT_Q = [
+  {q:"ส่วนประกอบหลักของหุ่นยนต์อุตสาหกรรมตามคู่มือ KUKA Robot Operation มีกี่ส่วน อะไรบ้าง?", c:["4 ส่วน คือ แขนกล (Manipulator) ตู้ควบคุม (Robot Controller) รีโมทสอนงาน (Teach Pendant) และสายเชื่อมต่อ (Connecting Cables)","2 ส่วน คือ แขนกลกับสายไฟเท่านั้น","3 ส่วน คือ มอเตอร์ เกียร์ และเซนเซอร์เท่านั้น","5 ส่วน รวมคอมพิวเตอร์ตั้งโต๊ะด้วย"], a:0},
+  {q:"\"Manipulator\" ในหุ่นยนต์อุตสาหกรรมเชื่อม ทำหน้าที่อะไร?", c:["ทำหน้าที่เหมือนแขนมนุษย์ เคลื่อนที่พาหัวเชื่อมหรืออุปกรณ์ปลายแขนไปยังตำแหน่งต่างๆ อย่างแม่นยำ","ควบคุมสัญญาณไฟฟ้าทั้งหมดของระบบ","เก็บโปรแกรมและข้อมูลพิกัดของหุ่นยนต์เพียงอย่างเดียว","จ่ายแก๊สปกป้องแนวเชื่อมเท่านั้น"], a:0},
+  {q:"\"Robot Controller\" (ตู้ควบคุมหุ่นยนต์) ทำหน้าที่หลักคืออะไร?", c:["ควบคุมมอเตอร์และสัญญาณรับส่งต่างๆ รวมถึงเชื่อมต่อกับอุปกรณ์ความปลอดภัยและสั่งการจากภายนอกเช่น PLC","เป็นเพียงกล่องใส่สายไฟ ไม่มีวงจรควบคุมใดๆ","ทำหน้าที่จ่ายแก๊สปกป้องแนวเชื่อมเพียงอย่างเดียว","ใช้เก็บอะไหล่สำรองของหุ่นยนต์"], a:0},
+  {q:"\"Teach Pendant\" หรือที่เรียกกันว่า Smart PAD ใช้สำหรับ?", c:["เป็นอุปกรณ์เชื่อมต่อผู้ใช้กับหุ่นยนต์ เพื่อควบคุม บังคับ สอนโปรแกรม และตั้งค่าต่างๆ","ใช้จ่ายไฟฟ้าแรงสูงให้มอเตอร์โดยตรง","เป็นอุปกรณ์วัดกระแสไฟเชื่อมเพียงอย่างเดียว","ใช้แทนตู้ควบคุมหุ่นยนต์ได้ทั้งหมด"], a:0},
+  {q:"Connecting Cables ในระบบหุ่นยนต์เชื่อมมีหน้าที่อะไร?", c:["รับส่งสัญญาณควบคุมและจ่ายไฟฟ้าจากตู้ควบคุมไปยังแขนกล","ใช้ยึดแขนกลกับพื้นเท่านั้น","เป็นท่อส่งแก๊สปกป้องแนวเชื่อมเพียงอย่างเดียว","ใช้ระบายความร้อนของตู้ควบคุม"], a:0},
+  {q:"KUKA KR CYBERTECH เป็นหุ่นยนต์ในกลุ่มใด และมีจุดเด่นตามข้อมูลผู้ผลิตคืออะไร?", c:["กลุ่มหุ่นยนต์เชื่อมความแม่นยำสูง (Repeatability ประมาณ 0.04 มม.) มีข้อมือกลวง (Hollow Wrist) เพื่อร้อยสายเชื่อมภายใน","กลุ่มหุ่นยนต์ยกของหนักเกิน 500 กก. เท่านั้น","กลุ่มหุ่นยนต์สำหรับงานพ่นสีเพียงอย่างเดียว","กลุ่มหุ่นยนต์ที่ไม่สามารถหมุนข้อมือได้"], a:0},
+  {q:"เหตุผลที่สายเชื่อม (cable) ของ KR CYBERTECH ถูกออกแบบให้ร้อยผ่านข้อมือกลวง (Hollow Wrist) มีประโยชน์อย่างไร?", c:["ลดพื้นที่กีดขวางและป้องกันสายพันกันขณะแขนกลหมุน ทำให้ทำงานในพื้นที่แคบได้ดีขึ้น","เพื่อให้มองเห็นสายไฟจากภายนอกได้ชัดเจนขึ้น","เพื่อลดน้ำหนักหุ่นยนต์ลงครึ่งหนึ่ง","ไม่มีผลใดๆ ต่อการทำงาน"], a:0},
+  {q:"ตัวเลข \"Reach\" ในตารางสเปกหุ่นยนต์ เช่น KR16 R2010 หมายถึงอะไร?", c:["ระยะเอื้อมสูงสุดของแขนกล (มิลลิเมตร) จากจุดศูนย์กลางฐาน","น้ำหนักสูงสุดที่ยกได้ (กิโลกรัม)","ความเร็วสูงสุดของแกนที่ 1","แรงดันไฟฟ้าที่ตู้ควบคุมใช้งาน"], a:0},
+];
+
+const SAFETY_Q = [
+  {q:"หลักการพื้นฐานด้านความปลอดภัยที่สำคัญที่สุดเมื่อทำงานกับหุ่นยนต์อุตสาหกรรมคือข้อใด?", c:["หุ่นยนต์มีแรงและความเร็วมากกว่ามนุษย์เสมอ จึงต้องไม่ประมาทแม้หุ่นยนต์จะดูมีขนาดเล็ก","หุ่นยนต์มีเซนเซอร์ตรวจจับคนอยู่แล้วจึงไม่มีอันตราย","หุ่นยนต์ที่มีขนาดเล็กไม่จำเป็นต้องมีรั้วกั้น","ผู้ปฏิบัติงานสามารถเข้าไปในพื้นที่ทำงานได้ตลอดเวลาที่ระบบทำงาน"], a:0},
+  {q:"\"รั้วนิรภัย\" (Safety Fence) รอบพื้นที่ทำงานหุ่นยนต์มีวัตถุประสงค์หลักคืออะไร?", c:["กันไม่ให้บุคคลเข้าไปในรัศมีทำงานของหุ่นยนต์ขณะทำงานโดยไม่ได้รับอนุญาต","ใช้เป็นที่แขวนอุปกรณ์เชื่อมเท่านั้น","ใช้กันเสียงรบกวนจากภายนอกเพียงอย่างเดียว","ใช้ป้องกันฝุ่นไม่ให้เข้าตู้ควบคุม"], a:0},
+  {q:"เซนเซอร์ตรวจจับการปิด-เปิดประตู (Door Sensor) ที่รั้วนิรภัยทำงานอย่างไรเพื่อความปลอดภัย?", c:["เมื่อประตูถูกเปิดขณะหุ่นยนต์ทำงาน ระบบจะสั่งหยุดหรือตัดการทำงานของหุ่นยนต์ทันที","เปิดไฟส่องสว่างในพื้นที่ทำงานเท่านั้น","นับจำนวนคนที่เข้าออกเพื่อบันทึกสถิติ","ไม่มีผลต่อการทำงานของหุ่นยนต์"], a:0},
+  {q:"ปุ่มหยุดฉุกเฉิน (Emergency Stop) ควรติดตั้งอย่างน้อยกี่ตำแหน่ง และเพราะเหตุใด?", c:["อย่างน้อย 2 ตำแหน่ง คือ ที่ใกล้ตัวผู้ใช้งานและที่รีโมท เพื่อให้หยุดหุ่นยนต์ได้ทันทีไม่ว่าผู้ควบคุมจะอยู่จุดใด","มีเพียงตำแหน่งเดียวที่ตู้ควบคุมเท่านั้น","ไม่จำเป็นต้องติดตั้งปุ่มหยุดฉุกเฉินหากมีรั้วนิรภัยแล้ว","ติดตั้งเฉพาะที่ประตูทางเข้าโรงงานเท่านั้น"], a:0},
+  {q:"อุปกรณ์กันการหมุนเกินองศา (Anti-rotation / Overtravel Device) มีหน้าที่อะไร?", c:["จำกัดไม่ให้แกนหุ่นยนต์หมุนเกินขอบเขตที่ปลอดภัยจนอาจชนอุปกรณ์หรือโครงสร้างรอบข้าง","เพิ่มความเร็วในการหมุนของแกนหุ่นยนต์","วัดอุณหภูมิของมอเตอร์แต่ละแกน","แปลงกระแสไฟฟ้าให้กับหัวเชื่อม"], a:0},
+  {q:"เพราะเหตุใดจึงต้องมี \"อุปกรณ์ควบคุมด้านความปลอดภัย\" (Safety Control) แยกต่างหากจากตู้ควบคุมหลักของหุ่นยนต์?", c:["เพื่อให้ระบบความปลอดภัยทำงานเป็นอิสระและเชื่อถือได้ แม้ระบบควบคุมหลักจะเกิดข้อผิดพลาด","เพื่อลดต้นทุนสายไฟ","เพื่อให้ดูสวยงามเท่านั้น","เพราะกฎหมายไม่อนุญาตให้รวมกัน"], a:0},
+  {q:"ข้อใดคือข้อควรระวังที่ถูกต้องก่อนเข้าไปในพื้นที่ทำงานของหุ่นยนต์เพื่อซ่อมบำรุง?", c:["ต้องกดปุ่มหยุดฉุกเฉินหรือตัดโหมดการทำงานอัตโนมัติ และตรวจสอบว่าหุ่นยนต์หยุดสนิทก่อนเข้าไปทุกครั้ง","สามารถเข้าไปได้ทันทีถ้าเห็นว่าหุ่นยนต์เคลื่อนที่ช้า","ไม่จำเป็นต้องแจ้งใครก่อนเข้าไปในพื้นที่","ใช้เพียงการมองด้วยตาว่าหุ่นยนต์ไม่ขยับก็เพียงพอโดยไม่ต้องกดปุ่มใดๆ"], a:0},
+  {q:"เหตุใดโหมด T2 และ AUT จึงต้องมีมาตรการความปลอดภัยเข้มงวดกว่าโหมด T1?", c:["เพราะหุ่นยนต์สามารถเคลื่อนที่ด้วยความเร็วสูงสุด 100% ได้ในโหมดเหล่านี้ จึงเสี่ยงอันตรายมากกว่า","เพราะโหมด T2 และ AUT ใช้ไฟฟ้าน้อยกว่าจึงปลอดภัยกว่าอยู่แล้ว","เพราะโหมด T1 เป็นโหมดที่อันตรายที่สุดเสมอ","ไม่มีความแตกต่างด้านความปลอดภัยระหว่างโหมดต่างๆ"], a:0},
+];
+
+const COORD_Q = [
+  {q:"การขยับแขนกลแบบ \"Axis\" หมายถึงอะไร และเหมาะกับกรณีใด?", c:["เคลื่อนที่โดยหมุนทีละข้อต่อ (แกน) อิสระต่อกัน เหมาะกับการตั้งค่าเบื้องต้นหรือหุ่นยนต์ที่ยังไม่ได้ทำ Mastering","เคลื่อนที่ตามแนวแกน X Y Z ของโลกเท่านั้น","เคลื่อนที่ตามทิศทางของหัวเชื่อมเท่านั้น","ใช้ได้เฉพาะตอนเชื่อมงานจริงเท่านั้น"], a:0},
+  {q:"ระบบพิกัด \"World\" ($WORLD) มีจุดกำเนิด (origin) อยู่ที่ใด?", c:["คงที่อยู่ที่ฐานของหุ่นยนต์ (robot base) ไม่เปลี่ยนแปลงตามการเคลื่อนที่","อยู่ที่ปลายหัวเชื่อมเสมอ","อยู่ที่ชิ้นงานที่กำลังเชื่อม","เปลี่ยนตำแหน่งไปเรื่อยๆ ตามการเคลื่อนที่ของแขนกล"], a:0},
+  {q:"ระบบพิกัด \"Tool\" ($TOOL) เหมาะสำหรับการใช้งานลักษณะใด?", c:["เคลื่อนที่ไปตามแนวทิศทางของหัวเชื่อม/อุปกรณ์ปลายแขนที่ติดตั้งไว้ เช่น เดินหน้าตรงตามแนวลวดเชื่อมที่เอียงทำมุม","เคลื่อนที่ตามพิกัดโลกเสมอไม่ว่าจะติดตั้งอุปกรณ์ใด","ใช้ได้เฉพาะการหมุนแกนที่ 1 เท่านั้น","ไม่เกี่ยวข้องกับการเชื่อมงาน"], a:0},
+  {q:"ระบบพิกัด \"Base\" ($BASE) มีประโยชน์อย่างไรในงานเชื่อม?", c:["ใช้อ้างอิงตามระนาบของชิ้นงานที่บันทึกไว้ ทำให้ควบคุมทิศทางการเคลื่อนที่ให้สัมพันธ์กับชิ้นงานได้ง่ายขึ้น เช่น เมื่อวางชิ้นงานเอียงมุม","ใช้ได้เฉพาะตอนปิดเครื่องเท่านั้น","ไม่มีผลต่อการขยับแขนกล","ใช้แทนระบบ Axis ได้ในทุกกรณีโดยไม่มีข้อแตกต่าง"], a:0},
+  {q:"\"Jog Override\" ที่ปรากฏบน Smart PAD ใช้สำหรับตั้งค่าใด?", c:["ปรับเปอร์เซ็นต์ความเร็วในการขยับแขนกลด้วยมือ (jog) ให้เหมาะกับความชำนาญของผู้ใช้และความปลอดภัย","ปรับความสว่างของหน้าจอ","ตั้งรหัสผ่านเข้าใช้งานหุ่นยนต์","ปรับปริมาณแก๊สปกป้องแนวเชื่อม"], a:0},
+  {q:"Enabling Switch (สวิตช์นิรภัยสีเทา) บน Smart PAD ทำงานอย่างไร?", c:["ต้องกดค้างไว้ในตำแหน่งกลาง (ไฟเขียวติด) หุ่นยนต์จึงจะเคลื่อนที่ได้ หากปล่อยมือหรือกดแรงเกินไปหุ่นยนต์จะหยุดทันที","กดครั้งเดียวแล้วปล่อยได้ หุ่นยนต์จะเคลื่อนที่ต่อเนื่องไปเรื่อยๆ","ใช้สำหรับเปิด-ปิดไฟหน้าจอเท่านั้น","ไม่มีผลต่อการเคลื่อนที่ของหุ่นยนต์"], a:0},
+  {q:"\"6D Mouse\" (Space Mouse) บนรีโมทหุ่นยนต์มีข้อดีเหนือการใช้ Jog Keys ทีละแกนอย่างไร?", c:["สามารถควบคุมการเคลื่อนที่และหมุนของหุ่นยนต์ได้พร้อมกันหลายทิศทางในการบังคับครั้งเดียว ทำให้ขยับได้เป็นธรรมชาติและรวดเร็วกว่า","ใช้แทนปุ่มหยุดฉุกเฉินได้","ควบคุมได้เฉพาะแกนที่ 1 เท่านั้น","ไม่สามารถใช้ร่วมกับระบบพิกัด World หรือ Tool ได้"], a:0},
+  {q:"หากต้องการขยับหุ่นยนต์ที่ยัง \"ไม่ได้ทำ Mastering\" (ยังไม่ทราบตำแหน่งอ้างอิงของแกน) ควรเลือกโหมดขยับแบบใด?", c:["Axis เพราะเป็นวิธีเดียวที่สามารถขยับหุ่นยนต์ที่ยังไม่ได้ Mastering ได้อย่างปลอดภัย","World เพราะสะดวกที่สุดในทุกกรณี","Tool เพราะมีความแม่นยำสูงสุด","Base เพราะไม่ต้องอ้างอิงกับแกนใดเลย"], a:0},
+];
+
+const MODE_Q = [
+  {q:"โหมด \"T1\" ของหุ่นยนต์ใช้สำหรับวัตถุประสงค์ใด?", c:["ลดความเร็วเพื่อใช้ในการตั้งโปรแกรมใหม่ ทดสอบโปรแกรม และตั้งค่าต่างๆ อย่างปลอดภัย","สั่งงานหุ่นยนต์ด้วยความเร็วสูงสุด 100% โดยไม่ต้องกำ Enabling Switch","ใช้เฉพาะตอนสั่งงานจากอุปกรณ์ภายนอกอย่าง PLC เท่านั้น","ใช้เฉพาะตอนปิดเครื่องหุ่นยนต์"], a:0},
+  {q:"ข้อแตกต่างสำคัญระหว่างโหมด T2 กับ AUT คือข้อใด?", c:["T2 ต้องกำ Enabling Switch ขณะทดสอบโปรแกรมด้วยความเร็วสูงสุด แต่ AUT ไม่ต้องกำ Enabling Switch ขณะทดสอบ","T2 ใช้ความเร็วต่ำกว่า AUT เสมอ","AUT ใช้ได้เฉพาะตอนเขียนโปรแกรมใหม่เท่านั้น","ไม่มีความแตกต่างกัน"], a:0},
+  {q:"โหมด \"EXT\" เหมาะสำหรับสถานการณ์ใด?", c:["เมื่อต้องการให้อุปกรณ์ภายนอก เช่น PLC เป็นผู้สั่งการทำงานของหุ่นยนต์ด้วยความเร็วสูงสุดได้ถึง 100%","เมื่อต้องการตั้งโปรแกรมใหม่ด้วยความเร็วต่ำ","เมื่อต้องการปิดหุ่นยนต์ทั้งระบบ","เมื่อต้องการทำความสะอาดหัวเชื่อมเท่านั้น"], a:0},
+  {q:"ขั้นตอนแรกในการสร้างโปรแกรมใหม่บนตู้ควบคุมหุ่นยนต์ (ตามคู่มือ) คือข้อใด?", c:["เลือกโหมดสวิตช์อยู่ที่ T1 แล้วเข้าเมนู Navigator เลือก New เพื่อสร้างไฟล์โปรแกรมใหม่","เข้าโหมด AUT แล้วกดปุ่มหยุดฉุกเฉินทันที","ถอดปลั๊กตู้ควบคุมแล้วเสียบใหม่","ปิดหน้าจอ Smart PAD ก่อนทุกครั้ง"], a:0},
+  {q:"การเคลื่อนที่แบบ PTP (Point to Point) ในการเขียนโปรแกรมหุ่นยนต์มีลักษณะอย่างไร?", c:["หุ่นยนต์เคลื่อนที่จากจุดหนึ่งไปอีกจุดหนึ่งด้วยเส้นทางที่เร็วที่สุดของแต่ละแกน โดยไม่รับประกันว่าเส้นทางจะเป็นเส้นตรง","หุ่นยนต์เคลื่อนที่เป็นเส้นตรงเสมอระหว่างสองจุด","หุ่นยนต์เคลื่อนที่เป็นส่วนโค้งเสมอ","ใช้ได้เฉพาะกับการเชื่อมมุมโค้งเท่านั้น"], a:0},
+  {q:"การเคลื่อนที่แบบ LIN (Linear) แตกต่างจาก PTP อย่างไร?", c:["LIN เคลื่อนที่เป็นเส้นตรงระหว่างจุดเริ่มต้นกับจุดปลายเสมอ ต่างจาก PTP ที่ไม่รับประกันเส้นทางเป็นเส้นตรง","LIN เร็วกว่า PTP เสมอในทุกกรณี","LIN ใช้ได้เฉพาะแกนที่ 6 เท่านั้น","ไม่มีความแตกต่างระหว่าง LIN กับ PTP"], a:0},
+  {q:"คำสั่ง \"ArcON\" ในระบบ KUKA.ArcTech เกี่ยวข้องกับงานเชื่อมอย่างไร?", c:["ใช้สั่งเริ่มต้นการอาร์กเชื่อม (จุดอาร์ก) ณ ตำแหน่งที่กำหนดในโปรแกรม","ใช้สั่งปิดเครื่องหุ่นยนต์ทั้งระบบ","ใช้สั่งเปลี่ยนโหมดการทำงานเป็น T1","ใช้สั่งเรียกคีย์บอร์ดเสมือนบนหน้าจอ"], a:0},
+  {q:"คำสั่ง \"Weaving\" ในโปรแกรมเชื่อมด้วยหุ่นยนต์หมายถึงการทำงานลักษณะใด?", c:["การสั่งให้หัวเชื่อมส่ายไปมาเป็นแนวตามที่กำหนดขณะเดินแนวเชื่อม เพื่อให้แนวเชื่อมกว้างและครอบคลุมมากขึ้น","การสั่งหยุดการเชื่อมทันที","การสั่งเปลี่ยนลวดเชื่อมอัตโนมัติ","การสั่งพ่นสีป้องกันสนิม"], a:0},
+];
+
+const TCP_Q = [
+  {q:"TCP (Tool Center Point) ในงานหุ่นยนต์เชื่อมหมายถึงตำแหน่งใด?", c:["จุดอ้างอิงที่ปลายหัวเชื่อมหรือปลายอุปกรณ์ที่ติดตั้งกับแขนกล ซึ่งใช้เป็นจุดควบคุมหลักในการเขียนโปรแกรม","จุดศูนย์กลางของฐานหุ่นยนต์","จุดที่ตู้ควบคุมติดตั้งอยู่","จุดกึ่งกลางของชิ้นงานเสมอ"], a:0},
+  {q:"เหตุใดจึงต้องทำการตั้งศูนย์ปืนเชื่อม (TCP Calibration) ใหม่หลังเกิดการชน (Collision)?", c:["เพราะตำแหน่งปลายปืนเชื่อมอาจเปลี่ยนไปจากเดิม ทำให้พิกัดอ้างอิงคลาดเคลื่อนและโปรแกรมเดิมทำงานผิดตำแหน่ง","เพราะกฎหมายบังคับให้ทำทุกสัปดาห์โดยไม่มีเหตุผลทางเทคนิค","เพราะจะทำให้หุ่นยนต์เร็วขึ้น","ไม่มีความจำเป็นต้องตั้งศูนย์ใหม่หลังการชน"], a:0},
+  {q:"วิธี \"XYZ 4-Point Method\" ในการตั้งศูนย์ปืนเชื่อมมีหลักการอย่างไร?", c:["บันทึกตำแหน่งปลายปืนเชื่อม 4 จุดที่ทำมุมต่างกัน แล้วให้ระบบคำนวณหาตำแหน่งจุดอ้างอิง TCP","วัดระยะห่างจากพื้นถึงหัวเชื่อมเพียงจุดเดียว","ใช้สายวัดขนาดวัดความยาวปืนเชื่อมด้วยมือ","ใช้ได้เฉพาะกับหุ่นยนต์ที่ไม่มีหัวเชื่อมเท่านั้น"], a:0},
+  {q:"วิธี \"ABC World Method\" ในการตั้งค่าเครื่องมือ (Tool) แตกต่างจาก XYZ 4-Point อย่างไร?", c:["ใช้สำหรับกำหนดทิศทางการหมุนและการบิดของ TCP (แนวแกนของปืนเชื่อม) ซึ่งสำคัญมากสำหรับงานเชื่อมแบบส่าย (Weaving) ไม่ใช่แค่หาตำแหน่ง","ใช้หาตำแหน่ง TCP เพียงอย่างเดียวเหมือนกันทุกประการกับ XYZ 4-Point","ใช้ได้เฉพาะแกน A1 เท่านั้น","ไม่เกี่ยวข้องกับทิศทางของปืนเชื่อมเลย"], a:0},
+  {q:"หากไม่ได้ตั้งค่า ABC World Method อย่างถูกต้องก่อนเชื่อมแบบส่าย (Weaving) จะเกิดผลอย่างไร?", c:["แนวการส่ายเชื่อมอาจผิดทิศทางและปรับตั้งแนวเชื่อมได้ยากกว่าปกติ","หุ่นยนต์จะหยุดทำงานทันทีโดยอัตโนมัติ","ไม่มีผลกระทบใดๆ ต่องานเชื่อม","ตู้ควบคุมจะรีเซ็ตโปรแกรมทั้งหมดอัตโนมัติ"], a:0},
+  {q:"จากตารางสเปกหุ่นยนต์ตระกูล KR CYBERTECH รุ่น \"KR16 R2010\" มีระยะเอื้อม (Reach) และน้ำหนักบรรทุก (Payload) ตามข้อใด?", c:["ระยะเอื้อม 2,010 มม. รับน้ำหนักได้ 16 กก.","ระยะเอื้อม 1,610 มม. รับน้ำหนักได้ 20 กก.","ระยะเอื้อม 1,820 มม. รับน้ำหนักได้ 6 กก.","ระยะเอื้อม 2,101 มม. รับน้ำหนักได้ 8 กก."], a:0},
+  {q:"ระบบสื่อสาร EtherCAT ที่เชื่อมต่อกับโมดูล I/O (เช่น ของ Beckhoff) ในระบบหุ่นยนต์เชื่อมมีประโยชน์อย่างไร?", c:["ช่วยให้รับส่งสัญญาณควบคุมอุปกรณ์ภายนอก เช่น เซนเซอร์และวาล์วต่างๆ ได้รวดเร็วและแม่นยำผ่านเครือข่ายเดียว","ใช้จ่ายไฟฟ้าแรงสูงให้กับมอเตอร์แขนกลโดยตรง","ใช้แทนที่ตู้ควบคุมหุ่นยนต์ได้ทั้งหมด","เป็นเพียงสายไฟที่ไม่มีการรับส่งข้อมูลใดๆ"], a:0},
+  {q:"เหตุใดค่า \"ความสามารถในการทำซ้ำ\" (Repeatability) เช่น 0.04 มม. ของ KR CYBERTECH จึงสำคัญต่อคุณภาพงานเชื่อม?", c:["ยิ่งค่าความคลาดเคลื่อนต่ำ หุ่นยนต์ยิ่งเดินแนวเชื่อมซ้ำตำแหน่งเดิมได้แม่นยำ ทำให้แนวเชื่อมสม่ำเสมอในการผลิตจำนวนมากโดยไม่ต้องแก้ไขโปรแกรมบ่อย","ค่านี้ไม่มีผลต่อคุณภาพงานเชื่อมเลย","ยิ่งค่าตัวเลขมากยิ่งแม่นยำกว่า","ใช้วัดความเร็วสูงสุดของหุ่นยนต์เท่านั้น"], a:0},
+];
+
+const SECTIONS = [
+  {key:'component', label:'ส่วนประกอบหุ่นยนต์', color:'#60a5fa', list: COMPONENT_Q},
+  {key:'safety', label:'ความปลอดภัย', color:'#fb923c', list: SAFETY_Q},
+  {key:'coord', label:'ระบบพิกัด/การขยับแขนกล', color:'#22c55e', list: COORD_Q},
+  {key:'mode', label:'โหมดการทำงาน/โปรแกรม', color:'#a78bfa', list: MODE_Q},
+  {key:'tcp', label:'TCP/สเปกหุ่นยนต์', color:'#f472b6', list: TCP_Q},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('loginEmblem').textContent = EXAM_EMOJI;
+document.getElementById('loginH1').innerHTML = `ข้อสอบ 40 ข้อ<br>${SUBJECT_NAME}`;
+document.getElementById('loginSub').textContent = SUBJECT_CODE;
+document.getElementById('examTopbarTitle').textContent = `ข้อสอบ 40 ข้อ — ${SUBJECT_NAME}`;
+
+// ═══════════════════════════════════════════════════════════════
+// ENGINE (ระบบล็อกอิน, จับเวลา, สุ่มข้อ/ตัวเลือก, ตัดเกรด, ใบประกาศ, รายงานผล — ใช้ร่วมกับวิชาอื่น)
+// ═══════════════════════════════════════════════════════════════
+const MASTER_QUESTIONS = SECTIONS.flatMap(s => s.list.map(q => ({...q, sec: s.key, secTH: s.label, color: s.color})));
+const N = MASTER_QUESTIONS.length;
+const PT_PER_Q = 200 / N;
+const TOTAL_TOPICS = SECTIONS.length;
+
+document.getElementById('rulesBox').innerHTML = `
+  • ข้อสอบทั้งหมด <b>${N} ข้อ</b> (${TOTAL_TOPICS} หัวข้อ)<br>
+  • คะแนนเต็ม <b>200 คะแนน</b><br>
+  • เวลาสอบ <b>${(EXAM_SECONDS/3600).toFixed(0)} ชั่วโมง</b> — หมดเวลาระบบจะส่งข้อสอบให้อัตโนมัติ<br>
+  • สอบเสร็จ ระบบแสดงผลคะแนนทันที`;
+
+function shuffled(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function buildExamQuestions(){
+  const out = [];
+  SECTIONS.forEach(({key, label, color, list})=>{
+    shuffled(list).forEach(q=>{
+      const order = shuffled([0,1,2,3]);
+      out.push({
+        q: q.q,
+        c: order.map(origIdx=>q.c[origIdx]),
+        a: order.indexOf(q.a),
+        sec: key, secTH: label, color,
+      });
+    });
+  });
+  return out;
+}
+let examQuestions = MASTER_QUESTIONS;
+
+function gradeOf(pct){
+  if(pct >= 80) return {n:4, label:'เกรด 4', pass:true};
+  if(pct >= 70) return {n:3, label:'เกรด 3', pass:true};
+  if(pct >= 60) return {n:2, label:'เกรด 2', pass:true};
+  if(pct >= 50) return {n:1, label:'เกรด 1', pass:true};
+  return {n:0, label:'เกรด 0 (ไม่ผ่าน)', pass:false};
+}
+
+let student = null;
+let answers = new Array(N).fill(-1);
+let currentQ = 0;
+let timeLeft = EXAM_SECONDS;
+let timerInterval = null;
+let submitted = false;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startExam(){
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const dept = document.getElementById('dept').value.trim();
+  if(!fname || !lname || !dept){ alert('กรุณากรอก ชื่อ นามสกุล และแผนก ให้ครบ'); return; }
+  student = {fname, lname, dept};
+  document.getElementById('examWho').textContent = `${fname} ${lname} — ${dept}`;
+  examQuestions = buildExamQuestions();
+  buildNavGrid();
+  gotoQ(0);
+  show('s-exam');
+  timeLeft = EXAM_SECONDS;
+  updateTimerDisplay();
+  timerInterval = setInterval(tick, 1000);
+  window.addEventListener('beforeunload', beforeUnload);
+}
+
+function beforeUnload(e){
+  if(!submitted){ e.preventDefault(); e.returnValue=''; }
+}
+
+function tick(){
+  timeLeft--;
+  updateTimerDisplay();
+  if(timeLeft <= 0){ doSubmit(); }
+}
+
+function updateTimerDisplay(){
+  const h = Math.floor(timeLeft/3600), m = Math.floor((timeLeft%3600)/60), s = timeLeft%60;
+  const el = document.getElementById('timerNum');
+  el.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('warn', timeLeft <= 600 && timeLeft > 120);
+  el.classList.toggle('danger', timeLeft <= 120);
+}
+
+function buildNavGrid(){
+  const grid = document.getElementById('navgrid');
+  grid.innerHTML = '';
+  for(let i=0;i<N;i++){
+    const b = document.createElement('button');
+    b.className = 'navbtn';
+    b.id = 'nav'+i;
+    b.textContent = i+1;
+    b.onclick = ()=>gotoQ(i);
+    grid.appendChild(b);
+  }
+}
+function refreshNavGrid(){
+  for(let i=0;i<N;i++){
+    const b = document.getElementById('nav'+i);
+    b.classList.toggle('answered', answers[i] !== -1);
+    b.classList.toggle('current', i === currentQ);
+  }
+}
+
+function gotoQ(i){
+  if(i<0 || i>=N) return;
+  currentQ = i;
+  const item = examQuestions[i];
+  const badge = document.getElementById('qBadge');
+  badge.textContent = item.secTH;
+  badge.style.background = item.color;
+  document.getElementById('qNum').textContent = `ข้อที่ ${i+1} / ${N}`;
+  document.getElementById('qText').textContent = item.q;
+  const wrap = document.getElementById('qChoices');
+  wrap.innerHTML = '';
+  const letters = ['ก','ข','ค','ง'];
+  item.c.forEach((choice, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (answers[i]===idx ? ' sel' : '');
+    btn.innerHTML = `<span class="choice-ltr">${letters[idx]}</span><span>${choice}</span>`;
+    btn.onclick = ()=>{ answers[i]=idx; gotoQ(i); };
+    wrap.appendChild(btn);
+  });
+  document.getElementById('btnPrev').disabled = (i===0);
+  document.getElementById('btnNext').textContent = (i===N-1) ? '✓ ไปหน้าส่งข้อสอบ' : 'ข้อถัดไป →';
+  document.getElementById('btnNext').onclick = (i===N-1) ? confirmSubmit : ()=>gotoQ(currentQ+1);
+  refreshNavGrid();
+}
+
+function confirmSubmit(){
+  const unanswered = answers.filter(a=>a===-1).length;
+  const msg = unanswered>0
+    ? `ยังมีข้อที่ยังไม่ได้ตอบ ${unanswered} ข้อ ยืนยันส่งข้อสอบหรือไม่?`
+    : 'ยืนยันส่งข้อสอบหรือไม่?';
+  if(confirm(msg)) doSubmit();
+}
+
+async function doSubmit(){
+  if(submitted) return;
+  submitted = true;
+  clearInterval(timerInterval);
+  window.removeEventListener('beforeunload', beforeUnload);
+
+  const secCorrect = {};
+  SECTIONS.forEach(s=> secCorrect[s.key] = 0);
+  examQuestions.forEach((item, i)=>{ if(answers[i] === item.a) secCorrect[item.sec]++; });
+
+  const totalCorrect = SECTIONS.reduce((sum,s)=> sum + secCorrect[s.key], 0);
+  const totalPts = +(totalCorrect * PT_PER_Q).toFixed(1);
+  const scores = {};
+  SECTIONS.forEach(s=> scores[s.key] = +(secCorrect[s.key] * PT_PER_Q).toFixed(1));
+  const pct = +(totalPts/200*100).toFixed(1);
+  const usedSec = EXAM_SECONDS - Math.max(timeLeft,0);
+
+  const grade = gradeOf(pct);
+  const record = {
+    fname: student.fname, lname: student.lname, dept: student.dept,
+    scores: scores,
+    total: totalPts, pct: pct,
+    gradeN: grade.n, gradeLabel: grade.label, pass: grade.pass,
+    usedSec: usedSec,
+    submittedAt: Date.now(),
+  };
+
+  try{
+    await fetch(RESULTS_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(record)});
+  }catch(e){ /* เก็บผลไว้แสดงในเครื่องได้แม้ส่งขึ้นเซิร์ฟเวอร์ไม่สำเร็จ */ }
+
+  showResult(record);
+}
+
+let lastResult = null;
+function showResult(r){
+  lastResult = r;
+  document.getElementById('rScore').textContent = `${r.total} / 200 คะแนน`;
+  document.getElementById('rPct').textContent = `คิดเป็น ${r.pct}%`;
+  document.getElementById('rWho').textContent = `${r.fname} ${r.lname} — ${r.dept}`;
+  document.getElementById('rGrade').innerHTML = `<span class="grade-badge g${r.gradeN}">${r.pass ? '✅' : '❌'} ${r.gradeLabel}</span>`;
+  document.getElementById('rEmoji').textContent = r.pct>=80 ? '🏆' : r.pct>=50 ? '👍' : '📘';
+  document.getElementById('rBreakdown').innerHTML = SECTIONS.map(s=>{
+    const val = r.scores[s.key];
+    const maxThisSec = +(s.list.length * PT_PER_Q).toFixed(1);
+    return `
+    <div class="sec-row">
+      <div class="sec-label">${s.label}</div>
+      <div class="sec-bar-wrap"><div class="sec-bar" style="width:${(val/maxThisSec*100)}%;background:${s.color}"></div></div>
+      <div class="sec-val">${val} / ${maxThisSec}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('btnCert').style.display = r.pass ? 'block' : 'none';
+  show('s-result');
+}
+
+// ─── CERTIFICATE (ออกให้อัตโนมัติเมื่อสอบผ่าน) ─────
+async function downloadCertificate(overrideResult){
+  const r = overrideResult || lastResult;
+  if(!r || !r.pass) return;
+  const canWebShareFile = (() => {
+    try { return !!(navigator.canShare && navigator.share && navigator.canShare({files:[new File([''], 't.png', {type:'image/png'})]})); }
+    catch(e){ return false; }
+  })();
+  const certWindow = canWebShareFile ? null : window.open('', '_blank');
+  if(document.fonts && document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} }
+
+  const canvas = document.getElementById('certCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  ctx.fillStyle = '#fdfaf3';
+  ctx.fillRect(0,0,W,H);
+
+  ctx.strokeStyle = '#0b2d4a';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(30,30,W-60,H-60);
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(50,50,W-100,H-100);
+
+  ctx.textAlign = 'center';
+
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "800 60px 'Sarabun', sans-serif";
+  ctx.fillText('ใบประกาศเกียรติคุณ', W/2, 175);
+  ctx.fillStyle = '#c9a227';
+  ctx.font = "700 24px 'Sarabun', sans-serif";
+  ctx.fillText('CERTIFICATE OF ACHIEVEMENT', W/2, 215);
+
+  ctx.fillStyle = '#333';
+  ctx.font = "400 26px 'Sarabun', sans-serif";
+  ctx.fillText('มอบให้เพื่อแสดงว่า', W/2, 300);
+
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "800 52px 'Sarabun', sans-serif";
+  ctx.fillText(`${r.fname} ${r.lname}`, W/2, 375);
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(W/2-260,400); ctx.lineTo(W/2+260,400); ctx.stroke();
+
+  ctx.fillStyle = '#333';
+  ctx.font = "400 24px 'Sarabun', sans-serif";
+  ctx.fillText(`แผนก / ชั้นปี ${r.dept}`, W/2, 445);
+
+  ctx.font = "400 26px 'Sarabun', sans-serif";
+  const bodyLines = [
+    'ได้สอบผ่านการทดสอบตามแนวข้อสอบมาตรฐานฝีมือแรงงานแห่งชาติ (จำลอง)',
+    CERT_BODY_LINE2,
+  ];
+  bodyLines.forEach((line,i)=> ctx.fillText(line, W/2, 495 + i*38));
+
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "700 30px 'Sarabun', sans-serif";
+  ctx.fillText(`คะแนน ${r.total} / 200 (${r.pct}%)  —  ${r.gradeLabel}`, W/2, 605);
+
+  const dateTH = new Date(r.submittedAt || Date.now()).toLocaleDateString('th-TH-u-ca-buddhist', {day:'numeric', month:'long', year:'numeric'});
+  ctx.fillStyle = '#555';
+  ctx.font = "400 22px 'Sarabun', sans-serif";
+  ctx.fillText(`ให้ไว้ ณ วันที่ ${dateTH}`, W/2, 660);
+
+  try{
+    const sigImg = new Image();
+    await new Promise((res, rej) => { sigImg.onload = res; sigImg.onerror = rej; sigImg.src = 'data:image/png;base64,' + SIGNATURE_PNG_B64; });
+    const sigW = 210, sigH = sigW * (sigImg.naturalHeight / sigImg.naturalWidth);
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.drawImage(sigImg, W/2 - sigW/2, 840 - sigH - 8, sigW, sigH);
+    ctx.globalCompositeOperation = 'source-over';
+  }catch(e){ /* ไม่มีรูปลายเซ็น ใช้เส้นว่างแทน */ }
+
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(W/2-190,840); ctx.lineTo(W/2+190,840); ctx.stroke();
+  ctx.fillStyle = '#0b2d4a';
+  ctx.font = "700 24px 'Sarabun', sans-serif";
+  ctx.fillText('(นายธานี ชมสุข)', W/2, 875);
+  ctx.fillStyle = '#555';
+  ctx.font = "400 20px 'Sarabun', sans-serif";
+  ctx.fillText('ครูผู้สอน วิทยาลัยการอาชีพบุรีรัมย์', W/2, 905);
+
+  const fileName = `certificate-${DOWNLOAD_PREFIX}-${r.fname}-${r.lname}.png`;
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+
+  if(canWebShareFile){
+    try{
+      await navigator.share({files:[new File([blob], fileName, {type:'image/png'})], title:'ใบประกาศเกียรติคุณ', text: `${r.fname} ${r.lname}`});
+    }catch(e){ /* ผู้ใช้กดยกเลิกการแชร์ หรือแชร์ไม่สำเร็จ — ถือเป็นการตัดสินใจของผู้ใช้ ไม่ต้องทำอะไรเพิ่ม */ }
+    return;
+  }
+
+  const blobUrl = URL.createObjectURL(blob);
+  if(certWindow){
+    certWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบประกาศ - ${r.fname} ${r.lname}</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;background:#111;font-family:'Sarabun',sans-serif;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px}p{color:#fff;text-align:center;margin:0 0 14px;font-size:15px;line-height:1.8}img{max-width:100%;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5)}</style></head><body><p>📱 มือถือ: แตะค้างที่รูปด้านล่าง แล้วเลือก "บันทึกรูปภาพ"<br>💻 คอมพิวเตอร์: คลิกขวาที่รูป แล้วเลือก "บันทึกรูปภาพเป็น"</p><img src="${blobUrl}" alt="certificate"></body></html>`);
+    certWindow.document.close();
+  }else{
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = blobUrl;
+    link.click();
+    alert('เบราว์เซอร์บล็อกการเปิดหน้าต่างใหม่ กรุณาอนุญาต Pop-up ของเว็บนี้แล้วลองใหม่');
+  }
+}
+
+// ─── REPORT (สำหรับครู) ─────────────────
+let reportData = [];
+let currentReportRows = [];
+function downloadCertificateForRow(i){ downloadCertificate(currentReportRows[i]); }
+function openReport(){
+  const pin = prompt('กรุณาใส่รหัสผ่านสำหรับครู เพื่อดูรายงานผลสอบ:');
+  if(pin !== REPORT_PIN){ if(pin!==null) alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  show('s-report');
+  loadReport();
+}
+function backToLogin(){ show('s-login'); }
+
+async function loadReport(){
+  document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">กำลังโหลด...</div>';
+  try{
+    const res = await fetch(RESULTS_URL, {cache:'no-store'});
+    const data = await res.json();
+    reportData = data ? Object.values(data).sort((a,b)=>b.submittedAt-a.submittedAt) : [];
+  }catch(e){
+    reportData = [];
+    document.getElementById('rptTableWrap').innerHTML = '<div class="rpt-empty">โหลดข้อมูลไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>';
+    return;
+  }
+  renderReport();
+}
+
+function renderReport(){
+  const filter = document.getElementById('rptFilter').value.trim().toLowerCase();
+  const rows = reportData.filter(r=>{
+    if(!filter) return true;
+    return (`${r.fname} ${r.lname} ${r.dept}`).toLowerCase().includes(filter);
+  });
+  const wrap = document.getElementById('rptTableWrap');
+  if(rows.length === 0){
+    wrap.innerHTML = '<div class="rpt-empty">ยังไม่มีนักเรียนสอบ หรือไม่พบข้อมูลที่ค้นหา</div>';
+    return;
+  }
+  const fmtTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  const gradeFor = r => r.gradeN != null ? {n:r.gradeN, label:r.gradeLabel} : (()=>{ const g=gradeOf(r.pct); return {n:g.n, label:g.label}; })();
+  currentReportRows = rows;
+  wrap.innerHTML = `<table class="rpt"><thead><tr>
+    <th>เวลาส่ง</th><th>ชื่อ-สกุล</th><th>แผนก</th>${SECTIONS.map(s=>`<th>${s.label}</th>`).join('')}<th>รวม</th><th>%</th><th>เกรด</th><th>ใบประกาศ</th>
+  </tr></thead><tbody>
+  ${rows.map((r,i)=>{ const g = gradeFor(r); return `<tr>
+    <td>${fmtTime(r.submittedAt)}</td>
+    <td>${r.fname} ${r.lname}</td>
+    <td>${r.dept}</td>
+    ${SECTIONS.map(s=>`<td>${r.scores ? r.scores[s.key] : ''}</td>`).join('')}
+    <td class="rpt-total">${r.total}</td>
+    <td>${r.pct}%</td>
+    <td class="rpt-grade g${g.n}">${g.label}</td>
+    <td>${r.pass ? `<button class="rpt-cert-btn" onclick="downloadCertificateForRow(${i})">🎓 ดาวน์โหลด</button>` : '—'}</td>
+  </tr>`; }).join('')}
+  </tbody></table>
+  <div style="margin-top:10px;font-size:12px;color:var(--mut)">ทั้งหมด ${rows.length} รายการ — เกณฑ์ผ่าน: 50% ขึ้นไป (เกรด 1-4)</div>`;
+}
+
+function downloadCSV(){
+  if(reportData.length === 0){ alert('ยังไม่มีข้อมูลให้ดาวน์โหลด'); return; }
+  const header = ['เวลาส่ง','ชื่อ','นามสกุล','แผนก', ...SECTIONS.map(s=>s.label), 'รวม','เปอร์เซ็นต์','เกรด'];
+  const lines = [header.join(',')];
+  reportData.forEach(r=>{
+    const ts = new Date(r.submittedAt).toLocaleString('th-TH');
+    const gradeLabel = r.gradeLabel != null ? r.gradeLabel : gradeOf(r.pct).label;
+    const secVals = SECTIONS.map(s=> r.scores ? r.scores[s.key] : '');
+    lines.push([ts, r.fname, r.lname, r.dept, ...secVals, r.total, r.pct, gradeLabel].map(v=>`"${v}"`).join(','));
+  });
+  const blob = new Blob(['﻿'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `exam-report-${DOWNLOAD_PREFIX}-2569.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
