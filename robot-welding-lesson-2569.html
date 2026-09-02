@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>บทเรียน — หุ่นยนต์เชื่อมอุตสาหกรรม (Robot Welding) KUKA เบื้องต้น</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0a0f;--card:#12121a;--line:#232333;--cy:#22d3ee;--cyd:#0891b2;--tx:#e6e6f0;--mut:#8a8aa0;--rd:#f43f5e;--gr:#22c55e;--yw:#facc15;--pp:#a78bfa;--pk:#f472b6;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;color:var(--tx);min-height:100vh;
+  background:
+    linear-gradient(rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,211,238,.05) 1px,transparent 1px),
+    linear-gradient(160deg,#0a0a0f 0%,#0d1420 100%);
+  background-size:28px 28px,28px 28px,100% 100%;
+}
+.wrap{max-width:840px;margin:0 auto;padding:32px 18px 60px}
+
+/* HEADER */
+.head{text-align:center;margin-bottom:26px}
+.head .badge{font-size:48px;margin-bottom:8px}
+.head h1{font-size:24px;font-weight:800;color:var(--cy);line-height:1.5}
+.head .sub{font-size:14px;color:var(--mut);margin-top:6px}
+.head .org{font-size:13px;color:var(--mut);margin-top:2px}
+
+/* TOC */
+.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:28px}
+.toc h2{font-size:14px;color:var(--yw);margin-bottom:10px}
+.toc ol{padding-left:20px;font-size:14px;line-height:2;color:var(--cy)}
+.toc a{color:var(--cy);text-decoration:none}
+.toc a:hover{text-decoration:underline}
+
+/* SECTION */
+.sec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px 22px;margin-bottom:22px;scroll-margin-top:16px}
+.sec .tag{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:4px 12px;margin-bottom:10px;color:#001}
+.sec h2{font-size:19px;font-weight:800;color:var(--tx);margin-bottom:14px;line-height:1.5}
+.sec h3{font-size:15px;font-weight:700;color:var(--cy);margin:18px 0 8px}
+.sec p{font-size:14.5px;line-height:1.9;color:var(--tx);margin-bottom:10px}
+.sec ul{padding-left:20px;margin-bottom:12px}
+.sec li{font-size:14.5px;line-height:1.9;color:var(--tx);margin-bottom:4px}
+.sec b{color:var(--yw)}
+.note{background:#0d1a1e;border:1px solid var(--cyd);border-radius:10px;padding:12px 14px;margin:12px 0;font-size:13.5px;line-height:1.8;color:var(--cy)}
+.note b{color:var(--yw)}
+.danger{background:#1a0d10;border:1px solid var(--rd);border-radius:10px;padding:12px 14px;margin:12px 0;font-size:13.5px;line-height:1.8;color:#ffb4c0}
+.danger b{color:var(--rd)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:14px 0}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
+th{text-align:left;color:var(--yw);font-weight:700;padding:8px 10px;border-bottom:2px solid var(--cyd);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid #1a1a26;color:var(--tx);white-space:nowrap}
+tr:hover td{background:#161622}
+
+/* MODE CARDS */
+.modegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0}
+.modecard{background:#161622;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.modecard .m{font-size:16px;font-weight:800;color:var(--cy)}
+.modecard .d{font-size:12.5px;color:var(--mut);margin-top:4px;line-height:1.6}
+
+/* AXIS DIAGRAM (CSS) */
+.axisrow{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.axisbox{flex:1;min-width:150px;background:#161622;border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-align:center}
+.axisbox .ic{font-size:26px}
+.axisbox .n{font-size:14px;font-weight:800;color:var(--cy);margin-top:4px}
+.axisbox .d{font-size:12px;color:var(--mut);margin-top:4px;line-height:1.6}
+
+/* CTA */
+.cta{text-align:center;margin-top:30px}
+.btn-primary{display:inline-block;background:linear-gradient(135deg,var(--cyd),var(--cy));color:#001;text-decoration:none;border-radius:10px;padding:16px 32px;font-size:16px;font-weight:800}
+.btn-primary:active{transform:scale(.98)}
+
+.foot{text-align:center;font-size:12px;color:var(--mut);line-height:1.9;margin-top:26px}
+.foot b{color:var(--tx)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="head">
+    <div class="badge">🦾</div>
+    <h1>บทเรียน: หุ่นยนต์เชื่อมอุตสาหกรรม (Robot Welding)<br>เบื้องต้น — KUKA Robot Operation</h1>
+    <div class="sub">อ้างอิงเอกสาร KUKA Robot Operation for Arc Welding และคู่มือ KUKA Robotics (Thailand)</div>
+    <div class="org">นายธานี ชมสุข — ครูผู้สอน วิทยาลัยการอาชีพบุรีรัมย์</div>
+  </div>
+
+  <div class="toc">
+    <h2>📑 หัวข้อในบทเรียน</h2>
+    <ol>
+      <li><a href="#sec1">ส่วนประกอบของหุ่นยนต์เชื่อมอุตสาหกรรม</a></li>
+      <li><a href="#sec2">ความปลอดภัยในการใช้งานหุ่นยนต์</a></li>
+      <li><a href="#sec3">ระบบพิกัดและการขยับแขนกล (Jog)</a></li>
+      <li><a href="#sec4">โหมดการทำงานและการเขียนโปรแกรมเบื้องต้น</a></li>
+      <li><a href="#sec5">การตั้งศูนย์ปืนเชื่อม (TCP) และสเปกหุ่นยนต์</a></li>
+    </ol>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="sec" id="sec1">
+    <span class="tag" style="background:#60a5fa">หัวข้อที่ 1</span>
+    <h2>ส่วนประกอบของหุ่นยนต์เชื่อมอุตสาหกรรม</h2>
+    <p>หุ่นยนต์อุตสาหกรรม 1 ชุด สำหรับงานเชื่อมโลหะ ประกอบด้วย 4 ส่วนหลัก ตามคู่มือ KUKA Robot Operation:</p>
+    <ul>
+      <li><b>1. Manipulator (แขนกล)</b> — ลักษณะการทำงานเปรียบเหมือนแขนมนุษย์ เคลื่อนที่ทำงานได้แม่นยำและหลากหลาย ขึ้นอยู่กับอุปกรณ์ปลายแขน (End Effector) ที่นำมาติดตั้ง เช่น หัวปืนเชื่อม (Torch) หรือกริปเปอร์หยิบจับชิ้นงาน</li>
+      <li><b>2. Robot Controller (ตู้ควบคุมหุ่นยนต์)</b> — ทำหน้าที่ควบคุมมอเตอร์ สัญญาณรับส่งต่างๆ รวมถึงอุปกรณ์ด้านความปลอดภัย และรับคำสั่งจากภายนอกเช่น PLC</li>
+      <li><b>3. Teach Pendant / Smart PAD (รีโมทบังคับหุ่นยนต์)</b> — เป็นส่วนติดต่อกับผู้ใช้ เพื่อให้เกิดความสะดวกและรวดเร็วในการบังคับ ควบคุม เคลื่อนที่ ตั้งโปรแกรม และตั้งค่าต่างๆ ของหุ่นยนต์</li>
+      <li><b>4. Connecting Cables (สายรับส่งสัญญาณและสายไฟ)</b> — รับส่งสัญญาณควบคุมและไฟฟ้าจากตู้ควบคุมไปยังแขนกล</li>
+    </ul>
+
+    <h3>ตระกูล KR CYBERTECH — หุ่นยนต์เฉพาะทางงานเชื่อม</h3>
+    <p>KR CYBERTECH เป็นตระกูลหุ่นยนต์ของ KUKA ที่ออกแบบมาสำหรับงานเชื่อมโดยเฉพาะ จุดเด่นคือ <b>ข้อมือหมุนได้ไม่จำกัดรอบในแกนที่ 6 (infinitely rotating 6th axis)</b> และมี <b>ความสามารถในการทำซ้ำ (Repeatability) สูงถึง 0.04 มม.</b> ทำให้ได้แนวเชื่อมที่สม่ำเสมอแม้ทำงานด้วยความเร็วสูง อีกทั้งยังออกแบบข้อมือให้เป็นแบบกลวง (Hollow Wrist) เพื่อร้อยสายเชื่อมภายในแขนกล ลดปัญหาสายพันและประหยัดพื้นที่ติดตั้ง</p>
+
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>รุ่น (Type)</th><th>ระยะเอื้อม (Reach)</th><th>น้ำหนักบรรทุก (Payload)</th></tr></thead>
+      <tbody>
+        <tr><td>KR 6 R1820</td><td>1,820 mm</td><td>6 kg</td></tr>
+        <tr><td>KR 8 R1620</td><td>1,620 mm</td><td>8 kg</td></tr>
+        <tr><td>KR 10 R1420</td><td>1,420 mm</td><td>10 kg</td></tr>
+        <tr><td>KR 8 R2100 arc HW (CYBERTECH)</td><td>2,101 mm</td><td>8 kg</td></tr>
+        <tr><td>KR 12 R1810 (CYBERTECH)</td><td>1,810 mm</td><td>12 kg</td></tr>
+        <tr><td>KR 16 R2010 (CYBERTECH)</td><td>2,010 mm</td><td>16 kg</td></tr>
+        <tr><td>KR 20 R1810 (CYBERTECH)</td><td>1,810 mm</td><td>20 kg</td></tr>
+        <tr><td>KR 22 R1610 (CYBERTECH)</td><td>1,610 mm</td><td>22 kg</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="note"><b>เกร็ดความรู้:</b> ระบบสื่อสาร <b>EtherCAT</b> ที่เชื่อมต่อโมดูล I/O ภายนอก (เช่นของ Beckhoff) ช่วยให้หุ่นยนต์รับส่งสัญญาณกับเซนเซอร์และอุปกรณ์รอบข้าง (เช่น วาล์วแก๊ส เซนเซอร์ตรวจจับชิ้นงาน) ได้รวดเร็วและแม่นยำผ่านเครือข่ายเดียว</div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="sec" id="sec2">
+    <span class="tag" style="background:#fb923c">หัวข้อที่ 2</span>
+    <h2>ความปลอดภัยในการใช้งานหุ่นยนต์</h2>
+    <div class="danger"><b>⚠️ หลักการสำคัญที่สุด:</b> "หุ่นยนต์แข็งแรงกว่าคนเสมอ" — ถึงแม้จะมองว่าเป็นหุ่นยนต์ขนาดเล็ก แต่ก็ไม่ควรประมาท เพราะสามารถสร้างอันตรายให้กับผู้ใช้ได้เสมอ หากผู้ใช้ขาดความรู้และความระมัดระวัง</div>
+    <p>พื้นที่ทำงานของหุ่นยนต์เชื่อมอุตสาหกรรมจะถูกล้อมด้วยระบบความปลอดภัยหลายชั้น ได้แก่:</p>
+    <ul>
+      <li><b>รั้วนิรภัย (Safety Fence)</b> — กันไม่ให้บุคคลเข้าไปในรัศมีทำงานของหุ่นยนต์ขณะทำงานโดยไม่ได้รับอนุญาต</li>
+      <li><b>เซนเซอร์ตรวจจับการปิด-เปิดประตู (Door Sensor)</b> — เมื่อประตูรั้วถูกเปิดขณะหุ่นยนต์ทำงาน ระบบจะสั่งหยุดหรือตัดการทำงานทันที</li>
+      <li><b>อุปกรณ์กันการหมุนเกินองศา (Anti-rotation Device)</b> — จำกัดไม่ให้แกนหมุนเกินขอบเขตที่ปลอดภัยจนอาจชนโครงสร้างรอบข้าง</li>
+      <li><b>ปุ่มหยุดฉุกเฉิน (Emergency Stop)</b> — ติดตั้งอย่างน้อย 2 จุด คือ ที่รีโมท (Smart PAD) และที่ใกล้ตัวผู้ใช้งาน เพื่อให้หยุดหุ่นยนต์ได้ทันทีไม่ว่าผู้ควบคุมจะอยู่จุดใด</li>
+      <li><b>อุปกรณ์ควบคุมด้านความปลอดภัย (Safety Control)</b> — ระบบควบคุมความปลอดภัยที่ทำงานเป็นอิสระ เชื่อถือได้ แม้ระบบควบคุมหลักจะเกิดข้อผิดพลาด</li>
+    </ul>
+    <p>ก่อนเข้าไปในพื้นที่ทำงานของหุ่นยนต์เพื่อซ่อมบำรุงหรือปรับตั้งค่าทุกครั้ง ต้อง <b>กดปุ่มหยุดฉุกเฉินหรือตัดโหมดอัตโนมัติ และตรวจสอบว่าหุ่นยนต์หยุดสนิทแล้ว</b> ก่อนเข้าไปทุกครั้ง</p>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="sec" id="sec3">
+    <span class="tag" style="background:#22c55e;color:#001">หัวข้อที่ 3</span>
+    <h2>ระบบพิกัดและการขยับแขนกล (Jog)</h2>
+    <p>บนรีโมท Smart PAD ผู้ใช้จะเลือกระบบพิกัด (Coordinate System) ก่อนขยับแขนกลด้วย Jog Keys หรือ 6D Mouse ระบบพิกัดมี 4 แบบ:</p>
+    <div class="axisrow">
+      <div class="axisbox"><div class="ic">🔧</div><div class="n">Axis</div><div class="d">เคลื่อนที่โดยหมุนทีละข้อต่อ (แกน) อิสระต่อกัน ใช้ตั้งค่าเบื้องต้น เป็นวิธีเดียวที่ขยับหุ่นยนต์ที่ยังไม่ได้ Mastering ได้</div></div>
+      <div class="axisbox"><div class="ic">🌐</div><div class="n">World</div><div class="d">จุดกำเนิดคงที่อยู่ที่ฐานหุ่นยนต์ ($WORLD) ใช้เคลื่อนที่ไปยังจุดใดๆ ในแนวแกน X,Y,Z และใช้ตั้งศูนย์ Tool/Base</div></div>
+      <div class="axisbox"><div class="ic">🧱</div><div class="n">Base</div><div class="d">จุดกำเนิดอยู่ที่ชิ้นงาน ($BASE) ตามระนาบที่บันทึกไว้ เหมาะกับการขยับตามแนวชิ้นงานที่วางเอียงมุม</div></div>
+      <div class="axisbox"><div class="ic">🔥</div><div class="n">Tool</div><div class="d">จุดกำเนิดอยู่ที่ปลายปืนเชื่อม ($TOOL) เดินตามระนาบของอุปกรณ์ที่ติดตั้ง เหมาะกับงานเดินแนวเชื่อมตรงที่ปืนเชื่อมเอียงทำมุม</div></div>
+    </div>
+
+    <h3>ขั้นตอนเริ่มต้นขยับแขนกล</h3>
+    <ul>
+      <li>เลือกระบบพิกัดที่ต้องการ (Axis / World / Base / Tool)</li>
+      <li>ตั้งค่า <b>Jog Override</b> (เปอร์เซ็นต์ความเร็วขณะขยับด้วยมือ) ให้เหมาะสม เริ่มจากค่าต่ำๆ ก่อนเสมอ</li>
+      <li>กำ <b>Enabling Switch</b> (สวิตช์นิรภัยสีเทา) ไว้ในตำแหน่งกลางค้างไว้ — สังเกตไฟสีเขียวติดขึ้น แสดงว่าแขนกลพร้อมเคลื่อนที่ (หากปล่อยมือหรือกำแรงเกินไป หุ่นยนต์จะหยุดทันที)</li>
+      <li>กด Jog Key (+/-) หรือใช้ 6D Mouse เพื่อขยับแขนกลไปในทิศทางที่ต้องการ</li>
+    </ul>
+    <div class="note"><b>6D Mouse (Space Mouse):</b> ควบคุมการเคลื่อนที่และหมุนของหุ่นยนต์ได้พร้อมกันหลายทิศทางในการบังคับครั้งเดียว ทำให้ขยับแขนกลได้เป็นธรรมชาติและรวดเร็วกว่าการกด Jog Key ทีละแกน</div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="sec" id="sec4">
+    <span class="tag" style="background:#a78bfa">หัวข้อที่ 4</span>
+    <h2>โหมดการทำงานและการเขียนโปรแกรมเบื้องต้น</h2>
+    <p>หุ่นยนต์ KUKA มีโหมดการสั่งการ 4 แบบ เลือกได้จากสวิตช์กุญแจบนตู้ควบคุม:</p>
+    <div class="modegrid">
+      <div class="modecard"><div class="m">T1</div><div class="d">โหมดลดความเร็ว สำหรับตั้งโปรแกรมใหม่ ทดสอบโปรแกรม และตั้งค่าต่างๆ</div></div>
+      <div class="modecard"><div class="m">T2</div><div class="d">ทดสอบโปรแกรมด้วยความเร็วสูงสุด 100% — ต้องกำ Enabling Switch ขณะทดสอบ</div></div>
+      <div class="modecard"><div class="m">AUT</div><div class="d">ทดสอบ/เดินโปรแกรมความเร็วสูงสุด 100% — ไม่ต้องกำ Enabling Switch</div></div>
+      <div class="modecard"><div class="m">EXT</div><div class="d">สั่งการหุ่นยนต์จากอุปกรณ์ภายนอก เช่น PLC ความเร็วสูงสุดได้ 100%</div></div>
+    </div>
+
+    <h3>การสร้างโปรแกรมใหม่ (ขั้นต้น)</h3>
+    <ul>
+      <li>เลือกโหมดสวิตช์อยู่ที่ <b>T1</b></li>
+      <li>เข้าเมนู Navigator แล้วเลือก <b>New</b></li>
+      <li>พิมพ์ชื่อโปรแกรมที่ต้องการ</li>
+      <li>ระบบจะแสดงหน้าโปรแกรมเปล่าให้เริ่มเขียนคำสั่ง</li>
+    </ul>
+
+    <h3>การเคลื่อนที่พื้นฐานในการโปรแกรม</h3>
+    <ul>
+      <li><b>PTP (Point to Point)</b> — เดินลอยกลางอากาศแบบอิสระ เคลื่อนที่จากจุดหนึ่งไปอีกจุดหนึ่งด้วยเส้นทางที่เร็วที่สุดของแต่ละแกน ไม่รับประกันว่าเป็นเส้นตรง</li>
+      <li><b>LIN (Linear)</b> — เดินแนวเชื่อมแบบเส้นตรง เคลื่อนที่เป็นเส้นตรงเสมอระหว่างจุดเริ่มต้นกับจุดปลาย</li>
+      <li><b>CIRC (Circular)</b> — เดินแนวเชื่อมแบบส่วนโค้ง ผ่านจุดกึ่งกลางที่กำหนดไปยังจุดปลาย</li>
+    </ul>
+
+    <h3>คำสั่งงานเชื่อม (KUKA.ArcTech)</h3>
+    <ul>
+      <li><b>ArcON</b> — สั่งเริ่มต้นการอาร์กเชื่อม ณ ตำแหน่งที่กำหนด</li>
+      <li><b>ArcOFF</b> — สั่งหยุดการอาร์กเชื่อม</li>
+      <li><b>ArcSwi</b> — คำสั่งดำเนินการเชื่อมต่อ (สลับ/ต่อแนวเชื่อม)</li>
+      <li><b>Weaving</b> — สั่งให้หัวเชื่อมส่ายไปมาตามแนวที่กำหนดขณะเดินแนวเชื่อม เพื่อให้แนวเชื่อมกว้างและครอบคลุมมากขึ้น</li>
+    </ul>
+  </div>
+
+  <!-- SECTION 5 -->
+  <div class="sec" id="sec5">
+    <span class="tag" style="background:#f472b6;color:#001">หัวข้อที่ 5</span>
+    <h2>การตั้งศูนย์ปืนเชื่อม (TCP) และสเปกหุ่นยนต์</h2>
+    <p><b>TCP (Tool Center Point)</b> คือจุดอ้างอิงที่ปลายหัวเชื่อมหรือปลายอุปกรณ์ที่ติดตั้งกับแขนกล ใช้เป็นจุดควบคุมหลักในการเขียนโปรแกรม การตั้งศูนย์ปืนเชื่อม (Tool Calibration) มีประโยชน์คือ:</p>
+    <ul>
+      <li>ทำให้ผู้ใช้สอนหุ่นยนต์ได้ง่ายและสะดวก เพราะมีจุดอ้างอิงอยู่ที่ปลายปืนเชื่อม</li>
+      <li>กรณีเกิดการชนทำให้ศูนย์ปืนเชื่อมผิดเพี้ยนไป ผู้ใช้สามารถตั้งศูนย์ใหม่แล้วใช้โปรแกรมเก่าที่อิงทูลเดิมได้ (อาจต้องแก้ไขจุดคลาดเคลื่อนบางส่วน)</li>
+    </ul>
+
+    <h3>XYZ 4-Point Method</h3>
+    <p>บันทึกตำแหน่งปลายปืนเชื่อม 4 จุดที่ทำมุมต่างกันออกไป โดยชี้ปลายปืนเชื่อมไปยังจุดอ้างอิงจุดเดียวกันในมุมที่ต่างกัน 4 ครั้ง ระบบจะคำนวณหาตำแหน่งจุดอ้างอิง TCP ให้อัตโนมัติ</p>
+
+    <h3>ABC World Method</h3>
+    <p>ตั้งค่าเพื่อให้หุ่นยนต์ทราบถึง <b>ลักษณะการหมุนและการบิดของปืนเชื่อม (ทิศทางของ TCP)</b> ทำให้ทราบระนาบของปืนเชื่อมในแนวแกน X ที่ถูกต้อง ซึ่งสำคัญมากโดยเฉพาะตอนทำการเชื่อมแบบส่าย (Weaving) — หากไม่มีการตั้งค่าที่ถูกต้อง การเชื่อมแบบส่ายจะส่ายผิดทิศทางและปรับตั้งแนวเชื่อมได้ยากกว่าปกติ</p>
+
+    <div class="note"><b>สรุป:</b> XYZ 4-Point หา "ตำแหน่ง" ของ TCP ส่วน ABC World หา "ทิศทาง/การหมุน" ของ TCP — ทั้งสองขั้นตอนต้องทำให้ครบเพื่อให้หุ่นยนต์เชื่อมได้แม่นยำ</div>
+  </div>
+
+  <div class="cta">
+    <a class="btn-primary" href="robot-welding-quiz-2569.html">📝 ไปทำข้อสอบ 40 ข้อ (แนวมาตรฐานฝีมือแรงงานแห่งชาติ)</a>
+  </div>
+
+  <div class="foot">
+    จัดทำโดย <b>นายธานี ชมสุข</b> ครูผู้สอน วิทยาลัยการอาชีพบุรีรัมย์<br>
+    อ้างอิงเนื้อหาจากเอกสาร KUKA Robot Operation for Arc Welding (KUKA Roboter GmbH) และคู่มือ KUKA Robotics (Thailand) Ltd.
+  </div>
+
+</div>
+</body>
+</html>
