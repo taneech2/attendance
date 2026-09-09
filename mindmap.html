@@ -12,6 +12,22 @@
     --text:#1e293b;
     --muted:#64748b;
     --accent:#4f46e5;
+    --input-bg:#ffffff;
+    --hover-bg:#f1f5f9;
+    --dot:#d7dbe6;
+    --export-bg:#f6f7fb;
+  }
+  :root[data-theme="dark"]{
+    --bg:#12151d;
+    --panel:rgba(24,28,38,.85);
+    --border:#2c3243;
+    --text:#e5e7eb;
+    --muted:#94a3b8;
+    --accent:#a5b4fc;
+    --input-bg:#1c202c;
+    --hover-bg:#252a38;
+    --dot:#252b3a;
+    --export-bg:#12151d;
   }
   *{box-sizing:border-box;}
   html,body{
@@ -20,6 +36,7 @@
     font-family:"Sarabun","Noto Sans Thai",-apple-system,"Segoe UI",system-ui,sans-serif;
     color:var(--text);
     -webkit-tap-highlight-color: transparent;
+    transition:background .2s ease, color .2s ease;
   }
 
   /* ---------- Toolbar ---------- */
@@ -36,12 +53,12 @@
     margin-right:6px; white-space:nowrap;
   }
   #toolbar button{
-    border:1px solid var(--border); background:#fff; color:var(--text);
+    border:1px solid var(--border); background:var(--input-bg); color:var(--text);
     border-radius:10px; padding:7px 12px; font-size:13px; cursor:pointer;
     font-family:inherit; display:flex; align-items:center; gap:5px;
     transition:background .15s, transform .1s;
   }
-  #toolbar button:hover{ background:#f1f5f9; }
+  #toolbar button:hover{ background:var(--hover-bg); }
   #toolbar button:active{ transform:scale(.95); }
   #node-count{
     margin-left:auto; font-size:12px; color:var(--muted); white-space:nowrap;
@@ -51,7 +68,8 @@
   #canvas-wrap{
     position:absolute; inset:0; touch-action:none; cursor:grab;
     background-color:var(--bg);
-    background-image: radial-gradient(circle, #d7dbe6 1.3px, transparent 1.3px);
+    background-image: radial-gradient(circle, var(--dot) 1.3px, transparent 1.3px);
+    transition:background-color .2s ease;
   }
   #canvas-wrap.panning{ cursor:grabbing; }
   svg#canvas{ width:100%; height:100%; display:block; }
@@ -97,29 +115,32 @@
   #quick-numbers::-webkit-scrollbar{ display:none; }
   .qn-btn{
     flex:none; width:28px; height:28px; border-radius:50%;
-    border:1px solid var(--border); background:#fff; color:var(--text);
+    border:1px solid var(--border); background:var(--input-bg); color:var(--text);
     font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     transition:background .15s, transform .1s, border-color .15s;
   }
-  .qn-btn:hover{ background:#eef2ff; border-color:var(--accent); color:var(--accent); }
+  .qn-btn:hover{ background:var(--hover-bg); border-color:var(--accent); color:var(--accent); }
   .qn-btn:active{ transform:scale(.9); }
   #input-row{ display:flex; gap:8px; }
   #node-input{
     flex:1; border:1px solid var(--border); border-radius:12px;
     padding:10px 14px; font-size:15px; font-family:inherit; outline:none;
-    background:#fff;
+    background:var(--input-bg); color:var(--text);
   }
   #node-input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,70,229,.15); }
   #del-btn{
     border:1px solid #fecaca; background:#fff1f2; color:#dc2626;
     border-radius:12px; padding:0 14px; font-size:13px; cursor:pointer;
   }
+  :root[data-theme="dark"] #del-btn{
+    border-color:#5c2330; background:#2a1620; color:#f87171;
+  }
   #hint{
     margin-top:7px; font-size:11px; color:var(--muted); line-height:1.5;
     text-align:center;
   }
-  #hint b{ color:#334155; }
+  #hint b{ color:var(--text); }
 
   @media (max-width: 520px){
     #toolbar .label{ display:none; }
@@ -137,6 +158,10 @@
   <button id="btn-zoomout">➖</button>
   <button id="btn-zoomin">➕</button>
   <button id="btn-png">⬇️ <span class="label">บันทึกรูป</span></button>
+  <button id="btn-save-file">💾 <span class="label">บันทึกไฟล์</span></button>
+  <button id="btn-load-file">📂 <span class="label">เปิดไฟล์</span></button>
+  <button id="btn-theme">🌙 <span class="label">ธีมมืด</span></button>
+  <input id="file-input" type="file" accept="application/json,.json" hidden>
   <span id="node-count"></span>
 </div>
 
@@ -177,6 +202,7 @@
   "use strict";
   const svgNS = "http://www.w3.org/2000/svg";
   const STORAGE_KEY = "mindmap_v1";
+  const THEME_KEY = "mindmap_theme_v1";
   const PALETTE = ["#ef4444","#f97316","#ca8a04","#16a34a","#0891b2","#2563eb","#7c3aed","#db2777","#0d9488","#d97706"];
   const GRID = 40;
 
@@ -614,7 +640,7 @@
     const bgRect = document.createElementNS(svgNS, "rect");
     bgRect.setAttribute("x", minX); bgRect.setAttribute("y", minY);
     bgRect.setAttribute("width", w); bgRect.setAttribute("height", h);
-    bgRect.setAttribute("fill", "#f6f7fb");
+    bgRect.setAttribute("fill", getComputedStyle(document.documentElement).getPropertyValue("--export-bg").trim() || "#f6f7fb");
     exportSvg.appendChild(bgRect);
     exportSvg.appendChild(linksLayer.cloneNode(true));
 
@@ -647,7 +673,8 @@
       const canvas = document.createElement("canvas");
       canvas.width = w * scale; canvas.height = h * scale;
       const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#f6f7fb"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--export-bg").trim() || "#f6f7fb";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, w * scale, h * scale);
       URL.revokeObjectURL(url);
       canvas.toBlob(function(blob){
@@ -661,6 +688,67 @@
     };
     img.onerror = function(){ URL.revokeObjectURL(url); alert("ไม่สามารถบันทึกรูปได้ในเบราว์เซอร์นี้"); };
     img.src = url;
+  }
+
+  // ---------------- Theme ----------------
+  const themeBtn = document.getElementById("btn-theme");
+  function applyTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    themeBtn.innerHTML = theme === "dark"
+      ? '☀️ <span class="label">ธีมสว่าง</span>'
+      : '🌙 <span class="label">ธีมมืด</span>';
+  }
+  function initTheme(){
+    let theme;
+    try{ theme = localStorage.getItem(THEME_KEY); }catch(e){ theme = null; }
+    if(theme !== "dark" && theme !== "light"){
+      theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+    }
+    applyTheme(theme);
+  }
+  function toggleTheme(){
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try{ localStorage.setItem(THEME_KEY, next); }catch(e){ /* ignore */ }
+  }
+
+  // ---------------- Save / load as file (works across devices) ----------------
+  function exportJSON(){
+    const data = { nodes, rootId, selectedId, nextId, colorCounter, savedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const rootText = (nodes[rootId] && nodes[rootId].text ? nodes[rootId].text : "mindmap").replace(/[^\p{L}\p{M}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");
+    const stamp = new Date().toISOString().slice(0, 10);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `mindmap-${rootText || "idea"}-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  function importJSONFile(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try{ data = JSON.parse(reader.result); }
+      catch(e){ alert("ไฟล์นี้ไม่ใช่ไฟล์มายด์แมปที่ถูกต้อง"); return; }
+      if(!data || !data.nodes || !data.rootId || !data.nodes[data.rootId]){
+        alert("ไฟล์นี้ไม่ใช่ไฟล์มายด์แมปที่ถูกต้อง");
+        return;
+      }
+      const hasContent = Object.keys(nodes).length > 1;
+      if(hasContent && !confirm("เปิดไฟล์นี้จะแทนที่มายด์แมปปัจจุบัน ต้องการดำเนินการต่อหรือไม่?")) return;
+      nodes = data.nodes; rootId = data.rootId;
+      selectedId = data.nodes[data.selectedId] ? data.selectedId : rootId;
+      nextId = data.nextId || Object.keys(nodes).length + 1;
+      colorCounter = data.colorCounter || 0;
+      Object.keys(domNodeMap).forEach((id) => { domNodeMap[id].g.remove(); delete domNodeMap[id]; });
+      Object.keys(domLinkMap).forEach((id) => { domLinkMap[id].remove(); delete domLinkMap[id]; });
+      layout(); saveState(); render(); fitView(); focusInput();
+    };
+    reader.onerror = () => alert("อ่านไฟล์ไม่สำเร็จ");
+    reader.readAsText(file);
   }
 
   // ---------------- Input handling ----------------
@@ -695,6 +783,14 @@
   document.getElementById("btn-zoomout").addEventListener("click", () => zoomBy(0.8));
   document.getElementById("btn-fit").addEventListener("click", fitView);
   document.getElementById("btn-png").addEventListener("click", exportPNG);
+  document.getElementById("btn-save-file").addEventListener("click", exportJSON);
+  document.getElementById("btn-theme").addEventListener("click", toggleTheme);
+  document.getElementById("btn-load-file").addEventListener("click", () => document.getElementById("file-input").click());
+  document.getElementById("file-input").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if(file) importJSONFile(file);
+    e.target.value = "";
+  });
   document.getElementById("btn-new").addEventListener("click", () => {
     if(!confirm("เริ่มมายด์แมปใหม่ทั้งหมด? ข้อมูลเดิมจะถูกลบ")) return;
     freshState();
@@ -714,6 +810,7 @@
 
   // ---------------- Init ----------------
   function init(){
+    initTheme();
     const restored = loadState();
     if(!restored) freshState();
     layout();
