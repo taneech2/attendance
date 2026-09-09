@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>มายด์แมป AI — ชมสุข69</title>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --panel:rgba(255,255,255,.82);
+    --border:#e2e8f0;
+    --text:#1e293b;
+    --muted:#64748b;
+    --accent:#4f46e5;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+    background:var(--bg);
+    font-family:"Sarabun","Noto Sans Thai",-apple-system,"Segoe UI",system-ui,sans-serif;
+    color:var(--text);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ---------- Toolbar ---------- */
+  #toolbar{
+    position:fixed; top:0; left:0; right:0; z-index:20;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:10px 14px;
+    background:var(--panel);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  #toolbar .title{
+    font-weight:700; font-size:15px; color:var(--accent);
+    margin-right:6px; white-space:nowrap;
+  }
+  #toolbar button{
+    border:1px solid var(--border); background:#fff; color:var(--text);
+    border-radius:10px; padding:7px 12px; font-size:13px; cursor:pointer;
+    font-family:inherit; display:flex; align-items:center; gap:5px;
+    transition:background .15s, transform .1s;
+  }
+  #toolbar button:hover{ background:#f1f5f9; }
+  #toolbar button:active{ transform:scale(.95); }
+  #node-count{
+    margin-left:auto; font-size:12px; color:var(--muted); white-space:nowrap;
+  }
+
+  /* ---------- Canvas ---------- */
+  #canvas-wrap{
+    position:absolute; inset:0; touch-action:none; cursor:grab;
+    background-color:var(--bg);
+    background-image: radial-gradient(circle, #d7dbe6 1.3px, transparent 1.3px);
+  }
+  #canvas-wrap.panning{ cursor:grabbing; }
+  svg#canvas{ width:100%; height:100%; display:block; }
+  #viewport{ transform-origin:0 0; }
+  .node-g{
+    cursor:pointer;
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .25s ease;
+  }
+  .node-g.dragging{ transition:none; cursor:grabbing; }
+  .node-g rect{
+    stroke:rgba(255,255,255,.55); stroke-width:2px;
+    filter: drop-shadow(0 2px 6px rgba(15,23,42,.18));
+  }
+  .node-g.selected rect{
+    stroke:#fff; stroke-width:3px;
+    filter: drop-shadow(0 0 0 3px rgba(79,70,229,.35)) drop-shadow(0 3px 8px rgba(15,23,42,.25));
+  }
+  .node-g text{
+    fill:#fff; text-anchor:middle; dominant-baseline:middle;
+    paint-order:stroke; stroke:rgba(0,0,0,.18); stroke-width:2px; stroke-linejoin:round;
+    pointer-events:none; user-select:none;
+  }
+  .link{ pointer-events:none; }
+
+  /* ---------- Input bar ---------- */
+  #input-bar{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%);
+    width:min(92vw,600px); z-index:20;
+    background:var(--panel); backdrop-filter:blur(10px);
+    border:1px solid var(--border); border-radius:18px;
+    padding:10px 14px; box-shadow:0 10px 30px rgba(15,23,42,.12);
+  }
+  #anchor-label{
+    font-size:11.5px; color:var(--muted); margin-bottom:6px;
+    display:flex; align-items:center; gap:6px; overflow:hidden;
+    white-space:nowrap; text-overflow:ellipsis;
+  }
+  #anchor-dot{ width:9px; height:9px; border-radius:50%; flex:none; }
+  #input-row{ display:flex; gap:8px; }
+  #node-input{
+    flex:1; border:1px solid var(--border); border-radius:12px;
+    padding:10px 14px; font-size:15px; font-family:inherit; outline:none;
+    background:#fff;
+  }
+  #node-input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,70,229,.15); }
+  #del-btn{
+    border:1px solid #fecaca; background:#fff1f2; color:#dc2626;
+    border-radius:12px; padding:0 14px; font-size:13px; cursor:pointer;
+  }
+  #hint{
+    margin-top:7px; font-size:11px; color:var(--muted); line-height:1.5;
+    text-align:center;
+  }
+  #hint b{ color:#334155; }
+
+  @media (max-width: 520px){
+    #toolbar .label{ display:none; }
+    #toolbar .title{ font-size:13px; }
+    #hint{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <span class="title">🧠 มายด์แมป AI</span>
+  <button id="btn-new">🆕 <span class="label">เริ่มใหม่</span></button>
+  <button id="btn-fit">🎯 <span class="label">จัดกึ่งกลาง</span></button>
+  <button id="btn-zoomout">➖</button>
+  <button id="btn-zoomin">➕</button>
+  <button id="btn-png">⬇️ <span class="label">บันทึกรูป</span></button>
+  <span id="node-count"></span>
+</div>
+
+<div id="canvas-wrap">
+  <svg id="canvas">
+    <g id="viewport">
+      <g id="links"></g>
+      <g id="nodes"></g>
+    </g>
+  </svg>
+</div>
+
+<div id="input-bar">
+  <div id="anchor-label"><span id="anchor-dot"></span><span id="anchor-text">แตกกิ่งจาก: ไอเดียหลัก</span></div>
+  <div id="input-row">
+    <input id="node-input" type="text" placeholder="พิมพ์ไอเดีย แล้วกด Enter เพื่อแตกกิ่ง..." autocomplete="off">
+    <button id="del-btn" title="ลบกิ่งที่เลือก">🗑️</button>
+  </div>
+  <div id="hint">
+    <b>Enter</b> แตกกิ่งลึกจากกิ่งที่เลือก · <b>Shift+Enter</b> แตกกิ่งข้าง (พี่น้อง) · คลิกโหนด=เลือก · ดับเบิลคลิก=แก้ชื่อ · ลากโหนด=ย้ายกิ่ง · ลากพื้นหลัง/นิ้ว=เลื่อนจอ · scroll/บีบนิ้ว=ซูม
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const svgNS = "http://www.w3.org/2000/svg";
+  const STORAGE_KEY = "mindmap_v1";
+  const PALETTE = ["#ef4444","#f97316","#ca8a04","#16a34a","#0891b2","#2563eb","#7c3aed","#db2777","#0d9488","#d97706"];
+  const GRID = 40;
+
+  const svg = document.getElementById("canvas");
+  const wrap = document.getElementById("canvas-wrap");
+  const viewport = document.getElementById("viewport");
+  const linksLayer = document.getElementById("links");
+  const nodesLayer = document.getElementById("nodes");
+  const input = document.getElementById("node-input");
+  const anchorText = document.getElementById("anchor-text");
+  const anchorDot = document.getElementById("anchor-dot");
+  const nodeCountEl = document.getElementById("node-count");
+
+  const measureCtx = document.createElement("canvas").getContext("2d");
+
+  let nodes = {};
+  let rootId = null;
+  let selectedId = null;
+  let nextId = 1;
+  let colorCounter = 0;
+  let view = { x: 0, y: 0, k: 1 };
+
+  const domNodeMap = {};
+  const domLinkMap = {};
+
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  // ---------------- State ----------------
+  function freshState(){
+    nodes = {}; nextId = 1; colorCounter = 0;
+    rootId = "n0";
+    nodes[rootId] = { id: rootId, text: "ไอเดียหลัก", parentId: null, children: [], depth: 0, color: "#1e293b", pin: null };
+    selectedId = rootId;
+  }
+
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ nodes, rootId, selectedId, nextId, colorCounter, view }));
+    }catch(e){ /* storage unavailable - ignore */ }
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return false;
+      const data = JSON.parse(raw);
+      if(!data || !data.nodes || !data.rootId || !data.nodes[data.rootId]) return false;
+      nodes = data.nodes; rootId = data.rootId;
+      selectedId = data.nodes[data.selectedId] ? data.selectedId : rootId;
+      nextId = data.nextId || 1; colorCounter = data.colorCounter || 0;
+      if(data.view) view = data.view;
+      return true;
+    }catch(e){ return false; }
+  }
+
+  // ---------------- Layout (radial, unlimited depth) ----------------
+  function subtreeWeight(n){
+    if(!n.children.length) return 1;
+    return n.children.reduce((s, cid) => s + subtreeWeight(nodes[cid]), 0);
+  }
+  function baseRadius(depth){
+    if(depth <= 0) return 0;
+    return 150 + (depth - 1) * 145;
+  }
+  function place(n, angleStart, angleEnd, offX, offY){
+    const angle = (angleStart + angleEnd) / 2;
+    const r = baseRadius(n.depth);
+    n.baseX = Math.cos(angle) * r;
+    n.baseY = Math.sin(angle) * r;
+    n.angle = angle;
+    const pin = n.pin || { dx: 0, dy: 0 };
+    n.x = n.baseX + offX + pin.dx;
+    n.y = n.baseY + offY + pin.dy;
+    const nOffX = offX + pin.dx, nOffY = offY + pin.dy;
+    if(n.children.length){
+      const total = subtreeWeight(n);
+      let a = angleStart;
+      for(const cid of n.children){
+        const c = nodes[cid];
+        const w = subtreeWeight(c);
+        const share = (w / total) * (angleEnd - angleStart);
+        place(c, a, a + share, nOffX, nOffY);
+        a += share;
+      }
+    }
+  }
+  function layout(){
+    place(nodes[rootId], 0, Math.PI * 2, 0, 0);
+  }
+
+  // ---------------- Node dimensions / text fit ----------------
+  function nodeDims(n){
+    const fontSize = n.depth === 0 ? 18 : n.depth === 1 ? 15 : n.depth === 2 ? 14 : 13;
+    const maxW = n.depth === 0 ? 260 : 200;
+    const minW = n.depth === 0 ? 120 : 66;
+    const padX = n.depth === 0 ? 22 : 16;
+    const padY = n.depth === 0 ? 15 : 10;
+    const weight = n.depth <= 1 ? 700 : 600;
+    measureCtx.font = `${weight} ${fontSize}px "Sarabun","Noto Sans Thai",system-ui,sans-serif`;
+    let display = n.text && n.text.length ? n.text : " ";
+    const maxTextW = maxW - padX * 2;
+    let width = measureCtx.measureText(display).width;
+    if(width > maxTextW){
+      let lo = 0, hi = display.length;
+      while(lo < hi){
+        const mid = (lo + hi + 1) >> 1;
+        const t = display.slice(0, mid) + "…";
+        if(measureCtx.measureText(t).width <= maxTextW) lo = mid; else hi = mid - 1;
+      }
+      display = display.slice(0, lo) + "…";
+      width = measureCtx.measureText(display).width;
+    }
+    const w = Math.max(minW, Math.min(maxW, width + padX * 2));
+    const h = fontSize * 1.5 + padY;
+    return { w, h, fontSize, weight, display };
+  }
+
+  // ---------------- Mutations ----------------
+  function addChild(parentId, text){
+    const parent = nodes[parentId];
+    if(!parent) return;
+    const id = "n" + (nextId++);
+    const depth = parent.depth + 1;
+    let color;
+    if(depth === 1){ color = PALETTE[colorCounter % PALETTE.length]; colorCounter++; }
+    else { color = parent.color; }
+    nodes[id] = { id, text, parentId, children: [], depth, color, pin: null };
+    parent.children.push(id);
+    selectedId = id;
+    saveState(); layout(); render();
+  }
+
+  function countSubtree(n){
+    let c = 1;
+    for(const cid of n.children) c += countSubtree(nodes[cid]);
+    return c;
+  }
+  function removeSubtree(id){
+    const n = nodes[id];
+    for(const cid of [...n.children]) removeSubtree(cid);
+    if(n.parentId){
+      const p = nodes[n.parentId];
+      p.children = p.children.filter(c => c !== id);
+    }
+    delete nodes[id];
+  }
+  function deleteSelected(){
+    if(!selectedId || selectedId === rootId) return;
+    const n = nodes[selectedId];
+    if(n.children.length){
+      const extra = countSubtree(n) - 1;
+      if(!confirm(`ลบ "${n.text}" พร้อมกิ่งย่อยทั้งหมด (${extra} กิ่ง) ใช่หรือไม่?`)) return;
+    }
+    const parentId = n.parentId;
+    removeSubtree(selectedId);
+    selectedId = parentId || rootId;
+    saveState(); layout(); render();
+  }
+
+  function renameNode(id){
+    const n = nodes[id];
+    const val = prompt("แก้ไขข้อความ:", n.text);
+    if(val === null) return;
+    const trimmed = val.trim();
+    if(!trimmed) return;
+    n.text = trimmed;
+    saveState(); render();
+  }
+
+  function selectNode(id){
+    if(selectedId === id) return;
+    selectedId = id;
+    render();
+  }
+
+  // ---------------- Rendering ----------------
+  function curvePath(px, py, cx, cy, n){
+    const dx = cx - px, dy = cy - py;
+    const dist = Math.hypot(dx, dy) || 1;
+    const mx = (px + cx) / 2, my = (py + cy) / 2;
+    const perpX = -dy / dist, perpY = dx / dist;
+    const sign = (parseInt(n.id.slice(1), 10) % 2 === 0) ? 1 : -1;
+    const bend = Math.min(55, dist * 0.22) * sign;
+    const cx1 = mx + perpX * bend, cy1 = my + perpY * bend;
+    return `M ${px} ${py} Q ${cx1} ${cy1} ${cx} ${cy}`;
+  }
+
+  function createNodeDom(n){
+    const g = document.createElementNS(svgNS, "g");
+    g.setAttribute("class", "node-g");
+    const title = document.createElementNS(svgNS, "title");
+    const rect = document.createElementNS(svgNS, "rect");
+    const text = document.createElementNS(svgNS, "text");
+    g.appendChild(title); g.appendChild(rect); g.appendChild(text);
+
+    g.addEventListener("click", (e) => { e.stopPropagation(); selectNode(n.id); focusInput(); });
+    g.addEventListener("dblclick", (e) => { e.stopPropagation(); renameNode(n.id); });
+    g.addEventListener("pointerdown", (e) => startNodeDrag(n.id, g, e));
+
+    return { g, rect, text, title };
+  }
+
+  function render(){
+    const ids = new Set(Object.keys(nodes));
+
+    for(const id in domNodeMap){ if(!ids.has(id)){ domNodeMap[id].g.remove(); delete domNodeMap[id]; } }
+    for(const id in domLinkMap){ if(!ids.has(id)){ domLinkMap[id].remove(); delete domLinkMap[id]; } }
+
+    for(const id of ids){
+      const n = nodes[id];
+      if(!n.parentId) continue;
+      let path = domLinkMap[id];
+      if(!path){
+        path = document.createElementNS(svgNS, "path");
+        path.setAttribute("class", "link");
+        path.setAttribute("fill", "none");
+        linksLayer.appendChild(path);
+        domLinkMap[id] = path;
+      }
+      const p = nodes[n.parentId];
+      path.setAttribute("stroke", n.color);
+      path.setAttribute("stroke-width", Math.max(1.4, 4 - n.depth * 0.4));
+      path.setAttribute("stroke-opacity", "0.55");
+      path.setAttribute("d", curvePath(p.x, p.y, n.x, n.y, n));
+    }
+
+    for(const id of ids){
+      const n = nodes[id];
+      let dn = domNodeMap[id];
+      const isNew = !dn;
+      const dims = nodeDims(n);
+      if(isNew){
+        dn = createNodeDom(n);
+        domNodeMap[id] = dn;
+        nodesLayer.appendChild(dn.g);
+        const startX = n.parentId ? nodes[n.parentId].x : n.x;
+        const startY = n.parentId ? nodes[n.parentId].y : n.y;
+        dn.g.style.transition = "none";
+        dn.g.style.opacity = "0";
+        dn.g.style.transform = `translate(${startX}px,${startY}px) scale(.3)`;
+        void dn.g.getBoundingClientRect();
+        requestAnimationFrame(() => {
+          dn.g.style.transition = "";
+          dn.g.style.opacity = "1";
+          dn.g.style.transform = `translate(${n.x}px,${n.y}px) scale(1)`;
+        });
+      } else {
+        dn.g.style.transform = `translate(${n.x}px,${n.y}px) scale(1)`;
+      }
+      dn.rect.setAttribute("width", dims.w);
+      dn.rect.setAttribute("height", dims.h);
+      dn.rect.setAttribute("x", -dims.w / 2);
+      dn.rect.setAttribute("y", -dims.h / 2);
+      dn.rect.setAttribute("rx", dims.h / 2);
+      dn.rect.setAttribute("fill", n.color);
+      dn.text.textContent = dims.display;
+      dn.text.setAttribute("font-size", dims.fontSize);
+      dn.text.setAttribute("font-weight", dims.weight);
+      dn.title.textContent = n.text;
+      dn.g.classList.toggle("selected", id === selectedId);
+    }
+
+    const sel = nodes[selectedId];
+    if(sel){
+      anchorText.textContent = "แตกกิ่งจาก: " + sel.text;
+      anchorDot.style.background = sel.color;
+    }
+    nodeCountEl.textContent = Object.keys(nodes).length + " โหนด";
+  }
+
+  // ---------------- Node drag (pin a branch) ----------------
+  function startNodeDrag(id, g, e){
+    e.stopPropagation();
+    const n = nodes[id];
+    const startPin = n.pin ? { dx: n.pin.dx, dy: n.pin.dy } : { dx: 0, dy: 0 };
+    const startX = e.clientX, startY = e.clientY;
+    let moved = false;
+    g.setPointerCapture(e.pointerId);
+
+    function onMove(ev){
+      const dx = (ev.clientX - startX) / view.k;
+      const dy = (ev.clientY - startY) / view.k;
+      if(!moved && Math.hypot(ev.clientX - startX, ev.clientY - startY) > 4){
+        moved = true;
+        g.classList.add("dragging");
+      }
+      if(moved){
+        n.pin = { dx: startPin.dx + dx, dy: startPin.dy + dy };
+        layout(); render();
+      }
+    }
+    function onUp(ev){
+      g.releasePointerCapture(e.pointerId);
+      g.classList.remove("dragging");
+      g.removeEventListener("pointermove", onMove);
+      g.removeEventListener("pointerup", onUp);
+      g.removeEventListener("pointercancel", onUp);
+      if(moved) saveState();
+    }
+    g.addEventListener("pointermove", onMove);
+    g.addEventListener("pointerup", onUp);
+    g.addEventListener("pointercancel", onUp);
+  }
+
+  // ---------------- View (pan / zoom) ----------------
+  function applyView(){
+    viewport.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.k})`;
+    wrap.style.backgroundPosition = `${view.x}px ${view.y}px`;
+    wrap.style.backgroundSize = `${GRID * view.k}px ${GRID * view.k}px`;
+  }
+
+  function zoomBy(factor){
+    const rect = wrap.getBoundingClientRect();
+    const mx = rect.width / 2, my = rect.height / 2;
+    const oldK = view.k;
+    const newK = clamp(oldK * factor, 0.15, 3);
+    const wx = (mx - view.x) / oldK, wy = (my - view.y) / oldK;
+    view.x = mx - wx * newK; view.y = my - wy * newK; view.k = newK;
+    applyView(); saveState();
+  }
+
+  function fitView(){
+    const list = Object.values(nodes);
+    if(!list.length) return;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for(const n of list){
+      const d = nodeDims(n);
+      minX = Math.min(minX, n.x - d.w / 2); maxX = Math.max(maxX, n.x + d.w / 2);
+      minY = Math.min(minY, n.y - d.h / 2); maxY = Math.max(maxY, n.y + d.h / 2);
+    }
+    const pad = 70;
+    minX -= pad; maxX += pad; minY -= pad; maxY += pad;
+    const rect = wrap.getBoundingClientRect();
+    const scaleX = rect.width / (maxX - minX), scaleY = rect.height / (maxY - minY);
+    const newK = clamp(Math.min(scaleX, scaleY), 0.1, 2);
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    view.k = newK; view.x = rect.width / 2 - cx * newK; view.y = rect.height / 2 - cy * newK;
+    viewport.style.transition = "transform .4s cubic-bezier(.2,.8,.2,1)";
+    applyView(); saveState();
+    setTimeout(() => { viewport.style.transition = ""; }, 400);
+  }
+
+  // background pan + pinch zoom (pointer events unify mouse/touch/pen)
+  const bgPointers = new Map();
+  let panState = null;
+  let pinchState = null;
+
+  function dist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
+  function midpoint(a, b){ return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+
+  wrap.addEventListener("pointerdown", (e) => {
+    if(e.target.closest(".node-g")) return;
+    bgPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    wrap.setPointerCapture(e.pointerId);
+    if(bgPointers.size === 1){
+      panState = { startX: e.clientX, startY: e.clientY, vx: view.x, vy: view.y };
+      wrap.classList.add("panning");
+    } else if(bgPointers.size === 2){
+      panState = null;
+      const pts = [...bgPointers.values()];
+      pinchState = { startDist: dist(pts[0], pts[1]) || 1, startMid: midpoint(pts[0], pts[1]), startK: view.k, startVX: view.x, startVY: view.y };
+    }
+  });
+  wrap.addEventListener("pointermove", (e) => {
+    if(!bgPointers.has(e.pointerId)) return;
+    bgPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if(bgPointers.size === 1 && panState){
+      view.x = panState.vx + (e.clientX - panState.startX);
+      view.y = panState.vy + (e.clientY - panState.startY);
+      applyView();
+    } else if(bgPointers.size === 2 && pinchState){
+      const pts = [...bgPointers.values()];
+      const d = dist(pts[0], pts[1]) || 1;
+      const mid = midpoint(pts[0], pts[1]);
+      const newK = clamp(pinchState.startK * (d / pinchState.startDist), 0.15, 3);
+      const wx = (pinchState.startMid.x - pinchState.startVX) / pinchState.startK;
+      const wy = (pinchState.startMid.y - pinchState.startVY) / pinchState.startK;
+      view.x = mid.x - wx * newK;
+      view.y = mid.y - wy * newK;
+      view.k = newK;
+      applyView();
+    }
+  });
+  function endBgPointer(e){
+    bgPointers.delete(e.pointerId);
+    wrap.classList.remove("panning");
+    if(bgPointers.size >= 2){
+      const pts = [...bgPointers.values()];
+      pinchState = { startDist: dist(pts[0], pts[1]) || 1, startMid: midpoint(pts[0], pts[1]), startK: view.k, startVX: view.x, startVY: view.y };
+    } else {
+      pinchState = null;
+      if(bgPointers.size === 1){
+        const [pt] = bgPointers.values();
+        panState = { startX: pt.x, startY: pt.y, vx: view.x, vy: view.y };
+        wrap.classList.add("panning");
+      } else {
+        panState = null;
+        saveState();
+      }
+    }
+  }
+  wrap.addEventListener("pointerup", endBgPointer);
+  wrap.addEventListener("pointercancel", endBgPointer);
+
+  wrap.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const oldK = view.k;
+    const newK = clamp(oldK * Math.pow(1.0015, -e.deltaY), 0.15, 3);
+    const wx = (mx - view.x) / oldK, wy = (my - view.y) / oldK;
+    view.x = mx - wx * newK; view.y = my - wy * newK; view.k = newK;
+    applyView();
+  }, { passive: false });
+
+  // ---------------- PNG export ----------------
+  function exportPNG(){
+    const list = Object.values(nodes);
+    if(!list.length) return;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for(const n of list){
+      const d = nodeDims(n);
+      minX = Math.min(minX, n.x - d.w / 2); maxX = Math.max(maxX, n.x + d.w / 2);
+      minY = Math.min(minY, n.y - d.h / 2); maxY = Math.max(maxY, n.y + d.h / 2);
+    }
+    const pad = 60;
+    minX -= pad; maxX += pad; minY -= pad; maxY += pad;
+    const w = maxX - minX, h = maxY - minY;
+    const scale = 2;
+
+    const exportSvg = document.createElementNS(svgNS, "svg");
+    exportSvg.setAttribute("xmlns", svgNS);
+    exportSvg.setAttribute("width", w); exportSvg.setAttribute("height", h);
+    exportSvg.setAttribute("viewBox", `${minX} ${minY} ${w} ${h}`);
+    const bgRect = document.createElementNS(svgNS, "rect");
+    bgRect.setAttribute("x", minX); bgRect.setAttribute("y", minY);
+    bgRect.setAttribute("width", w); bgRect.setAttribute("height", h);
+    bgRect.setAttribute("fill", "#f6f7fb");
+    exportSvg.appendChild(bgRect);
+    exportSvg.appendChild(linksLayer.cloneNode(true));
+
+    const nodesClone = document.createElementNS(svgNS, "g");
+    for(const n of list){
+      const d = nodeDims(n);
+      const g = document.createElementNS(svgNS, "g");
+      g.setAttribute("transform", `translate(${n.x},${n.y})`);
+      const rect = document.createElementNS(svgNS, "rect");
+      rect.setAttribute("x", -d.w / 2); rect.setAttribute("y", -d.h / 2);
+      rect.setAttribute("width", d.w); rect.setAttribute("height", d.h);
+      rect.setAttribute("rx", d.h / 2); rect.setAttribute("fill", n.color);
+      rect.setAttribute("stroke", "rgba(255,255,255,.55)"); rect.setAttribute("stroke-width", "2");
+      const text = document.createElementNS(svgNS, "text");
+      text.setAttribute("text-anchor", "middle"); text.setAttribute("dominant-baseline", "middle");
+      text.setAttribute("fill", "#fff"); text.setAttribute("font-size", d.fontSize);
+      text.setAttribute("font-weight", d.weight);
+      text.setAttribute("font-family", "Sarabun, 'Noto Sans Thai', system-ui, sans-serif");
+      text.textContent = d.display;
+      g.appendChild(rect); g.appendChild(text);
+      nodesClone.appendChild(g);
+    }
+    exportSvg.appendChild(nodesClone);
+
+    const xml = new XMLSerializer().serializeToString(exportSvg);
+    const svgBlob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = function(){
+      const canvas = document.createElement("canvas");
+      canvas.width = w * scale; canvas.height = h * scale;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#f6f7fb"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, w * scale, h * scale);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(function(blob){
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "mindmap.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); alert("ไม่สามารถบันทึกรูปได้ในเบราว์เซอร์นี้"); };
+    img.src = url;
+  }
+
+  // ---------------- Input handling ----------------
+  function focusInput(){ input.focus({ preventScroll: true }); }
+
+  input.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+      const val = input.value.trim();
+      if(!val) return;
+      const targetParent = e.shiftKey && nodes[selectedId].parentId ? nodes[selectedId].parentId : selectedId;
+      addChild(targetParent, val);
+      input.value = "";
+    } else if(e.key === "Delete" && input.value === ""){
+      e.preventDefault();
+      deleteSelected();
+    } else if(e.key === "Escape"){
+      input.blur();
+    }
+  });
+
+  document.getElementById("del-btn").addEventListener("click", deleteSelected);
+  document.getElementById("btn-zoomin").addEventListener("click", () => zoomBy(1.25));
+  document.getElementById("btn-zoomout").addEventListener("click", () => zoomBy(0.8));
+  document.getElementById("btn-fit").addEventListener("click", fitView);
+  document.getElementById("btn-png").addEventListener("click", exportPNG);
+  document.getElementById("btn-new").addEventListener("click", () => {
+    if(!confirm("เริ่มมายด์แมปใหม่ทั้งหมด? ข้อมูลเดิมจะถูกลบ")) return;
+    freshState();
+    layout();
+    const rect = wrap.getBoundingClientRect();
+    view = { x: rect.width / 2, y: rect.height * 0.42, k: 1 };
+    applyView();
+    render();
+    saveState();
+    focusInput();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if(document.activeElement === input) return;
+    if(e.key === "Escape"){ selectedId = rootId; render(); }
+  });
+
+  // ---------------- Init ----------------
+  function init(){
+    const restored = loadState();
+    if(!restored) freshState();
+    layout();
+    const rect = wrap.getBoundingClientRect();
+    if(!restored){
+      view = { x: rect.width / 2, y: rect.height * 0.42, k: 1 };
+    }
+    applyView();
+    render();
+    focusInput();
+  }
+
+  window.addEventListener("resize", () => { applyView(); });
+
+  init();
+})();
+</script>
+</body>
+</html>
