@@ -137,6 +137,9 @@
   <button id="btn-zoomout">➖</button>
   <button id="btn-zoomin">➕</button>
   <button id="btn-png">⬇️ <span class="label">บันทึกรูป</span></button>
+  <button id="btn-save-file">💾 <span class="label">บันทึกไฟล์</span></button>
+  <button id="btn-load-file">📂 <span class="label">เปิดไฟล์</span></button>
+  <input id="file-input" type="file" accept="application/json,.json" hidden>
   <span id="node-count"></span>
 </div>
 
@@ -663,6 +666,45 @@
     img.src = url;
   }
 
+  // ---------------- Save / load as file (works across devices) ----------------
+  function exportJSON(){
+    const data = { nodes, rootId, selectedId, nextId, colorCounter, savedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const rootText = (nodes[rootId] && nodes[rootId].text ? nodes[rootId].text : "mindmap").replace(/[^\p{L}\p{M}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");
+    const stamp = new Date().toISOString().slice(0, 10);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `mindmap-${rootText || "idea"}-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  function importJSONFile(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try{ data = JSON.parse(reader.result); }
+      catch(e){ alert("ไฟล์นี้ไม่ใช่ไฟล์มายด์แมปที่ถูกต้อง"); return; }
+      if(!data || !data.nodes || !data.rootId || !data.nodes[data.rootId]){
+        alert("ไฟล์นี้ไม่ใช่ไฟล์มายด์แมปที่ถูกต้อง");
+        return;
+      }
+      const hasContent = Object.keys(nodes).length > 1;
+      if(hasContent && !confirm("เปิดไฟล์นี้จะแทนที่มายด์แมปปัจจุบัน ต้องการดำเนินการต่อหรือไม่?")) return;
+      nodes = data.nodes; rootId = data.rootId;
+      selectedId = data.nodes[data.selectedId] ? data.selectedId : rootId;
+      nextId = data.nextId || Object.keys(nodes).length + 1;
+      colorCounter = data.colorCounter || 0;
+      Object.keys(domNodeMap).forEach((id) => { domNodeMap[id].g.remove(); delete domNodeMap[id]; });
+      Object.keys(domLinkMap).forEach((id) => { domLinkMap[id].remove(); delete domLinkMap[id]; });
+      layout(); saveState(); render(); fitView(); focusInput();
+    };
+    reader.onerror = () => alert("อ่านไฟล์ไม่สำเร็จ");
+    reader.readAsText(file);
+  }
+
   // ---------------- Input handling ----------------
   function focusInput(){ input.focus({ preventScroll: true }); }
 
@@ -695,6 +737,13 @@
   document.getElementById("btn-zoomout").addEventListener("click", () => zoomBy(0.8));
   document.getElementById("btn-fit").addEventListener("click", fitView);
   document.getElementById("btn-png").addEventListener("click", exportPNG);
+  document.getElementById("btn-save-file").addEventListener("click", exportJSON);
+  document.getElementById("btn-load-file").addEventListener("click", () => document.getElementById("file-input").click());
+  document.getElementById("file-input").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if(file) importJSONFile(file);
+    e.target.value = "";
+  });
   document.getElementById("btn-new").addEventListener("click", () => {
     if(!confirm("เริ่มมายด์แมปใหม่ทั้งหมด? ข้อมูลเดิมจะถูกลบ")) return;
     freshState();
