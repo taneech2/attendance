@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "$room": {
+      ".read": "$room.matches(/^(attendance[A-Za-z0-9_-]*|scout|scout-marks|marathon|bike|examResults)$/)",
+      ".write": "$room.matches(/^(attendance[A-Za-z0-9_-]*|scout|scout-marks|marathon|bike|examResults)$/)"
+    }
+  }
+}
