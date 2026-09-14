@@ -69,3 +69,16 @@ Cindy (COO) — รับงาน, กระจายให้ทีม
 - **ชช.1** (attendance-ch1.html): DB=attendance.json, LS=attendanceData_v2, นักเรียน 15 คน
 - **ชช.2** (attendance-y2.html): DB=attendance-y2.json, LS=attendanceData_y2_v2, นักเรียน=[] (กรอกเอง)
 - **ลูกเสือ** (attendance-scout.html): DB=attendance-scout.json, LS=attendanceData_scout_v2
+
+### Firebase Realtime Database Security Rules
+ทุกแอปในเว็บนี้ (attendance-*, scout, scout-marks, marathon, bike, ผลสอบ examResults/*)
+เขียนอ่าน Firebase RTDB `attendance-bric-default-rtdb` ด้วย `fetch()` ตรงๆ **ไม่มี Firebase Auth**
+ดังนั้น rules จึง**ไม่สามารถบังคับ auth ได้** — ทำได้แค่จำกัดว่า root key ไหนอ่าน/เขียนได้บ้าง
+
+- ไฟล์ rules อยู่ที่ `firebase-database.rules.json` (ไม่ได้ deploy อัตโนมัติ ต้องก๊อปวางเอง)
+- วิธี deploy: Firebase Console → โปรเจกต์ `attendance-bric` → Build → Realtime Database →
+  แท็บ Rules → วางเนื้อหาไฟล์นี้ → Publish
+- ถ้าเพิ่ม root key ใหม่ในแอปตัวใหม่ ต้องอัปเดต regex ใน `firebase-database.rules.json`
+  ให้ match ชื่อ key นั้นด้วย ไม่งั้นแอปใหม่จะเขียน/อ่านไม่ได้ (permission denied)
+- ⚠️ โปรเจกต์ `gps-photo-app-19249` (ใช้ใน gps-photo-app.html, home-visit-general.html)
+  เป็น Firebase DB คนละตัว — ยังไม่ได้ตรวจ/แก้ rules ให้ ต้องเช็คแยกต่างหาก
