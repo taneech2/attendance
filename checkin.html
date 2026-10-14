@@ -170,6 +170,11 @@ const mapUrl = (lat, lon) => `https://maps.google.com/?q=${lat},${lon}`;
 // ================= STUDENT =================
 let gps = null, photo = null;
 
+// เปิดจาก LINE โดยลิงก์ไม่มี openExternalBrowser → เติมแล้วโหลดใหม่ ให้ LINE เด้งไปเบราว์เซอร์ภายนอก
+if (/Line\//i.test(navigator.userAgent) && !params.has('openExternalBrowser')) {
+  params.set('openExternalBrowser', '1');
+  location.replace(location.pathname + '?' + params.toString());
+}
 if (/Line\/|FBAN|FBAV|Instagram/i.test(navigator.userAgent)) $('inApp').style.display = 'block';
 $('name').value = localStorage.getItem('checkin_name') || '';
 
