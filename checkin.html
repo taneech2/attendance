@@ -71,6 +71,12 @@ table.list a{color:#000}
   [contenteditable]:hover{outline:none}
 }
 @media (max-width:600px){ #report{overflow-x:auto} }
+.urg{background:#B3261E;color:#fff;border-radius:16px;padding:14px 16px;margin-bottom:14px;display:none}
+.urg .cd{font-size:26px;font-weight:700;line-height:1.1;margin:4px 0}
+.urg ul{margin:8px 0 0;padding-left:20px;font-size:15px}
+.bar{background:rgba(255,255,255,.3);border-radius:99px;height:12px;margin:8px 0 2px;overflow:hidden}
+.bar i{display:block;height:100%;background:#FFD54F;width:0}
+.share{background:#06C755;color:#fff;margin-top:12px}
 </style>
 </head>
 <body>
@@ -79,6 +85,18 @@ table.list a{color:#000}
 <div id="student" class="wrap">
   <h1>📍 เช็คอินบ้าน</h1>
   <div class="sub">วิทยาลัยการอาชีพบุรีรัมย์ · ถ่ายรูป + เลือกชื่อ + กดเช็คอิน</div>
+
+  <div class="urg" id="urg">
+    <div>⏰ ปิดรับเช็คอิน <b id="dlTxt"></b></div>
+    <div class="cd" id="cd"></div>
+    <div class="bar"><i id="barFill"></i></div>
+    <div id="prog" style="font-size:15px"></div>
+    <ul>
+      <li>รายชื่อ <b>คนที่ไม่เช็คอิน</b> จะถูกส่งถึง <b>ท่านผู้อำนวยการ</b> โดยตรง</li>
+      <li>ไม่เช็คอิน = ครูต้อง <b>โทรหาผู้ปกครอง</b> และ <b>ไปเยี่ยมบ้านเอง</b></li>
+      <li>ใช้เวลาไม่ถึง 1 นาที — ทำเลยตอนนี้!</li>
+    </ul>
+  </div>
 
   <div class="warn" id="inApp">
     ⚠️ เปิดจาก LINE/Facebook อาจถ่ายรูปหรือหาพิกัดไม่ได้<br>
@@ -111,6 +129,8 @@ table.list a{color:#000}
     <div class="big">✅</div>
     <h2 style="margin:4px 0">เช็คอินเรียบร้อย</h2>
     <div id="doneInfo"></div>
+    <div id="rankTxt" style="font-size:20px;font-weight:700;margin-top:10px"></div>
+    <a class="btn share" id="shareBtn" target="_blank">💬 ส่งลิงก์ให้เพื่อนที่ยังไม่เช็คอิน</a>
     <button class="btn btn-sm" style="margin-top:14px" onclick="location.reload()">ส่งใหม่อีกครั้ง</button>
   </div>
 
@@ -142,6 +162,8 @@ table.list a{color:#000}
         <button class="btn btn-sm" id="csvBtn">⬇️ CSV</button>
       </div>
       <div class="msg" id="tmsg"></div>
+      <label>⏰ เส้นตายเช็คอิน (โชว์นับถอยหลังบนหน้านักเรียน · นับคนส่งตั้งแต่ "ตั้งแต่วันที่" ด้านบน)</label>
+      <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกเส้นตาย</button></div>
       <label>ลิงก์ให้นักเรียน (ใส่ชื่อกลุ่มเพื่อแยกห้อง — ไม่ใส่ก็ได้)</label>
       <div class="row"><input type="text" id="linkGrp" placeholder="เช่น ชช.1"><button class="btn btn-sm" id="copyLink">📋 คัดลอกลิงก์</button></div>
       <div class="linkbox" id="linkOut" style="margin-top:6px"></div>
@@ -282,6 +304,10 @@ $('goBtn').onclick = async () => {
     });
     if (!res.ok) throw new Error(res.status);
     $('form').style.display = 'none'; $('done').style.display = 'block';
+    meta[id] = {sid, ts}; const rank = doneCount();
+    $('rankTxt').textContent = cfg.deadline ? `🎉 คุณเป็นคนที่ ${rank} จาก ${STUDENTS.length} คนที่เช็คอินแล้ว` : '';
+    const link = location.href.split('#')[0];
+    $('shareBtn').href = 'https://line.me/R/msg/text/?' + encodeURIComponent(`เช็คอินบ้านยัง? ผอ.ดูรายชื่อคนที่ไม่ส่งนะ ใช้เวลาไม่ถึงนาที 👉 ${link}`);
     $('doneInfo').innerHTML = `<b>${esc(name)}</b><br>${thDateTime(ts)}<br><a href="${mapUrl(gps.lat,gps.lon)}" target="_blank">ดูตำแหน่งบนแผนที่</a>`;
   } catch(e){
     $('msg').textContent = '❌ ส่งไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วกดเช็คอินอีกครั้ง';
@@ -295,16 +321,51 @@ $('teacherLink').onclick = e => {
   if (prompt('รหัสครู') !== PIN) return alert('รหัสไม่ถูกต้อง');
   openTeacher();
 };
-if (params.has('report')) $('teacherLink').click(); else getGPS();
+let cfg = {}, meta = {};
+async function loadUrgency(){
+  try {
+    const [c, m] = await Promise.all([fetch(`${DB}/homecheckin_config.json`).then(r=>r.json()), fetch(`${DB}/homecheckin_meta.json`).then(r=>r.json())]);
+    cfg = c || {}; meta = m || {};
+  } catch(e){ return; }
+  if (!cfg.deadline) return;
+  $('urg').style.display = 'block';
+  $('dlTxt').textContent = thDateTime(cfg.deadline);
+  tick(); setInterval(tick, 1000);
+  showProgress();
+}
+function doneCount(){
+  const ids = new Set(STUDENTS.map(s => s[0]));
+  return new Set(Object.values(meta).filter(m => m.ts >= (cfg.since||0) && ids.has(m.sid)).map(m => m.sid)).size;
+}
+function showProgress(){
+  const n = doneCount(), all = STUDENTS.length;
+  $('barFill').style.width = (100*n/all) + '%';
+  $('prog').innerHTML = `เช็คอินแล้ว <b>${n}/${all}</b> คน — <b>ยังขาดอีก ${all-n} คน</b> คุณเป็นหนึ่งในนั้นหรือเปล่า?`;
+}
+function tick(){
+  const ms = cfg.deadline - Date.now();
+  if (ms <= 0){ $('cd').textContent = '⛔ หมดเวลาแล้ว — รีบเช็คอินแล้วแจ้งครูด่วน!'; return; }
+  const d = Math.floor(ms/864e5), h = Math.floor(ms/36e5)%24, mi = Math.floor(ms/6e4)%60, se = Math.floor(ms/1e3)%60;
+  $('cd').textContent = `เหลือ ${d ? d+' วัน ' : ''}${h} ชม. ${mi} นาที ${se} วิ`;
+}
+if (params.has('report')) $('teacherLink').click(); else { getGPS(); loadUrgency(); }
 
-let meta = {}, rows = [];
+let rows = [];
 const photoCache = {};
 
 function openTeacher(){
   $('student').style.display = 'none'; $('teacher').style.display = 'block';
   const today = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
   $('dFrom').value = today; $('dTo').value = today;
-  updateLink(); loadData();
+  updateLink();
+  fetch(`${DB}/homecheckin_config.json`).then(r=>r.json()).catch(()=>null).then(c => {
+    const tz = new Date().getTimezoneOffset()*6e4;
+    if (c && c.deadline){
+      $('dl').value = new Date(c.deadline - tz).toISOString().slice(0,16);
+      $('dFrom').value = new Date(c.since - tz).toISOString().slice(0,10);
+    }
+    loadData();
+  });
 }
 function updateLink(){
   const u = new URL(location.href.split('?')[0].split('#')[0]);
@@ -315,6 +376,12 @@ function updateLink(){
 $('linkGrp').oninput = updateLink;
 $('copyLink').onclick = () => navigator.clipboard.writeText($('linkOut').textContent).then(()=>$('copyLink').textContent='✓ คัดลอกแล้ว');
 
+$('saveDl').onclick = async () => {
+  if (!$('dl').value) return alert('เลือกวันเวลาก่อน');
+  const body = {deadline: new Date($('dl').value).getTime(), since: new Date($('dFrom').value + 'T00:00:00').getTime()};
+  const r = await fetch(`${DB}/homecheckin_config.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  $('saveDl').textContent = r.ok ? '✓ บันทึกแล้ว' : '❌ ไม่สำเร็จ';
+};
 async function loadData(){
   $('tmsg').textContent = '⏳ กำลังโหลด…';
   try {
