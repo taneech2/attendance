@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เช็คอินบ้าน — วก.บุรีรัมย์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1F2A44;--bg:#F4F1E8;--card:#fff;--ok:#2F7D46;--err:#B3261E;--line:#D9D3C2;--accent:#1F4E9C}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sarabun',sans-serif;font-size:17px}
+.wrap{max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:8px 0 2px;text-align:center}
+.sub{text-align:center;color:#5b6475;margin-bottom:16px;font-size:15px}
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.step{font-weight:700;margin-bottom:8px}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font:600 20px 'Sarabun',sans-serif;cursor:pointer}
+.btn-cam{background:var(--accent);color:#fff}
+.btn-go{background:var(--ok);color:#fff;font-size:24px;padding:20px}
+.btn-go:disabled{background:#9aa59d;cursor:not-allowed}
+.btn-sm{display:inline-block;width:auto;padding:8px 14px;font-size:15px;background:#e7e2d3;color:var(--ink)}
+input[type=text],input[type=password],input[type=date],select{width:100%;padding:14px;border:2px solid var(--line);border-radius:12px;font:20px 'Sarabun',sans-serif}
+#preview{width:100%;border-radius:12px;margin-top:10px;display:none}
+.gps{display:flex;align-items:center;gap:8px;font-size:15px}
+.dot{width:12px;height:12px;border-radius:50%;background:#c9a227;flex:none}
+.dot.ok{background:var(--ok)}.dot.err{background:var(--err)}
+.msg{text-align:center;margin-top:10px;min-height:22px}
+.warn{background:#FFF4D6;border:1px solid #E8C566;border-radius:12px;padding:12px;font-size:15px;margin-bottom:14px;display:none}
+.done{text-align:center;display:none}
+.done .big{font-size:64px}
+.foot{text-align:center;margin-top:24px}
+.foot a{color:#8a8f99;font-size:13px}
+/* ---------- teacher ---------- */
+#teacher{display:none}
+.tbar{max-width:900px;margin:0 auto;padding:16px}
+.tbar .card label{display:block;font-size:14px;margin:8px 0 4px;color:#5b6475}
+.tbar input,.tbar select{font-size:16px;padding:10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.actions .btn{width:auto;font-size:16px;padding:10px 16px}
+.linkbox{word-break:break-all;background:#f5f5f5;padding:8px;border-radius:8px;font-size:14px}
+/* ---------- A4 report ---------- */
+#report{background:#888;padding:20px 0}
+.page{width:210mm;min-height:297mm;margin:0 auto 20px;background:#fff;padding:20mm 20mm 20mm 30mm;font-size:16pt;line-height:1.35;color:#000}
+.memo-head{display:flex;align-items:flex-end;gap:12px;margin-bottom:8px}
+.memo-head img{width:1.5cm}
+.memo-head h2{flex:1;text-align:center;font-size:29pt;margin:0;padding-right:1.5cm}
+.ml{display:flex;gap:6px;border-bottom:1px dotted #000;margin:2px 0}
+.ml b{white-space:nowrap}
+.ml span{flex:1}
+.ml2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+[contenteditable]:hover{outline:1px dashed #6aa0ff}
+.body p{text-indent:2.5cm;margin:6px 0;text-align:justify}
+.sign{margin-left:45%;text-align:center;margin-top:28px}
+.boss{margin-top:24px;border-top:1px solid #000;padding-top:8px}
+table.list{width:100%;border-collapse:collapse;font-size:13pt;margin-top:8px}
+table.list th,table.list td{border:1px solid #000;padding:3px 5px;vertical-align:top}
+table.list th{background:#eee}
+table.list a{color:#000}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+.ph{break-inside:avoid;font-size:12pt;line-height:1.25}
+.ph img{width:100%;height:62mm;object-fit:cover;border:1px solid #999}
+.ptitle{text-align:center;font-weight:700;font-size:18pt;margin:0 0 6mm}
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  #teacher .tbar,#student{display:none!important}
+  #report{background:#fff;padding:0}
+  .page{margin:0;box-shadow:none;page-break-after:always}
+  [contenteditable]:hover{outline:none}
+}
+@media (max-width:600px){ #report{overflow-x:auto} }
+</style>
+</head>
+<body>
+
+<!-- ================= STUDENT ================= -->
+<div id="student" class="wrap">
+  <h1>📍 เช็คอินบ้าน</h1>
+  <div class="sub">วิทยาลัยการอาชีพบุรีรัมย์ · ถ่ายรูป + พิมพ์ชื่อ + กดเช็คอิน</div>
+
+  <div class="warn" id="inApp">
+    ⚠️ เปิดจาก LINE/Facebook อาจถ่ายรูปหรือหาพิกัดไม่ได้<br>
+    กด <b>⋮</b> หรือ <b>⋯</b> มุมจอ → <b>เปิดในเบราว์เซอร์</b> (Chrome/Safari)
+  </div>
+
+  <div id="form">
+    <div class="card">
+      <div class="gps"><span class="dot" id="gpsDot"></span><span id="gpsText">กำลังหาพิกัด GPS…</span></div>
+      <button class="btn btn-sm" id="gpsRetry" style="display:none;margin-top:8px">🔄 ลองหาพิกัดอีกครั้ง</button>
+    </div>
+
+    <div class="card">
+      <div class="step">① ถ่ายรูปตัวเองหน้าบ้าน (ให้เห็นทั้งตัวและบ้าน)</div>
+      <button class="btn btn-cam" id="camBtn">📷 ถ่ายรูป</button>
+      <input type="file" id="file" accept="image/*" capture="environment" hidden>
+      <img id="preview" alt="">
+    </div>
+
+    <div class="card">
+      <div class="step">② ชื่อ–นามสกุล</div>
+      <input type="text" id="name" placeholder="เช่น นายสมชาย ใจดี" autocomplete="name">
+    </div>
+
+    <button class="btn btn-go" id="goBtn" disabled>✅ เช็คอิน</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card done" id="done">
+    <div class="big">✅</div>
+    <h2 style="margin:4px 0">เช็คอินเรียบร้อย</h2>
+    <div id="doneInfo"></div>
+    <button class="btn btn-sm" style="margin-top:14px" onclick="location.reload()">ส่งใหม่อีกครั้ง</button>
+  </div>
+
+  <div class="foot"><a href="#" id="teacherLink">สำหรับครู</a></div>
+</div>
+
+<!-- ================= TEACHER ================= -->
+<div id="teacher">
+  <div class="tbar">
+    <div class="card">
+      <h2 style="margin:0 0 8px">📋 รายงานเช็คอินบ้าน (บันทึกข้อความ)</h2>
+      <div class="row">
+        <div><label>ตั้งแต่วันที่</label><input type="date" id="dFrom"></div>
+        <div><label>ถึงวันที่</label><input type="date" id="dTo"></div>
+      </div>
+      <div class="row">
+        <div><label>กลุ่ม/ห้อง</label><select id="grp"><option value="">ทั้งหมด</option></select></div>
+        <div><label>ถ้าคนเดียวส่งหลายครั้ง</label>
+          <select id="dedupe"><option value="1">ใช้ครั้งล่าสุด</option><option value="0">แสดงทุกครั้ง</option></select></div>
+      </div>
+      <div class="row">
+        <div><label>ผู้รายงาน</label><input type="text" id="who" value="นายธานี ชมสุข"></div>
+        <div><label>ตำแหน่ง</label><input type="text" id="whoPos" value="ครู"></div>
+      </div>
+      <label>ส่วนราชการ</label><input type="text" id="dept" value="แผนกวิชาช่างเชื่อมโลหะ วิทยาลัยการอาชีพบุรีรัมย์">
+      <div class="actions">
+        <button class="btn btn-cam" id="loadBtn">🔄 โหลดข้อมูล / สร้างรายงาน</button>
+        <button class="btn btn-go" id="printBtn" style="font-size:16px;padding:10px 16px">🖨️ พิมพ์ / บันทึก PDF</button>
+        <button class="btn btn-sm" id="csvBtn">⬇️ CSV</button>
+      </div>
+      <div class="msg" id="tmsg"></div>
+      <label>ลิงก์ให้นักเรียน (ใส่ชื่อกลุ่มเพื่อแยกห้อง — ไม่ใส่ก็ได้)</label>
+      <div class="row"><input type="text" id="linkGrp" placeholder="เช่น ชช.1"><button class="btn btn-sm" id="copyLink">📋 คัดลอกลิงก์</button></div>
+      <div class="linkbox" id="linkOut" style="margin-top:6px"></div>
+      <div style="font-size:13px;color:#5b6475;margin-top:8px">💡 แก้ข้อความในบันทึกได้โดยคลิกที่ตัวหนังสือในหน้ากระดาษด้านล่าง ก่อนกดพิมพ์</div>
+    </div>
+  </div>
+  <div id="report"></div>
+</div>
+
+<canvas id="cv" hidden></canvas>
+
+<script>
+const DB = 'https://gps-photo-app-19249-default-rtdb.asia-southeast1.firebasedatabase.app';
+const PIN = '2569';
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const GROUP = (params.get('g') || '').trim();
+
+// ---------- helpers ----------
+const thNum = s => String(s).replace(/\d/g, d => '๐๑๒๓๔๕๖๗๘๙'[d]);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const thDate = (ts, opt = {dateStyle:'long'}) => new Date(ts).toLocaleString('th-TH', opt);
+const thDateTime = ts => new Date(ts).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'});
+const mapUrl = (lat, lon) => `https://maps.google.com/?q=${lat},${lon}`;
+
+// ================= STUDENT =================
+let gps = null, photo = null;
+
+if (/Line\/|FBAN|FBAV|Instagram/i.test(navigator.userAgent)) $('inApp').style.display = 'block';
+$('name').value = localStorage.getItem('checkin_name') || '';
+
+function getGPS(){
+  $('gpsRetry').style.display = 'none';
+  $('gpsDot').className = 'dot';
+  $('gpsText').textContent = 'กำลังหาพิกัด GPS…';
+  if (!navigator.geolocation){ gpsFail('เครื่องนี้ไม่รองรับ GPS'); return; }
+  navigator.geolocation.getCurrentPosition(p => {
+    gps = {lat:p.coords.latitude, lon:p.coords.longitude, acc:Math.round(p.coords.accuracy)};
+    $('gpsDot').className = 'dot ok';
+    $('gpsText').textContent = `ได้พิกัดแล้ว ✓ (แม่นยำ ±${gps.acc} ม.)`;
+    ready();
+  }, () => gpsFail('หาพิกัดไม่ได้ — กด "อนุญาต" ตำแหน่ง และเปิด GPS ในมือถือ'),
+  {enableHighAccuracy:true, timeout:20000, maximumAge:0});
+}
+function gpsFail(t){
+  $('gpsDot').className = 'dot err';
+  $('gpsText').textContent = t;
+  $('gpsRetry').style.display = 'inline-block';
+}
+$('gpsRetry').onclick = getGPS;
+
+$('camBtn').onclick = () => { if (!gps) getGPS(); $('file').click(); };
+$('file').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1024, s = Math.min(1, MAX / Math.max(img.width, img.height));
+      const cv = $('cv'); cv.width = Math.round(img.width*s); cv.height = Math.round(img.height*s);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      photo = cv.toDataURL('image/jpeg', 0.8);
+      $('preview').src = photo; $('preview').style.display = 'block';
+      $('camBtn').textContent = '📷 ถ่ายใหม่';
+      ready();
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+};
+$('name').oninput = ready;
+function ready(){ $('goBtn').disabled = !(gps && photo && $('name').value.trim().length >= 3); }
+
+async function stamp(dataUrl, name, g, ts){
+  await document.fonts.load("600 20px 'Sarabun'").catch(()=>{});
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const cv = $('cv'); cv.width = img.width; cv.height = img.height;
+      const c = cv.getContext('2d'); c.drawImage(img, 0, 0);
+      const fs = Math.max(16, img.width*0.032), pad = fs*0.6, h = fs*3.6;
+      c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(0, img.height-h, img.width, h);
+      c.fillStyle = '#fff';
+      c.font = `600 ${fs}px Sarabun, sans-serif`;
+      c.fillText(name, pad, img.height-h+fs*1.1);
+      c.font = `${fs*0.8}px Sarabun, sans-serif`;
+      c.fillText(`📍 ${g.lat.toFixed(6)}, ${g.lon.toFixed(6)} (±${g.acc} ม.)`, pad, img.height-h+fs*2.15);
+      c.fillText(`🕒 ${thDateTime(ts)}`, pad, img.height-h+fs*3.15);
+      res(cv.toDataURL('image/jpeg', 0.72));
+    };
+    img.src = dataUrl;
+  });
+}
+
+$('goBtn').onclick = async () => {
+  const name = $('name').value.trim().replace(/\s+/g, ' ');
+  localStorage.setItem('checkin_name', name);
+  $('goBtn').disabled = true; $('msg').textContent = '⏳ กำลังส่ง…'; $('msg').style.color = '';
+  const ts = Date.now();
+  const id = ts + '_' + Math.random().toString(36).slice(2, 7);
+  try {
+    const img = await stamp(photo, name, gps, ts);
+    const res = await fetch(`${DB}/.json`, {
+      method: 'PATCH', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        [`homecheckin_meta/${id}`]: {name, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP},
+        [`homecheckin_photo/${id}`]: img
+      })
+    });
+    if (!res.ok) throw new Error(res.status);
+    $('form').style.display = 'none'; $('done').style.display = 'block';
+    $('doneInfo').innerHTML = `<b>${esc(name)}</b><br>${thDateTime(ts)}<br><a href="${mapUrl(gps.lat,gps.lon)}" target="_blank">ดูตำแหน่งบนแผนที่</a>`;
+  } catch(e){
+    $('msg').textContent = '❌ ส่งไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วกดเช็คอินอีกครั้ง';
+    $('msg').style.color = 'var(--err)'; $('goBtn').disabled = false;
+  }
+};
+
+// ================= TEACHER =================
+$('teacherLink').onclick = e => {
+  e.preventDefault();
+  if (prompt('รหัสครู') !== PIN) return alert('รหัสไม่ถูกต้อง');
+  openTeacher();
+};
+if (params.has('report')) $('teacherLink').click(); else getGPS();
+
+let meta = {}, rows = [];
+const photoCache = {};
+
+function openTeacher(){
+  $('student').style.display = 'none'; $('teacher').style.display = 'block';
+  const today = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  $('dFrom').value = today; $('dTo').value = today;
+  updateLink(); loadData();
+}
+function updateLink(){
+  const u = new URL(location.href.split('?')[0].split('#')[0]);
+  const g = $('linkGrp').value.trim(); if (g) u.searchParams.set('g', g);
+  u.searchParams.set('openExternalBrowser', '1');
+  $('linkOut').textContent = u.toString();
+}
+$('linkGrp').oninput = updateLink;
+$('copyLink').onclick = () => navigator.clipboard.writeText($('linkOut').textContent).then(()=>$('copyLink').textContent='✓ คัดลอกแล้ว');
+
+async function loadData(){
+  $('tmsg').textContent = '⏳ กำลังโหลด…';
+  try {
+    const r = await fetch(`${DB}/homecheckin_meta.json`);
+    meta = (await r.json()) || {};
+  } catch(e){ $('tmsg').textContent = '❌ โหลดข้อมูลไม่ได้'; return; }
+  const groups = [...new Set(Object.values(meta).map(m => m.g).filter(Boolean))].sort();
+  const cur = $('grp').value;
+  $('grp').innerHTML = '<option value="">ทั้งหมด</option>' + groups.map(g => `<option ${g===cur?'selected':''}>${esc(g)}</option>`).join('');
+  await buildReport();
+}
+
+function filterRows(){
+  const from = new Date($('dFrom').value + 'T00:00:00').getTime();
+  const to = new Date($('dTo').value + 'T23:59:59').getTime();
+  const g = $('grp').value;
+  let list = Object.entries(meta).map(([id, m]) => ({id, ...m}))
+    .filter(m => m.ts >= from && m.ts <= to && (!g || m.g === g));
+  if ($('dedupe').value === '1'){
+    const last = {};
+    list.forEach(m => { const k = m.name.replace(/\s/g,''); if (!last[k] || last[k].ts < m.ts) last[k] = m; });
+    list = Object.values(last);
+  }
+  return list.sort((a,b) => a.name.localeCompare(b.name, 'th'));
+}
+
+async function getPhoto(id){
+  if (photoCache[id]) return photoCache[id];
+  const r = await fetch(`${DB}/homecheckin_photo/${id}.json`);
+  return photoCache[id] = await r.json();
+}
+
+async function buildReport(){
+  rows = filterRows();
+  $('tmsg').textContent = `พบ ${rows.length} รายการ — กำลังโหลดรูป…`;
+  const photos = await Promise.all(rows.map(r => getPhoto(r.id).catch(()=>null)));
+  $('tmsg').textContent = `✓ ${rows.length} รายการ`;
+
+  const fromTxt = thNum(thDate($('dFrom').value + 'T00:00'));
+  const toTxt = thNum(thDate($('dTo').value + 'T00:00'));
+  const period = $('dFrom').value === $('dTo').value ? `วันที่ ${fromTxt}` : `ระหว่างวันที่ ${fromTxt} ถึงวันที่ ${toTxt}`;
+  const grpTxt = $('grp').value ? ` กลุ่ม ${esc($('grp').value)}` : '';
+  const n = thNum(rows.length);
+
+  const tableRows = rows.map((r, i) => `<tr>
+    <td style="text-align:center">${thNum(i+1)}</td><td>${esc(r.name)}</td>
+    <td>${thNum(thDateTime(r.ts))}</td>
+    <td><a href="${mapUrl(r.lat,r.lon)}">${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</a></td>
+    <td style="text-align:center">±${r.acc} ม.</td></tr>`).join('');
+
+  const memo = `<div class="page">
+    <div class="memo-head"><img src="garuda.jpg" alt=""><h2>บันทึกข้อความ</h2></div>
+    <div class="ml"><b>ส่วนราชการ</b><span contenteditable>${esc($('dept').value)}</span></div>
+    <div class="ml2"><div class="ml"><b>ที่</b><span contenteditable>&nbsp;</span></div>
+      <div class="ml"><b>วันที่</b><span contenteditable>${thNum(thDate(Date.now()))}</span></div></div>
+    <div class="ml"><b>เรื่อง</b><span contenteditable>รายงานผลการถ่ายภาพที่พักอาศัยของนักเรียนพร้อมพิกัด GPS</span></div>
+    <div style="margin:8px 0"><b>เรียน</b> <span contenteditable>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</span></div>
+    <div class="body" contenteditable>
+      <p>ตามที่ผู้อำนวยการได้มอบหมายให้ครูดำเนินการให้นักเรียนถ่ายภาพตนเองพร้อมที่พักอาศัย และบันทึกพิกัดตำแหน่ง (GPS) เพื่อใช้เป็นข้อมูลในการดูแลช่วยเหลือนักเรียน นั้น</p>
+      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยถ่ายภาพตนเองหน้าที่พักอาศัย ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${n} คน รายละเอียดรายชื่อ พิกัด และภาพถ่ายดังแนบท้ายบันทึกนี้</p>
+      <p>จึงเรียนมาเพื่อโปรดทราบ</p>
+    </div>
+    <div class="sign" contenteditable>ลงชื่อ ......................................<br>(${esc($('who').value)})<br>ตำแหน่ง ${esc($('whoPos').value)}</div>
+    <div class="boss" contenteditable><b>ความเห็นผู้อำนวยการ</b><br>.............................................................................................................<br>
+      <div style="margin-left:45%;text-align:center;margin-top:18px">ลงชื่อ ......................................<br>(นางสาวรัชญา คนธขจร)<br>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</div></div>
+  </div>`;
+
+  const listPage = `<div class="page"><div class="ptitle">รายชื่อนักเรียนที่เช็คอิน (${n} คน)</div>
+    <table class="list"><tr><th>ที่</th><th>ชื่อ–นามสกุล</th><th>วัน–เวลา</th><th>พิกัด (คลิกดูแผนที่)</th><th>ความแม่นยำ</th></tr>${tableRows}</table></div>`;
+
+  const per = 6;
+  let photoPages = '';
+  for (let i = 0; i < rows.length; i += per){
+    photoPages += `<div class="page"><div class="ptitle">ภาพถ่ายประกอบ${i ? ' (ต่อ)' : ''}</div><div class="photos">` +
+      rows.slice(i, i+per).map((r, j) => `<div class="ph">
+        ${photos[i+j] ? `<img src="${photos[i+j]}">` : '<div style="height:62mm;border:1px solid #999">ไม่มีรูป</div>'}
+        <b>${thNum(i+j+1)}. ${esc(r.name)}</b><br>${thNum(thDateTime(r.ts))}<br>${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</div>`).join('') +
+      `</div></div>`;
+  }
+  $('report').innerHTML = memo + (rows.length ? listPage + photoPages : '');
+}
+
+$('loadBtn').onclick = loadData;
+['dFrom','dTo','grp','dedupe'].forEach(id => $(id).onchange = buildReport);
+$('printBtn').onclick = () => window.print();
+$('csvBtn').onclick = () => {
+  const lines = [['ลำดับ','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่']]
+    .concat(rows.map((r,i) => [i+1, r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon)]));
+  const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = `checkin_${$('dFrom').value}_${$('dTo').value}.csv`; a.click();
+};
+</script>
+</body>
+</html>
