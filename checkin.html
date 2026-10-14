@@ -20,7 +20,7 @@ h1{font-size:26px;margin:8px 0 2px;text-align:center}
 .btn-go{background:var(--ok);color:#fff;font-size:24px;padding:20px}
 .btn-go:disabled{background:#9aa59d;cursor:not-allowed}
 .btn-sm{display:inline-block;width:auto;padding:8px 14px;font-size:15px;background:#e7e2d3;color:var(--ink)}
-input[type=text],input[type=password],input[type=date],select{width:100%;padding:14px;border:2px solid var(--line);border-radius:12px;font:20px 'Sarabun',sans-serif}
+input[type=text],input[type=password],input[type=date],select{background:#fff;width:100%;padding:14px;border:2px solid var(--line);border-radius:12px;font:20px 'Sarabun',sans-serif}
 #preview{width:100%;border-radius:12px;margin-top:10px;display:none}
 .gps{display:flex;align-items:center;gap:8px;font-size:15px}
 .dot{width:12px;height:12px;border-radius:50%;background:#c9a227;flex:none}
@@ -78,7 +78,7 @@ table.list a{color:#000}
 <!-- ================= STUDENT ================= -->
 <div id="student" class="wrap">
   <h1>📍 เช็คอินบ้าน</h1>
-  <div class="sub">วิทยาลัยการอาชีพบุรีรัมย์ · ถ่ายรูป + พิมพ์ชื่อ + กดเช็คอิน</div>
+  <div class="sub">วิทยาลัยการอาชีพบุรีรัมย์ · ถ่ายรูป + เลือกชื่อ + กดเช็คอิน</div>
 
   <div class="warn" id="inApp">
     ⚠️ เปิดจาก LINE/Facebook อาจถ่ายรูปหรือหาพิกัดไม่ได้<br>
@@ -99,8 +99,8 @@ table.list a{color:#000}
     </div>
 
     <div class="card">
-      <div class="step">② ชื่อ–นามสกุล</div>
-      <input type="text" id="name" placeholder="เช่น นายสมชาย ใจดี" autocomplete="name">
+      <div class="step">② เลือกชื่อของตัวเอง</div>
+      <select id="name"><option value="">— กดเลือกชื่อของตัวเอง —</option></select>
     </div>
 
     <button class="btn btn-go" id="goBtn" disabled>✅ เช็คอิน</button>
@@ -156,6 +156,28 @@ table.list a{color:#000}
 <script>
 const DB = 'https://gps-photo-app-19249-default-rtdb.asia-southeast1.firebasedatabase.app';
 const PIN = '2569';
+// รายชื่อนักเรียน: [รหัสประจำตัว, ชื่อ-สกุล] — ห้ามใส่เลขประจำตัวประชาชน (หน้านี้เปิดสาธารณะ)
+const STUDENTS = [
+  ['69201030001','นางสาวสุนิสา สิงห์เถร'],
+  ['69201030003','นายณัฐพงษ์ โปรัมย์'],
+  ['69201030004','นายอิสระ คุดรัมย์'],
+  ['69201030005','นายอนันต์ เกตุชาติ'],
+  ['69201030006','นายภูริภัทร์ พูนสวัสดิ์'],
+  ['69201030007','นายธณารัฐ โขรัมย์'],
+  ['69201030008','นายลิขิตกร ทอนศรี'],
+  ['69201030009','นายศิริเดช กวดวงษาค์'],
+  ['69201030010','นางสาวมินตรา พรดอนกอ'],
+  ['69201030011','นายฐิติภูมิ บุญภูมิ'],
+  ['69201030012','นายอรรถพร โอทารัมย์'],
+  ['69201030013','นายธนายุทธ การะเกศ'],
+  ['69201030014','นายวิวัฒน์ โคตา'],
+  ['69201030015','นายนวพล คงมี'],
+  ['69201030016','นายธนภัทร แผ้วพลสง'],
+  ['69201030017','นายสุภกร ไชยเขตต์'],
+  ['69201030018','นายภานุเดช จารย์ไธสงค์'],
+  ['69201030019','นายณัฐธวัฒน์ คำรัมย์'],
+  ['69201030020','นายธนากร เนานาน'],
+];
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const GROUP = (params.get('g') || '').trim();
@@ -176,7 +198,8 @@ if (/Line\//i.test(navigator.userAgent) && !params.has('openExternalBrowser')) {
   location.replace(location.pathname + '?' + params.toString());
 }
 if (/Line\/|FBAN|FBAV|Instagram/i.test(navigator.userAgent)) $('inApp').style.display = 'block';
-$('name').value = localStorage.getItem('checkin_name') || '';
+$('name').innerHTML += STUDENTS.map(([sid, n], i) => `<option value="${sid}">${i+1}. ${sid} ${n}</option>`).join('');
+$('name').value = localStorage.getItem('checkin_sid') || '';
 
 function getGPS(){
   $('gpsRetry').style.display = 'none';
@@ -217,8 +240,8 @@ $('file').onchange = e => {
   };
   r.readAsDataURL(f);
 };
-$('name').oninput = ready;
-function ready(){ $('goBtn').disabled = !(gps && photo && $('name').value.trim().length >= 3); }
+$('name').onchange = ready;
+function ready(){ $('goBtn').disabled = !(gps && photo && $('name').value); }
 
 async function stamp(dataUrl, name, g, ts){
   await document.fonts.load("600 20px 'Sarabun'").catch(()=>{});
@@ -242,17 +265,18 @@ async function stamp(dataUrl, name, g, ts){
 }
 
 $('goBtn').onclick = async () => {
-  const name = $('name').value.trim().replace(/\s+/g, ' ');
-  localStorage.setItem('checkin_name', name);
+  const sid = $('name').value;
+  const name = STUDENTS.find(s => s[0] === sid)[1];
+  localStorage.setItem('checkin_sid', sid);
   $('goBtn').disabled = true; $('msg').textContent = '⏳ กำลังส่ง…'; $('msg').style.color = '';
   const ts = Date.now();
   const id = ts + '_' + Math.random().toString(36).slice(2, 7);
   try {
-    const img = await stamp(photo, name, gps, ts);
+    const img = await stamp(photo, `${name} (${sid})`, gps, ts);
     const res = await fetch(`${DB}/.json`, {
       method: 'PATCH', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        [`homecheckin_meta/${id}`]: {name, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP},
+        [`homecheckin_meta/${id}`]: {name, sid, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP},
         [`homecheckin_photo/${id}`]: img
       })
     });
@@ -311,10 +335,10 @@ function filterRows(){
     .filter(m => m.ts >= from && m.ts <= to && (!g || m.g === g));
   if ($('dedupe').value === '1'){
     const last = {};
-    list.forEach(m => { const k = m.name.replace(/\s/g,''); if (!last[k] || last[k].ts < m.ts) last[k] = m; });
+    list.forEach(m => { const k = m.sid || m.name.replace(/\s/g,''); if (!last[k] || last[k].ts < m.ts) last[k] = m; });
     list = Object.values(last);
   }
-  return list.sort((a,b) => a.name.localeCompare(b.name, 'th'));
+  return list.sort((a,b) => (a.sid||'z').localeCompare(b.sid||'z') || a.name.localeCompare(b.name, 'th'));
 }
 
 async function getPhoto(id){
@@ -327,7 +351,7 @@ async function buildReport(){
   rows = filterRows();
   $('tmsg').textContent = `พบ ${rows.length} รายการ — กำลังโหลดรูป…`;
   const photos = await Promise.all(rows.map(r => getPhoto(r.id).catch(()=>null)));
-  $('tmsg').textContent = `✓ ${rows.length} รายการ`;
+  $('tmsg').textContent = `✓ เช็คอินแล้ว ${rows.length} รายการ`;
 
   const fromTxt = thNum(thDate($('dFrom').value + 'T00:00'));
   const toTxt = thNum(thDate($('dTo').value + 'T00:00'));
@@ -335,8 +359,13 @@ async function buildReport(){
   const grpTxt = $('grp').value ? ` กลุ่ม ${esc($('grp').value)}` : '';
   const n = thNum(rows.length);
 
+  const done = new Set(rows.map(r => r.sid));
+  const missing = STUDENTS.filter(([sid]) => !done.has(sid));
+  const missingHtml = missing.length ? `<div style="margin-top:8mm;font-weight:700">ยังไม่เช็คอิน (${thNum(missing.length)} คน)</div>
+    <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th></tr>${missing.map(([sid,n],i) =>
+    `<tr><td style="text-align:center">${thNum(i+1)}</td><td>${thNum(sid)}</td><td>${esc(n)}</td></tr>`).join('')}</table>` : '';
   const tableRows = rows.map((r, i) => `<tr>
-    <td style="text-align:center">${thNum(i+1)}</td><td>${esc(r.name)}</td>
+    <td style="text-align:center">${thNum(i+1)}</td><td>${thNum(r.sid||'-')}</td><td>${esc(r.name)}</td>
     <td>${thNum(thDateTime(r.ts))}</td>
     <td><a href="${mapUrl(r.lat,r.lon)}">${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</a></td>
     <td style="text-align:center">±${r.acc} ม.</td></tr>`).join('');
@@ -350,7 +379,7 @@ async function buildReport(){
     <div style="margin:8px 0"><b>เรียน</b> <span contenteditable>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</span></div>
     <div class="body" contenteditable>
       <p>ตามที่ผู้อำนวยการได้มอบหมายให้ครูดำเนินการให้นักเรียนถ่ายภาพตนเองพร้อมที่พักอาศัย และบันทึกพิกัดตำแหน่ง (GPS) เพื่อใช้เป็นข้อมูลในการดูแลช่วยเหลือนักเรียน นั้น</p>
-      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยถ่ายภาพตนเองหน้าที่พักอาศัย ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${n} คน รายละเอียดรายชื่อ พิกัด และภาพถ่ายดังแนบท้ายบันทึกนี้</p>
+      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยถ่ายภาพตนเองหน้าที่พักอาศัย ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${n} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${missing.length ? ` ยังไม่เช็คอิน ${thNum(missing.length)} คน` : ''} รายละเอียดรายชื่อ พิกัด และภาพถ่ายดังแนบท้ายบันทึกนี้</p>
       <p>จึงเรียนมาเพื่อโปรดทราบ</p>
     </div>
     <div class="sign" contenteditable>ลงชื่อ ......................................<br>(${esc($('who').value)})<br>ตำแหน่ง ${esc($('whoPos').value)}</div>
@@ -359,7 +388,7 @@ async function buildReport(){
   </div>`;
 
   const listPage = `<div class="page"><div class="ptitle">รายชื่อนักเรียนที่เช็คอิน (${n} คน)</div>
-    <table class="list"><tr><th>ที่</th><th>ชื่อ–นามสกุล</th><th>วัน–เวลา</th><th>พิกัด (คลิกดูแผนที่)</th><th>ความแม่นยำ</th></tr>${tableRows}</table></div>`;
+    <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th><th>วัน–เวลา</th><th>พิกัด (คลิกดูแผนที่)</th><th>ความแม่นยำ</th></tr>${tableRows}</table>${missingHtml}</div>`;
 
   const per = 6;
   let photoPages = '';
@@ -370,15 +399,15 @@ async function buildReport(){
         <b>${thNum(i+j+1)}. ${esc(r.name)}</b><br>${thNum(thDateTime(r.ts))}<br>${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</div>`).join('') +
       `</div></div>`;
   }
-  $('report').innerHTML = memo + (rows.length ? listPage + photoPages : '');
+  $('report').innerHTML = memo + listPage + photoPages;
 }
 
 $('loadBtn').onclick = loadData;
 ['dFrom','dTo','grp','dedupe'].forEach(id => $(id).onchange = buildReport);
 $('printBtn').onclick = () => window.print();
 $('csvBtn').onclick = () => {
-  const lines = [['ลำดับ','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่']]
-    .concat(rows.map((r,i) => [i+1, r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon)]));
+  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่']]
+    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon)]));
   const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
