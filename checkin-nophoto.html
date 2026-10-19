@@ -82,6 +82,11 @@ table.list a{color:#000}
 .ph{break-inside:avoid;font-size:12pt;line-height:1.25}
 .ph img{width:100%;height:62mm;object-fit:cover;border:1px solid #999}
 #preview{width:100%;border-radius:12px;margin-top:10px;display:none}
+.tbar .card label.chk{display:flex;gap:8px;align-items:center;font-size:15px;margin:4px 0;color:var(--ink)}
+.tbar .card label.chk input{width:auto}
+#deptChecks{display:none;margin:4px 0 0 26px;columns:2;font-size:15px}
+#deptChecks label{display:flex;gap:6px;align-items:center;margin:2px 0;font-size:14px;color:var(--ink)}
+#deptChecks input{width:auto}
 .depts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .depts button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:12px 6px;font:600 16px 'Sarabun',sans-serif;cursor:pointer;color:var(--ink)}
 .depts button small{font-weight:400;color:#5b6475}
@@ -132,7 +137,7 @@ table.mx td.nm{text-align:left;white-space:nowrap}
       <button class="btn btn-sm" id="gpsRetry" style="display:none;margin-top:8px">🔄 ลองหาพิกัดอีกครั้ง</button>
     </div>
 
-    <div class="card">
+    <div class="card" id="deptCard" style="display:none">
       <div class="step">เลือกแผนก/กลุ่มเรียนของคุณ</div>
       <div class="depts" id="depts"></div>
     </div>
@@ -224,6 +229,12 @@ table.mx td.nm{text-align:left;white-space:nowrap}
       <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกการตั้งค่า</button></div>
       <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" id="needPhoto" style="width:auto"> 📷 ต้องถ่ายรูปตอนเช็คอิน (ติ๊ก = นักเรียนต้องถ่ายรูปก่อนกดเช็คอิน · ไม่ติ๊ก = ไม่ต้องถ่าย · ใช้กับลิงก์/วิชาที่ตั้งชื่อด้านบน บันทึกทันที)</label>
       <div class="msg" id="photoMsg" style="margin:0;min-height:0;text-align:left;font-size:14px"></div>
+      <label>🏷️ ปุ่มแผนกบนหน้านักเรียน (ใช้กับลิงก์/วิชาที่ตั้งชื่อด้านบน · บันทึกทันที)</label>
+      <label class="chk"><input type="radio" name="dmode" value="all" checked> แสดงทุกแผนก</label>
+      <label class="chk"><input type="radio" name="dmode" value="some"> แสดงเฉพาะแผนกที่เลือก (เลือกแผนกเดียวหรือหลายแผนกก็ได้)</label>
+      <div id="deptChecks"></div>
+      <label class="chk"><input type="radio" name="dmode" value="none"> ไม่แสดงปุ่มแผนก (นักเรียนเลือกชื่อจากรายชื่อรวมทุกแผนก)</label>
+      <div class="msg" id="deptMsg" style="margin:0;min-height:0;text-align:left;font-size:14px"></div>
       <label>📍 จุดอ้างอิงห้องเรียน/วิทยาลัย — ใช้ตรวจว่านักเรียนเช็คอินอยู่ในพื้นที่จริง (ยืนอยู่ที่ห้องเรียน กดปุ่มซ้าย ตั้งรัศมีขวา แล้วกด "บันทึกการตั้งค่า")</label>
       <div class="row"><button class="btn btn-sm" id="setRef">📍 ใช้ตำแหน่งปัจจุบันของฉัน</button><input type="number" id="refR" value="200" min="30" step="10" placeholder="รัศมี (เมตร)"></div>
       <div class="linkbox" id="refTxt">ยังไม่ได้ตั้งจุดอ้างอิง (ไม่ตรวจพื้นที่)</div>
@@ -396,22 +407,36 @@ if (/Line\//i.test(navigator.userAgent) && !params.has('openExternalBrowser')) {
 }
 if (/Line\/|FBAN|FBAV|Instagram/i.test(navigator.userAgent)) $('inApp').style.display = 'block';
 // ปุ่มแผนก/กลุ่มเรียน → แสดงรายชื่อของกลุ่มนั้นให้เลือกชื่อตัวเอง
-let curClass = null;
-$('depts').innerHTML = CLASSES.map(c => `<button data-id="${c.id}">${esc(c.name)}<br><small>${c.s.length} คน</small></button>`).join('');
-function pickClass(id, sid){
+// ครูกำหนดต่อลิงก์ได้ (cfg.deptMode): all = ทุกแผนก · some = เฉพาะแผนกที่เลือก (cfg.depts) · none = ไม่แสดงปุ่มแผนก (รายชื่อรวม)
+let curClass = null, deptSig = null;
+const allowedClasses = () => cfg.deptMode === 'some' && Array.isArray(cfg.depts) && cfg.depts.length ? CLASSES.filter(c => cfg.depts.includes(c.id)) : CLASSES;
+const sidAllowed = sid => cfg.deptMode === 'none' || allowedClasses().includes(CLASS_OF[sid]);
+function renderDepts(list){
+  $('depts').innerHTML = list.map(c => `<button data-id="${c.id}">${esc(c.name)}<br><small>${c.s.length} คน</small></button>`).join('');
+}
+function pickClass(id, sid, all){
   curClass = CLASSES.find(c => c.id === id) || null;
   document.querySelectorAll('#depts button').forEach(b => b.classList.toggle('on', !!curClass && b.dataset.id === curClass.id));
-  $('nameCard').style.display = curClass ? 'block' : 'none';
+  $('nameCard').style.display = curClass || all ? 'block' : 'none';
   $('deptName').textContent = curClass ? '· ' + curClass.name : '';
-  $('name').innerHTML = '<option value="">— กดเลือกชื่อของตัวเอง —</option>' + (curClass ? curClass.s.map(([s, n], i) => `<option value="${s}">${i+1}. ${s} ${n}</option>`).join('') : '');
+  const opt = (s, n, i) => `<option value="${s}">${i}${s} ${n}</option>`;
+  $('name').innerHTML = '<option value="">— กดเลือกชื่อของตัวเอง —</option>' + (curClass ? curClass.s.map(([s, n], i) => opt(s, n, (i+1) + '. ')).join('')
+    : all ? CLASSES.map(c => `<optgroup label="${esc(c.name)}">${c.s.map(([s, n]) => opt(s, n, '')).join('')}</optgroup>`).join('') : '');
   $('name').value = sid || '';
   try { if (curClass) localStorage.setItem('checkin2_class', curClass.id); } catch(e){}
   ready(); if (cfg.deadline) showProgress();
 }
 $('depts').onclick = e => { const b = e.target.closest('button'); if (!b) return; pickClass(b.dataset.id); if (matchMedia('(max-width:700px)').matches) $('nameCard').scrollIntoView({behavior:'smooth', block:'center'}); };
-function restoreClass(){
-  const sid0 = localStorage.getItem('checkin2_sid') || '', c0 = CLASS_OF[sid0] || CLASSES.find(c => c.id === localStorage.getItem('checkin2_class'));
-  if (c0) pickClass(c0.id, CLASS_OF[sid0] ? sid0 : '');
+// เรียกเมื่อโหลด/อัปเดตค่าตั้งของครู — จัดปุ่มแผนกตามโหมด (เปลี่ยนเฉพาะเมื่อค่าตั้งเปลี่ยน ไม่ทับสิ่งที่นักเรียนเลือกไว้)
+function applyDepts(){
+  const sig = (cfg.deptMode || 'all') + '|' + JSON.stringify(cfg.depts || []);
+  if (sig === deptSig) return; deptSig = sig;
+  const keep = $('name').value || localStorage.getItem('checkin2_sid') || '';
+  if (cfg.deptMode === 'none'){ $('deptCard').style.display = 'none'; pickClass(null, sidAllowed(keep) ? keep : '', true); return; }
+  const list = allowedClasses(); renderDepts(list);
+  const c0 = list.length === 1 ? list[0] : list.includes(CLASS_OF[keep]) ? CLASS_OF[keep] : list.find(c => c.id === localStorage.getItem('checkin2_class'));
+  $('deptCard').style.display = list.length === 1 ? 'none' : 'block';
+  pickClass(c0 ? c0.id : null, c0 && CLASS_OF[keep] === c0 ? keep : '');
 }
 
 function getGPS(){
@@ -490,6 +515,7 @@ $('goBtn').onclick = async () => {
   try {
     try { cfg = (await fetch(cfgUrl(GROUP)).then(r => r.json())) || {}; } catch(e){}
     const rd = activeRound(cfg);
+    if (!sidAllowed(sid)){ applyDepts(); $('msg').textContent = '⚠️ ชื่อนี้ไม่อยู่ในแผนกที่เปิดให้เช็คอินในกิจกรรมนี้ กรุณาเลือกใหม่'; $('msg').style.color = 'var(--err)'; return; }
     if (photoNeeded() && !photo){
       applyPhoto(); $('msg').textContent = '📷 ครูกำหนดให้ถ่ายรูปในกิจกรรมนี้ กรุณาถ่ายรูปก่อนกดเช็คอิน'; $('msg').style.color = 'var(--err)'; return;
     }
@@ -515,7 +541,7 @@ $('goBtn').onclick = async () => {
     }
     $('form').style.display = 'none'; $('done').style.display = 'block';
     meta[id] = {sid, ts}; const rank = doneCount();
-    $('rankTxt').textContent = cfg.deadline ? `🎉 คุณเป็นคนที่ ${rank} จาก ${curClass.s.length} คนที่เช็คอินแล้ว` : '';
+    $('rankTxt').textContent = cfg.deadline ? `🎉 คุณเป็นคนที่ ${rank}${curClass ? ' จาก ' + curClass.s.length : ''} คนที่เช็คอินแล้ว` : '';
     const link = location.href.split('#')[0];
     $('shareBtn').href = 'https://line.me/R/msg/text/?' + encodeURIComponent(`เช็คอินเช็คชื่อยัง? ครูดูรายชื่อคนที่ไม่ส่งนะ ใช้เวลาไม่ถึงนาที 👉 ${link}`);
     $('doneInfo').innerHTML = `<b>${esc(name)}</b><br>${thDateTime(ts)}<br><b>${ptsTxt}</b><br>${area.in === true ? '<span style="color:var(--ok)">✓ อยู่ในพื้นที่เรียน</span><br>' : area.in === false ? `<span style="color:var(--err)">⚠️ อยู่นอกพื้นที่เรียน (ห่างประมาณ ${d} ม.)</span><br>` : ''}<a href="${mapUrl(gps.lat,gps.lon)}" target="_blank">ดูตำแหน่งบนแผนที่</a>`;
@@ -559,9 +585,9 @@ async function loadUrgency(){
   try {
     const [c, m] = await Promise.all([fetch(cfgUrl(GROUP)).then(r=>r.json()), fetch(`${DB}/checkin2_meta.json`).then(r=>r.json())]);
     cfg = c || {}; meta = m || {};
-  } catch(e){ return; }
-  applyPhoto(); renderRound(); setInterval(renderRound, 1000);
-  setInterval(() => fetch(cfgUrl(GROUP)).then(r => r.json()).then(c => { cfg = c || {}; applyPhoto(); }).catch(() => {}), 20000);
+  } catch(e){ applyDepts(); return; }
+  applyDepts(); applyPhoto(); renderRound(); setInterval(renderRound, 1000);
+  setInterval(() => fetch(cfgUrl(GROUP)).then(r => r.json()).then(c => { cfg = c || {}; applyDepts(); applyPhoto(); }).catch(() => {}), 20000);
   if (!cfg.deadline) return;
   $('urg').style.display = 'block';
   $('dlTxt').textContent = thDateTime(cfg.deadline);
@@ -573,6 +599,7 @@ function doneCount(){
   return new Set(Object.values(meta).filter(m => m.ts >= (cfg.since||0) && ids.has(m.sid) && (!GROUP || m.g === GROUP)).map(m => m.sid)).size;
 }
 function showProgress(){
+  if (!curClass && cfg.deptMode === 'none'){ $('barFill').style.width = '0'; $('prog').innerHTML = `เช็คอินแล้ว <b>${doneCount()}</b> คน`; return; }
   if (!curClass){ $('barFill').style.width = '0'; $('prog').innerHTML = 'เลือกแผนก/กลุ่มเรียนของคุณ เพื่อดูว่าห้องของคุณเช็คอินแล้วกี่คน'; return; }
   const n = doneCount(), all = curClass.s.length;
   $('barFill').style.width = (100*n/all) + '%';
@@ -599,6 +626,26 @@ function openTeacher(){
 $('deptSel').innerHTML = '<option value="">ทุกแผนก (' + STUDENTS.length + ' คน)</option>' + CLASSES.map(c => `<option value="${c.id}">${esc(c.name)} (${c.s.length})</option>`).join('');
 try { $('deptSel').value = localStorage.getItem('checkin2_dept') || ''; } catch(e){}
 const rosterNow = () => rosterOf($('deptSel').value);
+$('deptChecks').innerHTML = CLASSES.map(c => `<label><input type="checkbox" value="${c.id}"> ${esc(c.name)}</label>`).join('');
+function showDeptCfg(c){
+  const m = (c && c.deptMode) || 'all', sel = new Set((c && c.depts) || []);
+  document.querySelector(`input[name=dmode][value=${m}]`).checked = true;
+  document.querySelectorAll('#deptChecks input').forEach(i => { i.checked = sel.has(i.value); });
+  $('deptChecks').style.display = m === 'some' ? 'block' : 'none';
+}
+async function saveDeptCfg(){
+  dlSeq++;
+  const m = document.querySelector('input[name=dmode]:checked').value, depts = [...document.querySelectorAll('#deptChecks input:checked')].map(i => i.value);
+  $('deptChecks').style.display = m === 'some' ? 'block' : 'none';
+  if (m === 'some' && !depts.length){ $('deptMsg').textContent = 'ติ๊กเลือกอย่างน้อย 1 แผนก (ยังไม่บันทึก)'; return; }
+  const body = {deptMode: m === 'all' ? null : m, depts: m === 'some' ? depts : null};
+  const r = await fetch(cfgUrl($('linkGrp').value.trim()), {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).catch(() => null);
+  if (r && r.ok){ Object.assign(curCfg, {deptMode: body.deptMode || undefined, depts: body.depts || undefined});
+    $('deptMsg').textContent = m === 'all' ? '✓ ตั้งแล้ว: แสดงทุกแผนก' : m === 'none' ? '✓ ตั้งแล้ว: ไม่แสดงปุ่มแผนก' : `✓ ตั้งแล้ว: แสดง ${depts.length} แผนก`; }
+  else $('deptMsg').textContent = '❌ บันทึกไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต';
+}
+document.querySelectorAll('input[name=dmode]').forEach(i => { i.onchange = saveDeptCfg; });
+$('deptChecks').onchange = saveDeptCfg;
 let refPt = null, curCfg = {};
 const roundMsg = () => { const r = activeRound(curCfg), g = $('linkGrp').value.trim();
   return `🔔 ถึงเวลาเช็คอินแล้ว!${g ? ' วิชา/กลุ่ม ' + g : ''}${r && r.name ? ' (' + r.name + ')' : ''}${r && r.until ? ' กดภายใน ' + hm(r.until) + ' น.' : ''}${curCfg.photo ? ' (ต้องถ่ายรูปด้วย)' : ''} ใช้เวลาไม่ถึงนาที 👉 ${linkFor(g)}`; };
@@ -635,7 +682,7 @@ async function loadDl(){
   const c = await fetch(cfgUrl($('linkGrp').value.trim())).then(r=>r.json()).catch(()=>null);
   if (my !== dlSeq) return;
   $('dl').value = c && c.deadline ? new Date(c.deadline - new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16) : '';
-  curCfg = c || {}; $('needPhoto').checked = !!(c && c.photo); renderRoundStat();
+  curCfg = c || {}; $('needPhoto').checked = !!(c && c.photo); showDeptCfg(c); renderRoundStat();
   refPt = c && c.lat != null ? {lat:c.lat, lon:c.lon} : null;
   $('refR').value = (c && c.r) || 200; showRef();
 }
@@ -939,7 +986,7 @@ function openStatus(){
 }
 
 // เริ่มทำงาน (วางท้ายสุด เพื่อให้ตัวแปรทุกตัวประกาศครบก่อน)
-if (params.has('status')) openStatus(); else if (params.has('report')) $('teacherLink').click(); else { restoreClass(); getGPS(); loadUrgency(); }
+if (params.has('status')) openStatus(); else if (params.has('report')) $('teacherLink').click(); else { getGPS(); loadUrgency(); }
 </script>
 </body>
 </html>
