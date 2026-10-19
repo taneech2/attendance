@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ตรวจสอบการเข้าเรียน — วก.บุรีรัมย์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1F2A44;--bg:#F4F1E8;--card:#fff;--ok:#2F7D46;--err:#B3261E;--line:#D9D3C2;--accent:#1F4E9C}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sarabun',sans-serif;font-size:17px}
+.wrap{max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:8px 0 2px;text-align:center}
+.sub{text-align:center;color:#5b6475;margin-bottom:16px;font-size:15px}
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.step{font-weight:700;margin-bottom:8px}
+label{display:block;font-size:14px;margin:10px 0 4px;color:#5b6475}
+select,input[type=date]{background:#fff;width:100%;padding:14px;border:2px solid var(--line);border-radius:12px;font:20px 'Sarabun',sans-serif}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:16px}
+.big{font-size:22px;font-weight:700}
+.note{font-size:14px;color:#5b6475;margin-top:6px}
+.foot{text-align:center;margin-top:24px;font-size:13px;color:#8a8f99}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏫 ตรวจสอบการเข้าเรียน</h1>
+  <div class="sub">วิทยาลัยการอาชีพบุรีรัมย์ · สำหรับผู้ปกครอง · อัปเดตอัตโนมัติทุก 1 นาที</div>
+  <div class="card">
+    <div class="step">เลือกแผนก/กลุ่มเรียน แล้วเลือกชื่อนักเรียน</div>
+    <select id="cls"></select>
+    <select id="nm" style="margin-top:8px"></select>
+    <label>วันที่</label><input type="date" id="day">
+  </div>
+  <div class="card" id="out">เลือกชื่อนักเรียนด้านบน</div>
+  <div class="card" id="overview"></div>
+  <div class="foot">หน้านี้ใช้ดูสถานะอย่างเดียว ไม่แสดงตำแหน่งของนักเรียน</div>
+</div>
+
+<script src="roster.js"></script>
+<script>
+const DB = 'https://gps-photo-app-19249-default-rtdb.asia-southeast1.firebasedatabase.app';
+const $ = id => document.getElementById(id);
+const GROUP = (new URLSearchParams(location.search).get('g') || '').trim();   // ใส่ ?g=ชื่อวิชา เพื่อดูเฉพาะวิชา/กลุ่มนั้น (ไม่ใส่ = ทุกวิชา)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dayKey = ts => new Date(ts - new Date().getTimezoneOffset()*6e4).toISOString().slice(0, 10);
+const hm = ts => new Date(ts).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+let meta = {}, rounds = [];
+
+function scoreTxt(sid){
+  const gs = [...new Set(rounds.map(r => r.g || ''))].filter(g => !GROUP || g === GROUP).sort();
+  if (!gs.length) return '';
+  return '<div style="margin-top:10px"><b>🎯 คะแนนเช็คอินสะสม</b><br>' + gs.map(g => {
+    const total = rounds.filter(r => (r.g || '') === g).length;
+    const pts = new Set(Object.values(meta).filter(m => m.sid === sid && (m.g || '') === g && m.rid).map(m => m.rid)).size;
+    return `${esc(g || 'ทั่วไป')}: <b>${pts}/${total}</b> รอบ`; }).join('<br>') + '</div>';
+}
+async function refresh(){
+  try {
+    const [m, r] = await Promise.all([fetch(`${DB}/checkin2_meta.json`).then(r => r.json()), fetch(`${DB}/checkin2_rounds.json`).then(r => r.json())]);
+    meta = m || {};
+    rounds = Object.values(r || {}).flatMap(g => Object.entries(g).map(([id, v]) => ({id, ...v})));
+  } catch(e){ $('out').textContent = '❌ โหลดข้อมูลไม่ได้ ตรวจสอบอินเทอร์เน็ต'; return; }
+  const day = $('day').value, roster = rosterOf($('cls').value), ids = new Set(roster.map(s => s[0]));
+  const list = Object.values(meta).filter(m => dayKey(m.ts) === day && (!GROUP || m.g === GROUP));
+  const cnt = new Set(list.filter(m => ids.has(m.sid)).map(m => m.sid)).size;
+  const c = CLASSES.find(c => c.id === $('cls').value);
+  $('overview').innerHTML = `ภาพรวม${c ? ' ' + esc(c.name) : ''}${GROUP ? ' · ' + esc(GROUP) : ''}: เช็คอินแล้ว <b>${cnt}/${roster.length}</b> คน`;
+  const sid = $('nm').value;
+  if (!sid){ $('out').innerHTML = 'เลือกชื่อนักเรียนด้านบน'; return; }
+  const name = STUDENTS.find(s => s[0] === sid)[1];
+  const mine = list.filter(m => m.sid === sid).sort((a, b) => a.ts - b.ts);
+  $('out').innerHTML = mine.length
+    ? `<div class="big" style="color:var(--ok)">✅ ${esc(name)} เช็คอินเข้าเรียนแล้ว</div>
+       <table><tr><th>เวลา</th><th>วิชา/กลุ่ม</th><th>พื้นที่เรียน</th><th>คะแนน</th></tr>${mine.map(m => `<tr><td>${hm(m.ts)} น.</td><td>${esc(m.g || '-')}</td><td>${m.in === undefined ? '-' : m.in ? '✓ อยู่ในพื้นที่' : '⚠️ นอกพื้นที่'}</td><td>${m.rid ? '+1 ✓' : 'ไม่นับ'}</td></tr>`).join('')}</table>${scoreTxt(sid)}`
+    : `<div class="big" style="color:var(--err)">❌ ยังไม่พบการเช็คอินของ ${esc(name)}</div><div class="note">ถ้านักเรียนเพิ่งเช็คอิน รอสักครู่ ระบบอัปเดตทุก 1 นาที</div>`;
+}
+function fillNames(sid){
+  const c = CLASSES.find(c => c.id === $('cls').value);
+  $('nm').innerHTML = '<option value="">— เลือกชื่อนักเรียน —</option>' + (c ? c.s : []).map(([s, n], i) => `<option value="${s}">${i+1}. ${n}</option>`).join('');
+  $('nm').value = sid || '';
+}
+$('cls').innerHTML = '<option value="">— เลือกแผนก/กลุ่มเรียน —</option>' + CLASSES.map(c => `<option value="${c.id}">${esc(c.name)} (${c.s.length})</option>`).join('');
+let sid0 = ''; try { sid0 = localStorage.getItem('checkin2_status_sid') || ''; } catch(e){}
+$('cls').value = (CLASS_OF[sid0] || {}).id || ''; fillNames(CLASS_OF[sid0] ? sid0 : '');
+$('day').value = dayKey(Date.now());
+$('cls').onchange = () => { fillNames(''); refresh(); };
+$('nm').onchange = () => { try { localStorage.setItem('checkin2_status_sid', $('nm').value); } catch(e){} refresh(); };
+$('day').onchange = refresh;
+refresh(); setInterval(refresh, 60000);
+</script>
+</body>
+</html>
