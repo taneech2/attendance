@@ -78,6 +78,12 @@ table.list a{color:#000}
 .pin{background:#1F4E9C;color:#fff;border:2px solid #fff;border-radius:50%;width:22px;height:22px;font:700 11px/18px sans-serif;text-align:center;box-shadow:0 0 2px #000}
 .lg{font-size:12pt;margin:0 0 3mm}.lg i{display:inline-block;vertical-align:middle;margin:0 2px 0 8px}
 .lg .c{width:14px;height:14px;border-radius:50%;background:radial-gradient(#e00,#fa0,#0c0)}
+.sv{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;font-size:15px}
+.sv b{flex:1;min-width:90px}
+.sv button{padding:6px 10px;font-size:14px}
+table.mx{font-size:10.5pt}
+table.mx th,table.mx td{text-align:center;padding:2px 3px}
+table.mx td.nm{text-align:left;white-space:nowrap}
 .refs{font-size:12pt;line-height:1.3;margin:4mm 0 0;padding-left:6mm}
 .refs li{margin:1mm 0}
 </style>
@@ -142,9 +148,9 @@ table.list a{color:#000}
         <div><label>ถึงวันที่</label><input type="date" id="dTo"></div>
       </div>
       <div class="row">
-        <div><label>กลุ่ม/ห้อง</label><select id="grp"><option value="">ทั้งหมด</option></select></div>
+        <div><label>กลุ่ม/ห้อง/วิชา</label><select id="grp"><option value="">ทั้งหมด</option></select></div>
         <div><label>ถ้าคนเดียวส่งหลายครั้ง</label>
-          <select id="dedupe"><option value="1">ใช้ครั้งล่าสุด</option><option value="0">แสดงทุกครั้ง</option></select></div>
+          <select id="dedupe"><option value="day">ครั้งล่าสุดของแต่ละวัน</option><option value="0">แสดงทุกครั้ง (ดูเวลา/ตำแหน่งทุกครั้ง)</option><option value="1">ครั้งล่าสุดตลอดช่วง</option></select></div>
       </div>
       <div class="row">
         <div><label>ผู้รายงาน</label><input type="text" id="who" value="นายธานี ชมสุข"></div>
@@ -157,11 +163,13 @@ table.list a{color:#000}
         <button class="btn btn-sm" id="csvBtn">⬇️ CSV</button>
       </div>
       <div class="msg" id="tmsg"></div>
-      <label>⏰ เส้นตายเช็คอิน (โชว์นับถอยหลังบนหน้านักเรียน · นับคนส่งตั้งแต่ "ตั้งแต่วันที่" ด้านบน)</label>
-      <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกเส้นตาย</button></div>
-      <label>ลิงก์ให้นักเรียน (ใส่ชื่อกลุ่มเพื่อแยกห้อง — ไม่ใส่ก็ได้)</label>
-      <div class="row"><input type="text" id="linkGrp" placeholder="เช่น ชช.1"><button class="btn btn-sm" id="copyLink">📋 คัดลอกลิงก์</button></div>
+      <label>ลิงก์ให้นักเรียน — ตั้งชื่อตามห้อง/วิชา/คาบ (เช่น "ชช.1 CNC คาบ 1") แต่ละชื่อจะแยกข้อมูลและเส้นตายของตัวเอง · ไม่ใส่ก็ได้</label>
+      <div class="row"><input type="text" id="linkGrp" placeholder="เช่น ชช.1 CNC"><button class="btn btn-sm" id="copyLink">📋 คัดลอกลิงก์</button></div>
       <div class="linkbox" id="linkOut" style="margin-top:6px"></div>
+      <div class="actions" style="margin-top:6px"><button class="btn btn-sm" id="saveLink">💾 บันทึกลิงก์นี้ไว้ใช้ซ้ำ</button></div>
+      <div id="savedLinks"></div>
+      <label>⏰ เส้นตายเช็คอินของลิงก์นี้ (โชว์นับถอยหลังบนหน้านักเรียน · นับคนส่งตั้งแต่ "ตั้งแต่วันที่" ด้านบน)</label>
+      <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกเส้นตาย</button></div>
       <div style="font-size:13px;color:#5b6475;margin-top:8px">💡 แก้ข้อความในบันทึกได้โดยคลิกที่ตัวหนังสือในหน้ากระดาษด้านล่าง ก่อนกดพิมพ์</div>
     </div>
   </div>
@@ -273,9 +281,12 @@ $('teacherLink').onclick = e => {
   openTeacher();
 };
 let cfg = {}, meta = {};
+// เส้นตายแยกตามกลุ่ม/วิชา (key ของ Firebase ห้ามมี . $ # [ ] /)
+const cfgUrl = g => `${DB}/checkin2_config/${encodeURIComponent((g || '_all').replace(/[.$#\[\]\/]/g, '_'))}.json`;
+const dayKey = ts => new Date(ts - new Date().getTimezoneOffset()*6e4).toISOString().slice(0, 10);
 async function loadUrgency(){
   try {
-    const [c, m] = await Promise.all([fetch(`${DB}/checkin2_config.json`).then(r=>r.json()), fetch(`${DB}/checkin2_meta.json`).then(r=>r.json())]);
+    const [c, m] = await Promise.all([fetch(cfgUrl(GROUP)).then(r=>r.json()), fetch(`${DB}/checkin2_meta.json`).then(r=>r.json())]);
     cfg = c || {}; meta = m || {};
   } catch(e){ return; }
   if (!cfg.deadline) return;
@@ -286,7 +297,7 @@ async function loadUrgency(){
 }
 function doneCount(){
   const ids = new Set(STUDENTS.map(s => s[0]));
-  return new Set(Object.values(meta).filter(m => m.ts >= (cfg.since||0) && ids.has(m.sid)).map(m => m.sid)).size;
+  return new Set(Object.values(meta).filter(m => m.ts >= (cfg.since||0) && ids.has(m.sid) && (!GROUP || m.g === GROUP)).map(m => m.sid)).size;
 }
 function showProgress(){
   const n = doneCount(), all = STUDENTS.length;
@@ -299,23 +310,19 @@ function tick(){
   const d = Math.floor(ms/864e5), h = Math.floor(ms/36e5)%24, mi = Math.floor(ms/6e4)%60, se = Math.floor(ms/1e3)%60;
   $('cd').textContent = `เหลือ ${d ? d+' วัน ' : ''}${h} ชม. ${mi} นาที ${se} วิ`;
 }
-if (params.has('report')) $('teacherLink').click(); else { getGPS(); loadUrgency(); }
 
 let rows = [];
 
 function openTeacher(){
   $('student').style.display = 'none'; $('teacher').style.display = 'block';
-  const today = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const today = dayKey(Date.now());
   $('dFrom').value = today; $('dTo').value = today;
-  updateLink();
-  fetch(`${DB}/checkin2_config.json`).then(r=>r.json()).catch(()=>null).then(c => {
-    const tz = new Date().getTimezoneOffset()*6e4;
-    if (c && c.deadline){
-      $('dl').value = new Date(c.deadline - tz).toISOString().slice(0,16);
-      $('dFrom').value = new Date(c.since - tz).toISOString().slice(0,10);
-    }
-    loadData();
-  });
+  updateLink(); renderSaved();
+  loadDl().then(loadData);
+}
+async function loadDl(){
+  const c = await fetch(cfgUrl($('linkGrp').value.trim())).then(r=>r.json()).catch(()=>null);
+  $('dl').value = c && c.deadline ? new Date(c.deadline - new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16) : '';
 }
 function updateLink(){
   const u = new URL(location.href.split('?')[0].split('#')[0]);
@@ -324,12 +331,34 @@ function updateLink(){
   $('linkOut').textContent = u.toString();
 }
 $('linkGrp').oninput = updateLink;
+$('linkGrp').onchange = loadDl;
 $('copyLink').onclick = () => navigator.clipboard.writeText($('linkOut').textContent).then(()=>$('copyLink').textContent='✓ คัดลอกแล้ว');
 
+const SAVED_LS = 'checkin2_saved_links';
+const getSaved = () => { try { return JSON.parse(localStorage.getItem(SAVED_LS)) || []; } catch(e){ return []; } };
+const putSaved = a => { try { localStorage.setItem(SAVED_LS, JSON.stringify(a)); } catch(e){} };
+const linkFor = g => { const u = new URL(location.href.split('?')[0].split('#')[0]); if (g) u.searchParams.set('g', g); u.searchParams.set('openExternalBrowser', '1'); return u.toString(); };
+function renderSaved(){
+  const list = getSaved();
+  $('savedLinks').innerHTML = list.length ? '<label>ลิงก์ที่บันทึกไว้ (กด "ใช้" เพื่อดูรายงานของวิชา/ห้องนั้น)</label>' + list.map((g, i) => `<div class="sv"><b>${esc(g || 'ทั้งหมด (ไม่ระบุกลุ่ม)')}</b>
+    <button class="btn btn-sm" data-a="use" data-i="${i}">ใช้</button><button class="btn btn-sm" data-a="copy" data-i="${i}">📋 คัดลอก</button><button class="btn btn-sm" data-a="del" data-i="${i}">🗑️</button></div>`).join('') : '';
+}
+$('saveLink').onclick = () => {
+  const g = $('linkGrp').value.trim(), list = getSaved();
+  if (!list.includes(g)) putSaved(list.concat(g));
+  renderSaved(); $('saveLink').textContent = '✓ บันทึกแล้ว';
+};
+$('savedLinks').onclick = async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const list = getSaved(), g = list[+b.dataset.i];
+  if (b.dataset.a === 'del'){ list.splice(+b.dataset.i, 1); putSaved(list); renderSaved(); }
+  else if (b.dataset.a === 'copy'){ navigator.clipboard.writeText(linkFor(g)).then(() => b.textContent = '✓'); }
+  else { $('linkGrp').value = g; updateLink(); await loadDl(); await loadData(); $('grp').value = g; await buildReport(); }
+};
 $('saveDl').onclick = async () => {
   if (!$('dl').value) return alert('เลือกวันเวลาก่อน');
   const body = {deadline: new Date($('dl').value).getTime(), since: new Date($('dFrom').value + 'T00:00:00').getTime()};
-  const r = await fetch(`${DB}/checkin2_config.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const r = await fetch(cfgUrl($('linkGrp').value.trim()), {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
   $('saveDl').textContent = r.ok ? '✓ บันทึกแล้ว' : '❌ ไม่สำเร็จ';
 };
 async function loadData(){
@@ -338,26 +367,29 @@ async function loadData(){
     const r = await fetch(`${DB}/checkin2_meta.json`);
     meta = (await r.json()) || {};
   } catch(e){ $('tmsg').textContent = '❌ โหลดข้อมูลไม่ได้'; return; }
-  const groups = [...new Set(Object.values(meta).map(m => m.g).filter(Boolean))].sort();
+  const groups = [...new Set(Object.values(meta).map(m => m.g).concat(getSaved()).filter(Boolean))].sort();
   const cur = $('grp').value;
   $('grp').innerHTML = '<option value="">ทั้งหมด</option>' + groups.map(g => `<option ${g===cur?'selected':''}>${esc(g)}</option>`).join('');
   await buildReport();
 }
 
-function filterRows(){
+function rawRows(){
   const from = new Date($('dFrom').value + 'T00:00:00').getTime();
   const to = new Date($('dTo').value + 'T23:59:59').getTime();
   const g = $('grp').value;
-  let list = Object.entries(meta).map(([id, m]) => ({id, ...m}))
+  return Object.entries(meta).map(([id, m]) => ({id, ...m}))
     .filter(m => m.ts >= from && m.ts <= to && (!g || m.g === g));
-  if ($('dedupe').value === '1'){
+}
+function filterRows(){
+  let list = rawRows();
+  const mode = $('dedupe').value;
+  if (mode !== '0'){
     const last = {};
-    list.forEach(m => { const k = m.sid || m.name.replace(/\s/g,''); if (!last[k] || last[k].ts < m.ts) last[k] = m; });
+    list.forEach(m => { const k = (m.sid || m.name.replace(/\s/g,'')) + (mode === 'day' ? '|' + dayKey(m.ts) : ''); if (!last[k] || last[k].ts < m.ts) last[k] = m; });
     list = Object.values(last);
   }
-  return list.sort((a,b) => (a.sid||'z').localeCompare(b.sid||'z') || a.name.localeCompare(b.name, 'th'));
+  return list.sort((a,b) => (a.sid||'z').localeCompare(b.sid||'z') || a.name.localeCompare(b.name, 'th') || a.ts - b.ts);
 }
-
 
 // ---------- แผนที่ + จุดกระจุกตัว ----------
 const CLUSTER_R = 100; // ม. — พิกัดที่ห่างกันไม่เกินนี้นับเป็นกลุ่มเดียวกัน
@@ -412,9 +444,14 @@ async function buildReport(){
   const grpTxt = $('grp').value ? ` กลุ่ม ${esc($('grp').value)}` : '';
   const n = thNum(rows.length);
 
+  const raw = rawRows();
+  const nStu = new Set(rows.map(r => r.sid || r.name)).size;
+  const days = [];
+  for (let t = new Date($('dFrom').value + 'T00:00:00'); dayKey(t.getTime()) <= $('dTo').value && days.length < 62; t.setDate(t.getDate()+1)) days.push(dayKey(t.getTime()));
+  const multiDay = days.length > 1;
   const done = new Set(rows.map(r => r.sid));
   const missing = STUDENTS.filter(([sid]) => !done.has(sid));
-  const missingHtml = missing.length ? `<div style="margin-top:8mm;font-weight:700">ยังไม่เช็คอิน (${thNum(missing.length)} คน)</div>
+  const missingHtml = missing.length ? `<div style="margin-top:8mm;font-weight:700">${multiDay ? 'ไม่เคยเช็คอินเลยในช่วงนี้' : 'ยังไม่เช็คอิน'} (${thNum(missing.length)} คน)</div>
     <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th></tr>${missing.map(([sid,n],i) =>
     `<tr><td style="text-align:center">${thNum(i+1)}</td><td>${thNum(sid)}</td><td>${esc(n)}</td></tr>`).join('')}</table>` : '';
   const tableRows = rows.map((r, i) => `<tr>
@@ -432,7 +469,7 @@ async function buildReport(){
     <div style="margin:8px 0"><b>เรียน</b> <span contenteditable>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</span></div>
     <div class="body" contenteditable>
       <p>ตามที่ผู้อำนวยการได้มอบหมายให้ครูดำเนินการเช็คชื่อนักเรียนผ่านระบบออนไลน์ และบันทึกพิกัดตำแหน่ง (GPS) เพื่อใช้เป็นข้อมูลในการดูแลช่วยเหลือนักเรียน นั้น</p>
-      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${n} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${missing.length ? ` ยังไม่เช็คอิน ${thNum(missing.length)} คน` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
+      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${thNum(nStu)} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${rows.length !== nStu ? ` (รวม ${n} รายการ ใน ${thNum(days.length)} วัน)` : ''}${missing.length ? ` ${multiDay ? 'ไม่เคยเช็คอินเลย' : 'ยังไม่เช็คอิน'} ${thNum(missing.length)} คน` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
       <p>จึงเรียนมาเพื่อโปรดทราบ</p>
     </div>
     <div class="sign" contenteditable>ลงชื่อ ......................................<br>(${esc($('who').value)})<br>ตำแหน่ง ${esc($('whoPos').value)}</div>
@@ -440,9 +477,24 @@ async function buildReport(){
       <div style="margin-left:45%;text-align:center;margin-top:18px">ลงชื่อ ......................................<br>(นางสาวรัชญา คนธขจร)<br>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</div></div>
   </div>`;
 
-  const listPage = `<div class="page"><div class="ptitle">รายชื่อนักเรียนที่เช็คอิน (${n} คน)</div>
+  const listPage = `<div class="page"><div class="ptitle">รายการเช็คอิน (${n} รายการ · ${thNum(nStu)} คน)</div>
     <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th><th>วัน–เวลา</th><th>พิกัด (คลิกดูแผนที่)</th><th>ความแม่นยำ</th></tr>${tableRows}</table>${missingHtml}</div>`;
 
+  // ตารางเช็คชื่อรายวัน (เมื่อเลือกหลายวัน): ✓ + เวลาแรกที่เช็คอินของวันนั้น
+  const first = {};
+  raw.forEach(m => { const k = m.sid + '|' + dayKey(m.ts); if (!first[k] || first[k] > m.ts) first[k] = m.ts; });
+  const hhmm = ts => thNum(new Date(ts).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', hour12:false}));
+  const dShort = d => thNum(new Date(d + 'T00:00').toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
+  let matrixPages = '';
+  if (multiDay){
+    for (let i = 0; i < days.length; i += 7){
+      const ds = days.slice(i, i + 7);
+      matrixPages += `<div class="page"><div class="ptitle">ตารางเช็คชื่อรายวัน${i ? ' (ต่อ)' : ''}${grpTxt}</div>
+        <table class="list mx"><tr><th>ที่</th><th>ชื่อ–นามสกุล</th>${ds.map(d => `<th>${dShort(d)}</th>`).join('')}<th>รวม (วัน)</th></tr>
+        ${STUDENTS.map(([sid, nm], j) => `<tr><td>${thNum(j+1)}</td><td class="nm">${esc(nm)}</td>${ds.map(d => first[sid+'|'+d] ? `<td>✓ ${hhmm(first[sid+'|'+d])}</td>` : '<td>–</td>').join('')}<td><b>${thNum(days.filter(d => first[sid+'|'+d]).length)}</b></td></tr>`).join('')}
+        <tr><td></td><td class="nm"><b>จำนวนผู้เช็คอิน (คน)</b></td>${ds.map(d => `<td><b>${thNum(STUDENTS.filter(([sid]) => first[sid+'|'+d]).length)}</b></td>`).join('')}<td></td></tr></table></div>`;
+    }
+  }
   const cl = clusterRows(rows);
   const multi = cl.filter(c => c.items.length > 1);
   const clusterRowsHtml = multi.map((c, i) => `<tr>
@@ -453,18 +505,18 @@ async function buildReport(){
     <div class="lg"><i class="pin" style="width:18px;height:18px;font-size:10px;line-height:14px">ก</i> ตำแหน่งนักเรียน (หมายเลขตามตารางรายชื่อ)<i class="c"></i> สีแดงเข้ม = จุดที่นักเรียนเช็คอินอยู่ใกล้กันหนาแน่น</div>
     <div id="map"></div>
     <div style="font-weight:700">จุดที่มีการกระจุกตัว (${thNum(multi.length)} จุด · เช็คอินกระจายตัวเดี่ยว ${thNum(cl.length - multi.length)} จุด)</div>
-    ${multi.length ? `<table class="list"><tr><th>ที่</th><th>จำนวน (คน)</th><th>รายชื่อ</th><th>ตำแหน่งกึ่งกลาง</th></tr>${clusterRowsHtml}</table>` : '<div style="font-size:13pt">ไม่พบกลุ่มที่เช็คอินอยู่ใกล้กัน</div>'}
+    ${multi.length ? `<table class="list"><tr><th>ที่</th><th>จำนวน (รายการ)</th><th>รายชื่อ</th><th>ตำแหน่งกึ่งกลาง</th></tr>${clusterRowsHtml}</table>` : '<div style="font-size:13pt">ไม่พบกลุ่มที่เช็คอินอยู่ใกล้กัน</div>'}
     <div style="font-weight:700;margin-top:5mm">อ้างอิง</div>
     <ol class="refs" contenteditable>
       <li>ข้อมูลจากระบบเช็คอินเช็คชื่อออนไลน์ วิทยาลัยการอาชีพบุรีรัมย์ (${esc(location.href.split('?')[0].split('#')[0])}) ฐานข้อมูล checkin2_meta</li>
-      <li>ช่วงข้อมูล ${period}${grpTxt ? ' ' + grpTxt.trim() : ''} · ${$('dedupe').value === '1' ? 'กรณีส่งหลายครั้งใช้ครั้งล่าสุดของแต่ละคน' : 'แสดงทุกครั้งที่ส่ง'} · รวม ${n} รายการ</li>
+      <li>ช่วงข้อมูล ${period}${grpTxt ? ' ' + grpTxt.trim() : ''} · ${{day:'กรณีส่งหลายครั้งใน 1 วัน ใช้ครั้งล่าสุดของวันนั้น', 1:'กรณีส่งหลายครั้ง ใช้ครั้งล่าสุดของแต่ละคนตลอดช่วง', 0:'แสดงทุกครั้งที่ส่ง'}[$('dedupe').value]} · รวม ${n} รายการ</li>
       <li>พิกัดบันทึกจาก GPS ของโทรศัพท์นักเรียนขณะกดเช็คอิน ความคลาดเคลื่อนของแต่ละรายการแสดงในตารางรายชื่อ (ค่า ±เมตร)</li>
       <li>การหาจุดกระจุกตัว (ตาราง): จัดกลุ่มนักเรียนที่มีพิกัดห่างกันไม่เกิน ${thNum(CLUSTER_R)} เมตร</li>
       <li>แผนที่พื้นหลัง: © OpenStreetMap contributors (Leaflet)</li>
       <li>สร้างรายงานเมื่อ ${thNum(thDateTime(Date.now()))} โดย ${esc($('who').value)}</li>
     </ol></div>`;
 
-  $('report').innerHTML = memo + listPage + mapPage;
+  $('report').innerHTML = memo + matrixPages + listPage + mapPage;
   drawMap(rows, cl);
 }
 
@@ -479,6 +531,8 @@ $('csvBtn').onclick = () => {
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
   a.download = `checkin_${$('dFrom').value}_${$('dTo').value}.csv`; a.click();
 };
+// เริ่มทำงาน (วางท้ายสุด เพื่อให้ตัวแปรทุกตัวประกาศครบก่อน)
+if (params.has('report')) $('teacherLink').click(); else { getGPS(); loadUrgency(); }
 </script>
 </body>
 </html>
