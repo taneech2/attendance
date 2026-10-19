@@ -78,6 +78,8 @@ table.list a{color:#000}
 .pin{background:#1F4E9C;color:#fff;border:2px solid #fff;border-radius:50%;width:22px;height:22px;font:700 11px/18px sans-serif;text-align:center;box-shadow:0 0 2px #000}
 .lg{font-size:12pt;margin:0 0 3mm}.lg i{display:inline-block;vertical-align:middle;margin:0 2px 0 8px}
 .lg .c{width:14px;height:14px;border-radius:50%;background:radial-gradient(#e00,#fa0,#0c0)}
+.stl label{display:block;font-size:14px;margin:10px 0 4px;color:#5b6475}
+.stl td,.stl th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:16px}
 .sv{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;font-size:15px}
 .sv b{flex:1;min-width:90px}
 .sv button{padding:6px 10px;font-size:14px}
@@ -138,6 +140,20 @@ table.mx td.nm{text-align:left;white-space:nowrap}
   <div class="foot"><a href="#" id="teacherLink">สำหรับครู</a></div>
 </div>
 
+<!-- ================= STATUS (ผู้ปกครอง) ================= -->
+<div id="status" class="wrap stl" style="display:none">
+  <h1>🏫 ตรวจสอบการเข้าเรียน</h1>
+  <div class="sub">วิทยาลัยการอาชีพบุรีรัมย์ · สำหรับผู้ปกครอง · อัปเดตอัตโนมัติทุก 1 นาที</div>
+  <div class="card">
+    <div class="step">เลือกชื่อนักเรียน</div>
+    <select id="stName"></select>
+    <label>วันที่</label><input type="date" id="stDate">
+  </div>
+  <div class="card" id="stOut"></div>
+  <div class="card" id="stClass"></div>
+  <div class="foot"><a href="#" id="stBack">กลับหน้าเช็คอิน</a></div>
+</div>
+
 <!-- ================= TEACHER ================= -->
 <div id="teacher">
   <div class="tbar">
@@ -150,7 +166,7 @@ table.mx td.nm{text-align:left;white-space:nowrap}
       <div class="row">
         <div><label>กลุ่ม/ห้อง/วิชา</label><select id="grp"><option value="">ทั้งหมด</option></select></div>
         <div><label>ถ้าคนเดียวส่งหลายครั้ง</label>
-          <select id="dedupe"><option value="day">ครั้งล่าสุดของแต่ละวัน</option><option value="0">แสดงทุกครั้ง (ดูเวลา/ตำแหน่งทุกครั้ง)</option><option value="1">ครั้งล่าสุดตลอดช่วง</option></select></div>
+          <select id="dedupe"><option value="day">ครั้งล่าสุดของแต่ละวัน/วิชา</option><option value="0">แสดงทุกครั้ง (ดูเวลา/ตำแหน่งทุกครั้ง)</option><option value="1">ครั้งล่าสุดตลอดช่วง</option></select></div>
       </div>
       <div class="row">
         <div><label>ผู้รายงาน</label><input type="text" id="who" value="นายธานี ชมสุข"></div>
@@ -161,6 +177,7 @@ table.mx td.nm{text-align:left;white-space:nowrap}
         <button class="btn btn-cam" id="loadBtn">🔄 โหลดข้อมูล / สร้างรายงาน</button>
         <button class="btn btn-go" id="printBtn" style="font-size:16px;padding:10px 16px">🖨️ พิมพ์ / บันทึก PDF</button>
         <button class="btn btn-sm" id="csvBtn">⬇️ CSV</button>
+        <label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-size:14px"><input type="checkbox" id="auto" style="width:auto"> รีเฟรชอัตโนมัติทุก 1 นาที</label>
       </div>
       <div class="msg" id="tmsg"></div>
       <label>ลิงก์ให้นักเรียน — ตั้งชื่อตามห้อง/วิชา/คาบ (เช่น "ชช.1 CNC คาบ 1") แต่ละชื่อจะแยกข้อมูลและเส้นตายของตัวเอง · ไม่ใส่ก็ได้</label>
@@ -169,7 +186,12 @@ table.mx td.nm{text-align:left;white-space:nowrap}
       <div class="actions" style="margin-top:6px"><button class="btn btn-sm" id="saveLink">💾 บันทึกลิงก์นี้ไว้ใช้ซ้ำ</button></div>
       <div id="savedLinks"></div>
       <label>⏰ เส้นตายเช็คอินของลิงก์นี้ (โชว์นับถอยหลังบนหน้านักเรียน · นับคนส่งตั้งแต่ "ตั้งแต่วันที่" ด้านบน)</label>
-      <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกเส้นตาย</button></div>
+      <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกการตั้งค่า</button></div>
+      <label>📍 จุดอ้างอิงห้องเรียน/วิทยาลัย — ใช้ตรวจว่านักเรียนเช็คอินอยู่ในพื้นที่จริง (ยืนอยู่ที่ห้องเรียน กดปุ่มซ้าย ตั้งรัศมีขวา แล้วกด "บันทึกการตั้งค่า")</label>
+      <div class="row"><button class="btn btn-sm" id="setRef">📍 ใช้ตำแหน่งปัจจุบันของฉัน</button><input type="number" id="refR" value="200" min="30" step="10" placeholder="รัศมี (เมตร)"></div>
+      <div class="linkbox" id="refTxt">ยังไม่ได้ตั้งจุดอ้างอิง (ไม่ตรวจพื้นที่)</div>
+      <label>👪 ลิงก์ให้ผู้ปกครองดูสถานะการเข้าเรียน (เห็นเวลาเช็คอินและว่าอยู่ในพื้นที่หรือไม่ — ไม่แสดงพิกัด)</label>
+      <div class="row"><div class="linkbox" id="linkStatus" style="margin:0"></div><button class="btn btn-sm" id="copyStatus">📋 คัดลอกลิงก์</button></div>
       <div style="font-size:13px;color:#5b6475;margin-top:8px">💡 แก้ข้อความในบันทึกได้โดยคลิกที่ตัวหนังสือในหน้ากระดาษด้านล่าง ก่อนกดพิมพ์</div>
     </div>
   </div>
@@ -255,10 +277,12 @@ $('goBtn').onclick = async () => {
   const ts = Date.now();
   const id = ts + '_' + Math.random().toString(36).slice(2, 7);
   try {
+    const d = cfg.lat != null ? Math.round(distM(gps, {lat:cfg.lat, lon:cfg.lon})) : null;
+    const area = d == null ? {} : {d, in: d <= (cfg.r || 200)};
     const res = await fetch(`${DB}/.json`, {
       method: 'PATCH', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        [`checkin2_meta/${id}`]: {name, sid, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP}
+        [`checkin2_meta/${id}`]: {name, sid, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP, ...area}
       })
     });
     if (!res.ok) throw new Error(res.status);
@@ -267,7 +291,7 @@ $('goBtn').onclick = async () => {
     $('rankTxt').textContent = cfg.deadline ? `🎉 คุณเป็นคนที่ ${rank} จาก ${STUDENTS.length} คนที่เช็คอินแล้ว` : '';
     const link = location.href.split('#')[0];
     $('shareBtn').href = 'https://line.me/R/msg/text/?' + encodeURIComponent(`เช็คอินเช็คชื่อยัง? ครูดูรายชื่อคนที่ไม่ส่งนะ ใช้เวลาไม่ถึงนาที 👉 ${link}`);
-    $('doneInfo').innerHTML = `<b>${esc(name)}</b><br>${thDateTime(ts)}<br><a href="${mapUrl(gps.lat,gps.lon)}" target="_blank">ดูตำแหน่งบนแผนที่</a>`;
+    $('doneInfo').innerHTML = `<b>${esc(name)}</b><br>${thDateTime(ts)}<br>${area.in === true ? '<span style="color:var(--ok)">✓ อยู่ในพื้นที่เรียน</span><br>' : area.in === false ? `<span style="color:var(--err)">⚠️ อยู่นอกพื้นที่เรียน (ห่างประมาณ ${d} ม.)</span><br>` : ''}<a href="${mapUrl(gps.lat,gps.lon)}" target="_blank">ดูตำแหน่งบนแผนที่</a>`;
   } catch(e){
     $('msg').textContent = '❌ ส่งไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วกดเช็คอินอีกครั้ง';
     $('msg').style.color = 'var(--err)'; $('goBtn').disabled = false;
@@ -320,18 +344,31 @@ function openTeacher(){
   updateLink(); renderSaved();
   loadDl().then(loadData);
 }
+let refPt = null;
+function showRef(){ $('refTxt').textContent = refPt ? `ตั้งแล้ว: ${refPt.lat.toFixed(5)}, ${refPt.lon.toFixed(5)} · รัศมี ${$('refR').value || 200} ม.` : 'ยังไม่ได้ตั้งจุดอ้างอิง (ไม่ตรวจพื้นที่)'; }
 async function loadDl(){
   const c = await fetch(cfgUrl($('linkGrp').value.trim())).then(r=>r.json()).catch(()=>null);
   $('dl').value = c && c.deadline ? new Date(c.deadline - new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16) : '';
+  refPt = c && c.lat != null ? {lat:c.lat, lon:c.lon} : null;
+  $('refR').value = (c && c.r) || 200; showRef();
 }
+$('refR').oninput = showRef;
+$('setRef').onclick = () => {
+  $('setRef').textContent = '⏳ กำลังหาตำแหน่ง…';
+  navigator.geolocation.getCurrentPosition(p => { refPt = {lat:p.coords.latitude, lon:p.coords.longitude}; showRef(); $('setRef').textContent = '✓ ได้ตำแหน่งแล้ว — กดบันทึกการตั้งค่า'; },
+    () => { $('setRef').textContent = '❌ หาตำแหน่งไม่ได้ (อนุญาตตำแหน่งในเบราว์เซอร์)'; }, {enableHighAccuracy:true, timeout:20000});
+};
 function updateLink(){
   const u = new URL(location.href.split('?')[0].split('#')[0]);
   const g = $('linkGrp').value.trim(); if (g) u.searchParams.set('g', g);
   u.searchParams.set('openExternalBrowser', '1');
   $('linkOut').textContent = u.toString();
+  u.searchParams.set('status', '1');
+  $('linkStatus').textContent = u.toString();
 }
 $('linkGrp').oninput = updateLink;
 $('linkGrp').onchange = loadDl;
+$('copyStatus').onclick = () => navigator.clipboard.writeText($('linkStatus').textContent).then(()=>$('copyStatus').textContent='✓ คัดลอกแล้ว');
 $('copyLink').onclick = () => navigator.clipboard.writeText($('linkOut').textContent).then(()=>$('copyLink').textContent='✓ คัดลอกแล้ว');
 
 const SAVED_LS = 'checkin2_saved_links';
@@ -356,8 +393,10 @@ $('savedLinks').onclick = async e => {
   else { $('linkGrp').value = g; updateLink(); await loadDl(); await loadData(); $('grp').value = g; await buildReport(); }
 };
 $('saveDl').onclick = async () => {
-  if (!$('dl').value) return alert('เลือกวันเวลาก่อน');
-  const body = {deadline: new Date($('dl').value).getTime(), since: new Date($('dFrom').value + 'T00:00:00').getTime()};
+  if (!$('dl').value && !refPt) return alert('ตั้งเส้นตายหรือจุดอ้างอิงอย่างน้อยหนึ่งอย่างก่อน');
+  const body = {since: new Date($('dFrom').value + 'T00:00:00').getTime()};
+  if ($('dl').value) body.deadline = new Date($('dl').value).getTime();
+  if (refPt) Object.assign(body, refPt, {r: +$('refR').value || 200});
   const r = await fetch(cfgUrl($('linkGrp').value.trim()), {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
   $('saveDl').textContent = r.ok ? '✓ บันทึกแล้ว' : '❌ ไม่สำเร็จ';
 };
@@ -385,7 +424,7 @@ function filterRows(){
   const mode = $('dedupe').value;
   if (mode !== '0'){
     const last = {};
-    list.forEach(m => { const k = (m.sid || m.name.replace(/\s/g,'')) + (mode === 'day' ? '|' + dayKey(m.ts) : ''); if (!last[k] || last[k].ts < m.ts) last[k] = m; });
+    list.forEach(m => { const k = (m.sid || m.name.replace(/\s/g,'')) + (mode === 'day' ? '|' + dayKey(m.ts) + '|' + (m.g || '') : ''); if (!last[k] || last[k].ts < m.ts) last[k] = m; });
     list = Object.values(last);
   }
   return list.sort((a,b) => (a.sid||'z').localeCompare(b.sid||'z') || a.name.localeCompare(b.name, 'th') || a.ts - b.ts);
@@ -445,6 +484,7 @@ async function buildReport(){
   const n = thNum(rows.length);
 
   const raw = rawRows();
+  const nOut = rows.filter(r => r.in === false).length, nChk = rows.filter(r => r.in !== undefined).length;
   const nStu = new Set(rows.map(r => r.sid || r.name)).size;
   const days = [];
   for (let t = new Date($('dFrom').value + 'T00:00:00'); dayKey(t.getTime()) <= $('dTo').value && days.length < 62; t.setDate(t.getDate()+1)) days.push(dayKey(t.getTime()));
@@ -458,7 +498,7 @@ async function buildReport(){
     <td style="text-align:center">${thNum(i+1)}</td><td>${thNum(r.sid||'-')}</td><td>${esc(r.name)}</td>
     <td>${thNum(thDateTime(r.ts))}</td>
     <td><a href="${mapUrl(r.lat,r.lon)}">${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</a></td>
-    <td style="text-align:center">±${r.acc} ม.</td></tr>`).join('');
+    <td style="text-align:center">±${r.acc} ม.</td><td>${r.in === undefined ? '-' : r.in ? '✓ ในพื้นที่' : '⚠️ นอกพื้นที่ ' + thNum(r.d) + ' ม.'}</td></tr>`).join('');
 
   const memo = `<div class="page">
     <div class="memo-head"><img src="garuda.jpg" alt=""><h2>บันทึกข้อความ</h2></div>
@@ -469,7 +509,7 @@ async function buildReport(){
     <div style="margin:8px 0"><b>เรียน</b> <span contenteditable>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</span></div>
     <div class="body" contenteditable>
       <p>ตามที่ผู้อำนวยการได้มอบหมายให้ครูดำเนินการเช็คชื่อนักเรียนผ่านระบบออนไลน์ และบันทึกพิกัดตำแหน่ง (GPS) เพื่อใช้เป็นข้อมูลในการดูแลช่วยเหลือนักเรียน นั้น</p>
-      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${thNum(nStu)} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${rows.length !== nStu ? ` (รวม ${n} รายการ ใน ${thNum(days.length)} วัน)` : ''}${missing.length ? ` ${multiDay ? 'ไม่เคยเช็คอินเลย' : 'ยังไม่เช็คอิน'} ${thNum(missing.length)} คน` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
+      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${thNum(nStu)} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${rows.length !== nStu ? ` (รวม ${n} รายการ ใน ${thNum(days.length)} วัน)` : ''}${missing.length ? ` ${multiDay ? 'ไม่เคยเช็คอินเลย' : 'ยังไม่เช็คอิน'} ${thNum(missing.length)} คน` : ''}${nChk ? ` ตรวจสอบพิกัดกับจุดอ้างอิงห้องเรียน พบอยู่ในพื้นที่ ${thNum(nChk - nOut)} รายการ นอกพื้นที่ ${thNum(nOut)} รายการ` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
       <p>จึงเรียนมาเพื่อโปรดทราบ</p>
     </div>
     <div class="sign" contenteditable>ลงชื่อ ......................................<br>(${esc($('who').value)})<br>ตำแหน่ง ${esc($('whoPos').value)}</div>
@@ -478,7 +518,7 @@ async function buildReport(){
   </div>`;
 
   const listPage = `<div class="page"><div class="ptitle">รายการเช็คอิน (${n} รายการ · ${thNum(nStu)} คน)</div>
-    <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th><th>วัน–เวลา</th><th>พิกัด (คลิกดูแผนที่)</th><th>ความแม่นยำ</th></tr>${tableRows}</table>${missingHtml}</div>`;
+    <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th><th>วัน–เวลา</th><th>พิกัด (คลิกดูแผนที่)</th><th>ความแม่นยำ</th><th>พื้นที่เรียน</th></tr>${tableRows}</table>${missingHtml}</div>`;
 
   // ตารางเช็คชื่อรายวัน (เมื่อเลือกหลายวัน): ✓ + เวลาแรกที่เช็คอินของวันนั้น
   const first = {};
@@ -509,7 +549,7 @@ async function buildReport(){
     <div style="font-weight:700;margin-top:5mm">อ้างอิง</div>
     <ol class="refs" contenteditable>
       <li>ข้อมูลจากระบบเช็คอินเช็คชื่อออนไลน์ วิทยาลัยการอาชีพบุรีรัมย์ (${esc(location.href.split('?')[0].split('#')[0])}) ฐานข้อมูล checkin2_meta</li>
-      <li>ช่วงข้อมูล ${period}${grpTxt ? ' ' + grpTxt.trim() : ''} · ${{day:'กรณีส่งหลายครั้งใน 1 วัน ใช้ครั้งล่าสุดของวันนั้น', 1:'กรณีส่งหลายครั้ง ใช้ครั้งล่าสุดของแต่ละคนตลอดช่วง', 0:'แสดงทุกครั้งที่ส่ง'}[$('dedupe').value]} · รวม ${n} รายการ</li>
+      <li>ช่วงข้อมูล ${period}${grpTxt ? ' ' + grpTxt.trim() : ''} · ${{day:'กรณีส่งหลายครั้งใน 1 วัน/วิชา ใช้ครั้งล่าสุด', 1:'กรณีส่งหลายครั้ง ใช้ครั้งล่าสุดของแต่ละคนตลอดช่วง', 0:'แสดงทุกครั้งที่ส่ง'}[$('dedupe').value]} · รวม ${n} รายการ</li>
       <li>พิกัดบันทึกจาก GPS ของโทรศัพท์นักเรียนขณะกดเช็คอิน ความคลาดเคลื่อนของแต่ละรายการแสดงในตารางรายชื่อ (ค่า ±เมตร)</li>
       <li>การหาจุดกระจุกตัว (ตาราง): จัดกลุ่มนักเรียนที่มีพิกัดห่างกันไม่เกิน ${thNum(CLUSTER_R)} เมตร</li>
       <li>แผนที่พื้นหลัง: © OpenStreetMap contributors (Leaflet)</li>
@@ -520,19 +560,49 @@ async function buildReport(){
   drawMap(rows, cl);
 }
 
+let autoT = null;
+$('auto').onchange = () => { clearInterval(autoT); if ($('auto').checked) autoT = setInterval(loadData, 60000); };
 $('loadBtn').onclick = loadData;
 ['dFrom','dTo','grp','dedupe'].forEach(id => $(id).onchange = buildReport);
 $('printBtn').onclick = () => window.print();
 $('csvBtn').onclick = () => {
-  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่']]
-    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon)]));
+  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่','ระยะจากจุดอ้างอิง(ม.)','ในพื้นที่เรียน']]
+    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon), r.d ?? '', r.in === undefined ? '' : r.in ? 'ใช่' : 'ไม่']));
   const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
   a.download = `checkin_${$('dFrom').value}_${$('dTo').value}.csv`; a.click();
 };
+// ---------- หน้าผู้ปกครอง ----------
+async function refreshStatus(){
+  try { meta = (await fetch(`${DB}/checkin2_meta.json`).then(r => r.json())) || {}; }
+  catch(e){ $('stOut').textContent = '❌ โหลดข้อมูลไม่ได้ ตรวจสอบอินเทอร์เน็ต'; return; }
+  const day = $('stDate').value, ids = new Set(STUDENTS.map(s => s[0]));
+  const list = Object.values(meta).filter(m => dayKey(m.ts) === day && (!GROUP || m.g === GROUP));
+  const cnt = new Set(list.filter(m => ids.has(m.sid)).map(m => m.sid)).size;
+  $('stClass').innerHTML = `ภาพรวม${GROUP ? ' ' + esc(GROUP) : ''}: เช็คอินแล้ว <b>${cnt}/${STUDENTS.length}</b> คน`;
+  const sid = $('stName').value;
+  if (!sid){ $('stOut').innerHTML = 'เลือกชื่อนักเรียนด้านบน'; return; }
+  const name = STUDENTS.find(s => s[0] === sid)[1];
+  const mine = list.filter(m => m.sid === sid).sort((a, b) => a.ts - b.ts);
+  $('stOut').innerHTML = mine.length
+    ? `<div style="font-size:22px;font-weight:700;color:var(--ok)">✅ ${esc(name)} เช็คอินเข้าเรียนแล้ว</div>
+       <table style="width:100%;border-collapse:collapse;margin-top:8px"><tr><th>เวลา</th><th>วิชา/กลุ่ม</th><th>พื้นที่เรียน</th></tr>${mine.map(m => `<tr><td>${new Date(m.ts).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})} น.</td><td>${esc(m.g || '-')}</td><td>${m.in === undefined ? '-' : m.in ? '✓ อยู่ในพื้นที่' : '⚠️ นอกพื้นที่'}</td></tr>`).join('')}</table>`
+    : `<div style="font-size:22px;font-weight:700;color:var(--err)">❌ ยังไม่พบการเช็คอินของ ${esc(name)}</div><div style="font-size:14px;color:#5b6475;margin-top:6px">ถ้านักเรียนเพิ่งเช็คอิน รอสักครู่ ระบบอัปเดตทุก 1 นาที</div>`;
+}
+function openStatus(){
+  $('student').style.display = 'none'; $('status').style.display = 'block';
+  $('stName').innerHTML = '<option value="">— เลือกชื่อนักเรียน —</option>' + STUDENTS.map(([sid, n], i) => `<option value="${sid}">${i+1}. ${n}</option>`).join('');
+  $('stName').value = localStorage.getItem('checkin2_status_sid') || '';
+  $('stDate').value = dayKey(Date.now());
+  $('stName').onchange = () => { try { localStorage.setItem('checkin2_status_sid', $('stName').value); } catch(e){} refreshStatus(); };
+  $('stDate').onchange = refreshStatus;
+  $('stBack').onclick = e => { e.preventDefault(); params.delete('status'); location.search = params.toString(); };
+  refreshStatus(); setInterval(refreshStatus, 60000);
+}
+
 // เริ่มทำงาน (วางท้ายสุด เพื่อให้ตัวแปรทุกตัวประกาศครบก่อน)
-if (params.has('report')) $('teacherLink').click(); else { getGPS(); loadUrgency(); }
+if (params.has('status')) openStatus(); else if (params.has('report')) $('teacherLink').click(); else { getGPS(); loadUrgency(); }
 </script>
 </body>
 </html>
