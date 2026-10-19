@@ -77,7 +77,7 @@ table.list a{color:#000}
 #map{height:120mm;border:1px solid #999;background:#eef1f5;margin-bottom:3mm}
 .pin{background:#1F4E9C;color:#fff;border:2px solid #fff;border-radius:50%;width:22px;height:22px;font:700 11px/18px sans-serif;text-align:center;box-shadow:0 0 2px #000}
 .lg{font-size:12pt;margin:0 0 3mm}.lg i{display:inline-block;vertical-align:middle;margin:0 2px 0 8px}
-.lg .c{width:14px;height:14px;border-radius:50%;background:rgba(200,30,30,.3);border:1px solid #C81E1E}
+.lg .c{width:14px;height:14px;border-radius:50%;background:radial-gradient(#e00,#fa0,#0c0)}
 .refs{font-size:12pt;line-height:1.3;margin:4mm 0 0;padding-left:6mm}
 .refs li{margin:1mm 0}
 </style>
@@ -162,8 +162,6 @@ table.list a{color:#000}
       <label>ลิงก์ให้นักเรียน (ใส่ชื่อกลุ่มเพื่อแยกห้อง — ไม่ใส่ก็ได้)</label>
       <div class="row"><input type="text" id="linkGrp" placeholder="เช่น ชช.1"><button class="btn btn-sm" id="copyLink">📋 คัดลอกลิงก์</button></div>
       <div class="linkbox" id="linkOut" style="margin-top:6px"></div>
-      <label>🗺️ Google Maps API key (ไม่ใส่ = ใช้แผนที่ OpenStreetMap · ใส่แล้วรายงานจะแสดงบนแผนที่ Google · เก็บในเครื่องนี้เท่านั้น)</label>
-      <div class="row"><input type="text" id="gkey" placeholder="AIza…"><button class="btn btn-sm" id="saveGkey">💾 บันทึก key</button></div>
       <div style="font-size:13px;color:#5b6475;margin-top:8px">💡 แก้ข้อความในบันทึกได้โดยคลิกที่ตัวหนังสือในหน้ากระดาษด้านล่าง ก่อนกดพิมพ์</div>
     </div>
   </div>
@@ -362,7 +360,6 @@ function filterRows(){
 
 
 // ---------- แผนที่ + จุดกระจุกตัว ----------
-const GKEY_LS = 'checkin2_gmaps_key';
 const CLUSTER_R = 100; // ม. — พิกัดที่ห่างกันไม่เกินนี้นับเป็นกลุ่มเดียวกัน
 const distM = (a, b) => {
   const R = 6371000, rad = Math.PI/180, dLat = (b.lat-a.lat)*rad, dLon = (b.lon-a.lon)*rad;
@@ -381,29 +378,15 @@ function clusterRows(list){
 const loadScript = src => new Promise((ok, ko) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = ko; document.head.appendChild(e); });
 const pinHtml = n => `<div class="pin">${n}</div>`;
 
-async function drawGoogle(el, list, cl, key){
-  if (!window.google || !google.maps) await loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&loading=async`);
-  const {Map, Circle} = await google.maps.importLibrary('maps');
-  const {AdvancedMarkerElement} = await google.maps.importLibrary('marker');
-  const map = new Map(el, {mapId:'DEMO_MAP_ID', center:{lat:list[0].lat, lng:list[0].lon}, zoom:15, mapTypeControl:false});
-  const bounds = new google.maps.LatLngBounds();
-  cl.filter(c => c.items.length > 1).forEach(c => new Circle({map, center:{lat:c.lat, lng:c.lon}, radius:CLUSTER_R, strokeColor:'#C81E1E', strokeWeight:1, fillColor:'#C81E1E', fillOpacity:.25}));
-  list.forEach((r, i) => {
-    const d = document.createElement('div'); d.innerHTML = pinHtml(i+1);
-    new AdvancedMarkerElement({map, position:{lat:r.lat, lng:r.lon}, content:d.firstChild, title:r.name});
-    bounds.extend({lat:r.lat, lng:r.lon});
-  });
-  map.fitBounds(bounds, 40);
-  google.maps.event.addListenerOnce(map, 'idle', () => { if (map.getZoom() > 17) map.setZoom(17); });
-}
 async function drawLeaflet(el, list, cl){
   if (!window.L){
-    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js');
+    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(css);
+    await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
   }
+  if (!L.heatLayer) await loadScript('https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js').catch(() => {});
   const map = L.map(el);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap contributors'}).addTo(map);
-  cl.filter(c => c.items.length > 1).forEach(c => L.circle([c.lat, c.lon], {radius:CLUSTER_R, color:'#C81E1E', weight:1, fillColor:'#C81E1E', fillOpacity:.25}).addTo(map));
+  if (L.heatLayer) L.heatLayer(list.map(r => [r.lat, r.lon, 1]), {radius:35, blur:25, maxZoom:17}).addTo(map);
   list.forEach((r, i) => L.marker([r.lat, r.lon], {title:r.name, icon:L.divIcon({className:'', html:pinHtml(i+1), iconSize:[22,22], iconAnchor:[11,11]})}).addTo(map));
   map.fitBounds(L.latLngBounds(list.map(r => [r.lat, r.lon])), {padding:[30,30], maxZoom:17});
 }
@@ -412,11 +395,10 @@ async function drawMap(list, cl){
   const el = $('map'); if (!el) return;
   const seq = ++mapSeq;
   if (!list.length){ el.innerHTML = '<div style="padding:50mm 0;text-align:center">ยังไม่มีข้อมูลเช็คอินในช่วงที่เลือก</div>'; return; }
-  const key = localStorage.getItem(GKEY_LS) || '';
-  try { await (key ? drawGoogle(el, list, cl, key) : drawLeaflet(el, list, cl)); }
+  try { await drawLeaflet(el, list, cl); }
   catch(e){
     if (seq !== mapSeq) return;
-    el.innerHTML = `<div style="padding:45mm 10mm;text-align:center">โหลดแผนที่ไม่ได้ — ตรวจสอบอินเทอร์เน็ต${key ? ' หรือ Google Maps API key' : ''}<br>ดูตำแหน่งแต่ละคนได้จากลิงก์พิกัดในตารางหน้าก่อน</div>`;
+    el.innerHTML = `<div style="padding:45mm 10mm;text-align:center">โหลดแผนที่ไม่ได้ — ตรวจสอบอินเทอร์เน็ต<br>ดูตำแหน่งแต่ละคนได้จากลิงก์พิกัดในตารางหน้าก่อน</div>`;
   }
 }
 
@@ -467,9 +449,8 @@ async function buildReport(){
     <td style="text-align:center">${thNum(i+1)}</td><td style="text-align:center">${thNum(c.items.length)}</td>
     <td>${c.items.map(k => thNum(k+1) + '. ' + esc(rows[k].name)).join('<br>')}</td>
     <td><a href="${mapUrl(c.lat,c.lon)}">${c.lat.toFixed(5)}, ${c.lon.toFixed(5)}</a></td></tr>`).join('');
-  const gkey = !!localStorage.getItem(GKEY_LS);
   const mapPage = `<div class="page"><div class="ptitle">แผนที่แสดงการกระจุกตัวของการเช็คอิน</div>
-    <div class="lg"><i class="pin" style="width:18px;height:18px;font-size:10px;line-height:14px">ก</i> ตำแหน่งนักเรียน (หมายเลขตามตารางรายชื่อ)<i class="c"></i> วงสีแดง = กลุ่มที่เช็คอินอยู่ใกล้กันในรัศมี ${thNum(CLUSTER_R)} ม. (ยิ่งซ้อนทับยิ่งหนาแน่น)</div>
+    <div class="lg"><i class="pin" style="width:18px;height:18px;font-size:10px;line-height:14px">ก</i> ตำแหน่งนักเรียน (หมายเลขตามตารางรายชื่อ)<i class="c"></i> สีแดงเข้ม = จุดที่นักเรียนเช็คอินอยู่ใกล้กันหนาแน่น</div>
     <div id="map"></div>
     <div style="font-weight:700">จุดที่มีการกระจุกตัว (${thNum(multi.length)} จุด · เช็คอินกระจายตัวเดี่ยว ${thNum(cl.length - multi.length)} จุด)</div>
     ${multi.length ? `<table class="list"><tr><th>ที่</th><th>จำนวน (คน)</th><th>รายชื่อ</th><th>ตำแหน่งกึ่งกลาง</th></tr>${clusterRowsHtml}</table>` : '<div style="font-size:13pt">ไม่พบกลุ่มที่เช็คอินอยู่ใกล้กัน</div>'}
@@ -478,8 +459,8 @@ async function buildReport(){
       <li>ข้อมูลจากระบบเช็คอินเช็คชื่อออนไลน์ วิทยาลัยการอาชีพบุรีรัมย์ (${esc(location.href.split('?')[0].split('#')[0])}) ฐานข้อมูล checkin2_meta</li>
       <li>ช่วงข้อมูล ${period}${grpTxt ? ' ' + grpTxt.trim() : ''} · ${$('dedupe').value === '1' ? 'กรณีส่งหลายครั้งใช้ครั้งล่าสุดของแต่ละคน' : 'แสดงทุกครั้งที่ส่ง'} · รวม ${n} รายการ</li>
       <li>พิกัดบันทึกจาก GPS ของโทรศัพท์นักเรียนขณะกดเช็คอิน ความคลาดเคลื่อนของแต่ละรายการแสดงในตารางรายชื่อ (ค่า ±เมตร)</li>
-      <li>การหาจุดกระจุกตัว: จัดกลุ่มนักเรียนที่มีพิกัดห่างกันไม่เกิน ${thNum(CLUSTER_R)} เมตร</li>
-      <li>แผนที่พื้นหลัง: ${gkey ? 'Google Maps' : '© OpenStreetMap contributors'}</li>
+      <li>การหาจุดกระจุกตัว (ตาราง): จัดกลุ่มนักเรียนที่มีพิกัดห่างกันไม่เกิน ${thNum(CLUSTER_R)} เมตร</li>
+      <li>แผนที่พื้นหลัง: © OpenStreetMap contributors (Leaflet)</li>
       <li>สร้างรายงานเมื่อ ${thNum(thDateTime(Date.now()))} โดย ${esc($('who').value)}</li>
     </ol></div>`;
 
@@ -487,12 +468,6 @@ async function buildReport(){
   drawMap(rows, cl);
 }
 
-$('gkey').value = localStorage.getItem(GKEY_LS) || '';
-$('saveGkey').onclick = () => {
-  const k = $('gkey').value.trim();
-  if (k) localStorage.setItem(GKEY_LS, k); else localStorage.removeItem(GKEY_LS);
-  $('saveGkey').textContent = '✓ บันทึกแล้ว'; buildReport();
-};
 $('loadBtn').onclick = loadData;
 ['dFrom','dTo','grp','dedupe'].forEach(id => $(id).onchange = buildReport);
 $('printBtn').onclick = () => window.print();
