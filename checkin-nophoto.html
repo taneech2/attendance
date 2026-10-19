@@ -156,6 +156,7 @@ table.mx td.nm{text-align:left;white-space:nowrap}
 
     <button class="btn btn-go" id="goBtn" disabled>✅ เช็คอิน</button>
     <div class="msg" id="msg"></div>
+    <div class="sub" style="margin-top:14px;font-size:14px">📵 ไม่มีมือถือ / แบตหมด / มือถือมีปัญหา? ไปแจ้งครู ครูจะเช็คอินให้</div>
   </div>
 
   <div class="card done" id="done">
@@ -210,6 +211,12 @@ table.mx td.nm{text-align:left;white-space:nowrap}
       <div class="actions"><button class="btn btn-go" id="rOpen" style="font-size:16px;padding:10px 16px">🔔 เปิดรอบเช็คอินตอนนี้</button><button class="btn btn-sm" id="rClose">⏹ ปิดรอบ</button></div>
       <div class="linkbox" id="rStat" style="margin-top:6px">ยังไม่เปิดรอบ</div>
       <div class="actions" style="margin-top:6px"><a class="btn btn-sm" id="rLine" target="_blank" style="background:#06C755;color:#fff;text-decoration:none">💬 ส่งแจ้งเข้า LINE</a><button class="btn btn-sm" id="rCopy">📋 คัดลอกข้อความ</button></div>
+      <label>✍️ ครูเช็คอินแทนนักเรียน (ไม่มีมือถือ / แบตหมด) — ใช้กับกลุ่ม/วิชาและรอบที่เปิดอยู่ของลิงก์ด้านบน · รายงานจะติดป้าย "👩‍🏫 ครูเช็คอินแทน" และเหตุผล</label>
+      <div class="row"><select id="pxDept"></select><select id="pxWhy"><option>แบตมือถือหมด</option><option>ไม่มีโทรศัพท์มือถือ</option><option>มือถือเสีย/ลืมเครื่อง</option><option>เหตุผลอื่น</option></select></div>
+      <div id="pxList" style="max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin-top:6px;background:#fff"></div>
+      <div class="actions"><button class="btn btn-go" id="pxGo" style="font-size:16px;padding:10px 16px">✍️ เช็คอินแทนคนที่ติ๊ก</button></div>
+      <div class="msg" id="pxMsg" style="margin:0;min-height:0;text-align:left;font-size:14px"></div>
+      <div id="pxLog" style="font-size:14px"></div>
       <label>⏰ เส้นตายเช็คอินของลิงก์นี้ (โชว์นับถอยหลังบนหน้านักเรียน · นับคนส่งตั้งแต่ "ตั้งแต่วันที่" ด้านบน)</label>
       <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกการตั้งค่า</button></div>
       <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" id="needPhoto" style="width:auto"> 📷 ต้องถ่ายรูปตอนเช็คอิน (ติ๊ก = นักเรียนต้องถ่ายรูปก่อนกดเช็คอิน · ไม่ติ๊ก = ไม่ต้องถ่าย · ใช้กับลิงก์/วิชาที่ตั้งชื่อด้านบน บันทึกทันที)</label>
@@ -459,7 +466,15 @@ async function fetchMeta({from = 0, to = Infinity, sid = ''} = {}){
   let all = null, ok = false;
   try { const r = await fetch(`${DB}/checkin2_meta.json?${q}`); if (r.ok){ all = await r.json(); ok = true; } } catch(e){}
   if (!ok) all = await fetch(`${DB}/checkin2_meta.json`).then(r => r.json());
-  return Object.fromEntries(Object.entries(all || {}).filter(([, m]) => sid ? m.sid === sid : m.ts >= from && m.ts <= to));
+  const voided = await getVoid();
+  return Object.fromEntries(Object.entries(all || {}).filter(([id, m]) => !voided.has(id) && (sid ? m.sid === sid : m.ts >= from && m.ts <= to)));
+}
+// รายการที่ครูยกเลิก (เช็คอินแทนผิดคน) — rules ไม่ให้แก้/ลบบันทึกเดิม จึงใช้ตัวมาร์ก checkin2_void แทน
+let voidCache = {t: 0, set: new Set()};
+async function getVoid(force){
+  if (!force && Date.now() - voidCache.t < 20000) return voidCache.set;
+  try { voidCache = {t: Date.now(), set: new Set(Object.keys((await fetch(`${DB}/checkin2_void.json`).then(r => r.json())) || {}))}; } catch(e){}
+  return voidCache.set;
 }
 async function loadUrgency(){
   try {
@@ -526,6 +541,40 @@ async function saveDeptCfg(){
 }
 document.querySelectorAll('input[name=dmode]').forEach(i => { i.onchange = saveDeptCfg; });
 $('deptChecks').onchange = saveDeptCfg;
+// ---------- ครูเช็คอินแทน ----------
+$('pxDept').innerHTML = CLASSES.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+async function renderPx(){
+  const c = CLASSES.find(c => c.id === $('pxDept').value) || CLASSES[0], g = $('linkGrp').value.trim();
+  let today = {}; try { today = await fetchMeta({from: new Date(dayKey(Date.now()) + 'T00:00:00').getTime()}); } catch(e){}
+  const got = {}; Object.values(today).filter(m => (m.g || '') === g).forEach(m => { got[m.sid] = Math.max(got[m.sid] || 0, m.ts); });
+  $('pxList').innerHTML = c.s.map(([sid, n]) => `<label style="display:flex;gap:8px;align-items:center;margin:2px 0;font-size:15px;color:var(--ink)"><input type="checkbox" value="${sid}" style="width:auto"${got[sid] ? ' disabled' : ''}> ${esc(n)}${got[sid] ? ` <small style="color:var(--ok)">✓ เช็คอินแล้ว ${hm(got[sid])} น.</small>` : ''}</label>`).join('');
+  const mine = Object.entries(today).filter(([, m]) => m.by === 'teacher' && (m.g || '') === g);
+  $('pxLog').innerHTML = mine.length ? '<b>ครูเช็คอินแทนวันนี้ (ยกเลิกได้ถ้าบันทึกผิดคน)</b>' + mine.map(([id, m]) => `<div style="display:flex;gap:8px;align-items:center;margin-top:4px"><span style="flex:1">${hm(m.ts)} น. ${esc(m.name)} · ${esc(m.why || '')}</span><button class="btn btn-sm" data-void="${id}" style="padding:4px 10px;font-size:13px">ยกเลิก</button></div>`).join('') : '';
+}
+$('pxDept').onchange = renderPx;
+$('pxLog').onclick = async e => {
+  const b = e.target.closest('button[data-void]'); if (!b) return;
+  if (!confirm('ยกเลิกรายการเช็คอินแทนนี้?')) return;
+  const r = await fetch(`${DB}/.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({[`checkin2_void/${b.dataset.void}`]: {ts: Date.now(), by: 'teacher'}})}).catch(() => null);
+  if (!r || !r.ok) return alert('ยกเลิกไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต');
+  await getVoid(true); renderPx(); loadData();
+};
+$('pxGo').onclick = async () => {
+  const sids = [...document.querySelectorAll('#pxList input:checked')].map(i => i.value);
+  if (!sids.length) return alert('ติ๊กเลือกนักเรียนก่อน');
+  const g = $('linkGrp').value.trim(), why = $('pxWhy').value, rd = activeRound(curCfg);
+  // ตำแหน่ง: ใช้จุดอ้างอิงห้องเรียนของกลุ่มนี้ ถ้าไม่มีใช้ตำแหน่งปัจจุบันของครู (ครูอยู่กับนักเรียนตรงนั้น)
+  let pos = curCfg.lat != null ? {lat:curCfg.lat, lon:curCfg.lon} : refPt;
+  if (!pos){ $('pxMsg').textContent = '⏳ กำลังหาตำแหน่งของครู…';
+    pos = await new Promise(ok => navigator.geolocation ? navigator.geolocation.getCurrentPosition(p => ok({lat:p.coords.latitude, lon:p.coords.longitude}), () => ok(null), {enableHighAccuracy:true, timeout:15000}) : ok(null)); }
+  if (!pos){ $('pxMsg').textContent = ''; return alert('ไม่มีตำแหน่งสำหรับบันทึก — ตั้ง "จุดอ้างอิงห้องเรียน" ของกลุ่มนี้ก่อน หรืออนุญาตให้เว็บใช้ตำแหน่งของครู'); }
+  if (!confirm(`ครูเช็คอินแทน ${sids.length} คน\nกลุ่ม/วิชา: ${g || '(ไม่ระบุ)'}\nเหตุผล: ${why}${rd ? '\nนับคะแนนรอบ: ' + (rd.name || 'รอบที่เปิดอยู่') : '\n(ไม่มีรอบเปิดอยู่ จึงไม่นับคะแนน)'}\n\nยืนยัน?`)) { $('pxMsg').textContent = ''; return; }
+  const t0 = Date.now(), body = {};
+  sids.forEach((sid, i) => { const ts = t0 + i; body[`checkin2_meta/${ts}_t${Math.random().toString(36).slice(2, 6)}`] = {name: nameOf(sid), sid, lat: pos.lat, lon: pos.lon, acc: 0, ts, g, by: 'teacher', why, ...(rd ? {rid: rd.id} : {})}; });
+  const r = await fetch(`${DB}/.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).catch(() => null);
+  if (!r || !r.ok){ $('pxMsg').textContent = ''; return alert('บันทึกไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต'); }
+  $('pxMsg').textContent = `✓ ครูเช็คอินแทนแล้ว ${sids.length} คน`; renderPx(); loadData();
+};
 let refPt = null, curCfg = {};
 const roundMsg = () => { const r = activeRound(curCfg), g = $('linkGrp').value.trim();
   return `🔔 ถึงเวลาเช็คอินแล้ว!${g ? ' วิชา/กลุ่ม ' + g : ''}${r && r.name ? ' (' + r.name + ')' : ''}${r && r.until ? ' กดภายใน ' + hm(r.until) + ' น.' : ''}${curCfg.photo ? ' (ต้องถ่ายรูปด้วย)' : ''} ใช้เวลาไม่ถึงนาที 👉 ${linkFor(g)}`; };
@@ -561,7 +610,7 @@ async function loadDl(){
   const my = ++dlSeq; touched = new Set();
   const c = await fetch(cfgUrl($('linkGrp').value.trim())).then(r=>r.json()).catch(()=>null);
   if (my !== dlSeq) return;
-  curCfg = c || {};
+  curCfg = c || {}; renderPx();
   if (!touched.has('dl')) $('dl').value = c && c.deadline ? new Date(c.deadline - new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16) : '';
   if (!touched.has('photo')) $('needPhoto').checked = !!(c && c.photo); else curCfg.photo = $('needPhoto').checked || undefined;
   if (!touched.has('dept')) showDeptCfg(c);
@@ -685,7 +734,7 @@ async function drawLeaflet(el, list, cl){
   const map = L.map(el);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap contributors'}).addTo(map);
   if (L.heatLayer) L.heatLayer(list.map(r => [r.lat, r.lon, 1]), {radius:35, blur:25, maxZoom:17}).addTo(map);
-  list.forEach((r, i) => L.marker([r.lat, r.lon], {title:r.name, icon:L.divIcon({className:'', html:pinHtml(i+1), iconSize:[22,22], iconAnchor:[11,11]})}).addTo(map));
+  list.forEach((r, i) => L.marker([r.lat, r.lon], {title:r.name, icon:L.divIcon({className:'', html:pinHtml(r._i || i+1), iconSize:[22,22], iconAnchor:[11,11]})}).addTo(map));
   map.fitBounds(L.latLngBounds(list.map(r => [r.lat, r.lon])), {padding:[30,30], maxZoom:17});
 }
 let mapSeq = 0;
@@ -722,7 +771,7 @@ async function buildReport(){
   const rds = roundsAll.filter(r => r.start >= tFrom && r.start <= tTo && (!gSel || r.g === gSel)).sort((a, b) => a.start - b.start);
   // เกณฑ์ "นับว่ามา": ทุกการเช็คอิน / เฉพาะในพื้นที่ / เฉพาะในรอบ / ทั้งสอง — ใช้กับตารางรายวัน รายชื่อที่ยังไม่เช็คอิน คะแนนรอบ และจำนวนคน (ตารางรายการยังแสดงครบทุกครั้ง)
   const cm = $('countMode').value, needArea = cm === 'area' || cm === 'both', needRound = cm === 'round' || cm === 'both';
-  const valid = m => (!needArea || m.in === true) && (!needRound || !!m.rid);
+  const valid = m => (!needArea || m.in === true || m.by === 'teacher') && (!needRound || !!m.rid);   // ครูเช็คอินแทน = ครูยืนยันตัวตนต่อหน้า ถือว่าอยู่ในพื้นที่
   const rawOK = raw.filter(valid);
   const cmTxt = {area:'อยู่ในพื้นที่เรียน', round:'เช็คอินในรอบที่ครูเปิด', both:'อยู่ในพื้นที่เรียนและเช็คอินในรอบที่ครูเปิด'}[cm];
   const got = {}; rawOK.forEach(m => { if (m.rid) (got[m.sid] = got[m.sid] || new Set()).add(m.rid); });
@@ -731,7 +780,7 @@ async function buildReport(){
   const dupDevs = Object.entries(devSids).filter(([, ss]) => ss.size > 1); lastDup = new Set(dupDevs.map(([d]) => d));
   const dupHtml = dupDevs.length ? `<div style="border:1px solid #B3261E;padding:3mm;margin-bottom:4mm;font-size:12pt"><b>⚠️ ตรวจพบเครื่องเดียวกันเช็คอินหลายชื่อ ${thNum(dupDevs.length)} เครื่อง</b> (อาจเช็คแทนกัน ควรตรวจสอบ)<br>${dupDevs.map(([d, ss], i) => `เครื่องที่ ${thNum(i+1)}: ` + [...ss].map(sid => esc(nameOf(sid))).join(', ')).join('<br>')}</div>` : '';
   const nOut = rows.filter(r => r.in === false).length, nChk = rows.filter(r => r.in !== undefined).length;
-  const nStu = new Set(rawOK.map(r => r.sid)).size;
+  const nStu = new Set(rawOK.map(r => r.sid)).size, nTeach = new Set(rawOK.filter(r => r.by === 'teacher').map(r => r.sid)).size;
   const days = [];
   for (let t = new Date($('dFrom').value + 'T00:00:00'); dayKey(t.getTime()) <= $('dTo').value && days.length < 62; t.setDate(t.getDate()+1)) days.push(dayKey(t.getTime()));
   const multiDay = days.length > 1;
@@ -741,10 +790,10 @@ async function buildReport(){
     <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th></tr>${missing.map(([sid,n],i) =>
     `<tr><td style="text-align:center">${thNum(i+1)}</td><td>${thNum(sid)}</td><td>${esc(n)}</td></tr>`).join('')}</table>` : '';
   const tableRows = rows.map((r, i) => `<tr>
-    <td style="text-align:center">${thNum(i+1)}</td><td>${thNum(r.sid||'-')}</td><td>${esc(r.name)}${lastDup.has(r.dev) ? ' ⚠️' : ''}</td>
+    <td style="text-align:center">${thNum(i+1)}</td><td>${thNum(r.sid||'-')}</td><td>${esc(r.name)}${lastDup.has(r.dev) ? ' ⚠️' : ''}${r.by === 'teacher' ? ' 👩‍🏫' : ''}</td>
     <td>${thNum(thDateTime(r.ts))}</td>
     <td><a href="${mapUrl(r.lat,r.lon)}">${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</a></td>
-    <td style="text-align:center">±${r.acc} ม.</td><td>${r.in === undefined ? '-' : r.in ? '✓ ในพื้นที่' : '⚠️ นอกพื้นที่ ' + thNum(r.d) + ' ม.'}</td><td style="text-align:center">${r.rid ? '✓' : '-'}</td>${cm !== 'all' ? `<td style="text-align:center">${valid(r) ? '✓' : '✗'}</td>` : ''}</tr>`).join('');
+    <td style="text-align:center">${r.by === 'teacher' ? '-' : '±' + r.acc + ' ม.'}</td><td>${r.by === 'teacher' ? '👩‍🏫 ครูเช็คอินแทน' + (r.why ? ' (' + esc(r.why) + ')' : '') : r.in === undefined ? '-' : r.in ? '✓ ในพื้นที่' : '⚠️ นอกพื้นที่ ' + thNum(r.d) + ' ม.'}</td><td style="text-align:center">${r.rid ? '✓' : '-'}</td>${cm !== 'all' ? `<td style="text-align:center">${valid(r) ? '✓' : '✗'}</td>` : ''}</tr>`).join('');
 
   const memo = `<div class="page">
     <div class="memo-head"><img src="garuda.jpg" alt=""><h2>บันทึกข้อความ</h2></div>
@@ -755,7 +804,7 @@ async function buildReport(){
     <div style="margin:8px 0"><b>เรียน</b> <span contenteditable>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</span></div>
     <div class="body" contenteditable>
       <p>ตามที่ผู้อำนวยการได้มอบหมายให้ครูดำเนินการเช็คชื่อนักเรียนผ่านระบบออนไลน์ และบันทึกพิกัดตำแหน่ง (GPS) เพื่อใช้เป็นข้อมูลในการดูแลช่วยเหลือนักเรียน นั้น</p>
-      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${deptTxt}${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${thNum(nStu)} คน จากทั้งหมด ${thNum(roster.length)} คน${rows.length !== nStu ? ` (รวม ${n} รายการ ใน ${thNum(days.length)} วัน)` : ''}${cm !== 'all' ? ` (นับเป็นผู้มาเฉพาะการเช็คอินที่${cmTxt})` : ''}${missing.length ? ` ${multiDay ? 'ไม่เคยเช็คอินเลย' : 'ยังไม่เช็คอิน'} ${thNum(missing.length)} คน` : ''}${dupDevs.length ? ` ตรวจพบเครื่องเดียวกันเช็คอินหลายชื่อ ${thNum(dupDevs.length)} เครื่อง` : ''}${phRows.length ? ` พร้อมภาพถ่ายประกอบ ${thNum(phRows.length)} ภาพ` : ''}${rds.length ? ` ครูเปิดรอบเช็คอิน ${thNum(rds.length)} รอบ นักเรียนได้ 1 คะแนนต่อรอบที่เช็คอิน` : ''}${nChk ? ` ตรวจสอบพิกัดกับจุดอ้างอิงห้องเรียน พบอยู่ในพื้นที่ ${thNum(nChk - nOut)} รายการ นอกพื้นที่ ${thNum(nOut)} รายการ` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
+      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${deptTxt}${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${thNum(nStu)} คน จากทั้งหมด ${thNum(roster.length)} คน${rows.length !== nStu ? ` (รวม ${n} รายการ ใน ${thNum(days.length)} วัน)` : ''}${cm !== 'all' ? ` (นับเป็นผู้มาเฉพาะการเช็คอินที่${cmTxt})` : ''}${missing.length ? ` ${multiDay ? 'ไม่เคยเช็คอินเลย' : 'ยังไม่เช็คอิน'} ${thNum(missing.length)} คน` : ''}${nTeach ? ` (ในจำนวนนี้ครูเช็คอินแทนนักเรียนที่ไม่มีโทรศัพท์/แบตหมด ${thNum(nTeach)} คน)` : ''}${dupDevs.length ? ` ตรวจพบเครื่องเดียวกันเช็คอินหลายชื่อ ${thNum(dupDevs.length)} เครื่อง` : ''}${phRows.length ? ` พร้อมภาพถ่ายประกอบ ${thNum(phRows.length)} ภาพ` : ''}${rds.length ? ` ครูเปิดรอบเช็คอิน ${thNum(rds.length)} รอบ นักเรียนได้ 1 คะแนนต่อรอบที่เช็คอิน` : ''}${nChk ? ` ตรวจสอบพิกัดกับจุดอ้างอิงห้องเรียน พบอยู่ในพื้นที่ ${thNum(nChk - nOut)} รายการ นอกพื้นที่ ${thNum(nOut)} รายการ` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
       <p>จึงเรียนมาเพื่อโปรดทราบ</p>
     </div>
     <div class="sign" contenteditable>ลงชื่อ ......................................<br>(${esc($('who').value)})<br>ตำแหน่ง ${esc($('whoPos').value)}</div>
@@ -798,11 +847,12 @@ async function buildReport(){
         ${photos[i+j] ? `<img src="${photos[i+j]}">` : '<div style="height:62mm;border:1px solid #999">ไม่มีรูป</div>'}
         <b>${thNum(i+j+1)}. ${esc(r.name)}</b>${r.g ? ' · ' + esc(r.g) : ''}<br>${thNum(thDateTime(r.ts))}<br>${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</div>`).join('') + `</div></div>`;
   }
-  const cl = clusterRows(rows);
+  const rowsGeo = rows.map((r, i) => ({...r, _i: i + 1})).filter(r => r.by !== 'teacher');   // แผนที่ไม่รวมรายการที่ครูเช็คอินแทน (ไม่ใช่ตำแหน่งจริงของนักเรียน)
+  const cl = clusterRows(rowsGeo);
   const multi = cl.filter(c => c.items.length > 1);
   const clusterRowsHtml = multi.map((c, i) => `<tr>
     <td style="text-align:center">${thNum(i+1)}</td><td style="text-align:center">${thNum(c.items.length)}</td>
-    <td>${c.items.map(k => thNum(k+1) + '. ' + esc(rows[k].name)).join('<br>')}</td>
+    <td>${c.items.map(k => thNum(rowsGeo[k]._i) + '. ' + esc(rowsGeo[k].name)).join('<br>')}</td>
     <td><a href="${mapUrl(c.lat,c.lon)}">${c.lat.toFixed(5)}, ${c.lon.toFixed(5)}</a></td></tr>`).join('');
   const mapPage = `<div class="page"><div class="ptitle">แผนที่แสดงการกระจุกตัวของการเช็คอิน</div>
     <div class="lg"><i class="pin" style="width:18px;height:18px;font-size:10px;line-height:14px">ก</i> ตำแหน่งนักเรียน (หมายเลขตามตารางรายชื่อ)<i class="c"></i> สีแดงเข้ม = จุดที่นักเรียนเช็คอินอยู่ใกล้กันหนาแน่น</div>
@@ -822,7 +872,7 @@ async function buildReport(){
 
   if (needArea && !raw.some(m => m.in !== undefined)) $('tmsg').textContent += ' · ⚠️ ยังไม่ได้ตั้งจุดอ้างอิงห้องเรียนหรือไม่มีข้อมูลพื้นที่ จึงไม่มีรายการที่นับว่ามา';
   $('report').innerHTML = memo + matrixPages + roundPages + listPage + mapPage + photoPages;
-  drawMap(rows, cl);
+  drawMap(rowsGeo, cl);
 }
 
 let autoT = null;
@@ -852,8 +902,8 @@ $('delPhotos').onclick = async () => {
 };
 $('printBtn').onclick = () => window.print();
 $('csvBtn').onclick = () => {
-  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่','ระยะจากจุดอ้างอิง(ม.)','ในพื้นที่เรียน','รอบ(นับคะแนน)','มีรูป','เครื่องเดียวกันเช็คหลายชื่อ']]
-    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon), r.d ?? '', r.in === undefined ? '' : r.in ? 'ใช่' : 'ไม่', r.rid ? 'ใช่' : '', lastPhotoIds.has(r.id) ? 'ใช่' : '', lastDup.has(r.dev) ? 'ใช่' : '']));
+  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่','ระยะจากจุดอ้างอิง(ม.)','ในพื้นที่เรียน','รอบ(นับคะแนน)','มีรูป','เครื่องเดียวกันเช็คหลายชื่อ','บันทึกโดย','เหตุผลที่ครูเช็คอินแทน']]
+    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon), r.d ?? '', r.in === undefined ? '' : r.in ? 'ใช่' : 'ไม่', r.rid ? 'ใช่' : '', lastPhotoIds.has(r.id) ? 'ใช่' : '', lastDup.has(r.dev) ? 'ใช่' : '', r.by === 'teacher' ? 'ครู' : 'นักเรียน', r.why || '']));
   const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
