@@ -78,6 +78,10 @@ table.list a{color:#000}
 .pin{background:#1F4E9C;color:#fff;border:2px solid #fff;border-radius:50%;width:22px;height:22px;font:700 11px/18px sans-serif;text-align:center;box-shadow:0 0 2px #000}
 .lg{font-size:12pt;margin:0 0 3mm}.lg i{display:inline-block;vertical-align:middle;margin:0 2px 0 8px}
 .lg .c{width:14px;height:14px;border-radius:50%;background:radial-gradient(#e00,#fa0,#0c0)}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+.ph{break-inside:avoid;font-size:12pt;line-height:1.25}
+.ph img{width:100%;height:62mm;object-fit:cover;border:1px solid #999}
+#preview{width:100%;border-radius:12px;margin-top:10px;display:none}
 .rnd{border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:16px;display:none}
 .rnd.on{background:#E8F5E9;border:2px solid var(--ok)}
 .rnd.off{background:#FFF4D6;border:1px solid #E8C566}
@@ -122,6 +126,13 @@ table.mx td.nm{text-align:left;white-space:nowrap}
     <div class="card">
       <div class="gps"><span class="dot" id="gpsDot"></span><span id="gpsText">กำลังหาพิกัด GPS…</span></div>
       <button class="btn btn-sm" id="gpsRetry" style="display:none;margin-top:8px">🔄 ลองหาพิกัดอีกครั้ง</button>
+    </div>
+
+    <div class="card" id="photoCard" style="display:none">
+      <div class="step">📷 ถ่ายรูป (ครูกำหนดให้ถ่ายรูปในกิจกรรมนี้)</div>
+      <button class="btn btn-cam" id="camBtn">📷 ถ่ายรูป</button>
+      <input type="file" id="file" accept="image/*" capture="environment" hidden>
+      <img id="preview" alt="">
     </div>
 
     <div class="card">
@@ -197,6 +208,8 @@ table.mx td.nm{text-align:left;white-space:nowrap}
       <div class="actions" style="margin-top:6px"><a class="btn btn-sm" id="rLine" target="_blank" style="background:#06C755;color:#fff;text-decoration:none">💬 ส่งแจ้งเข้า LINE</a><button class="btn btn-sm" id="rCopy">📋 คัดลอกข้อความ</button></div>
       <label>⏰ เส้นตายเช็คอินของลิงก์นี้ (โชว์นับถอยหลังบนหน้านักเรียน · นับคนส่งตั้งแต่ "ตั้งแต่วันที่" ด้านบน)</label>
       <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกการตั้งค่า</button></div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" id="needPhoto" style="width:auto"> 📷 ต้องถ่ายรูปตอนเช็คอิน (ติ๊ก = นักเรียนต้องถ่ายรูปก่อนกดเช็คอิน · ไม่ติ๊ก = ไม่ต้องถ่าย · ใช้กับลิงก์/วิชาที่ตั้งชื่อด้านบน บันทึกทันที)</label>
+      <div class="msg" id="photoMsg" style="margin:0;min-height:0;text-align:left;font-size:14px"></div>
       <label>📍 จุดอ้างอิงห้องเรียน/วิทยาลัย — ใช้ตรวจว่านักเรียนเช็คอินอยู่ในพื้นที่จริง (ยืนอยู่ที่ห้องเรียน กดปุ่มซ้าย ตั้งรัศมีขวา แล้วกด "บันทึกการตั้งค่า")</label>
       <div class="row"><button class="btn btn-sm" id="setRef">📍 ใช้ตำแหน่งปัจจุบันของฉัน</button><input type="number" id="refR" value="200" min="30" step="10" placeholder="รัศมี (เมตร)"></div>
       <div class="linkbox" id="refTxt">ยังไม่ได้ตั้งจุดอ้างอิง (ไม่ตรวจพื้นที่)</div>
@@ -207,6 +220,8 @@ table.mx td.nm{text-align:left;white-space:nowrap}
   </div>
   <div id="report"></div>
 </div>
+
+<canvas id="cv" hidden></canvas>
 
 <script>
 const DB = 'https://gps-photo-app-19249-default-rtdb.asia-southeast1.firebasedatabase.app';
@@ -277,7 +292,50 @@ function gpsFail(t){
 $('gpsRetry').onclick = getGPS;
 
 $('name').onchange = ready;
-function ready(){ $('goBtn').disabled = !(gps && $('name').value); }
+// ตัวเลือก "ต้องถ่ายรูป" ตั้งโดยครูต่อลิงก์/กิจกรรม (cfg.photo)
+let photo = null;
+const photoNeeded = () => !!cfg.photo;
+function applyPhoto(){ $('photoCard').style.display = photoNeeded() ? 'block' : 'none'; ready(); }
+$('camBtn').onclick = () => { if (!gps) getGPS(); $('file').click(); };
+$('file').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1024, sc = Math.min(1, MAX / Math.max(img.width, img.height));
+      const cv = $('cv'); cv.width = Math.round(img.width*sc); cv.height = Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      photo = cv.toDataURL('image/jpeg', 0.8);
+      $('preview').src = photo; $('preview').style.display = 'block';
+      $('camBtn').textContent = '📷 ถ่ายใหม่';
+      ready();
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+};
+async function stamp(dataUrl, name, g, ts){
+  await document.fonts.load("600 20px 'Sarabun'").catch(()=>{});
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const cv = $('cv'); cv.width = img.width; cv.height = img.height;
+      const c = cv.getContext('2d'); c.drawImage(img, 0, 0);
+      const fs = Math.max(16, img.width*0.032), pad = fs*0.6, h = fs*3.6;
+      c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(0, img.height-h, img.width, h);
+      c.fillStyle = '#fff';
+      c.font = `600 ${fs}px Sarabun, sans-serif`;
+      c.fillText(name, pad, img.height-h+fs*1.1);
+      c.font = `${fs*0.8}px Sarabun, sans-serif`;
+      c.fillText(`📍 ${g.lat.toFixed(6)}, ${g.lon.toFixed(6)} (±${g.acc} ม.)`, pad, img.height-h+fs*2.15);
+      c.fillText(`🕒 ${thDateTime(ts)}`, pad, img.height-h+fs*3.15);
+      res(cv.toDataURL('image/jpeg', 0.72));
+    };
+    img.src = dataUrl;
+  });
+}
+function ready(){ $('goBtn').disabled = !(gps && $('name').value && (!photoNeeded() || photo)); }
 
 $('goBtn').onclick = async () => {
   const sid = $('name').value;
@@ -289,12 +347,17 @@ $('goBtn').onclick = async () => {
   try {
     try { cfg = (await fetch(cfgUrl(GROUP)).then(r => r.json())) || {}; } catch(e){}
     const rd = activeRound(cfg);
+    if (photoNeeded() && !photo){
+      applyPhoto(); $('msg').textContent = '📷 ครูกำหนดให้ถ่ายรูปในกิจกรรมนี้ กรุณาถ่ายรูปก่อนกดเช็คอิน'; $('msg').style.color = 'var(--err)'; return;
+    }
+    const img = photoNeeded() ? await stamp(photo, `${name} (${sid})` + (GROUP ? ' · ' + GROUP : ''), gps, ts) : null;
     const d = cfg.lat != null ? Math.round(distM(gps, {lat:cfg.lat, lon:cfg.lon})) : null;
     const area = d == null ? {} : {d, in: d <= (cfg.r || 200)};
     const res = await fetch(`${DB}/.json`, {
       method: 'PATCH', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        [`checkin2_meta/${id}`]: {name, sid, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP, ...area, ...(rd ? {rid: rd.id} : {})}
+        [`checkin2_meta/${id}`]: {name, sid, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP, ...area, ...(rd ? {rid: rd.id} : {}), ...(img ? {ph: 1} : {})},
+        ...(img ? {[`checkin2_photo/${id}`]: img} : {})
       })
     });
     if (!res.ok) throw new Error(res.status);
@@ -354,8 +417,8 @@ async function loadUrgency(){
     const [c, m] = await Promise.all([fetch(cfgUrl(GROUP)).then(r=>r.json()), fetch(`${DB}/checkin2_meta.json`).then(r=>r.json())]);
     cfg = c || {}; meta = m || {};
   } catch(e){ return; }
-  renderRound(); setInterval(renderRound, 1000);
-  setInterval(() => fetch(cfgUrl(GROUP)).then(r => r.json()).then(c => { cfg = c || {}; }).catch(() => {}), 20000);
+  applyPhoto(); renderRound(); setInterval(renderRound, 1000);
+  setInterval(() => fetch(cfgUrl(GROUP)).then(r => r.json()).then(c => { cfg = c || {}; applyPhoto(); }).catch(() => {}), 20000);
   if (!cfg.deadline) return;
   $('urg').style.display = 'block';
   $('dlTxt').textContent = thDateTime(cfg.deadline);
@@ -379,6 +442,8 @@ function tick(){
 }
 
 let rows = [];
+const photoCache = {};
+async function getPhoto(id){ if (photoCache[id]) return photoCache[id]; return photoCache[id] = await fetch(`${DB}/checkin2_photo/${id}.json`).then(r => r.json()); }
 
 function openTeacher(){
   $('student').style.display = 'none'; $('teacher').style.display = 'block';
@@ -389,7 +454,7 @@ function openTeacher(){
 }
 let refPt = null, curCfg = {};
 const roundMsg = () => { const r = activeRound(curCfg), g = $('linkGrp').value.trim();
-  return `🔔 ถึงเวลาเช็คอินแล้ว!${g ? ' วิชา/กลุ่ม ' + g : ''}${r && r.name ? ' (' + r.name + ')' : ''}${r && r.until ? ' กดภายใน ' + hm(r.until) + ' น.' : ''} ใช้เวลาไม่ถึงนาที 👉 ${linkFor(g)}`; };
+  return `🔔 ถึงเวลาเช็คอินแล้ว!${g ? ' วิชา/กลุ่ม ' + g : ''}${r && r.name ? ' (' + r.name + ')' : ''}${r && r.until ? ' กดภายใน ' + hm(r.until) + ' น.' : ''}${curCfg.photo ? ' (ต้องถ่ายรูปด้วย)' : ''} ใช้เวลาไม่ถึงนาที 👉 ${linkFor(g)}`; };
 function renderRoundStat(){
   const r = activeRound(curCfg);
   if (r){
@@ -417,14 +482,24 @@ $('rClose').onclick = async () => {
 };
 $('rCopy').onclick = () => navigator.clipboard.writeText(roundMsg()).then(() => $('rCopy').textContent = '✓ คัดลอกแล้ว');
 function showRef(){ $('refTxt').textContent = refPt ? `ตั้งแล้ว: ${refPt.lat.toFixed(5)}, ${refPt.lon.toFixed(5)} · รัศมี ${$('refR').value || 200} ม.` : 'ยังไม่ได้ตั้งจุดอ้างอิง (ไม่ตรวจพื้นที่)'; }
+let dlSeq = 0; // ทิ้งผลโหลดที่มาช้า ไม่ให้ทับสิ่งที่ครูเพิ่งติ๊ก/พิมพ์
 async function loadDl(){
+  const my = ++dlSeq;
   const c = await fetch(cfgUrl($('linkGrp').value.trim())).then(r=>r.json()).catch(()=>null);
+  if (my !== dlSeq) return;
   $('dl').value = c && c.deadline ? new Date(c.deadline - new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16) : '';
-  curCfg = c || {}; renderRoundStat();
+  curCfg = c || {}; $('needPhoto').checked = !!(c && c.photo); renderRoundStat();
   refPt = c && c.lat != null ? {lat:c.lat, lon:c.lon} : null;
   $('refR').value = (c && c.r) || 200; showRef();
 }
 $('refR').oninput = showRef;
+$('needPhoto').onchange = async () => {
+  dlSeq++;
+  const on = $('needPhoto').checked;
+  const r = await fetch(cfgUrl($('linkGrp').value.trim()), {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({photo: on ? true : null})}).catch(() => null);
+  if (r && r.ok){ curCfg.photo = on; $('photoMsg').textContent = on ? '✓ ตั้งแล้ว: ต้องถ่ายรูป' : '✓ ตั้งแล้ว: ไม่ต้องถ่ายรูป'; renderRoundStat(); }
+  else { $('needPhoto').checked = !on; $('photoMsg').textContent = '❌ บันทึกไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต'; }
+};
 $('setRef').onclick = () => {
   $('setRef').textContent = '⏳ กำลังหาตำแหน่ง…';
   navigator.geolocation.getCurrentPosition(p => { refPt = {lat:p.coords.latitude, lon:p.coords.longitude}; showRef(); $('setRef').textContent = '✓ ได้ตำแหน่งแล้ว — กดบันทึกการตั้งค่า'; },
@@ -558,6 +633,10 @@ async function buildReport(){
   const n = thNum(rows.length);
 
   const raw = rawRows();
+  const phRows = rows.filter(r => r.ph);
+  if (phRows.length) $('tmsg').textContent = `พบ ${rows.length} รายการ — กำลังโหลดรูป ${phRows.length} ภาพ…`;
+  const photos = await Promise.all(phRows.map(r => getPhoto(r.id).catch(() => null)));
+  if (phRows.length) $('tmsg').textContent = `✓ เช็คอินแล้ว ${rows.length} รายการ`;
   const gSel = $('grp').value, tFrom = new Date($('dFrom').value + 'T00:00:00').getTime(), tTo = new Date($('dTo').value + 'T23:59:59').getTime();
   const rds = roundsAll.filter(r => r.start >= tFrom && r.start <= tTo && (!gSel || r.g === gSel)).sort((a, b) => a.start - b.start);
   const got = {}; raw.forEach(m => { if (m.rid) (got[m.sid] = got[m.sid] || new Set()).add(m.rid); });
@@ -586,7 +665,7 @@ async function buildReport(){
     <div style="margin:8px 0"><b>เรียน</b> <span contenteditable>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</span></div>
     <div class="body" contenteditable>
       <p>ตามที่ผู้อำนวยการได้มอบหมายให้ครูดำเนินการเช็คชื่อนักเรียนผ่านระบบออนไลน์ และบันทึกพิกัดตำแหน่ง (GPS) เพื่อใช้เป็นข้อมูลในการดูแลช่วยเหลือนักเรียน นั้น</p>
-      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${thNum(nStu)} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${rows.length !== nStu ? ` (รวม ${n} รายการ ใน ${thNum(days.length)} วัน)` : ''}${missing.length ? ` ${multiDay ? 'ไม่เคยเช็คอินเลย' : 'ยังไม่เช็คอิน'} ${thNum(missing.length)} คน` : ''}${rds.length ? ` ครูเปิดรอบเช็คอิน ${thNum(rds.length)} รอบ นักเรียนได้ 1 คะแนนต่อรอบที่เช็คอิน` : ''}${nChk ? ` ตรวจสอบพิกัดกับจุดอ้างอิงห้องเรียน พบอยู่ในพื้นที่ ${thNum(nChk - nOut)} รายการ นอกพื้นที่ ${thNum(nOut)} รายการ` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
+      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${thNum(nStu)} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${rows.length !== nStu ? ` (รวม ${n} รายการ ใน ${thNum(days.length)} วัน)` : ''}${missing.length ? ` ${multiDay ? 'ไม่เคยเช็คอินเลย' : 'ยังไม่เช็คอิน'} ${thNum(missing.length)} คน` : ''}${phRows.length ? ` พร้อมภาพถ่ายประกอบ ${thNum(phRows.length)} ภาพ` : ''}${rds.length ? ` ครูเปิดรอบเช็คอิน ${thNum(rds.length)} รอบ นักเรียนได้ 1 คะแนนต่อรอบที่เช็คอิน` : ''}${nChk ? ` ตรวจสอบพิกัดกับจุดอ้างอิงห้องเรียน พบอยู่ในพื้นที่ ${thNum(nChk - nOut)} รายการ นอกพื้นที่ ${thNum(nOut)} รายการ` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
       <p>จึงเรียนมาเพื่อโปรดทราบ</p>
     </div>
     <div class="sign" contenteditable>ลงชื่อ ......................................<br>(${esc($('who').value)})<br>ตำแหน่ง ${esc($('whoPos').value)}</div>
@@ -622,6 +701,13 @@ async function buildReport(){
         return `<tr><td>${thNum(j+1)}</td><td class="nm">${esc(nm)}</td>${rs.map(r => got[sid] && got[sid].has(r.id) ? '<td>✓</td>' : '<td>–</td>').join('')}<td><b>${thNum(pts)}/${thNum(rds.length)}</b></td><td>${thNum(Math.round(100*pts/rds.length))}</td></tr>`; }).join('')}
       <tr><td></td><td class="nm"><b>จำนวนผู้เช็คอิน (คน)</b></td>${rs.map(r => `<td><b>${thNum(STUDENTS.filter(([sid]) => got[sid] && got[sid].has(r.id)).length)}</b></td>`).join('')}<td></td><td></td></tr></table></div>`;
   }
+  let photoPages = '';
+  for (let i = 0; i < phRows.length; i += 6){
+    photoPages += `<div class="page"><div class="ptitle">ภาพถ่ายประกอบ${i ? ' (ต่อ)' : ''}${grpTxt}</div><div class="photos">` +
+      phRows.slice(i, i + 6).map((r, j) => `<div class="ph">
+        ${photos[i+j] ? `<img src="${photos[i+j]}">` : '<div style="height:62mm;border:1px solid #999">ไม่มีรูป</div>'}
+        <b>${thNum(i+j+1)}. ${esc(r.name)}</b>${r.g ? ' · ' + esc(r.g) : ''}<br>${thNum(thDateTime(r.ts))}<br>${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</div>`).join('') + `</div></div>`;
+  }
   const cl = clusterRows(rows);
   const multi = cl.filter(c => c.items.length > 1);
   const clusterRowsHtml = multi.map((c, i) => `<tr>
@@ -643,7 +729,7 @@ async function buildReport(){
       <li>สร้างรายงานเมื่อ ${thNum(thDateTime(Date.now()))} โดย ${esc($('who').value)}</li>
     </ol></div>`;
 
-  $('report').innerHTML = memo + matrixPages + roundPages + listPage + mapPage;
+  $('report').innerHTML = memo + matrixPages + roundPages + listPage + mapPage + photoPages;
   drawMap(rows, cl);
 }
 
@@ -653,8 +739,8 @@ $('loadBtn').onclick = loadData;
 ['dFrom','dTo','grp','dedupe'].forEach(id => $(id).onchange = buildReport);
 $('printBtn').onclick = () => window.print();
 $('csvBtn').onclick = () => {
-  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่','ระยะจากจุดอ้างอิง(ม.)','ในพื้นที่เรียน','รอบ(นับคะแนน)']]
-    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon), r.d ?? '', r.in === undefined ? '' : r.in ? 'ใช่' : 'ไม่', r.rid ? 'ใช่' : '']));
+  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่','ระยะจากจุดอ้างอิง(ม.)','ในพื้นที่เรียน','รอบ(นับคะแนน)','มีรูป']]
+    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon), r.d ?? '', r.in === undefined ? '' : r.in ? 'ใช่' : 'ไม่', r.rid ? 'ใช่' : '', r.ph ? 'ใช่' : '']));
   const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
