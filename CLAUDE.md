@@ -67,5 +67,6 @@ Cindy (COO) — รับงาน, กระจายให้ทีม
 ### ข้อมูลเฉพาะแต่ละห้อง (อยู่ใน build.py)
 - **Homepage** (index.html): หน้าหลักลิงก์ทุกห้อง
 - **ชช.1** (attendance-ch1.html): DB=attendance.json, LS=attendanceData_v2, นักเรียน 15 คน
+- **ชช.1 ภาคเรียนที่ 2/2569** (attendance-ch1-t2.html): DB=attendance-ch1-t2.json (แยกจากภาค 1), LS=attendanceData_ch1_t2_v2, วิชา/กิจกรรมตามตารางเรียน 2/2569, นักเรียน 19 คน (กลุ่มเรียน 692010301)
 - **ชช.2** (attendance-y2.html): DB=attendance-y2.json, LS=attendanceData_y2_v2, นักเรียน=[] (กรอกเอง)
 - **ลูกเสือ** (attendance-scout.html): DB=attendance-scout.json, LS=attendanceData_scout_v2

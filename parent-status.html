@@ -48,6 +48,22 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const dayKey = ts => new Date(ts - new Date().getTimezoneOffset()*6e4).toISOString().slice(0, 10);
 const hm = ts => new Date(ts).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
 let meta = {}, rounds = [];
+// ดึง checkin2_meta เฉพาะช่วงเวลา/เฉพาะรหัสนักเรียน (ต้องมี .indexOn ts,sid ใน Firebase rules) ถ้าไม่ได้ถอยไปดึงทั้งหมดแล้วกรองเอง
+async function fetchMeta({from = 0, to = Infinity, sid = ''} = {}){
+  const q = sid ? `orderBy=${encodeURIComponent('"sid"')}&equalTo=${encodeURIComponent('"' + sid + '"')}`
+    : `orderBy=${encodeURIComponent('"ts"')}&startAt=${from}` + (to !== Infinity ? `&endAt=${to}` : '');
+  let all = null, ok = false;
+  try { const r = await fetch(`${DB}/checkin2_meta.json?${q}`); if (r.ok){ all = await r.json(); ok = true; } } catch(e){}
+  if (!ok) all = await fetch(`${DB}/checkin2_meta.json`).then(r => r.json());
+  const voided = await getVoid();   // รายการที่ครูยกเลิก (บันทึกผิดคน) ไม่นับ
+  return Object.fromEntries(Object.entries(all || {}).filter(([id, m]) => !voided.has(id) && (sid ? m.sid === sid : m.ts >= from && m.ts <= to)));
+}
+let voidCache = {t: 0, set: new Set()};
+async function getVoid(){
+  if (Date.now() - voidCache.t < 20000) return voidCache.set;
+  try { voidCache = {t: Date.now(), set: new Set(Object.keys((await fetch(`${DB}/checkin2_void.json`).then(r => r.json())) || {}))}; } catch(e){}
+  return voidCache.set;
+}
 
 function scoreTxt(sid){
   const gs = [...new Set(rounds.map(r => r.g || ''))].filter(g => !GROUP || g === GROUP).sort();
@@ -59,8 +75,12 @@ function scoreTxt(sid){
 }
 async function refresh(){
   try {
-    const [m, r] = await Promise.all([fetch(`${DB}/checkin2_meta.json`).then(r => r.json()), fetch(`${DB}/checkin2_rounds.json`).then(r => r.json())]);
-    meta = m || {};
+    const day0 = $('day').value, sid1 = $('nm').value;
+    const [m, mine, r] = await Promise.all([
+      fetchMeta({from: new Date(day0 + 'T00:00:00').getTime(), to: new Date(day0 + 'T23:59:59').getTime()}),   // ของวันที่เลือก (ภาพรวมห้อง)
+      sid1 ? fetchMeta({sid: sid1}) : {},                                                                       // ของนักเรียนคนนี้ทั้งหมด (คะแนนสะสม)
+      fetch(`${DB}/checkin2_rounds.json`).then(r => r.json())]);
+    meta = {...mine, ...m};
     rounds = Object.values(r || {}).flatMap(g => Object.entries(g).map(([id, v]) => ({id, ...v})));
   } catch(e){ $('out').textContent = '❌ โหลดข้อมูลไม่ได้ ตรวจสอบอินเทอร์เน็ต'; return; }
   const day = $('day').value, roster = rosterOf($('cls').value), ids = new Set(roster.map(s => s[0]));
@@ -74,7 +94,7 @@ async function refresh(){
   const mine = list.filter(m => m.sid === sid).sort((a, b) => a.ts - b.ts);
   $('out').innerHTML = mine.length
     ? `<div class="big" style="color:var(--ok)">✅ ${esc(name)} เช็คอินเข้าเรียนแล้ว</div>
-       <table><tr><th>เวลา</th><th>วิชา/กลุ่ม</th><th>พื้นที่เรียน</th><th>คะแนน</th></tr>${mine.map(m => `<tr><td>${hm(m.ts)} น.</td><td>${esc(m.g || '-')}</td><td>${m.in === undefined ? '-' : m.in ? '✓ อยู่ในพื้นที่' : '⚠️ นอกพื้นที่'}</td><td>${m.rid ? '+1 ✓' : 'ไม่นับ'}</td></tr>`).join('')}</table>${scoreTxt(sid)}`
+       <table><tr><th>เวลา</th><th>วิชา/กลุ่ม</th><th>พื้นที่เรียน</th><th>คะแนน</th></tr>${mine.map(m => `<tr><td>${hm(m.ts)} น.</td><td>${esc(m.g || '-')}</td><td>${m.by === 'teacher' ? '👩‍🏫 ครูบันทึกให้' : m.in === undefined ? '-' : m.in ? '✓ อยู่ในพื้นที่' : '⚠️ นอกพื้นที่'}</td><td>${m.rid ? '+1 ✓' : 'ไม่นับ'}</td></tr>`).join('')}</table>${scoreTxt(sid)}`
     : `<div class="big" style="color:var(--err)">❌ ยังไม่พบการเช็คอินของ ${esc(name)}</div><div class="note">ถ้านักเรียนเพิ่งเช็คอิน รอสักครู่ ระบบอัปเดตทุก 1 นาที</div>`;
 }
 function fillNames(sid){
