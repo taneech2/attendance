@@ -73,13 +73,6 @@ table.list a{color:#000}
 .bar{background:rgba(255,255,255,.3);border-radius:99px;height:12px;margin:8px 0 2px;overflow:hidden}
 .bar i{display:block;height:100%;background:#FFD54F;width:0}
 .share{background:#06C755;color:#fff;margin-top:12px}
-.who{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.who button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:12px 6px;font:600 16px 'Sarabun',sans-serif;cursor:pointer}
-.who button.on{border-color:var(--accent);background:#E6EEFB}
-.pnote{background:#E8F5E9;border-radius:16px;padding:14px 16px;margin-bottom:14px;display:none;font-size:16px}
-.parent-only{display:none}
-body.parent .parent-only{display:block}
-body.parent .student-only{display:none!important}
 </style>
 </head>
 <body>
@@ -89,19 +82,16 @@ body.parent .student-only{display:none!important}
   <h1>📍 เช็คอินเช็คชื่อ</h1>
   <div class="sub">วิทยาลัยการอาชีพบุรีรัมย์ · เลือกชื่อ + กดเช็คอิน (ไม่ต้องถ่ายรูป)</div>
 
-  <div class="urg student-only" id="urg">
+  <div class="urg" id="urg">
     <div>⏰ ปิดรับเช็คอิน <b id="dlTxt"></b></div>
     <div class="cd" id="cd"></div>
     <div class="bar"><i id="barFill"></i></div>
     <div id="prog" style="font-size:15px"></div>
     <ul>
       <li>รายชื่อ <b>คนที่ไม่เช็คอิน</b> จะถูกส่งถึง <b>ท่านผู้อำนวยการ</b> โดยตรง</li>
-      <li>ไม่เช็คอิน = ครูต้อง <b>โทรหาผู้ปกครอง</b> และ <b>ไปเยี่ยมบ้านเอง</b></li>
       <li>ใช้เวลาไม่ถึง 1 นาที — ทำเลยตอนนี้!</li>
     </ul>
   </div>
-
-  <div class="pnote parent-only">🙏 <b>เรียน ท่านผู้ปกครอง</b><br>สำหรับนักเรียนที่ไปทำงาน/ไม่อยู่บ้าน ขอความกรุณาท่านเช็คอินแทน เพื่อยืนยันที่พักอาศัยของบุตรหลาน ใช้เวลาไม่ถึง 1 นาทีค่ะ/ครับ</div>
 
   <div class="warn" id="inApp">
     ⚠️ เปิดจาก LINE/Facebook อาจหาพิกัดไม่ได้<br>
@@ -115,20 +105,8 @@ body.parent .student-only{display:none!important}
     </div>
 
     <div class="card">
-      <div class="step">ใครเป็นคนเช็คอิน?</div>
-      <div class="who"><button id="byStu" class="on">🧑‍🔧 นักเรียน</button><button id="byPar">👨‍👩‍👦 ผู้ปกครอง<br><small>(เช็คอินแทน)</small></button></div>
-    </div>
-
-    <div class="card">
-      <div class="step"><span class="student-only">① เลือกชื่อของตัวเอง</span><span class="parent-only">① เลือกชื่อบุตรหลาน (นักเรียน)</span></div>
+      <div class="step">เลือกชื่อของตัวเอง</div>
       <select id="name"><option value="">— กดเลือกชื่อของตัวเอง —</option></select>
-    </div>
-
-    <div class="card parent-only">
-      <div class="step">② ข้อมูลผู้ปกครอง</div>
-      <input type="text" id="pname" placeholder="ชื่อ–นามสกุล ผู้ปกครอง">
-      <select id="prel" style="margin-top:8px"><option value="">— เกี่ยวข้องเป็น —</option><option>บิดา</option><option>มารดา</option><option>ปู่/ย่า/ตา/ยาย</option><option>ลุง/ป้า/น้า/อา</option><option>พี่</option><option>อื่น ๆ</option></select>
-      <input type="tel" id="ptel" placeholder="เบอร์โทร (ไม่บังคับ)" style="margin-top:8px;width:100%;padding:14px;border:2px solid var(--line);border-radius:12px;font:20px 'Sarabun',sans-serif">
     </div>
 
     <button class="btn btn-go" id="goBtn" disabled>✅ เช็คอิน</button>
@@ -177,8 +155,6 @@ body.parent .student-only{display:none!important}
       <label>ลิงก์ให้นักเรียน (ใส่ชื่อกลุ่มเพื่อแยกห้อง — ไม่ใส่ก็ได้)</label>
       <div class="row"><input type="text" id="linkGrp" placeholder="เช่น ชช.1"><button class="btn btn-sm" id="copyLink">📋 คัดลอกลิงก์</button></div>
       <div class="linkbox" id="linkOut" style="margin-top:6px"></div>
-      <label>ลิงก์สำหรับผู้ปกครอง (เปิดโหมดผู้ปกครองให้อัตโนมัติ)</label>
-      <div class="linkbox" id="linkPar"></div>
       <div style="font-size:13px;color:#5b6475;margin-top:8px">💡 แก้ข้อความในบันทึกได้โดยคลิกที่ตัวหนังสือในหน้ากระดาษด้านล่าง ก่อนกดพิมพ์</div>
     </div>
   </div>
@@ -254,16 +230,7 @@ function gpsFail(t){
 $('gpsRetry').onclick = getGPS;
 
 $('name').onchange = ready;
-let BY = params.get('by') === 'parent' ? 'parent' : 'student';
-function setBy(b){
-  BY = b; document.body.classList.toggle('parent', b === 'parent');
-  $('byStu').classList.toggle('on', b === 'student'); $('byPar').classList.toggle('on', b === 'parent');
-  ready();
-}
-$('byStu').onclick = () => setBy('student'); $('byPar').onclick = () => setBy('parent');
-$('pname').oninput = ready; $('prel').onchange = ready;
-function ready(){ $('goBtn').disabled = !(gps && $('name').value && (BY === 'student' || ($('pname').value.trim().length >= 3 && $('prel').value))); }
-setBy(BY);
+function ready(){ $('goBtn').disabled = !(gps && $('name').value); }
 
 $('goBtn').onclick = async () => {
   const sid = $('name').value;
@@ -273,17 +240,15 @@ $('goBtn').onclick = async () => {
   const ts = Date.now();
   const id = ts + '_' + Math.random().toString(36).slice(2, 7);
   try {
-    const par = BY === 'parent' ? {by:'parent', pname:$('pname').value.trim(), prel:$('prel').value, ptel:$('ptel').value.trim()} : {};
     const res = await fetch(`${DB}/.json`, {
       method: 'PATCH', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        [`checkin2_meta/${id}`]: {name, sid, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP, ...par}
+        [`checkin2_meta/${id}`]: {name, sid, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP}
       })
     });
     if (!res.ok) throw new Error(res.status);
     $('form').style.display = 'none'; $('done').style.display = 'block';
     meta[id] = {sid, ts}; const rank = doneCount();
-    if (par.by){ $('shareBtn').style.display = 'none'; $('rankTxt').textContent = '🙏 ขอบพระคุณท่านผู้ปกครองที่ให้ความร่วมมือ'; } else
     $('rankTxt').textContent = cfg.deadline ? `🎉 คุณเป็นคนที่ ${rank} จาก ${STUDENTS.length} คนที่เช็คอินแล้ว` : '';
     const link = location.href.split('#')[0];
     $('shareBtn').href = 'https://line.me/R/msg/text/?' + encodeURIComponent(`เช็คอินเช็คชื่อยัง? ครูดูรายชื่อคนที่ไม่ส่งนะ ใช้เวลาไม่ถึงนาที 👉 ${link}`);
@@ -350,8 +315,6 @@ function updateLink(){
   const g = $('linkGrp').value.trim(); if (g) u.searchParams.set('g', g);
   u.searchParams.set('openExternalBrowser', '1');
   $('linkOut').textContent = u.toString();
-  u.searchParams.set('by', 'parent');
-  $('linkPar').textContent = u.toString();
 }
 $('linkGrp').oninput = updateLink;
 $('copyLink').onclick = () => navigator.clipboard.writeText($('linkOut').textContent).then(()=>$('copyLink').textContent='✓ คัดลอกแล้ว');
@@ -397,8 +360,6 @@ async function buildReport(){
   const period = $('dFrom').value === $('dTo').value ? `วันที่ ${fromTxt}` : `ระหว่างวันที่ ${fromTxt} ถึงวันที่ ${toTxt}`;
   const grpTxt = $('grp').value ? ` กลุ่ม ${esc($('grp').value)}` : '';
   const n = thNum(rows.length);
-  const nPar = rows.filter(r => r.by === 'parent').length;
-  const parTag = r => r.by === 'parent' ? `<br><small>(ผู้ปกครองเช็คอินแทน: ${esc(r.pname)} – ${esc(r.prel)}${r.ptel ? ' โทร ' + esc(r.ptel) : ''})</small>` : '';
 
   const done = new Set(rows.map(r => r.sid));
   const missing = STUDENTS.filter(([sid]) => !done.has(sid));
@@ -406,7 +367,7 @@ async function buildReport(){
     <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th></tr>${missing.map(([sid,n],i) =>
     `<tr><td style="text-align:center">${thNum(i+1)}</td><td>${thNum(sid)}</td><td>${esc(n)}</td></tr>`).join('')}</table>` : '';
   const tableRows = rows.map((r, i) => `<tr>
-    <td style="text-align:center">${thNum(i+1)}</td><td>${thNum(r.sid||'-')}</td><td>${esc(r.name)}${parTag(r)}</td>
+    <td style="text-align:center">${thNum(i+1)}</td><td>${thNum(r.sid||'-')}</td><td>${esc(r.name)}</td>
     <td>${thNum(thDateTime(r.ts))}</td>
     <td><a href="${mapUrl(r.lat,r.lon)}">${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</a></td>
     <td style="text-align:center">±${r.acc} ม.</td></tr>`).join('');
@@ -420,7 +381,7 @@ async function buildReport(){
     <div style="margin:8px 0"><b>เรียน</b> <span contenteditable>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</span></div>
     <div class="body" contenteditable>
       <p>ตามที่ผู้อำนวยการได้มอบหมายให้ครูดำเนินการเช็คชื่อนักเรียนผ่านระบบออนไลน์ และบันทึกพิกัดตำแหน่ง (GPS) เพื่อใช้เป็นข้อมูลในการดูแลช่วยเหลือนักเรียน นั้น</p>
-      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${n} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${nPar ? ` (ในจำนวนนี้ ผู้ปกครองเช็คอินแทน ${thNum(nPar)} คน เนื่องจากนักเรียนไม่สะดวกเช็คอินด้วยตนเอง)` : ''}${missing.length ? ` ยังไม่เช็คอิน ${thNum(missing.length)} คน` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
+      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${n} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${missing.length ? ` ยังไม่เช็คอิน ${thNum(missing.length)} คน` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
       <p>จึงเรียนมาเพื่อโปรดทราบ</p>
     </div>
     <div class="sign" contenteditable>ลงชื่อ ......................................<br>(${esc($('who').value)})<br>ตำแหน่ง ${esc($('whoPos').value)}</div>
@@ -438,8 +399,8 @@ $('loadBtn').onclick = loadData;
 ['dFrom','dTo','grp','dedupe'].forEach(id => $(id).onchange = buildReport);
 $('printBtn').onclick = () => window.print();
 $('csvBtn').onclick = () => {
-  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่','ผู้เช็คอิน','ชื่อผู้ปกครอง','ความเกี่ยวข้อง','เบอร์ผู้ปกครอง']]
-    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon), r.by === 'parent' ? 'ผู้ปกครอง' : 'นักเรียน', r.pname||'', r.prel||'', r.ptel||'']));
+  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่']]
+    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon)]));
   const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
