@@ -78,6 +78,21 @@ table.list a{color:#000}
 .pin{background:#1F4E9C;color:#fff;border:2px solid #fff;border-radius:50%;width:22px;height:22px;font:700 11px/18px sans-serif;text-align:center;box-shadow:0 0 2px #000}
 .lg{font-size:12pt;margin:0 0 3mm}.lg i{display:inline-block;vertical-align:middle;margin:0 2px 0 8px}
 .lg .c{width:14px;height:14px;border-radius:50%;background:radial-gradient(#e00,#fa0,#0c0)}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+.ph{break-inside:avoid;font-size:12pt;line-height:1.25}
+.ph img{width:100%;height:62mm;object-fit:cover;border:1px solid #999}
+#preview{width:100%;border-radius:12px;margin-top:10px;display:none}
+.rnd{border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:16px;display:none}
+.rnd.on{background:#E8F5E9;border:2px solid var(--ok)}
+.rnd.off{background:#FFF4D6;border:1px solid #E8C566}
+.stl label{display:block;font-size:14px;margin:10px 0 4px;color:#5b6475}
+.stl td,.stl th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:16px}
+.sv{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;font-size:15px}
+.sv b{flex:1;min-width:90px}
+.sv button{padding:6px 10px;font-size:14px}
+table.mx{font-size:10.5pt}
+table.mx th,table.mx td{text-align:center;padding:2px 3px}
+table.mx td.nm{text-align:left;white-space:nowrap}
 .refs{font-size:12pt;line-height:1.3;margin:4mm 0 0;padding-left:6mm}
 .refs li{margin:1mm 0}
 </style>
@@ -88,6 +103,8 @@ table.list a{color:#000}
 <div id="student" class="wrap">
   <h1>📍 เช็คอินเช็คชื่อ</h1>
   <div class="sub">วิทยาลัยการอาชีพบุรีรัมย์ · เลือกชื่อ + กดเช็คอิน (ไม่ต้องถ่ายรูป)</div>
+
+  <div class="rnd" id="rnd"></div>
 
   <div class="urg" id="urg">
     <div>⏰ ปิดรับเช็คอิน <b id="dlTxt"></b></div>
@@ -111,6 +128,13 @@ table.list a{color:#000}
       <button class="btn btn-sm" id="gpsRetry" style="display:none;margin-top:8px">🔄 ลองหาพิกัดอีกครั้ง</button>
     </div>
 
+    <div class="card" id="photoCard" style="display:none">
+      <div class="step">📷 ถ่ายรูป (ครูกำหนดให้ถ่ายรูปในกิจกรรมนี้)</div>
+      <button class="btn btn-cam" id="camBtn">📷 ถ่ายรูป</button>
+      <input type="file" id="file" accept="image/*" capture="environment" hidden>
+      <img id="preview" alt="">
+    </div>
+
     <div class="card">
       <div class="step">เลือกชื่อของตัวเอง</div>
       <select id="name"><option value="">— กดเลือกชื่อของตัวเอง —</option></select>
@@ -132,6 +156,20 @@ table.list a{color:#000}
   <div class="foot"><a href="#" id="teacherLink">สำหรับครู</a></div>
 </div>
 
+<!-- ================= STATUS (ผู้ปกครอง) ================= -->
+<div id="status" class="wrap stl" style="display:none">
+  <h1>🏫 ตรวจสอบการเข้าเรียน</h1>
+  <div class="sub">วิทยาลัยการอาชีพบุรีรัมย์ · สำหรับผู้ปกครอง · อัปเดตอัตโนมัติทุก 1 นาที</div>
+  <div class="card">
+    <div class="step">เลือกชื่อนักเรียน</div>
+    <select id="stName"></select>
+    <label>วันที่</label><input type="date" id="stDate">
+  </div>
+  <div class="card" id="stOut"></div>
+  <div class="card" id="stClass"></div>
+  <div class="foot"><a href="#" id="stBack">กลับหน้าเช็คอิน</a></div>
+</div>
+
 <!-- ================= TEACHER ================= -->
 <div id="teacher">
   <div class="tbar">
@@ -142,9 +180,9 @@ table.list a{color:#000}
         <div><label>ถึงวันที่</label><input type="date" id="dTo"></div>
       </div>
       <div class="row">
-        <div><label>กลุ่ม/ห้อง</label><select id="grp"><option value="">ทั้งหมด</option></select></div>
+        <div><label>กลุ่ม/ห้อง/วิชา</label><select id="grp"><option value="">ทั้งหมด</option></select></div>
         <div><label>ถ้าคนเดียวส่งหลายครั้ง</label>
-          <select id="dedupe"><option value="1">ใช้ครั้งล่าสุด</option><option value="0">แสดงทุกครั้ง</option></select></div>
+          <select id="dedupe"><option value="day">ครั้งล่าสุดของแต่ละวัน/วิชา</option><option value="0">แสดงทุกครั้ง (ดูเวลา/ตำแหน่งทุกครั้ง)</option><option value="1">ครั้งล่าสุดตลอดช่วง</option></select></div>
       </div>
       <div class="row">
         <div><label>ผู้รายงาน</label><input type="text" id="who" value="นายธานี ชมสุข"></div>
@@ -155,18 +193,35 @@ table.list a{color:#000}
         <button class="btn btn-cam" id="loadBtn">🔄 โหลดข้อมูล / สร้างรายงาน</button>
         <button class="btn btn-go" id="printBtn" style="font-size:16px;padding:10px 16px">🖨️ พิมพ์ / บันทึก PDF</button>
         <button class="btn btn-sm" id="csvBtn">⬇️ CSV</button>
+        <label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-size:14px"><input type="checkbox" id="auto" style="width:auto"> รีเฟรชอัตโนมัติทุก 1 นาที</label>
       </div>
       <div class="msg" id="tmsg"></div>
-      <label>⏰ เส้นตายเช็คอิน (โชว์นับถอยหลังบนหน้านักเรียน · นับคนส่งตั้งแต่ "ตั้งแต่วันที่" ด้านบน)</label>
-      <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกเส้นตาย</button></div>
-      <label>ลิงก์ให้นักเรียน (ใส่ชื่อกลุ่มเพื่อแยกห้อง — ไม่ใส่ก็ได้)</label>
-      <div class="row"><input type="text" id="linkGrp" placeholder="เช่น ชช.1"><button class="btn btn-sm" id="copyLink">📋 คัดลอกลิงก์</button></div>
+      <label>ลิงก์ให้นักเรียน — ตั้งชื่อตามห้อง/วิชา/คาบ (เช่น "ชช.1 CNC คาบ 1") แต่ละชื่อจะแยกข้อมูลและเส้นตายของตัวเอง · ไม่ใส่ก็ได้</label>
+      <div class="row"><input type="text" id="linkGrp" placeholder="เช่น ชช.1 CNC"><button class="btn btn-sm" id="copyLink">📋 คัดลอกลิงก์</button></div>
       <div class="linkbox" id="linkOut" style="margin-top:6px"></div>
+      <div class="actions" style="margin-top:6px"><button class="btn btn-sm" id="saveLink">💾 บันทึกลิงก์นี้ไว้ใช้ซ้ำ</button></div>
+      <div id="savedLinks"></div>
+      <label>🔔 รอบเช็คอิน — กดเปิดเมื่อถึงเวลาเช็คอิน (ไม่ต้องกำหนดตารางตายตัว) นักเรียนที่เช็คอินในรอบได้ 1 คะแนน และนับเป็นการเช็คชื่อวิชา/กลุ่มของลิงก์ด้านบน</label>
+      <div class="row"><input type="text" id="rName" placeholder="ชื่อรอบ (ไม่บังคับ) เช่น ต้นคาบ"><input type="number" id="rMin" value="10" min="0" placeholder="นาที (0 = ปิดเอง)"></div>
+      <div class="actions"><button class="btn btn-go" id="rOpen" style="font-size:16px;padding:10px 16px">🔔 เปิดรอบเช็คอินตอนนี้</button><button class="btn btn-sm" id="rClose">⏹ ปิดรอบ</button></div>
+      <div class="linkbox" id="rStat" style="margin-top:6px">ยังไม่เปิดรอบ</div>
+      <div class="actions" style="margin-top:6px"><a class="btn btn-sm" id="rLine" target="_blank" style="background:#06C755;color:#fff;text-decoration:none">💬 ส่งแจ้งเข้า LINE</a><button class="btn btn-sm" id="rCopy">📋 คัดลอกข้อความ</button></div>
+      <label>⏰ เส้นตายเช็คอินของลิงก์นี้ (โชว์นับถอยหลังบนหน้านักเรียน · นับคนส่งตั้งแต่ "ตั้งแต่วันที่" ด้านบน)</label>
+      <div class="row"><input type="datetime-local" id="dl"><button class="btn btn-sm" id="saveDl">💾 บันทึกการตั้งค่า</button></div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" id="needPhoto" style="width:auto"> 📷 ต้องถ่ายรูปตอนเช็คอิน (ติ๊ก = นักเรียนต้องถ่ายรูปก่อนกดเช็คอิน · ไม่ติ๊ก = ไม่ต้องถ่าย · ใช้กับลิงก์/วิชาที่ตั้งชื่อด้านบน บันทึกทันที)</label>
+      <div class="msg" id="photoMsg" style="margin:0;min-height:0;text-align:left;font-size:14px"></div>
+      <label>📍 จุดอ้างอิงห้องเรียน/วิทยาลัย — ใช้ตรวจว่านักเรียนเช็คอินอยู่ในพื้นที่จริง (ยืนอยู่ที่ห้องเรียน กดปุ่มซ้าย ตั้งรัศมีขวา แล้วกด "บันทึกการตั้งค่า")</label>
+      <div class="row"><button class="btn btn-sm" id="setRef">📍 ใช้ตำแหน่งปัจจุบันของฉัน</button><input type="number" id="refR" value="200" min="30" step="10" placeholder="รัศมี (เมตร)"></div>
+      <div class="linkbox" id="refTxt">ยังไม่ได้ตั้งจุดอ้างอิง (ไม่ตรวจพื้นที่)</div>
+      <label>👪 ลิงก์ให้ผู้ปกครองดูสถานะการเข้าเรียน (เห็นเวลาเช็คอินและว่าอยู่ในพื้นที่หรือไม่ — ไม่แสดงพิกัด)</label>
+      <div class="row"><div class="linkbox" id="linkStatus" style="margin:0"></div><button class="btn btn-sm" id="copyStatus">📋 คัดลอกลิงก์</button></div>
       <div style="font-size:13px;color:#5b6475;margin-top:8px">💡 แก้ข้อความในบันทึกได้โดยคลิกที่ตัวหนังสือในหน้ากระดาษด้านล่าง ก่อนกดพิมพ์</div>
     </div>
   </div>
   <div id="report"></div>
 </div>
+
+<canvas id="cv" hidden></canvas>
 
 <script>
 const DB = 'https://gps-photo-app-19249-default-rtdb.asia-southeast1.firebasedatabase.app';
@@ -237,7 +292,50 @@ function gpsFail(t){
 $('gpsRetry').onclick = getGPS;
 
 $('name').onchange = ready;
-function ready(){ $('goBtn').disabled = !(gps && $('name').value); }
+// ตัวเลือก "ต้องถ่ายรูป" ตั้งโดยครูต่อลิงก์/กิจกรรม (cfg.photo)
+let photo = null;
+const photoNeeded = () => !!cfg.photo;
+function applyPhoto(){ $('photoCard').style.display = photoNeeded() ? 'block' : 'none'; ready(); }
+$('camBtn').onclick = () => { if (!gps) getGPS(); $('file').click(); };
+$('file').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1024, sc = Math.min(1, MAX / Math.max(img.width, img.height));
+      const cv = $('cv'); cv.width = Math.round(img.width*sc); cv.height = Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      photo = cv.toDataURL('image/jpeg', 0.8);
+      $('preview').src = photo; $('preview').style.display = 'block';
+      $('camBtn').textContent = '📷 ถ่ายใหม่';
+      ready();
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+};
+async function stamp(dataUrl, name, g, ts){
+  await document.fonts.load("600 20px 'Sarabun'").catch(()=>{});
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const cv = $('cv'); cv.width = img.width; cv.height = img.height;
+      const c = cv.getContext('2d'); c.drawImage(img, 0, 0);
+      const fs = Math.max(16, img.width*0.032), pad = fs*0.6, h = fs*3.6;
+      c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(0, img.height-h, img.width, h);
+      c.fillStyle = '#fff';
+      c.font = `600 ${fs}px Sarabun, sans-serif`;
+      c.fillText(name, pad, img.height-h+fs*1.1);
+      c.font = `${fs*0.8}px Sarabun, sans-serif`;
+      c.fillText(`📍 ${g.lat.toFixed(6)}, ${g.lon.toFixed(6)} (±${g.acc} ม.)`, pad, img.height-h+fs*2.15);
+      c.fillText(`🕒 ${thDateTime(ts)}`, pad, img.height-h+fs*3.15);
+      res(cv.toDataURL('image/jpeg', 0.72));
+    };
+    img.src = dataUrl;
+  });
+}
+function ready(){ $('goBtn').disabled = !(gps && $('name').value && (!photoNeeded() || photo)); }
 
 $('goBtn').onclick = async () => {
   const sid = $('name').value;
@@ -247,19 +345,37 @@ $('goBtn').onclick = async () => {
   const ts = Date.now();
   const id = ts + '_' + Math.random().toString(36).slice(2, 7);
   try {
+    try { cfg = (await fetch(cfgUrl(GROUP)).then(r => r.json())) || {}; } catch(e){}
+    const rd = activeRound(cfg);
+    if (photoNeeded() && !photo){
+      applyPhoto(); $('msg').textContent = '📷 ครูกำหนดให้ถ่ายรูปในกิจกรรมนี้ กรุณาถ่ายรูปก่อนกดเช็คอิน'; $('msg').style.color = 'var(--err)'; return;
+    }
+    const img = photoNeeded() ? await stamp(photo, `${name} (${sid})` + (GROUP ? ' · ' + GROUP : ''), gps, ts) : null;
+    const d = cfg.lat != null ? Math.round(distM(gps, {lat:cfg.lat, lon:cfg.lon})) : null;
+    const area = d == null ? {} : {d, in: d <= (cfg.r || 200)};
     const res = await fetch(`${DB}/.json`, {
       method: 'PATCH', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        [`checkin2_meta/${id}`]: {name, sid, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP}
+        [`checkin2_meta/${id}`]: {name, sid, lat:gps.lat, lon:gps.lon, acc:gps.acc, ts, g:GROUP, ...area, ...(rd ? {rid: rd.id} : {}), ...(img ? {ph: 1} : {})},
+        ...(img ? {[`checkin2_photo/${id}`]: img} : {})
       })
     });
     if (!res.ok) throw new Error(res.status);
+    let ptsTxt = 'ℹ️ ไม่มีรอบเช็คอินเปิดอยู่ จึงไม่นับคะแนน';
+    if (rd){
+      ptsTxt = '🎯 ได้ 1 คะแนน';
+      try {
+        const [rs, ms] = await Promise.all([fetch(roundsUrl(GROUP)).then(r => r.json()), fetch(`${DB}/checkin2_meta.json`).then(r => r.json())]);
+        const mine = new Set(Object.values(ms || {}).filter(m => m.sid === sid && m.g === GROUP && m.rid).map(m => m.rid)); mine.add(rd.id);
+        ptsTxt += ` — คะแนนสะสมวิชา/กลุ่มนี้ ${mine.size}/${Math.max(Object.keys(rs || {}).length, mine.size)} รอบ`;
+      } catch(e){}
+    }
     $('form').style.display = 'none'; $('done').style.display = 'block';
     meta[id] = {sid, ts}; const rank = doneCount();
     $('rankTxt').textContent = cfg.deadline ? `🎉 คุณเป็นคนที่ ${rank} จาก ${STUDENTS.length} คนที่เช็คอินแล้ว` : '';
     const link = location.href.split('#')[0];
     $('shareBtn').href = 'https://line.me/R/msg/text/?' + encodeURIComponent(`เช็คอินเช็คชื่อยัง? ครูดูรายชื่อคนที่ไม่ส่งนะ ใช้เวลาไม่ถึงนาที 👉 ${link}`);
-    $('doneInfo').innerHTML = `<b>${esc(name)}</b><br>${thDateTime(ts)}<br><a href="${mapUrl(gps.lat,gps.lon)}" target="_blank">ดูตำแหน่งบนแผนที่</a>`;
+    $('doneInfo').innerHTML = `<b>${esc(name)}</b><br>${thDateTime(ts)}<br><b>${ptsTxt}</b><br>${area.in === true ? '<span style="color:var(--ok)">✓ อยู่ในพื้นที่เรียน</span><br>' : area.in === false ? `<span style="color:var(--err)">⚠️ อยู่นอกพื้นที่เรียน (ห่างประมาณ ${d} ม.)</span><br>` : ''}<a href="${mapUrl(gps.lat,gps.lon)}" target="_blank">ดูตำแหน่งบนแผนที่</a>`;
   } catch(e){
     $('msg').textContent = '❌ ส่งไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วกดเช็คอินอีกครั้ง';
     $('msg').style.color = 'var(--err)'; $('goBtn').disabled = false;
@@ -273,11 +389,36 @@ $('teacherLink').onclick = e => {
   openTeacher();
 };
 let cfg = {}, meta = {};
+// เส้นตายแยกตามกลุ่ม/วิชา (key ของ Firebase ห้ามมี . $ # [ ] /)
+const rk = g => (g || '_all').replace(/[.$#\[\]\/]/g, '_');
+const cfgUrl = g => `${DB}/checkin2_config/${encodeURIComponent(rk(g))}.json`;
+const roundsUrl = g => `${DB}/checkin2_rounds/${encodeURIComponent(rk(g))}.json`;
+// รอบเช็คอิน: ครูกดเปิด/ปิดเอง (เก็บใน config ของกลุ่ม) · ถ้าตั้งนาทีไว้จะปิดเองเมื่อครบเวลา
+const activeRound = c => c && c.round && (!c.round.until || Date.now() < c.round.until) ? c.round : null;
+const hm = ts => new Date(ts).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+let roundsAll = [];
+const loadRounds = () => fetch(`${DB}/checkin2_rounds.json`).then(r => r.json()).catch(() => null)
+  .then(o => { roundsAll = Object.values(o || {}).flatMap(g => Object.entries(g).map(([id, v]) => ({id, ...v}))); });
+function renderRound(){
+  const el = $('rnd'), r = activeRound(cfg);
+  el.style.display = 'block';
+  if (r){
+    const ms = r.until ? r.until - Date.now() : 0;
+    el.className = 'rnd on';
+    el.innerHTML = `🔔 <b>เปิดรอบเช็คอินแล้ว${r.name ? ' — ' + esc(r.name) : ''}</b><br>กดเช็คอินตอนนี้ รับ 1 คะแนน และนับเป็นการเช็คชื่อ${GROUP ? 'วิชา/กลุ่ม ' + esc(GROUP) : ''}${r.until ? `<br>เหลือเวลา <b>${Math.floor(ms/6e4)} นาที ${Math.floor(ms/1e3)%60} วิ</b>` : ''}`;
+  } else {
+    el.className = 'rnd off';
+    el.innerHTML = '⏳ ขณะนี้ยังไม่เปิดรอบเช็คอิน — ถ้าเช็คอินตอนนี้ ระบบบันทึกเวลา/ตำแหน่งไว้ แต่<b>ไม่นับคะแนน</b> รอครูประกาศในกลุ่มไลน์ว่าถึงเวลาเช็คอิน';
+  }
+}
+const dayKey = ts => new Date(ts - new Date().getTimezoneOffset()*6e4).toISOString().slice(0, 10);
 async function loadUrgency(){
   try {
-    const [c, m] = await Promise.all([fetch(`${DB}/checkin2_config.json`).then(r=>r.json()), fetch(`${DB}/checkin2_meta.json`).then(r=>r.json())]);
+    const [c, m] = await Promise.all([fetch(cfgUrl(GROUP)).then(r=>r.json()), fetch(`${DB}/checkin2_meta.json`).then(r=>r.json())]);
     cfg = c || {}; meta = m || {};
   } catch(e){ return; }
+  applyPhoto(); renderRound(); setInterval(renderRound, 1000);
+  setInterval(() => fetch(cfgUrl(GROUP)).then(r => r.json()).then(c => { cfg = c || {}; applyPhoto(); }).catch(() => {}), 20000);
   if (!cfg.deadline) return;
   $('urg').style.display = 'block';
   $('dlTxt').textContent = thDateTime(cfg.deadline);
@@ -286,7 +427,7 @@ async function loadUrgency(){
 }
 function doneCount(){
   const ids = new Set(STUDENTS.map(s => s[0]));
-  return new Set(Object.values(meta).filter(m => m.ts >= (cfg.since||0) && ids.has(m.sid)).map(m => m.sid)).size;
+  return new Set(Object.values(meta).filter(m => m.ts >= (cfg.since||0) && ids.has(m.sid) && (!GROUP || m.g === GROUP)).map(m => m.sid)).size;
 }
 function showProgress(){
   const n = doneCount(), all = STUDENTS.length;
@@ -299,37 +440,112 @@ function tick(){
   const d = Math.floor(ms/864e5), h = Math.floor(ms/36e5)%24, mi = Math.floor(ms/6e4)%60, se = Math.floor(ms/1e3)%60;
   $('cd').textContent = `เหลือ ${d ? d+' วัน ' : ''}${h} ชม. ${mi} นาที ${se} วิ`;
 }
-if (params.has('report')) $('teacherLink').click(); else { getGPS(); loadUrgency(); }
 
 let rows = [];
+const photoCache = {};
+async function getPhoto(id){ if (photoCache[id]) return photoCache[id]; return photoCache[id] = await fetch(`${DB}/checkin2_photo/${id}.json`).then(r => r.json()); }
 
 function openTeacher(){
   $('student').style.display = 'none'; $('teacher').style.display = 'block';
-  const today = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const today = dayKey(Date.now());
   $('dFrom').value = today; $('dTo').value = today;
-  updateLink();
-  fetch(`${DB}/checkin2_config.json`).then(r=>r.json()).catch(()=>null).then(c => {
-    const tz = new Date().getTimezoneOffset()*6e4;
-    if (c && c.deadline){
-      $('dl').value = new Date(c.deadline - tz).toISOString().slice(0,16);
-      $('dFrom').value = new Date(c.since - tz).toISOString().slice(0,10);
-    }
-    loadData();
-  });
+  updateLink(); renderSaved();
+  loadDl().then(loadData); setInterval(renderRoundStat, 15000);
 }
+let refPt = null, curCfg = {};
+const roundMsg = () => { const r = activeRound(curCfg), g = $('linkGrp').value.trim();
+  return `🔔 ถึงเวลาเช็คอินแล้ว!${g ? ' วิชา/กลุ่ม ' + g : ''}${r && r.name ? ' (' + r.name + ')' : ''}${r && r.until ? ' กดภายใน ' + hm(r.until) + ' น.' : ''}${curCfg.photo ? ' (ต้องถ่ายรูปด้วย)' : ''} ใช้เวลาไม่ถึงนาที 👉 ${linkFor(g)}`; };
+function renderRoundStat(){
+  const r = activeRound(curCfg);
+  if (r){
+    const n = new Set(Object.values(meta).filter(m => m.rid === r.id).map(m => m.sid)).size;
+    $('rStat').textContent = `🟢 รอบเปิดอยู่${r.name ? ' — ' + r.name : ''} · เริ่ม ${hm(r.start)} น.${r.until ? ' · ปิดอัตโนมัติ ' + hm(r.until) + ' น.' : ' · ปิดเองด้วยปุ่ม ⏹'} · เช็คอินแล้ว ${n}/${STUDENTS.length} คน`;
+  } else $('rStat').textContent = 'ยังไม่เปิดรอบ (หรือรอบล่าสุดปิดแล้ว)';
+  $('rOpen').disabled = !!r; $('rClose').disabled = !r;
+  $('rLine').href = 'https://line.me/R/msg/text/?' + encodeURIComponent(roundMsg());
+}
+$('rOpen').onclick = async () => {
+  const g = $('linkGrp').value.trim(), now = Date.now(), mins = +$('rMin').value || 0;
+  const round = {id:'r' + now, start:now, until:mins ? now + mins*6e4 : null, name:$('rName').value.trim()};
+  const res = await fetch(`${DB}/.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
+    [`checkin2_rounds/${rk(g)}/${round.id}`]: {g, start:now, until:round.until, name:round.name},
+    [`checkin2_config/${rk(g)}/round`]: round})});
+  if (!res.ok) return alert('เปิดรอบไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต');
+  curCfg.round = round; renderRoundStat(); loadRounds();
+};
+$('rClose').onclick = async () => {
+  const r = activeRound(curCfg), g = $('linkGrp').value.trim(); if (!r) return;
+  const res = await fetch(`${DB}/.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
+    [`checkin2_rounds/${rk(g)}/${r.id}/end`]: Date.now(), [`checkin2_config/${rk(g)}/round`]: null})});
+  if (!res.ok) return alert('ปิดรอบไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต');
+  curCfg.round = null; renderRoundStat(); loadRounds();
+};
+$('rCopy').onclick = () => navigator.clipboard.writeText(roundMsg()).then(() => $('rCopy').textContent = '✓ คัดลอกแล้ว');
+function showRef(){ $('refTxt').textContent = refPt ? `ตั้งแล้ว: ${refPt.lat.toFixed(5)}, ${refPt.lon.toFixed(5)} · รัศมี ${$('refR').value || 200} ม.` : 'ยังไม่ได้ตั้งจุดอ้างอิง (ไม่ตรวจพื้นที่)'; }
+let dlSeq = 0; // ทิ้งผลโหลดที่มาช้า ไม่ให้ทับสิ่งที่ครูเพิ่งติ๊ก/พิมพ์
+async function loadDl(){
+  const my = ++dlSeq;
+  const c = await fetch(cfgUrl($('linkGrp').value.trim())).then(r=>r.json()).catch(()=>null);
+  if (my !== dlSeq) return;
+  $('dl').value = c && c.deadline ? new Date(c.deadline - new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16) : '';
+  curCfg = c || {}; $('needPhoto').checked = !!(c && c.photo); renderRoundStat();
+  refPt = c && c.lat != null ? {lat:c.lat, lon:c.lon} : null;
+  $('refR').value = (c && c.r) || 200; showRef();
+}
+$('refR').oninput = showRef;
+$('needPhoto').onchange = async () => {
+  dlSeq++;
+  const on = $('needPhoto').checked;
+  const r = await fetch(cfgUrl($('linkGrp').value.trim()), {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({photo: on ? true : null})}).catch(() => null);
+  if (r && r.ok){ curCfg.photo = on; $('photoMsg').textContent = on ? '✓ ตั้งแล้ว: ต้องถ่ายรูป' : '✓ ตั้งแล้ว: ไม่ต้องถ่ายรูป'; renderRoundStat(); }
+  else { $('needPhoto').checked = !on; $('photoMsg').textContent = '❌ บันทึกไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต'; }
+};
+$('setRef').onclick = () => {
+  $('setRef').textContent = '⏳ กำลังหาตำแหน่ง…';
+  navigator.geolocation.getCurrentPosition(p => { refPt = {lat:p.coords.latitude, lon:p.coords.longitude}; showRef(); $('setRef').textContent = '✓ ได้ตำแหน่งแล้ว — กดบันทึกการตั้งค่า'; },
+    () => { $('setRef').textContent = '❌ หาตำแหน่งไม่ได้ (อนุญาตตำแหน่งในเบราว์เซอร์)'; }, {enableHighAccuracy:true, timeout:20000});
+};
 function updateLink(){
   const u = new URL(location.href.split('?')[0].split('#')[0]);
   const g = $('linkGrp').value.trim(); if (g) u.searchParams.set('g', g);
   u.searchParams.set('openExternalBrowser', '1');
   $('linkOut').textContent = u.toString();
+  u.searchParams.set('status', '1');
+  $('linkStatus').textContent = u.toString();
 }
 $('linkGrp').oninput = updateLink;
+$('linkGrp').onchange = loadDl;
+$('rName').oninput = $('rMin').oninput = () => renderRoundStat();
+$('copyStatus').onclick = () => navigator.clipboard.writeText($('linkStatus').textContent).then(()=>$('copyStatus').textContent='✓ คัดลอกแล้ว');
 $('copyLink').onclick = () => navigator.clipboard.writeText($('linkOut').textContent).then(()=>$('copyLink').textContent='✓ คัดลอกแล้ว');
 
+const SAVED_LS = 'checkin2_saved_links';
+const getSaved = () => { try { return JSON.parse(localStorage.getItem(SAVED_LS)) || []; } catch(e){ return []; } };
+const putSaved = a => { try { localStorage.setItem(SAVED_LS, JSON.stringify(a)); } catch(e){} };
+const linkFor = g => { const u = new URL(location.href.split('?')[0].split('#')[0]); if (g) u.searchParams.set('g', g); u.searchParams.set('openExternalBrowser', '1'); return u.toString(); };
+function renderSaved(){
+  const list = getSaved();
+  $('savedLinks').innerHTML = list.length ? '<label>ลิงก์ที่บันทึกไว้ (กด "ใช้" เพื่อดูรายงานของวิชา/ห้องนั้น)</label>' + list.map((g, i) => `<div class="sv"><b>${esc(g || 'ทั้งหมด (ไม่ระบุกลุ่ม)')}</b>
+    <button class="btn btn-sm" data-a="use" data-i="${i}">ใช้</button><button class="btn btn-sm" data-a="copy" data-i="${i}">📋 คัดลอก</button><button class="btn btn-sm" data-a="del" data-i="${i}">🗑️</button></div>`).join('') : '';
+}
+$('saveLink').onclick = () => {
+  const g = $('linkGrp').value.trim(), list = getSaved();
+  if (!list.includes(g)) putSaved(list.concat(g));
+  renderSaved(); $('saveLink').textContent = '✓ บันทึกแล้ว';
+};
+$('savedLinks').onclick = async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const list = getSaved(), g = list[+b.dataset.i];
+  if (b.dataset.a === 'del'){ list.splice(+b.dataset.i, 1); putSaved(list); renderSaved(); }
+  else if (b.dataset.a === 'copy'){ navigator.clipboard.writeText(linkFor(g)).then(() => b.textContent = '✓'); }
+  else { $('linkGrp').value = g; updateLink(); await loadDl(); await loadData(); $('grp').value = g; await buildReport(); }
+};
 $('saveDl').onclick = async () => {
-  if (!$('dl').value) return alert('เลือกวันเวลาก่อน');
-  const body = {deadline: new Date($('dl').value).getTime(), since: new Date($('dFrom').value + 'T00:00:00').getTime()};
-  const r = await fetch(`${DB}/checkin2_config.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if (!$('dl').value && !refPt) return alert('ตั้งเส้นตายหรือจุดอ้างอิงอย่างน้อยหนึ่งอย่างก่อน');
+  const body = {since: new Date($('dFrom').value + 'T00:00:00').getTime()};
+  body.deadline = $('dl').value ? new Date($('dl').value).getTime() : null;
+  if (refPt) Object.assign(body, refPt, {r: +$('refR').value || 200});
+  const r = await fetch(cfgUrl($('linkGrp').value.trim()), {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
   $('saveDl').textContent = r.ok ? '✓ บันทึกแล้ว' : '❌ ไม่สำเร็จ';
 };
 async function loadData(){
@@ -338,26 +554,30 @@ async function loadData(){
     const r = await fetch(`${DB}/checkin2_meta.json`);
     meta = (await r.json()) || {};
   } catch(e){ $('tmsg').textContent = '❌ โหลดข้อมูลไม่ได้'; return; }
-  const groups = [...new Set(Object.values(meta).map(m => m.g).filter(Boolean))].sort();
+  await loadRounds(); renderRoundStat();
+  const groups = [...new Set(Object.values(meta).map(m => m.g).concat(getSaved()).filter(Boolean))].sort();
   const cur = $('grp').value;
   $('grp').innerHTML = '<option value="">ทั้งหมด</option>' + groups.map(g => `<option ${g===cur?'selected':''}>${esc(g)}</option>`).join('');
   await buildReport();
 }
 
-function filterRows(){
+function rawRows(){
   const from = new Date($('dFrom').value + 'T00:00:00').getTime();
   const to = new Date($('dTo').value + 'T23:59:59').getTime();
   const g = $('grp').value;
-  let list = Object.entries(meta).map(([id, m]) => ({id, ...m}))
+  return Object.entries(meta).map(([id, m]) => ({id, ...m}))
     .filter(m => m.ts >= from && m.ts <= to && (!g || m.g === g));
-  if ($('dedupe').value === '1'){
+}
+function filterRows(){
+  let list = rawRows();
+  const mode = $('dedupe').value;
+  if (mode !== '0'){
     const last = {};
-    list.forEach(m => { const k = m.sid || m.name.replace(/\s/g,''); if (!last[k] || last[k].ts < m.ts) last[k] = m; });
+    list.forEach(m => { const k = (m.sid || m.name.replace(/\s/g,'')) + (mode === 'day' ? '|' + dayKey(m.ts) + '|' + (m.g || '') : ''); if (!last[k] || last[k].ts < m.ts) last[k] = m; });
     list = Object.values(last);
   }
-  return list.sort((a,b) => (a.sid||'z').localeCompare(b.sid||'z') || a.name.localeCompare(b.name, 'th'));
+  return list.sort((a,b) => (a.sid||'z').localeCompare(b.sid||'z') || a.name.localeCompare(b.name, 'th') || a.ts - b.ts);
 }
-
 
 // ---------- แผนที่ + จุดกระจุกตัว ----------
 const CLUSTER_R = 100; // ม. — พิกัดที่ห่างกันไม่เกินนี้นับเป็นกลุ่มเดียวกัน
@@ -412,16 +632,29 @@ async function buildReport(){
   const grpTxt = $('grp').value ? ` กลุ่ม ${esc($('grp').value)}` : '';
   const n = thNum(rows.length);
 
+  const raw = rawRows();
+  const phRows = rows.filter(r => r.ph);
+  if (phRows.length) $('tmsg').textContent = `พบ ${rows.length} รายการ — กำลังโหลดรูป ${phRows.length} ภาพ…`;
+  const photos = await Promise.all(phRows.map(r => getPhoto(r.id).catch(() => null)));
+  if (phRows.length) $('tmsg').textContent = `✓ เช็คอินแล้ว ${rows.length} รายการ`;
+  const gSel = $('grp').value, tFrom = new Date($('dFrom').value + 'T00:00:00').getTime(), tTo = new Date($('dTo').value + 'T23:59:59').getTime();
+  const rds = roundsAll.filter(r => r.start >= tFrom && r.start <= tTo && (!gSel || r.g === gSel)).sort((a, b) => a.start - b.start);
+  const got = {}; raw.forEach(m => { if (m.rid) (got[m.sid] = got[m.sid] || new Set()).add(m.rid); });
+  const nOut = rows.filter(r => r.in === false).length, nChk = rows.filter(r => r.in !== undefined).length;
+  const nStu = new Set(rows.map(r => r.sid || r.name)).size;
+  const days = [];
+  for (let t = new Date($('dFrom').value + 'T00:00:00'); dayKey(t.getTime()) <= $('dTo').value && days.length < 62; t.setDate(t.getDate()+1)) days.push(dayKey(t.getTime()));
+  const multiDay = days.length > 1;
   const done = new Set(rows.map(r => r.sid));
   const missing = STUDENTS.filter(([sid]) => !done.has(sid));
-  const missingHtml = missing.length ? `<div style="margin-top:8mm;font-weight:700">ยังไม่เช็คอิน (${thNum(missing.length)} คน)</div>
+  const missingHtml = missing.length ? `<div style="margin-top:8mm;font-weight:700">${multiDay ? 'ไม่เคยเช็คอินเลยในช่วงนี้' : 'ยังไม่เช็คอิน'} (${thNum(missing.length)} คน)</div>
     <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th></tr>${missing.map(([sid,n],i) =>
     `<tr><td style="text-align:center">${thNum(i+1)}</td><td>${thNum(sid)}</td><td>${esc(n)}</td></tr>`).join('')}</table>` : '';
   const tableRows = rows.map((r, i) => `<tr>
     <td style="text-align:center">${thNum(i+1)}</td><td>${thNum(r.sid||'-')}</td><td>${esc(r.name)}</td>
     <td>${thNum(thDateTime(r.ts))}</td>
     <td><a href="${mapUrl(r.lat,r.lon)}">${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</a></td>
-    <td style="text-align:center">±${r.acc} ม.</td></tr>`).join('');
+    <td style="text-align:center">±${r.acc} ม.</td><td>${r.in === undefined ? '-' : r.in ? '✓ ในพื้นที่' : '⚠️ นอกพื้นที่ ' + thNum(r.d) + ' ม.'}</td><td style="text-align:center">${r.rid ? '✓' : '-'}</td></tr>`).join('');
 
   const memo = `<div class="page">
     <div class="memo-head"><img src="garuda.jpg" alt=""><h2>บันทึกข้อความ</h2></div>
@@ -432,7 +665,7 @@ async function buildReport(){
     <div style="margin:8px 0"><b>เรียน</b> <span contenteditable>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</span></div>
     <div class="body" contenteditable>
       <p>ตามที่ผู้อำนวยการได้มอบหมายให้ครูดำเนินการเช็คชื่อนักเรียนผ่านระบบออนไลน์ และบันทึกพิกัดตำแหน่ง (GPS) เพื่อใช้เป็นข้อมูลในการดูแลช่วยเหลือนักเรียน นั้น</p>
-      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${n} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${missing.length ? ` ยังไม่เช็คอิน ${thNum(missing.length)} คน` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
+      <p>ข้าพเจ้า ${esc($('who').value)} ตำแหน่ง ${esc($('whoPos').value)} ได้ดำเนินการให้นักเรียน${grpTxt} เช็คอินผ่านระบบออนไลน์ โดยเลือกชื่อตนเอง ระบบบันทึกพิกัด GPS วันและเวลาโดยอัตโนมัติ ${period} มีนักเรียนเช็คอินจำนวน ${thNum(nStu)} คน จากทั้งหมด ${thNum(STUDENTS.length)} คน${rows.length !== nStu ? ` (รวม ${n} รายการ ใน ${thNum(days.length)} วัน)` : ''}${missing.length ? ` ${multiDay ? 'ไม่เคยเช็คอินเลย' : 'ยังไม่เช็คอิน'} ${thNum(missing.length)} คน` : ''}${phRows.length ? ` พร้อมภาพถ่ายประกอบ ${thNum(phRows.length)} ภาพ` : ''}${rds.length ? ` ครูเปิดรอบเช็คอิน ${thNum(rds.length)} รอบ นักเรียนได้ 1 คะแนนต่อรอบที่เช็คอิน` : ''}${nChk ? ` ตรวจสอบพิกัดกับจุดอ้างอิงห้องเรียน พบอยู่ในพื้นที่ ${thNum(nChk - nOut)} รายการ นอกพื้นที่ ${thNum(nOut)} รายการ` : ''} รายละเอียดรายชื่อและพิกัดดังแนบท้ายบันทึกนี้</p>
       <p>จึงเรียนมาเพื่อโปรดทราบ</p>
     </div>
     <div class="sign" contenteditable>ลงชื่อ ......................................<br>(${esc($('who').value)})<br>ตำแหน่ง ${esc($('whoPos').value)}</div>
@@ -440,9 +673,41 @@ async function buildReport(){
       <div style="margin-left:45%;text-align:center;margin-top:18px">ลงชื่อ ......................................<br>(นางสาวรัชญา คนธขจร)<br>ผู้อำนวยการวิทยาลัยการอาชีพบุรีรัมย์</div></div>
   </div>`;
 
-  const listPage = `<div class="page"><div class="ptitle">รายชื่อนักเรียนที่เช็คอิน (${n} คน)</div>
-    <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th><th>วัน–เวลา</th><th>พิกัด (คลิกดูแผนที่)</th><th>ความแม่นยำ</th></tr>${tableRows}</table>${missingHtml}</div>`;
+  const listPage = `<div class="page"><div class="ptitle">รายการเช็คอิน (${n} รายการ · ${thNum(nStu)} คน)</div>
+    <table class="list"><tr><th>ที่</th><th>รหัสประจำตัว</th><th>ชื่อ–นามสกุล</th><th>วัน–เวลา</th><th>พิกัด (คลิกดูแผนที่)</th><th>ความแม่นยำ</th><th>พื้นที่เรียน</th><th>รอบ</th></tr>${tableRows}</table>${missingHtml}</div>`;
 
+  // ตารางเช็คชื่อรายวัน (เมื่อเลือกหลายวัน): ✓ + เวลาแรกที่เช็คอินของวันนั้น
+  const first = {};
+  raw.forEach(m => { const k = m.sid + '|' + dayKey(m.ts); if (!first[k] || first[k] > m.ts) first[k] = m.ts; });
+  const hhmm = ts => thNum(new Date(ts).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', hour12:false}));
+  const dShort = d => thNum(new Date(d + 'T00:00').toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
+  let matrixPages = '';
+  if (multiDay){
+    for (let i = 0; i < days.length; i += 7){
+      const ds = days.slice(i, i + 7);
+      matrixPages += `<div class="page"><div class="ptitle">ตารางเช็คชื่อรายวัน${i ? ' (ต่อ)' : ''}${grpTxt}</div>
+        <table class="list mx"><tr><th>ที่</th><th>ชื่อ–นามสกุล</th>${ds.map(d => `<th>${dShort(d)}</th>`).join('')}<th>รวม (วัน)</th></tr>
+        ${STUDENTS.map(([sid, nm], j) => `<tr><td>${thNum(j+1)}</td><td class="nm">${esc(nm)}</td>${ds.map(d => first[sid+'|'+d] ? `<td>✓ ${hhmm(first[sid+'|'+d])}</td>` : '<td>–</td>').join('')}<td><b>${thNum(days.filter(d => first[sid+'|'+d]).length)}</b></td></tr>`).join('')}
+        <tr><td></td><td class="nm"><b>จำนวนผู้เช็คอิน (คน)</b></td>${ds.map(d => `<td><b>${thNum(STUDENTS.filter(([sid]) => first[sid+'|'+d]).length)}</b></td>`).join('')}<td></td></tr></table></div>`;
+    }
+  }
+  // คะแนนเช็คอินตามรอบ: 1 รอบที่เช็คอินทัน = 1 คะแนน
+  let roundPages = '';
+  for (let i = 0; i < rds.length; i += 8){
+    const rs = rds.slice(i, i + 8);
+    roundPages += `<div class="page"><div class="ptitle">คะแนนเช็คอินตามรอบ (๑ รอบ = ๑ คะแนน)${i ? ' (ต่อ)' : ''}${grpTxt}</div>
+      <table class="list mx"><tr><th>ที่</th><th>ชื่อ–นามสกุล</th>${rs.map(r => `<th>${dShort(dayKey(r.start))}<br>${hhmm(r.start)}${r.name ? '<br>' + esc(r.name) : ''}${gSel ? '' : '<br>' + esc(r.g || '-')}</th>`).join('')}<th>คะแนน</th><th>ร้อยละ</th></tr>
+      ${STUDENTS.map(([sid, nm], j) => { const pts = rds.filter(r => got[sid] && got[sid].has(r.id)).length;
+        return `<tr><td>${thNum(j+1)}</td><td class="nm">${esc(nm)}</td>${rs.map(r => got[sid] && got[sid].has(r.id) ? '<td>✓</td>' : '<td>–</td>').join('')}<td><b>${thNum(pts)}/${thNum(rds.length)}</b></td><td>${thNum(Math.round(100*pts/rds.length))}</td></tr>`; }).join('')}
+      <tr><td></td><td class="nm"><b>จำนวนผู้เช็คอิน (คน)</b></td>${rs.map(r => `<td><b>${thNum(STUDENTS.filter(([sid]) => got[sid] && got[sid].has(r.id)).length)}</b></td>`).join('')}<td></td><td></td></tr></table></div>`;
+  }
+  let photoPages = '';
+  for (let i = 0; i < phRows.length; i += 6){
+    photoPages += `<div class="page"><div class="ptitle">ภาพถ่ายประกอบ${i ? ' (ต่อ)' : ''}${grpTxt}</div><div class="photos">` +
+      phRows.slice(i, i + 6).map((r, j) => `<div class="ph">
+        ${photos[i+j] ? `<img src="${photos[i+j]}">` : '<div style="height:62mm;border:1px solid #999">ไม่มีรูป</div>'}
+        <b>${thNum(i+j+1)}. ${esc(r.name)}</b>${r.g ? ' · ' + esc(r.g) : ''}<br>${thNum(thDateTime(r.ts))}<br>${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</div>`).join('') + `</div></div>`;
+  }
   const cl = clusterRows(rows);
   const multi = cl.filter(c => c.items.length > 1);
   const clusterRowsHtml = multi.map((c, i) => `<tr>
@@ -453,32 +718,73 @@ async function buildReport(){
     <div class="lg"><i class="pin" style="width:18px;height:18px;font-size:10px;line-height:14px">ก</i> ตำแหน่งนักเรียน (หมายเลขตามตารางรายชื่อ)<i class="c"></i> สีแดงเข้ม = จุดที่นักเรียนเช็คอินอยู่ใกล้กันหนาแน่น</div>
     <div id="map"></div>
     <div style="font-weight:700">จุดที่มีการกระจุกตัว (${thNum(multi.length)} จุด · เช็คอินกระจายตัวเดี่ยว ${thNum(cl.length - multi.length)} จุด)</div>
-    ${multi.length ? `<table class="list"><tr><th>ที่</th><th>จำนวน (คน)</th><th>รายชื่อ</th><th>ตำแหน่งกึ่งกลาง</th></tr>${clusterRowsHtml}</table>` : '<div style="font-size:13pt">ไม่พบกลุ่มที่เช็คอินอยู่ใกล้กัน</div>'}
+    ${multi.length ? `<table class="list"><tr><th>ที่</th><th>จำนวน (รายการ)</th><th>รายชื่อ</th><th>ตำแหน่งกึ่งกลาง</th></tr>${clusterRowsHtml}</table>` : '<div style="font-size:13pt">ไม่พบกลุ่มที่เช็คอินอยู่ใกล้กัน</div>'}
     <div style="font-weight:700;margin-top:5mm">อ้างอิง</div>
     <ol class="refs" contenteditable>
       <li>ข้อมูลจากระบบเช็คอินเช็คชื่อออนไลน์ วิทยาลัยการอาชีพบุรีรัมย์ (${esc(location.href.split('?')[0].split('#')[0])}) ฐานข้อมูล checkin2_meta</li>
-      <li>ช่วงข้อมูล ${period}${grpTxt ? ' ' + grpTxt.trim() : ''} · ${$('dedupe').value === '1' ? 'กรณีส่งหลายครั้งใช้ครั้งล่าสุดของแต่ละคน' : 'แสดงทุกครั้งที่ส่ง'} · รวม ${n} รายการ</li>
+      <li>ช่วงข้อมูล ${period}${grpTxt ? ' ' + grpTxt.trim() : ''} · ${{day:'กรณีส่งหลายครั้งใน 1 วัน/วิชา ใช้ครั้งล่าสุด', 1:'กรณีส่งหลายครั้ง ใช้ครั้งล่าสุดของแต่ละคนตลอดช่วง', 0:'แสดงทุกครั้งที่ส่ง'}[$('dedupe').value]} · รวม ${n} รายการ</li>
       <li>พิกัดบันทึกจาก GPS ของโทรศัพท์นักเรียนขณะกดเช็คอิน ความคลาดเคลื่อนของแต่ละรายการแสดงในตารางรายชื่อ (ค่า ±เมตร)</li>
       <li>การหาจุดกระจุกตัว (ตาราง): จัดกลุ่มนักเรียนที่มีพิกัดห่างกันไม่เกิน ${thNum(CLUSTER_R)} เมตร</li>
       <li>แผนที่พื้นหลัง: © OpenStreetMap contributors (Leaflet)</li>
       <li>สร้างรายงานเมื่อ ${thNum(thDateTime(Date.now()))} โดย ${esc($('who').value)}</li>
     </ol></div>`;
 
-  $('report').innerHTML = memo + listPage + mapPage;
+  $('report').innerHTML = memo + matrixPages + roundPages + listPage + mapPage + photoPages;
   drawMap(rows, cl);
 }
 
+let autoT = null;
+$('auto').onchange = () => { clearInterval(autoT); if ($('auto').checked) autoT = setInterval(loadData, 60000); };
 $('loadBtn').onclick = loadData;
 ['dFrom','dTo','grp','dedupe'].forEach(id => $(id).onchange = buildReport);
 $('printBtn').onclick = () => window.print();
 $('csvBtn').onclick = () => {
-  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่']]
-    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon)]));
+  const lines = [['ลำดับ','รหัสประจำตัว','ชื่อ','กลุ่ม','วันเวลา','lat','lon','ความแม่นยำ(ม.)','แผนที่','ระยะจากจุดอ้างอิง(ม.)','ในพื้นที่เรียน','รอบ(นับคะแนน)','มีรูป']]
+    .concat(rows.map((r,i) => [i+1, r.sid||'', r.name, r.g||'', thDateTime(r.ts), r.lat, r.lon, r.acc, mapUrl(r.lat,r.lon), r.d ?? '', r.in === undefined ? '' : r.in ? 'ใช่' : 'ไม่', r.rid ? 'ใช่' : '', r.ph ? 'ใช่' : '']));
   const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
   a.download = `checkin_${$('dFrom').value}_${$('dTo').value}.csv`; a.click();
 };
+// ---------- หน้าผู้ปกครอง ----------
+function scoreTxt(sid){
+  const gs = [...new Set(roundsAll.map(r => r.g || ''))].filter(g => !GROUP || g === GROUP).sort();
+  if (!gs.length) return '';
+  return '<div style="margin-top:10px;font-size:16px"><b>🎯 คะแนนเช็คอินสะสม</b><br>' + gs.map(g => {
+    const total = roundsAll.filter(r => (r.g || '') === g).length;
+    const pts = new Set(Object.values(meta).filter(m => m.sid === sid && (m.g || '') === g && m.rid).map(m => m.rid)).size;
+    return `${esc(g || 'ทั่วไป')}: <b>${pts}/${total}</b> รอบ`; }).join('<br>') + '</div>';
+}
+async function refreshStatus(){
+  try { meta = (await fetch(`${DB}/checkin2_meta.json`).then(r => r.json())) || {}; }
+  catch(e){ $('stOut').textContent = '❌ โหลดข้อมูลไม่ได้ ตรวจสอบอินเทอร์เน็ต'; return; }
+  await loadRounds();
+  const day = $('stDate').value, ids = new Set(STUDENTS.map(s => s[0]));
+  const list = Object.values(meta).filter(m => dayKey(m.ts) === day && (!GROUP || m.g === GROUP));
+  const cnt = new Set(list.filter(m => ids.has(m.sid)).map(m => m.sid)).size;
+  $('stClass').innerHTML = `ภาพรวม${GROUP ? ' ' + esc(GROUP) : ''}: เช็คอินแล้ว <b>${cnt}/${STUDENTS.length}</b> คน`;
+  const sid = $('stName').value;
+  if (!sid){ $('stOut').innerHTML = 'เลือกชื่อนักเรียนด้านบน'; return; }
+  const name = STUDENTS.find(s => s[0] === sid)[1];
+  const mine = list.filter(m => m.sid === sid).sort((a, b) => a.ts - b.ts);
+  $('stOut').innerHTML = mine.length
+    ? `<div style="font-size:22px;font-weight:700;color:var(--ok)">✅ ${esc(name)} เช็คอินเข้าเรียนแล้ว</div>
+       <table style="width:100%;border-collapse:collapse;margin-top:8px"><tr><th>เวลา</th><th>วิชา/กลุ่ม</th><th>พื้นที่เรียน</th><th>คะแนน</th></tr>${mine.map(m => `<tr><td>${new Date(m.ts).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})} น.</td><td>${esc(m.g || '-')}</td><td>${m.in === undefined ? '-' : m.in ? '✓ อยู่ในพื้นที่' : '⚠️ นอกพื้นที่'}</td><td>${m.rid ? '+1 ✓' : 'ไม่นับ'}</td></tr>`).join('')}</table>${scoreTxt(sid)}`
+    : `<div style="font-size:22px;font-weight:700;color:var(--err)">❌ ยังไม่พบการเช็คอินของ ${esc(name)}</div><div style="font-size:14px;color:#5b6475;margin-top:6px">ถ้านักเรียนเพิ่งเช็คอิน รอสักครู่ ระบบอัปเดตทุก 1 นาที</div>`;
+}
+function openStatus(){
+  $('student').style.display = 'none'; $('status').style.display = 'block';
+  $('stName').innerHTML = '<option value="">— เลือกชื่อนักเรียน —</option>' + STUDENTS.map(([sid, n], i) => `<option value="${sid}">${i+1}. ${n}</option>`).join('');
+  $('stName').value = localStorage.getItem('checkin2_status_sid') || '';
+  $('stDate').value = dayKey(Date.now());
+  $('stName').onchange = () => { try { localStorage.setItem('checkin2_status_sid', $('stName').value); } catch(e){} refreshStatus(); };
+  $('stDate').onchange = refreshStatus;
+  $('stBack').onclick = e => { e.preventDefault(); params.delete('status'); location.search = params.toString(); };
+  refreshStatus(); setInterval(refreshStatus, 60000);
+}
+
+// เริ่มทำงาน (วางท้ายสุด เพื่อให้ตัวแปรทุกตัวประกาศครบก่อน)
+if (params.has('status')) openStatus(); else if (params.has('report')) $('teacherLink').click(); else { getGPS(); loadUrgency(); }
 </script>
 </body>
 </html>
