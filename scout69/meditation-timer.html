@@ -245,6 +245,7 @@ let running = false;
 let calibrating = false;
 let baseRoll = 0, basePitch = 0;
 let emaBlink = 0, emaRoll = 0, emaPitch = 0, primed = false;
+let baseBlink = 0;
 let sessionSeconds = 0;
 let totalSecondsAtStart = 0;
 let studentKey = '';
@@ -327,9 +328,14 @@ function detectLoop(ts){
     emaPitch = emaPitch*0.7 + pitch*0.3;
   }
 
-  if (calibrating){ baseRoll = emaRoll; basePitch = emaPitch; return; }
+  if (calibrating){ baseRoll = emaRoll; basePitch = emaPitch; baseBlink = emaBlink; return; }
 
-  const eyesClosed = emaBlink > 0.5;
+  // Threshold is relative to each person's own eyes-open baseline (captured
+  // during calibration), not a fixed 0.5 — glasses (reflections/frame
+  // occlusion) dampen the blendshape model's blink score for some people,
+  // so their "eyes closed" score may never cross a fixed absolute cutoff.
+  const blinkThreshold = Math.min(0.85, Math.max(0.35, baseBlink + 0.15));
+  const eyesClosed = emaBlink > blinkThreshold;
   const postureOk = Math.abs(emaRoll - baseRoll) < 15 && Math.abs(emaPitch - basePitch) < 15;
 
   if (eyesClosed && postureOk) setStatus('active', 'กำลังนั่งสมาธิ');
