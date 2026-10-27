@@ -1,0 +1,10 @@
+# ให้ Grep/Glob ของ Claude ข้ามไฟล์เหล่านี้ (ไม่กระทบ git / build.py / GitHub Pages)
+# ไฟล์เช็คชื่อที่ build.py สร้างอัตโนมัติ — แก้ที่ attendance.html / homepage.html เท่านั้น
+attendance-*.html
+home.html
+# สำเนาสำรองของระบบเช็คชื่อ (ไม่ใช่ต้นแบบ)
+สำรอง/
+เช็คเข้าแถวหน้าเสาธงนักเรียน1.2569*/
+# ไลบรารี Python และไฟล์ JS ที่ build แล้ว
+notebooklm/.venv/
+**/assets/*.js
