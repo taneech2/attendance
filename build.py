@@ -470,6 +470,95 @@ TARGETS = [
 ]
 
 # ══════════════════════════════════════════════════════════════
+#  ภาคเรียนที่ 2/2569 — สร้างจากห้องเทอม 1 อัตโนมัติ (ไฟล์ *-t2.html)
+#  • ข้อมูลแยก path ใหม่ (…-t2) → ข้อมูลเทอม 1 อยู่ครบ ไม่โดนทับ
+#  • เปิดครั้งแรก ดึงรายชื่อ/PIN/รูปหน้า จากเทอม 1 ให้เอง (PREV_DB_URL)
+#  • วิชา ชช.1/ชช.2 ตามแผนการเรียน ปวช.2567 (ภาคเรียนที่ 2 และ 4)
+# ══════════════════════════════════════════════════════════════
+FB_BASE = "https://attendance-bric-default-rtdb.asia-southeast1.firebasedatabase.app/"
+
+T2_SUBJ_CH1 = [  # ชช.1 รุ่น 2569 — ภาคเรียนที่ 2
+    ("thai_job",   "ภาษาไทยอาชีพ",       "20000-1102 ภาษาไทยเพื่ออาชีพ"),
+    ("eng_listen", "ฟัง-พูดอังกฤษ",       "20000-1203 การฟังและการพูดภาษาอังกฤษ"),
+    ("civic",      "หน้าที่พลเมือง",      "20000-1501 หน้าที่พลเมืองและศีลธรรม"),
+    ("sexed",      "เพศวิถี",             "20000-1602 เพศวิถีศึกษา"),
+    ("safety",     "สุขภาพฯ ปลอดภัย",     "20001-1001 สุขภาพ ความปลอดภัยและสิ่งแวดล้อม"),
+    ("sustain",    "พัฒนายั่งยืน",        "20001-1002 การพัฒนาอย่างยั่งยืน"),
+    ("tech_draw",  "เขียนแบบเทคนิค",      "20100-1001 เขียนแบบเทคนิคเบื้องต้น"),
+    ("weld_basic", "เชื่อมเบื้องต้น",     "20103-2001 งานเชื่อมโลหะเบื้องต้น"),
+    ("smaw1",      "SMAW 1",              "20103-2002 เชื่อมอาร์กด้วยลวดเชื่อมหุ้มฟลักซ์ 1"),
+    ("dt",         "DT",                  "20103-2004 ทดสอบแบบทำลายสภาพ"),
+    ("gtaw1",      "GTAW 1",              "20103-2006 เชื่อมอาร์กทังสเตนแก๊สคลุม 1"),
+    ("scout",      "ลูกเสือ",             "20000-2002 กิจกรรมลูกเสือวิสามัญ 2"),
+]
+T2_SUBJ_Y2 = [   # ชช.2 รุ่น 2568 — ภาคเรียนที่ 4
+    ("eng_proj",    "อังกฤษโครงงาน",      "20000-1202 ภาษาอังกฤษโครงงานบูรณาการวิชาชีพ"),
+    ("eng_net",     "อังกฤษอินเทอร์เน็ต", "20000-1205 ภาษาอังกฤษอินเทอร์เน็ต"),
+    ("business",    "ธุรกิจ",              "20001-1003 ธุรกิจเบื้องต้น"),
+    ("labor_law",   "กฎหมายแรงงาน",       "20001-1004 กฎหมายแรงงาน"),
+    ("smaw2",       "SMAW 2",              "20103-2003 เชื่อมอาร์กด้วยลวดเชื่อมหุ้มฟลักซ์ 2"),
+    ("gtaw2",       "GTAW 2",              "20103-2020 เชื่อมอาร์กทังสเตนแก๊สคลุม 2"),
+    ("gmaw2",       "GMAW 2",              "20103-2021 เชื่อมอาร์กโลหะแก๊สคลุม 2"),
+    ("weld_draw",   "เขียนแบบเชื่อม",     "20103-2008 เขียนแบบการเชื่อมและโลหะแผ่น"),
+    ("struct_draw", "เขียนแบบโครงสร้าง",  "20103-2023 เขียนแบบโครงสร้าง"),
+    ("vocorg",      "อวท.",                "20000-2004 กิจกรรมองค์การวิชาชีพ 1"),
+]
+# วัน/ครูผู้สอน ยังไม่มีตารางสอน 2/2569 → ใส่ '-' ไว้ก่อน (ลูกเสือ = พฤหัสบดี อ.ธานี)
+T2_DAY_TEACHER = {"scout": ("พฤหัสบดี", "อ.ธานี")}
+
+def _subj_js(rows, suffix=""):
+    out = []
+    for sid, name, full in rows:
+        day, teacher = T2_DAY_TEACHER.get(sid, ("-", "-"))
+        out.append(f"  {{ id:'{sid}', name:'{name}{suffix}', full:'{full}', day:'{day}', teacher:'{teacher}' }},")
+    return "[\n" + "\n".join(out) + "\n]"
+
+T2_SCOUT_ONLY = "[\n  { id:'scout', name:'ลูกเสือ', full:'20000-2002 กิจกรรมลูกเสือวิสามัญ 2', day:'พฤหัสบดี', teacher:'อ.ธานี' },\n]"
+
+T2_SUBJECTS = {
+    "attendance-ch1.html":   _subj_js(T2_SUBJ_CH1),
+    "attendance-y2.html":    _subj_js(T2_SUBJ_Y2),
+    "attendance-weld.html":  _subj_js(T2_SUBJ_CH1, " (ปี1)")[:-2] + "\n" + _subj_js(T2_SUBJ_Y2, " (ปี2)")[2:],
+    "attendance-scout.html": "[\n  { id:'scout', name:'ลูกเสือวิสามัญ', full:'ลูกเสือวิสามัญ 2 (ช่างเชื่อม / ช่างยนต์ / ช่างกล / ช่างไฟฟ้า / คอมพิวเตอร์ / บัญชี)', day:'พฤหัสบดี', teacher:'อ.ธานี' },\n]",
+}
+# ห้องที่ใช้งานจริงในเทอม 1 (หน้า ลูกเสือ-แยกห้อง ไม่มีข้อมูล → ไม่สร้าง)
+T2_ROOMS = ["attendance-ch1.html", "attendance-y2.html", "attendance-weld.html",
+            "attendance-me1a.html", "attendance-me1b.html", "attendance-ml1a.html", "attendance-ml1b.html",
+            "attendance-el1.html", "attendance-ct1.html", "attendance-ac1.html", "attendance-scout.html"]
+
+def _t2_name(fname):           # attendance-ch1.html → attendance-ch1-t2.html
+    return fname.replace(".html", "-t2.html")
+
+def make_term2(t):
+    p = dict(t["patches"])
+    db_base = p["db_path"].replace(".json", "")
+    out = _t2_name(t["out"])
+    p.update({
+        "title_suffix":     "2/2569 " + p["title_suffix"],
+        "db_path":          db_base + "-t2.json",
+        "ls_key":           p["ls_key"] + "_t2",
+        "default_students": "[]",
+        "manifest":         p["manifest"].replace(".json", "-t2.json"),
+        "pwa_name":         p["pwa_name"] + " 2/69",
+        "class_subjects":   T2_SUBJECTS.get(t["out"], T2_SCOUT_ONLY),
+        "term":             "2",
+        "prev_db":          FB_BASE + p["db_path"],
+        "scout_link":       _t2_name("attendance-scout.html"),
+    })
+    if p.get("merge_sources"):
+        ms = re.sub(r"/(attendance[a-z0-9-]*)\.json'", r"/\1-t2.json'", p["merge_sources"])
+        ms = re.sub(r"page:'(attendance[a-z0-9-]*)\.html'", r"page:'\1-t2.html'", ms)
+        p["merge_sources"] = ms
+    return {
+        "out":    out,
+        "label":  f"{out}  (2/2569)",
+        "banner": f"<!-- AUTO-GENERATED from attendance.html — python build.py  |  ภาคเรียน 2/2569 → https://taneech2.github.io/attendance/{out} -->",
+        "patches": p,
+    }
+
+TARGETS += [make_term2(t) for t in TARGETS if t["out"] in T2_ROOMS]
+
+# ══════════════════════════════════════════════════════════════
 #  PATCH ENGINE — ทำงานให้ทุก target อัตโนมัติ
 # ══════════════════════════════════════════════════════════════
 def patch_html(html, p):
@@ -532,6 +621,20 @@ def patch_html(html, p):
             f"const MERGE_SOURCES = {p['merge_sources']};",
             html,
         )
+
+    # ภาคเรียน (ค่าเริ่มต้นในช่อง + หัวกระดาษ)
+    if p.get('term'):
+        html = html.replace('<span id="lbl-term">1</span>', f'<span id="lbl-term">{p["term"]}</span>')
+        html = html.replace('placeholder="ภาคเรียนที่" value="1"', f'placeholder="ภาคเรียนที่" value="{p["term"]}"')
+
+    # ภาคเรียนใหม่ → URL ข้อมูลภาคเรียนก่อน (ดึงรายชื่อครั้งแรก)
+    if p.get('prev_db'):
+        html = html.replace("const PREV_DB_URL = '';", f"const PREV_DB_URL = '{p['prev_db']}';")
+
+    # ลิงก์ "ดูลูกเสือ รวม"
+    if p.get('scout_link'):
+        html = html.replace('href="attendance-scout.html" class="scout-link-btn"',
+                            f'href="{p["scout_link"]}" class="scout-link-btn"')
 
     # PWA manifest
     if p.get('manifest'):
@@ -658,7 +761,7 @@ def git_push():
     result = subprocess.run(
         ["git", "commit", "-m",
          f"build: sync {names} from attendance.html\n\n"
-         "Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"],
+         "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"],
         cwd=ROOT, capture_output=True, text=True,
     )
     out = result.stdout + result.stderr

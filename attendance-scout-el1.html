@@ -2813,6 +2813,38 @@ function saveToLS(){
 const LS_KEY = 'attendanceData_scout_el1_v2';
 // รายชื่อ source สำหรับหน้า รวม (override ใน build.py สำหรับ scout-รวม)
 const MERGE_SOURCES = [];
+// หน้าภาคเรียนใหม่: URL ข้อมูลภาคเรียนก่อน (build.py ใส่ให้) — เปิดครั้งแรกจะคัดลอก
+// รายชื่อ / ซ่อนชื่อ / บาร์โค้ด / PIN / รูปใบหน้า มาให้ (ไม่คัดลอกผลเช็คชื่อ)
+const PREV_DB_URL = '';
+
+async function seedFromPrevTerm(){
+  try{
+    const res = await fetch(PREV_DB_URL, {cache:'no-store'});
+    if(!res.ok) return false;
+    let p = await res.json();
+    if(p && p.students === undefined && p.p){ try{ p = JSON.parse(p.p); }catch(e){ return false; } }
+    if(!p || !Array.isArray(p.students) || !p.students.length) return false;
+    const ib = Object.assign({}, p.infoBar || {}, {
+      term: document.getElementById('inp-term')?.value || '',
+      year: document.getElementById('inp-year')?.value || '',
+    });
+    applyParsed({
+      students: p.students, weekData: {}, classData: {}, extraSubjects: [],
+      hiddenStudents: p.hiddenStudents || [], studentBarcodes: p.studentBarcodes || {},
+      infoBar: ib, pin: p.pin, namesHidden: p.namesHidden, fd: p.fd, savedAt: 0,
+    });
+    try{
+      const fpRes = await fetch(PREV_DB_URL.replace('.json', 'FP.json'), {cache:'no-store'});
+      if(fpRes.ok){
+        const fp = await fpRes.json();
+        if(fp && typeof fp === 'object') deserializeFP(fp); // saveToFirebase() ด้านล่างจะ PUT รูปขึ้น FP_URL ใหม่ให้
+      }
+    }catch(e){ console.warn('[seed] คัดลอกรูปหน้าไม่สำเร็จ:', e.message); }
+    await saveToFirebase();
+    showStatus('📋 ดึงรายชื่อ ' + students.length + ' รายการจากภาคเรียนก่อนแล้ว', '#4caf8a');
+    return true;
+  }catch(e){ console.warn('[seed] ดึงรายชื่อภาคเรียนก่อนไม่สำเร็จ:', e.message); return false; }
+}
 
 function showStatus(msg, color='#4caf8a'){
   let el = document.getElementById('fb-status');
@@ -2993,10 +3025,12 @@ function applyParsed(parsed, source) {
 async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   showStatus('⏳ กำลังโหลด...','#c9a84c');
   let cloudParsed = null, localParsed = null, needMigrate = false;
+  let cloudConfirmedEmpty = false; // true เฉพาะเมื่อ Firebase ตอบ OK และ path นี้ยังไม่มีข้อมูลเลย (null)
   // โหลด Cloud
   try{
     const res = await fetch(DB_URL);
     const data = await res.json();
+    if(res.ok && data === null) cloudConfirmedEmpty = true;
     if(data){
       if(data.students !== undefined){ cloudParsed = data; }  // format ใหม่ ✅
       else if(data.classData || data.weekData){
@@ -3098,6 +3132,10 @@ async function loadFromFirebase(forceCloud=false, skipMigrate=false){
   }
   if(cloudParsed){
     if(applyParsed(cloudParsed)){ showStatus('✅ โหลดจาก Cloud'); return; }
+  }
+  // ภาคเรียนใหม่ (cloud ว่างจริง + เครื่องนี้ไม่มีข้อมูล) → ดึงรายชื่อจากภาคเรียนก่อน
+  if(PREV_DB_URL && cloudConfirmedEmpty && !localParsed){
+    if(await seedFromPrevTerm()) return;
   }
   students = [...DEFAULT_STUDENTS];
   showStatus('📋 ใช้รายชื่อเริ่มต้น','#c9a84c');

@@ -69,3 +69,10 @@ Cindy (COO) — รับงาน, กระจายให้ทีม
 - **ชช.1** (attendance-ch1.html): DB=attendance.json, LS=attendanceData_v2, นักเรียน 15 คน
 - **ชช.2** (attendance-y2.html): DB=attendance-y2.json, LS=attendanceData_y2_v2, นักเรียน=[] (กรอกเอง)
 - **ลูกเสือ** (attendance-scout.html): DB=attendance-scout.json, LS=attendanceData_scout_v2
+
+### ภาคเรียน 2/2569 (สร้าง 17 พ.ย. 2569)
+- build.py สร้าง `*-t2.html` จากห้องเทอม 1 อัตโนมัติ (`make_term2`, ลิสต์ `T2_ROOMS`) — 11 ห้อง
+- DB แยก: `<db เดิม>-t2.json` / LS `<เดิม>_t2` → ข้อมูลเทอม 1 ไม่โดนทับ
+- เปิดครั้งแรก (cloud ว่างจริง) ดึงรายชื่อ/PIN/รูปหน้าจากเทอม 1 ผ่าน `PREV_DB_URL` (ไม่ดึงผลเช็คชื่อ)
+- วิชา ชช.1 (ภาค 2) / ชช.2 (ภาค 4) ตามแผนการเรียน ปวช.2567 → `T2_SUBJ_CH1` / `T2_SUBJ_Y2` ใน build.py (วัน/ครู ยังเป็น '-')
+- path ใหม่ต้องอยู่ใน `firebase-rules-attendance-bric.json` แล้วครูวางใน Firebase Console
