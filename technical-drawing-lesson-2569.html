@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เขียนแบบเทคนิคเบื้องต้น — สื่อการสอน Interactive</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--bg:#0b2340;--card:#0f2d52;--card2:#123661;--line:#21497a;--ln:#e8f1ff;--cy:#5fd4ff;--yw:#ffd54a;--gr:#4ade80;--rd:#ff6b81;--mut:#9db6d6;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sarabun',sans-serif;color:var(--ln);min-height:100vh;
+  background:
+    linear-gradient(rgba(95,212,255,.07) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(95,212,255,.07) 1px,transparent 1px),
+    linear-gradient(rgba(95,212,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(95,212,255,.03) 1px,transparent 1px),
+    var(--bg);
+  background-size:100px 100px,100px 100px,20px 20px,20px 20px,100% 100%}
+.wrap{max-width:860px;margin:0 auto;padding:28px 16px 70px}
+.head{text-align:center;margin-bottom:24px;border:2px solid var(--ln);padding:20px 14px;position:relative;background:rgba(11,35,64,.85)}
+.head:before{content:"";position:absolute;inset:5px;border:1px solid rgba(232,241,255,.4);pointer-events:none}
+.head .code{display:inline-block;font-size:12px;font-weight:700;color:var(--bg);background:var(--yw);border-radius:4px;padding:2px 10px;margin-bottom:8px}
+.head h1{font-size:26px;font-weight:800;line-height:1.45}
+.head .sub{font-size:14px;color:var(--mut);margin-top:6px}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:24px}
+.toc h2{font-size:14px;color:var(--yw);margin-bottom:8px}
+.toc ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:2px 16px;padding-left:22px;font-size:14px;line-height:2}
+.toc a{color:var(--cy);text-decoration:none}
+.toc a:hover{text-decoration:underline}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px 20px;margin-bottom:20px;scroll-margin-top:12px}
+.num{display:inline-block;font-size:12px;font-weight:800;color:var(--bg);background:var(--cy);border-radius:20px;padding:3px 12px;margin-bottom:8px}
+.sec h2{font-size:20px;font-weight:800;margin-bottom:12px;line-height:1.45}
+.sec h3{font-size:15.5px;font-weight:700;color:var(--cy);margin:18px 0 8px}
+.sec p,.sec li{font-size:15px;line-height:1.85}
+.sec p{margin-bottom:10px}
+.sec ul,.sec ol{padding-left:22px;margin-bottom:10px}
+.sec b{color:var(--yw)}
+.key{background:rgba(255,213,74,.08);border-left:4px solid var(--yw);border-radius:0 10px 10px 0;padding:10px 14px;margin:14px 0;font-size:14.5px;line-height:1.8}
+.key b{color:var(--yw)}
+.tip{background:rgba(95,212,255,.08);border-left:4px solid var(--cy);border-radius:0 10px 10px 0;padding:10px 14px;margin:14px 0;font-size:14.5px;line-height:1.8}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:12px 0}
+.tool{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.tool .i{font-size:26px}
+.tool .n{font-weight:700;color:var(--cy);margin:2px 0}
+.tool .d{font-size:13.5px;color:var(--mut);line-height:1.6}
+.tbl{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--yw);padding:8px;border-bottom:2px solid var(--cy);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td svg{display:block}
+.fig{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin:12px 0;text-align:center}
+.fig svg{width:100%;height:auto;max-height:420px}
+.fig .cap{font-size:13px;color:var(--mut);margin-top:6px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.btn{font-family:inherit;font-size:14.5px;font-weight:700;border:2px solid var(--cy);background:transparent;color:var(--cy);border-radius:999px;padding:7px 16px;cursor:pointer}
+.btn.on{background:var(--cy);color:var(--bg)}
+.calc{display:flex;flex-wrap:wrap;gap:10px;align-items:end;background:var(--card2);border-radius:10px;padding:14px;margin:12px 0}
+.calc label{font-size:13px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
+.calc input,.calc select{font-family:inherit;font-size:16px;background:var(--bg);color:var(--ln);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:130px}
+.calc .out{font-size:18px;font-weight:800;color:var(--gr);flex:1 1 100%}
+.q{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.q .t{font-weight:700;margin-bottom:8px;line-height:1.7}
+.q label{display:block;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:14.5px;line-height:1.6;border:1px solid transparent}
+.q label:hover{background:rgba(95,212,255,.08)}
+.q input{margin-right:8px;accent-color:var(--cy)}
+.q label.ok{border-color:var(--gr);background:rgba(74,222,128,.12)}
+.q label.no{border-color:var(--rd);background:rgba(255,107,129,.12)}
+.q .ex{display:none;font-size:13.5px;color:var(--mut);margin-top:6px;line-height:1.7}
+.q.done .ex{display:block}
+.score{position:sticky;bottom:12px;text-align:center;font-size:17px;font-weight:800;background:var(--yw);color:var(--bg);border-radius:999px;padding:10px;margin-top:14px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.cheat{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.cheat div{background:var(--card2);border:1px dashed var(--cy);border-radius:10px;padding:12px;font-size:14px;line-height:1.75}
+.cheat b{color:var(--yw)}
+.foot{text-align:center;font-size:13px;color:var(--mut);margin-top:26px}
+.top{position:fixed;right:14px;bottom:14px;width:44px;height:44px;border-radius:50%;background:var(--cy);color:var(--bg);font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+@media (max-width:520px){.head h1{font-size:21px}.sec{padding:18px 14px}.sec h2{font-size:18px}}
+@media print{body{background:#fff;color:#000}.sec,.toc,.head{background:#fff;border-color:#999;color:#000}.top,.btns{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="head">
+  <div class="code">20100-1001 · ปวช. 1</div>
+  <h1>📐 เขียนแบบเทคนิคเบื้องต้น</h1>
+  <div class="sub">สื่อการสอน Interactive · อ่านบนมือถือได้ · มีแบบทดสอบท้ายบท</div>
+  <div class="sub">ครูธานี ชมสุข · แผนกช่างเชื่อมโลหะ วิทยาลัยการอาชีพบุรีรัมย์</div>
+</header>
+
+<nav class="toc">
+  <h2>🗂️ สารบัญ</h2>
+  <ol>
+    <li><a href="#s1">ความรู้เบื้องต้นงานเขียนแบบ</a></li>
+    <li><a href="#s2">เครื่องมือและอุปกรณ์</a></li>
+    <li><a href="#s3">กระดาษ กรอบ และมาตราส่วน</a></li>
+    <li><a href="#s4">เส้นในงานเขียนแบบ</a></li>
+    <li><a href="#s5">ตัวอักษรและตัวเลข</a></li>
+    <li><a href="#s6">งานเรขาคณิตประยุกต์</a></li>
+    <li><a href="#s7">ภาพฉาย (Orthographic)</a></li>
+    <li><a href="#s8">ภาพสามมิติ (Pictorial)</a></li>
+    <li><a href="#s9">การกำหนดขนาด</a></li>
+    <li><a href="#s10">ภาพตัด (Section)</a></li>
+    <li><a href="#quiz">แบบทดสอบ 15 ข้อ</a></li>
+    <li><a href="#cheat">สรุปจำง่าย 20/80</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<section class="sec" id="s1">
+  <span class="num">หน่วยที่ 1</span>
+  <h2>ความรู้เบื้องต้นเกี่ยวกับงานเขียนแบบ</h2>
+  <p><b>งานเขียนแบบ</b> คือ "ภาษาของช่าง" — ใช้เส้น สัญลักษณ์ ตัวเลข และตัวอักษร ตามมาตรฐานเดียวกัน เพื่อสื่อสารรูปร่าง ขนาด และรายละเอียดของชิ้นงาน ให้ผู้ผลิตทำออกมาได้ตรงกับที่ผู้ออกแบบต้องการ ไม่ว่าจะอยู่ที่ไหนในโลก</p>
+  <h3>ประเภทของแบบที่เจอบ่อย</h3>
+  <ul>
+    <li><b>แบบร่าง (Sketch)</b> — เขียนด้วยมือเปล่า ใช้คิดงาน จดขนาดหน้างาน</li>
+    <li><b>แบบรายละเอียด / แบบสั่งงาน (Detail Drawing)</b> — ชิ้นเดียว มีขนาดครบ พร้อมนำไปผลิต</li>
+    <li><b>แบบประกอบ (Assembly Drawing)</b> — แสดงชิ้นส่วนหลายชิ้นประกอบกัน พร้อมตารางรายการชิ้นส่วน</li>
+  </ul>
+  <div class="key">🎯 <b>ทำไมช่างเชื่อมต้องอ่านแบบเป็น?</b> เพราะทุกงานโครงสร้าง ต่อเรือ ถังแรงดัน จะมาเป็น "แบบ" เสมอ อ่านผิด = ตัดผิด = เสียเหล็ก เสียเงิน เสียเวลา</div>
+</section>
+
+<!-- 2 -->
+<section class="sec" id="s2">
+  <span class="num">หน่วยที่ 2</span>
+  <h2>เครื่องมือและอุปกรณ์เขียนแบบ</h2>
+  <div class="grid">
+    <div class="tool"><div class="i">🗂️</div><div class="n">โต๊ะ / กระดานเขียนแบบ</div><div class="d">ผิวเรียบ ขอบตรง ใช้คู่กับไม้ที</div></div>
+    <div class="tool"><div class="i">📏</div><div class="n">ไม้ที (T-Square)</div><div class="d">ลากเส้นแนวนอน และเป็นฐานรองฉากสามเหลี่ยม</div></div>
+    <div class="tool"><div class="i">📐</div><div class="n">ฉากสามเหลี่ยม</div><div class="d">2 อัน: 45°-45° และ 30°-60° ใช้ร่วมกันได้มุมทุก ๆ 15°</div></div>
+    <div class="tool"><div class="i">✏️</div><div class="n">ดินสอเขียนแบบ</div><div class="d"><b>2H</b> เส้นร่าง · <b>H</b> เส้นบาง/ตัวอักษร · <b>HB</b> เส้นหนา</div></div>
+    <div class="tool"><div class="i">⭕</div><div class="n">วงเวียน</div><div class="d">เขียนวงกลม ส่วนโค้ง และใช้ถ่ายขนาด</div></div>
+    <div class="tool"><div class="i">🧽</div><div class="n">ยางลบ + แผ่นกันลบ</div><div class="d">แผ่นกันลบช่วยลบเฉพาะจุด ไม่ให้เส้นข้าง ๆ เสีย</div></div>
+    <div class="tool"><div class="i">🔷</div><div class="n">แผ่นเทมเพลต</div><div class="d">เขียนวงกลม วงรี สัญลักษณ์ได้เร็ว</div></div>
+    <div class="tool"><div class="i">📎</div><div class="n">เทปกาว</div><div class="d">ยึดกระดาษกับโต๊ะ ไม่ให้เลื่อนขณะเขียน</div></div>
+  </div>
+  <div class="fig">
+    <svg viewBox="0 0 420 150" aria-label="มุมที่ได้จากฉากสามเหลี่ยม">
+      <g fill="none" stroke="#e8f1ff" stroke-width="1.5">
+        <line x1="20" y1="130" x2="400" y2="130"/>
+        <g stroke="#5fd4ff">
+          <line x1="70" y1="130" x2="70" y2="20"/>
+          <line x1="140" y1="130" x2="203.5" y2="20"/>
+          <line x1="230" y1="130" x2="320" y2="40"/>
+          <line x1="330" y1="130" x2="400" y2="89.6"/>
+        </g>
+      </g>
+      <g fill="#ffd54a" font-size="14" font-family="Sarabun" font-weight="700">
+        <text x="76" y="118">90°</text><text x="160" y="118">60°</text><text x="258" y="118">45°</text><text x="362" y="122">30°</text>
+      </g>
+      <g fill="#9db6d6" font-size="12" font-family="Sarabun"><text x="20" y="148">ไม้ทีเป็นฐาน แล้ววางฉากสามเหลี่ยมเพื่อลากเส้นเอียงตามมุม</text></g>
+    </svg>
+    <div class="cap">ฉาก 45° + ฉาก 30°-60° วางซ้อนกัน → ได้มุม 15°, 75°, 105° ฯลฯ</div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="sec" id="s3">
+  <span class="num">หน่วยที่ 3</span>
+  <h2>กระดาษ กรอบ ตารางรายการ และมาตราส่วน</h2>
+  <h3>ขนาดกระดาษมาตรฐาน ISO ชุด A</h3>
+  <p>กระดาษขนาดเล็กลงหนึ่งเบอร์ = <b>ครึ่งหนึ่งของเบอร์ก่อนหน้า</b> (พับครึ่งด้านยาว) A0 มีพื้นที่ 1 ตร.ม.</p>
+  <div class="fig">
+    <svg viewBox="0 0 400 290" aria-label="ขนาดกระดาษชุด A">
+      <g fill="none" stroke="#e8f1ff" stroke-width="1.5" font-family="Sarabun">
+        <rect x="10" y="10" width="378.4" height="267.6"/>
+        <line x1="199.2" y1="10" x2="199.2" y2="277.6"/>
+        <line x1="199.2" y1="143.8" x2="388.4" y2="143.8"/>
+        <line x1="293.8" y1="143.8" x2="293.8" y2="277.6"/>
+        <line x1="293.8" y1="210.7" x2="388.4" y2="210.7"/>
+      </g>
+      <g fill="#ffd54a" font-family="Sarabun" font-weight="800" text-anchor="middle">
+        <text x="104" y="150" font-size="30">A1</text>
+        <text x="294" y="82" font-size="24">A2</text>
+        <text x="246" y="216" font-size="20">A3</text>
+        <text x="341" y="182" font-size="16">A4</text>
+        <text x="341" y="249" font-size="16">A4</text>
+      </g>
+      <text x="104" y="176" fill="#9db6d6" font-size="12" font-family="Sarabun" text-anchor="middle">ทั้งแผ่น = A0</text>
+    </svg>
+  </div>
+  <div class="tbl"><table>
+    <tr><th>ขนาด</th><th>กว้าง × ยาว (มม.)</th><th>ใช้งาน</th></tr>
+    <tr><td>A0</td><td>841 × 1189</td><td>แบบงานใหญ่</td></tr>
+    <tr><td>A1</td><td>594 × 841</td><td>แบบโครงสร้าง</td></tr>
+    <tr><td>A2</td><td>420 × 594</td><td>แบบประกอบ</td></tr>
+    <tr><td>A3</td><td>297 × 420</td><td>แบบชิ้นงานทั่วไป</td></tr>
+    <tr><td><b>A4</b></td><td><b>210 × 297</b></td><td><b>ใช้ในห้องเรียนบ่อยที่สุด</b></td></tr>
+  </table></div>
+  <h3>กรอบและตารางรายการ (Title Block)</h3>
+  <div class="fig">
+    <svg viewBox="0 0 300 220" aria-label="กรอบกระดาษ A4 แนวนอน">
+      <rect x="5" y="5" width="290" height="206" fill="none" stroke="#9db6d6" stroke-width="1"/>
+      <rect x="25" y="15" width="260" height="186" fill="none" stroke="#e8f1ff" stroke-width="2.5"/>
+      <g fill="none" stroke="#e8f1ff" stroke-width="1.2">
+        <rect x="165" y="166" width="120" height="35"/>
+        <line x1="165" y1="178" x2="285" y2="178"/><line x1="165" y1="190" x2="285" y2="190"/>
+        <line x1="225" y1="166" x2="225" y2="201"/>
+      </g>
+      <g fill="#e8f1ff" font-size="7.5" font-family="Sarabun">
+        <text x="168" y="175">ชื่องาน</text><text x="228" y="175">มาตราส่วน</text>
+        <text x="168" y="187">ผู้เขียน</text><text x="228" y="187">วันที่</text>
+        <text x="168" y="199">สถานศึกษา</text><text x="228" y="199">แผ่นที่</text>
+      </g>
+      <g fill="#ffd54a" font-size="10" font-family="Sarabun" font-weight="700">
+        <text x="7" y="110">20</text><text x="140" y="13">10</text><text x="287" y="110">10</text>
+      </g>
+      <text x="95" y="100" fill="#5fd4ff" font-size="12" font-family="Sarabun" text-anchor="middle">พื้นที่เขียนแบบ</text>
+    </svg>
+    <div class="cap">กรอบห่างขอบ 10 มม. · ด้านซ้าย 20 มม. (เผื่อเข้าเล่ม) · ตารางรายการอยู่มุมขวาล่าง</div>
+  </div>
+  <h3>มาตราส่วน (Scale) — อ่านว่า "แบบ : ของจริง"</h3>
+  <ul>
+    <li><b>1:1</b> มาตราส่วนจริง — ขนาดในแบบเท่าของจริง</li>
+    <li><b>1:2, 1:5, 1:10, 1:20 …</b> มาตราส่วนย่อ — ชิ้นงานใหญ่</li>
+    <li><b>2:1, 5:1, 10:1 …</b> มาตราส่วนขยาย — ชิ้นงานเล็ก</li>
+  </ul>
+  <div class="key">⚠️ <b>ไม่ว่าจะย่อหรือขยาย ตัวเลขบอกขนาดในแบบต้องเป็น "ขนาดจริง" เสมอ</b></div>
+  <div class="calc">
+    <label>ขนาดจริง (มม.)<input id="realLen" type="number" value="300" min="0"></label>
+    <label>มาตราส่วน<select id="scaleSel">
+      <option value="10/1">10:1</option><option value="5/1">5:1</option><option value="2/1">2:1</option>
+      <option value="1/1">1:1</option><option value="1/2">1:2</option><option value="1/5" selected>1:5</option>
+      <option value="1/10">1:10</option><option value="1/20">1:20</option><option value="1/50">1:50</option><option value="1/100">1:100</option>
+    </select></label>
+    <div class="out" id="scaleOut"></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="sec" id="s4">
+  <span class="num">หน่วยที่ 4</span>
+  <h2>เส้นในงานเขียนแบบ (ตามแนว ISO 128)</h2>
+  <p>เส้นมี 2 ขนาดหลัก คือ <b>เส้นหนา</b> และ <b>เส้นบาง</b> อัตราส่วนประมาณ <b>2 : 1</b> เช่น หนา 0.5 มม. คู่กับบาง 0.25 มม. หรือ หนา 0.7 คู่กับบาง 0.35</p>
+  <div class="tbl"><table>
+    <tr><th>ลักษณะเส้น</th><th>ชื่อเส้น</th><th>ใช้เขียน</th></tr>
+    <tr><td><svg width="120" height="14"><line x1="2" y1="7" x2="118" y2="7" stroke="#e8f1ff" stroke-width="3"/></svg></td><td>เส้นเต็มหนา</td><td>ขอบรูปที่มองเห็น</td></tr>
+    <tr><td><svg width="120" height="14"><line x1="2" y1="7" x2="118" y2="7" stroke="#e8f1ff" stroke-width="1.2"/></svg></td><td>เส้นเต็มบาง</td><td>เส้นกำหนดขนาด เส้นช่วย เส้นชี้ เส้นลายตัด</td></tr>
+    <tr><td><svg width="120" height="14"><path d="M2 7 q6 -6 12 0 t12 0 t12 0 t12 0 t12 0 t12 0 t12 0 t12 0 t12 0" fill="none" stroke="#e8f1ff" stroke-width="1.2"/></svg></td><td>เส้นมือเปล่าบาง</td><td>เส้นแสดงรอยหัก / ขอบภาพตัดเฉพาะส่วน</td></tr>
+    <tr><td><svg width="120" height="14"><line x1="2" y1="7" x2="118" y2="7" stroke="#e8f1ff" stroke-width="1.4" stroke-dasharray="9 4"/></svg></td><td>เส้นประบาง</td><td>ขอบรูปที่มองไม่เห็น (ถูกบัง)</td></tr>
+    <tr><td><svg width="120" height="14"><line x1="2" y1="7" x2="118" y2="7" stroke="#5fd4ff" stroke-width="1.2" stroke-dasharray="20 3 2 3"/></svg></td><td>เส้นลูกโซ่บาง (ยาว-จุด)</td><td>เส้นศูนย์กลาง เส้นแกนสมมาตร</td></tr>
+    <tr><td><svg width="120" height="14"><line x1="2" y1="7" x2="18" y2="7" stroke="#ff6b81" stroke-width="3"/><line x1="22" y1="7" x2="98" y2="7" stroke="#ff6b81" stroke-width="1.2" stroke-dasharray="20 3 2 3"/><line x1="102" y1="7" x2="118" y2="7" stroke="#ff6b81" stroke-width="3"/></svg></td><td>เส้นลูกโซ่บาง หนาที่ปลาย</td><td>แนวระนาบตัด (Cutting Plane)</td></tr>
+    <tr><td><svg width="120" height="14"><line x1="2" y1="7" x2="118" y2="7" stroke="#e8f1ff" stroke-width="1.2" stroke-dasharray="20 3 2 3 2 3"/></svg></td><td>เส้นลูกโซ่บาง (ยาว-จุด-จุด)</td><td>ชิ้นส่วนข้างเคียง / ตำแหน่งการเคลื่อนที่</td></tr>
+  </table></div>
+  <div class="tip">💡 <b>ลำดับความสำคัญเมื่อเส้นทับกัน:</b> เส้นเต็มหนา → เส้นประ → เส้นศูนย์กลาง → เส้นช่วยกำหนดขนาด (เขียนเส้นที่สำคัญกว่า)</div>
+</section>
+
+<!-- 5 -->
+<section class="sec" id="s5">
+  <span class="num">หน่วยที่ 5</span>
+  <h2>ตัวอักษรและตัวเลข (ตามแนว ISO 3098)</h2>
+  <ul>
+    <li>ความสูงมาตรฐาน (h): <b>2.5, 3.5, 5, 7, 10, 14, 20 มม.</b> — ในห้องเรียนใช้ 3.5 หรือ 5 มม. บ่อยที่สุด</li>
+    <li>เขียนได้ทั้ง <b>ตัวตรง</b> และ <b>ตัวเอียง 75°</b> กับแนวนอน (เอียงไปทางขวา)</li>
+    <li>ตีเส้นร่างบรรทัดด้วยดินสอ 2H เบา ๆ ก่อนเขียนทุกครั้ง</li>
+  </ul>
+  <div class="fig">
+    <svg viewBox="0 0 420 120" aria-label="ตัวอย่างตัวอักษรตรงและเอียง 75 องศา">
+      <g stroke="#9db6d6" stroke-width=".6" stroke-dasharray="3 3"><line x1="10" y1="30" x2="410" y2="30"/><line x1="10" y1="80" x2="410" y2="80"/></g>
+      <text x="20" y="78" fill="#e8f1ff" font-size="50" font-family="Arial,Helvetica,sans-serif">AB 123</text>
+      <text x="230" y="78" fill="#5fd4ff" font-size="50" font-family="Arial,Helvetica,sans-serif" transform="skewX(-15) translate(21 0)">AB 123</text>
+      <g fill="#ffd54a" font-size="13" font-family="Sarabun"><text x="60" y="105">ตัวตรง</text><text x="270" y="105">ตัวเอียง 75°</text><text x="10" y="22">h = ความสูงตัวอักษรใหญ่</text></g>
+    </svg>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="sec" id="s6">
+  <span class="num">หน่วยที่ 6</span>
+  <h2>งานเรขาคณิตประยุกต์</h2>
+  <p>พื้นฐานที่ช่างต้องทำได้ด้วยวงเวียนและไม้บรรทัด เพราะใช้จริงตอนร่างแบบลงแผ่นเหล็ก</p>
+  <h3>ตัวอย่าง: เขียนรูปหกเหลี่ยมด้านเท่าในวงกลม (หัวน็อต)</h3>
+  <div class="btns" id="hexBtns"></div>
+  <div class="fig">
+    <svg id="hexSvg" viewBox="-130 -120 260 240" aria-label="ขั้นตอนเขียนหกเหลี่ยม"></svg>
+    <div class="cap" id="hexCap"></div>
+  </div>
+  <div class="key">🔑 <b>หลักจำ:</b> ด้านของหกเหลี่ยมด้านเท่า = รัศมีวงกลมที่ล้อมรอบ</div>
+  <h3>งานเรขาคณิตอื่นที่ควรฝึก</h3>
+  <ul>
+    <li>แบ่งครึ่งเส้นตรง / แบ่งครึ่งมุม ด้วยวงเวียน</li>
+    <li>แบ่งเส้นตรงออกเป็นหลายส่วนเท่ากัน</li>
+    <li>เขียนส่วนโค้งต่อเส้นตรง (ลบมุมแผ่นเหล็ก) และโค้งต่อโค้ง</li>
+  </ul>
+</section>
+
+<!-- 7 -->
+<section class="sec" id="s7">
+  <span class="num">หน่วยที่ 7</span>
+  <h2>ภาพฉาย (Orthographic Projection)</h2>
+  <p>มองชิ้นงานตรง ๆ ทีละด้าน แล้วเขียนเป็นภาพ 2 มิติ ที่นิยมใช้ 3 ภาพ คือ <b>ภาพด้านหน้า (Front)</b> <b>ภาพด้านบน (Top)</b> และ <b>ภาพด้านข้าง (Side)</b> — ภาพด้านหน้าควรเลือกด้านที่เห็นรูปร่างชัดที่สุด</p>
+  <div class="fig">
+    <svg id="isoSvg" viewBox="0 0 300 240" aria-label="ชิ้นงานรูปตัว L แบบไอโซเมตริก"></svg>
+    <div class="cap">ชิ้นงานตัวอย่าง: บล็อกรูปตัว L (กว้าง 60 ลึก 40 สูง 40 มม.) · ลูกศรคือทิศที่มอง (ภาพด้านขวา = มองสวนทางกับลูกศรสีแดง)</div>
+  </div>
+  <div class="btns">
+    <button class="btn on" data-ang="1">ภาพฉายมุมที่ 1 (ระบบยุโรป)</button>
+    <button class="btn" data-ang="3">ภาพฉายมุมที่ 3 (ระบบอเมริกา)</button>
+  </div>
+  <div class="fig">
+    <svg id="orthoSvg" viewBox="0 0 400 330" aria-label="ภาพฉาย 3 ด้าน"></svg>
+    <div class="cap" id="orthoCap"></div>
+  </div>
+  <div class="tbl"><table>
+    <tr><th></th><th>มุมที่ 1</th><th>มุมที่ 3</th></tr>
+    <tr><td>ภาพด้านบน</td><td>วาง<b>ใต้</b>ภาพด้านหน้า</td><td>วาง<b>เหนือ</b>ภาพด้านหน้า</td></tr>
+    <tr><td>ภาพด้านขวาของแผ่น</td><td>เป็นภาพที่มองจาก<b>ด้านซ้าย</b></td><td>เป็นภาพที่มองจาก<b>ด้านขวา</b></td></tr>
+    <tr><td>สัญลักษณ์</td><td><svg width="80" height="34"><g fill="none" stroke="#e8f1ff" stroke-width="1.5"><polygon points="4,8 30,2 30,32 4,26"/><circle cx="62" cy="17" r="15"/><circle cx="62" cy="17" r="6"/></g></svg></td><td><svg width="80" height="34"><g fill="none" stroke="#e8f1ff" stroke-width="1.5"><circle cx="18" cy="17" r="15"/><circle cx="18" cy="17" r="6"/><polygon points="50,8 76,2 76,32 50,26"/></g></svg></td></tr>
+  </table></div>
+  <div class="tip">💡 สังเกตในตัวอย่าง: ขั้นบันไดของชิ้นงาน เมื่อมองจากด้านซ้ายจะถูกบัง → เขียนเป็น <b>เส้นประ</b> แต่มองจากด้านขวาเห็นชัด → <b>เส้นเต็มหนา</b></div>
+</section>
+
+<!-- 8 -->
+<section class="sec" id="s8">
+  <span class="num">หน่วยที่ 8</span>
+  <h2>ภาพสามมิติ (Pictorial Drawing)</h2>
+  <p>ภาพที่เห็นได้ 3 ด้านพร้อมกัน ช่วยให้เข้าใจรูปร่างชิ้นงานได้เร็ว เหมาะกับการสื่อสารกับลูกค้าหรือคนที่อ่านแบบไม่เป็น</p>
+  <div class="fig">
+    <svg id="pictSvg" viewBox="0 0 420 200" aria-label="เปรียบเทียบไอโซเมตริกกับออบลิค"></svg>
+  </div>
+  <div class="tbl"><table>
+    <tr><th></th><th>ไอโซเมตริก (Isometric)</th><th>ออบลิค (Oblique)</th></tr>
+    <tr><td>แกน</td><td>เอียง <b>30°</b> กับแนวนอน 2 แกน + แกนตั้ง (ห่างกัน 120°)</td><td>ด้านหน้าเป็นรูปจริง แกนลึกเอียง <b>45°</b> (หรือ 30°, 60°)</td></tr>
+    <tr><td>ความยาว</td><td>ใช้ความยาวจริงทุกแกน</td><td>คาวาเลียร์ = ลึกเต็มขนาด · <b>คาบิเนต = ลึกครึ่งเดียว</b></td></tr>
+    <tr><td>เหมาะกับ</td><td>ชิ้นงานทั่วไป</td><td>ชิ้นงานที่มีวงกลม/ส่วนโค้งอยู่ด้านหน้า</td></tr>
+  </table></div>
+</section>
+
+<!-- 9 -->
+<section class="sec" id="s9">
+  <span class="num">หน่วยที่ 9</span>
+  <h2>การกำหนดขนาด (Dimensioning)</h2>
+  <div class="fig">
+    <svg viewBox="0 0 400 285" aria-label="องค์ประกอบของการกำหนดขนาด">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 1.7 L10 5 L0 8.3z" fill="#e8f1ff"/></marker>
+        <marker id="ar2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 2 L10 5 L0 8z" fill="#ffd54a"/></marker>
+      </defs>
+      <rect x="80" y="40" width="200" height="100" fill="none" stroke="#e8f1ff" stroke-width="3"/>
+      <circle cx="180" cy="90" r="20" fill="none" stroke="#e8f1ff" stroke-width="3"/>
+      <g stroke="#5fd4ff" stroke-width="1" stroke-dasharray="14 3 2 3"><line x1="150" y1="90" x2="210" y2="90"/><line x1="180" y1="60" x2="180" y2="120"/></g>
+      <g stroke="#e8f1ff" stroke-width="1">
+        <line x1="80" y1="144" x2="80" y2="180"/><line x1="280" y1="144" x2="280" y2="180"/>
+        <line x1="80" y1="174" x2="280" y2="174" marker-start="url(#ar)" marker-end="url(#ar)"/>
+        <line x1="284" y1="40" x2="320" y2="40"/><line x1="284" y1="140" x2="320" y2="140"/>
+        <line x1="314" y1="40" x2="314" y2="140" marker-start="url(#ar)" marker-end="url(#ar)"/>
+        <line x1="194.1" y1="75.9" x2="235" y2="25" marker-start="url(#ar)"/><line x1="235" y1="25" x2="270" y2="25"/>
+      </g>
+      <g fill="#e8f1ff" font-family="Arial,Helvetica,sans-serif" font-size="15">
+        <text x="180" y="169" text-anchor="middle">80</text>
+        <text x="309" y="90" text-anchor="middle" transform="rotate(-90 309 90)">40</text>
+        <text x="240" y="21">Ø16</text>
+      </g>
+      <g fill="#ffd54a" font-family="Sarabun" font-size="12.5" font-weight="700">
+        <text x="40" y="232">① เส้นช่วยกำหนดขนาด</text>
+        <text x="40" y="252">② เส้นกำหนดขนาด</text>
+        <text x="40" y="272">③ หัวลูกศร</text>
+        <text x="220" y="252">④ ตัวเลขบอกขนาด</text>
+        <text x="220" y="272">⑤ เส้นชี้ (Leader)</text>
+        <text x="220" y="232">⑥ เส้นศูนย์กลาง</text>
+      </g>
+      <g fill="#ffd54a" font-family="Sarabun" font-size="13" font-weight="800">
+        <text x="66" y="168">①</text><text x="110" y="190">②</text><text x="262" y="190">③</text><text x="196" y="160">④</text><text x="222" y="58">⑤</text><text x="212" y="104">⑥</text>
+      </g>
+    </svg>
+  </div>
+  <h3>กฎสำคัญ</h3>
+  <ul>
+    <li>หน่วยเป็น <b>มิลลิเมตร</b> ไม่ต้องเขียนหน่วยกำกับ</li>
+    <li>เส้นช่วยฯ เว้นห่างจากชิ้นงานเล็กน้อย (~1 มม.) และ <b>ลากเลยเส้นกำหนดขนาด ~2 มม.</b></li>
+    <li>เส้นกำหนดขนาดเส้นแรกห่างชิ้นงาน ~10 มม. เส้นถัดไปห่างกัน ~7 มม.</li>
+    <li>ตัวเลขอยู่ <b>เหนือเส้นกำหนดขนาด กลางเส้น</b> อ่านได้จากด้านล่างหรือด้านขวาของแผ่น</li>
+    <li>ไม่บอกขนาดซ้ำ · ไม่บอกขนาดที่เส้นประ · ขนาดเล็กเรียงด้านใน ขนาดใหญ่อยู่ด้านนอก</li>
+  </ul>
+  <div class="tbl"><table>
+    <tr><th>สัญลักษณ์</th><th>ความหมาย</th><th>ตัวอย่าง</th></tr>
+    <tr><td><b>Ø</b></td><td>เส้นผ่านศูนย์กลาง</td><td>Ø30</td></tr>
+    <tr><td><b>R</b></td><td>รัศมี</td><td>R10</td></tr>
+    <tr><td><b>□</b></td><td>สี่เหลี่ยมจัตุรัส</td><td>□20</td></tr>
+    <tr><td><b>SØ / SR</b></td><td>ทรงกลม</td><td>SØ40</td></tr>
+    <tr><td><b>t</b></td><td>ความหนาแผ่น</td><td>t = 6</td></tr>
+  </table></div>
+</section>
+
+<!-- 10 -->
+<section class="sec" id="s10">
+  <span class="num">หน่วยที่ 10</span>
+  <h2>ภาพตัด (Sectional View)</h2>
+  <p>ใช้เมื่อชิ้นงานมีรายละเอียดภายในซับซ้อน — สมมติว่าเอาระนาบไปตัดชิ้นงาน แล้วมองเนื้อด้านใน ส่วนที่ถูกตัดเขียน <b>เส้นลายตัด (Hatching)</b> เป็นเส้นเต็มบาง เอียง <b>45°</b> ระยะห่างเท่ากัน</p>
+  <div class="fig">
+    <svg viewBox="0 0 400 200" aria-label="ภาพตัดเต็มของชิ้นงานมีรูกลาง">
+      <defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#e8f1ff" stroke-width="1"/></pattern></defs>
+      <g>
+        <rect x="30" y="30" width="120" height="120" fill="none" stroke="#e8f1ff" stroke-width="3"/>
+        <circle cx="90" cy="90" r="24" fill="none" stroke="#e8f1ff" stroke-width="3"/>
+        <line x1="18" y1="90" x2="162" y2="90" stroke="#ff6b81" stroke-width="1.2" stroke-dasharray="14 3 2 3"/>
+        <line x1="18" y1="90" x2="34" y2="90" stroke="#ff6b81" stroke-width="3"/><line x1="146" y1="90" x2="162" y2="90" stroke="#ff6b81" stroke-width="3"/>
+        <g fill="#ff6b81" font-family="Arial" font-weight="700" font-size="14"><text x="12" y="84">A</text><text x="158" y="84">A</text></g>
+        <path d="M24 92 v16" stroke="#ff6b81" stroke-width="1.5" marker-end="url(#ar2)"/><path d="M156 92 v16" stroke="#ff6b81" stroke-width="1.5" marker-end="url(#ar2)"/>
+        <text x="90" y="175" fill="#9db6d6" font-family="Sarabun" font-size="13" text-anchor="middle">ภาพด้านบน + แนวตัด A-A</text>
+      </g>
+      <g>
+        <rect x="248" y="60" width="36" height="60" fill="url(#hatch)" stroke="#e8f1ff" stroke-width="3"/>
+        <rect x="332" y="60" width="36" height="60" fill="url(#hatch)" stroke="#e8f1ff" stroke-width="3"/>
+        <line x1="284" y1="60" x2="332" y2="60" stroke="#e8f1ff" stroke-width="3"/>
+        <line x1="284" y1="120" x2="332" y2="120" stroke="#e8f1ff" stroke-width="3"/>
+        <line x1="308" y1="48" x2="308" y2="132" stroke="#5fd4ff" stroke-width="1" stroke-dasharray="14 3 2 3"/>
+        <text x="308" y="38" fill="#ffd54a" font-family="Sarabun" font-size="14" font-weight="700" text-anchor="middle">ภาพตัด A-A</text>
+        <text x="308" y="175" fill="#9db6d6" font-family="Sarabun" font-size="13" text-anchor="middle">ภาพตัดเต็ม (Full Section)</text>
+      </g>
+    </svg>
+  </div>
+  <ul>
+    <li><b>ภาพตัดเต็ม</b> — ตัดผ่านตลอดชิ้นงาน</li>
+    <li><b>ภาพตัดครึ่ง</b> — ตัด 1/4 ของชิ้นงานสมมาตร เห็นทั้งภายนอกและภายในในภาพเดียว</li>
+    <li><b>ภาพตัดเฉพาะส่วน</b> — ตัดเฉพาะจุด ขอบเขตใช้เส้นมือเปล่า</li>
+  </ul>
+  <div class="tip">💡 ชิ้นส่วนต่างชิ้นที่ประกอบติดกัน ให้เส้นลายตัด <b>เอียงสวนทางกัน</b> หรือเปลี่ยนระยะห่าง · เพลา สลักเกลียว ลิ่ม ตัดตามยาว <b>ไม่ต้องเขียนลายตัด</b></div>
+</section>
+
+<!-- QUIZ -->
+<section class="sec" id="quiz">
+  <span class="num">ทดสอบ</span>
+  <h2>📝 แบบทดสอบท้ายบท 15 ข้อ</h2>
+  <p>เลือกคำตอบแล้วรู้ผลทันที พร้อมคำอธิบาย</p>
+  <div id="quizBox"></div>
+  <div class="score" id="score">คะแนน 0 / 15</div>
+  <div class="btns" style="margin-top:12px"><button class="btn" id="resetQuiz">🔄 เริ่มทำใหม่ (สลับข้อ)</button></div>
+</section>
+
+<!-- CHEAT -->
+<section class="sec" id="cheat">
+  <span class="num">สรุป</span>
+  <h2>⚡ สรุปจำง่าย 20/80</h2>
+  <div class="cheat">
+    <div><b>กระดาษ</b><br>A4 = 210×297<br>กรอบ 10 มม. ซ้าย 20 มม.<br>ตารางรายการ มุมขวาล่าง</div>
+    <div><b>มาตราส่วน</b><br>แบบ : ของจริง<br>1:2 ย่อ · 2:1 ขยาย<br>ตัวเลขในแบบ = ขนาดจริงเสมอ</div>
+    <div><b>เส้น</b><br>หนา = ขอบที่เห็น<br>ประ = ขอบที่ไม่เห็น<br>ลูกโซ่ = ศูนย์กลาง<br>บาง = ขนาด/ลายตัด</div>
+    <div><b>ภาพฉาย</b><br>มุม 1: บนอยู่ล่าง ซ้ายอยู่ขวา<br>มุม 3: บนอยู่บน ขวาอยู่ขวา</div>
+    <div><b>ภาพสามมิติ</b><br>ไอโซ = 30° ยาวจริง<br>ออบลิค = 45° คาบิเนตลึกครึ่ง</div>
+    <div><b>ขนาด</b><br>หน่วย มม. ไม่ต้องเขียน<br>ตัวเลขอยู่เหนือเส้น<br>ห้ามซ้ำ ห้ามบอกที่เส้นประ</div>
+  </div>
+</section>
+
+<div class="foot">สื่อการสอนวิชาเขียนแบบเทคนิคเบื้องต้น · ครูธานี ชมสุข · วิทยาลัยการอาชีพบุรีรัมย์ · 2569<br><a href="teaching-hub.html" style="color:var(--cy)">← กลับหน้ารวมสื่อการสอน</a></div>
+</div>
+<a href="#" class="top" aria-label="กลับด้านบน">↑</a>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const LN='#e8f1ff',CY='#5fd4ff',YW='#ffd54a',RD='#ff6b81';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function txt(s,attrs,parent){const t=el('text',Object.assign({fill:YW,'font-family':'Sarabun','font-size':13,'font-weight':700,'text-anchor':'middle'},attrs),parent);t.textContent=s;return t}
+
+/* ---------- Scale calculator ---------- */
+function calcScale(){
+  const L=parseFloat(document.getElementById('realLen').value)||0;
+  const [a,b]=document.getElementById('scaleSel').value.split('/').map(Number);
+  const d=L*a/b, lbl=a+':'+b;
+  const kind=a>b?'ขยาย':a<b?'ย่อ':'จริง';
+  document.getElementById('scaleOut').textContent=`➜ เขียนในแบบยาว ${+d.toFixed(2)} มม. (มาตราส่วน${kind} ${lbl}) แต่ตัวเลขบอกขนาดยังเขียน ${L}`;
+}
+document.getElementById('realLen').addEventListener('input',calcScale);
+document.getElementById('scaleSel').addEventListener('change',calcScale);
+calcScale();
+
+/* ---------- Hexagon steps ---------- */
+(function(){
+  const svg=document.getElementById('hexSvg'),cap=document.getElementById('hexCap'),box=document.getElementById('hexBtns');
+  const R=90,steps=[
+    'ขั้นที่ 1: เขียนวงกลมรัศมี R และเส้นศูนย์กลางแนวนอน',
+    'ขั้นที่ 2: กางวงเวียนเท่ารัศมี R เดิม จิกที่จุดตัดซ้าย-ขวา เขียนส่วนโค้งตัดวงกลม',
+    'ขั้นที่ 3: ได้จุดบนวงกลม 6 จุด ห่างกันเท่ากัน (ทุก 60°)',
+    'ขั้นที่ 4: ลากเส้นเต็มหนาต่อจุดทั้ง 6 → ได้หกเหลี่ยมด้านเท่า'];
+  const P=[...Array(6)].map((_,i)=>[R*Math.cos(i*Math.PI/3),-R*Math.sin(i*Math.PI/3)]);
+  let cur=0;
+  function draw(s){
+    cur=s;svg.innerHTML='';
+    el('circle',{cx:0,cy:0,r:R,fill:'none',stroke:s>=3?'#9db6d6':LN,'stroke-width':s>=3?1:1.5},svg);
+    el('line',{x1:-120,y1:0,x2:120,y2:0,stroke:CY,'stroke-width':1,'stroke-dasharray':'14 3 2 3'},svg);
+    el('line',{x1:0,y1:-110,x2:0,y2:110,stroke:CY,'stroke-width':1,'stroke-dasharray':'14 3 2 3'},svg);
+    if(s>=1){
+      [[R,0],[-R,0]].forEach(([cx,cy])=>{
+        const a1=cx>0?120:-60,a2=cx>0?240:60;
+        const p=a=>[cx+R*Math.cos(a*Math.PI/180),cy-R*Math.sin(a*Math.PI/180)];
+        const [x1,y1]=p(a1-20),[x2,y2]=p(a2+20);
+        el('path',{d:`M${x1} ${y1} A${R} ${R} 0 0 ${cx>0?0:0} ${x2} ${y2}`,fill:'none',stroke:YW,'stroke-width':1.2,'stroke-dasharray':'4 3'},svg);
+        el('circle',{cx,cy,r:4,fill:RD},svg);
+      });
+    }
+    if(s>=2)P.forEach(([x,y])=>el('circle',{cx:x,cy:y,r:4.5,fill:YW},svg));
+    if(s>=3){
+      el('polygon',{points:P.map(p=>p.join(',')).join(' '),fill:'rgba(95,212,255,.12)',stroke:LN,'stroke-width':3},svg);
+      el('line',{x1:0,y1:0,x2:P[1][0],y2:P[1][1],stroke:RD,'stroke-width':1.5},svg);
+      txt('R',{x:P[1][0]/2-10,y:P[1][1]/2,fill:RD},svg);
+      txt('R',{x:(P[0][0]+P[1][0])/2+12,y:(P[0][1]+P[1][1])/2,fill:RD},svg);
+    }
+    cap.textContent=steps[s];
+    box.querySelectorAll('.btn').forEach((b,i)=>b.classList.toggle('on',i===s));
+  }
+  steps.forEach((_,i)=>{const b=document.createElement('button');b.className='btn';b.textContent='ขั้น '+(i+1);b.onclick=()=>draw(i);box.appendChild(b)});
+  draw(0);
+})();
+
+/* ---------- Isometric of L-block ---------- */
+// x = width (0..60), y = depth (0..40, front face at y=40), z = height
+const W=60,D=40,H=40,h1=20,w1=30;
+function isoP(x,y,z,s,ox,oy){const c=Math.cos(Math.PI/6),n=Math.sin(Math.PI/6);return [ox+(x-y)*c*s, oy+((x+y)*n-z)*s]}
+function poly(pts,fill,parent,proj){el('polygon',{points:pts.map(p=>proj(...p).join(',')).join(' '),fill,stroke:LN,'stroke-width':2.2,'stroke-linejoin':'round'},parent)}
+(function(){
+  const svg=document.getElementById('isoSvg'),s=2,ox=165,oy=113;
+  const pr=(x,y,z)=>isoP(x,y,z,s,ox,oy);
+  poly([[0,D,0],[W,D,0],[W,D,h1],[w1,D,h1],[w1,D,H],[0,D,H]],'#1f5c99',svg,pr);      // front
+  poly([[W,0,0],[W,D,0],[W,D,h1],[W,0,h1]],'#174a7d',svg,pr);                          // right lower
+  poly([[w1,0,h1],[w1,D,h1],[w1,D,H],[w1,0,H]],'#174a7d',svg,pr);                      // right upper
+  poly([[w1,0,h1],[W,0,h1],[W,D,h1],[w1,D,h1]],'#2c78c2',svg,pr);                      // top lower
+  poly([[0,0,H],[w1,0,H],[w1,D,H],[0,D,H]],'#2c78c2',svg,pr);                          // top upper
+  // arrows
+  const arrow=(from,to,label,col)=>{
+    const [x1,y1]=pr(...from),[x2,y2]=pr(...to);
+    el('line',{x1,y1,x2,y2,stroke:col,'stroke-width':2.5,'marker-end':'url(#isoAr'+col.slice(1)+')'},svg);
+    txt(label,{x:x1,y:y1+(y1>y2?16:-6),fill:col},svg);
+  };
+  const defs=el('defs',{},svg);
+  [YW,RD,CY].forEach(c=>{const m=el('marker',{id:'isoAr'+c.slice(1),viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},defs);el('path',{d:'M0 0L10 5L0 10z',fill:c},m)});
+  arrow([20,D+32,15],[20,D+6,15],'ด้านหน้า',YW);
+  arrow([15,20,H+24],[15,20,H+6],'ด้านบน',CY);
+  arrow([-30,44,20],[-6,44,20],'ด้านซ้าย',RD);
+})();
+
+/* ---------- Orthographic views ---------- */
+(function(){
+  const svg=document.getElementById('orthoSvg'),cap=document.getElementById('orthoCap'),s=1.9,g=34;
+  function rect(x,y,w,h){el('rect',{x,y,width:w,height:h,fill:'rgba(95,212,255,.06)',stroke:LN,'stroke-width':2.5},svg)}
+  function line(x1,y1,x2,y2,dash){el('line',{x1,y1,x2,y2,stroke:LN,'stroke-width':dash?1.6:2.5,'stroke-dasharray':dash?'7 4':'none'},svg)}
+  function front(x,y){ // x,y = top-left of bounding box W x H
+    el('polygon',{points:[[0,H],[W,H],[W,H-h1],[w1,H-h1],[w1,0],[0,0]].map(([a,b])=>[x+a*s,y+b*s].join(',')).join(' '),fill:'rgba(255,213,74,.1)',stroke:LN,'stroke-width':2.5},svg);
+  }
+  function top(x,y){rect(x,y,W*s,D*s);line(x+w1*s,y,x+w1*s,y+D*s)}
+  function side(x,y,hidden){rect(x,y,D*s,H*s);line(x,y+(H-h1)*s,x+D*s,y+(H-h1)*s,hidden)}
+  function draw(ang){
+    svg.innerHTML='';
+    const fx=40,fy=ang===1?40:150;
+    front(fx,fy);txt('ภาพด้านหน้า',{x:fx+W*s/2,y:fy-8},svg);
+    const ty=ang===1?fy+H*s+g:fy-g-D*s;
+    top(fx,ty);txt('ภาพด้านบน',{x:fx+W*s/2,y:ang===1?ty+D*s+18:ty-8,fill:CY},svg);
+    const sx=fx+W*s+g;
+    side(sx,fy,ang===1);txt(ang===1?'ภาพด้านซ้าย':'ภาพด้านขวา',{x:sx+D*s/2,y:fy-8,fill:RD},svg);
+    // projection guide lines
+    const gl={stroke:'#9db6d6','stroke-width':.6,'stroke-dasharray':'2 4'};
+    [0,W].forEach(a=>el('line',Object.assign({x1:fx+a*s,y1:Math.min(fy,ty),x2:fx+a*s,y2:Math.max(fy+H*s,ty+D*s)},gl),svg));
+    [0,H-h1,H].forEach(b=>el('line',Object.assign({x1:fx,y1:fy+b*s,x2:sx+D*s,y2:fy+b*s},gl),svg));
+    // symbol
+    const sy=ang===1?250:30, sx0=300;
+    const cone=`${sx0},${sy+6} ${sx0+26},${sy} ${sx0+26},${sy+30} ${sx0},${sy+24}`;
+    const cxC=ang===1?sx0+58:sx0+16, coneX=ang===1?0:42;
+    el('polygon',{points:cone.split(' ').map(p=>{const[a,b]=p.split(',').map(Number);return (a+coneX)+','+b}).join(' '),fill:'none',stroke:LN,'stroke-width':1.5},svg);
+    el('circle',{cx:cxC,cy:sy+15,r:15,fill:'none',stroke:LN,'stroke-width':1.5},svg);
+    el('circle',{cx:cxC,cy:sy+15,r:6,fill:'none',stroke:LN,'stroke-width':1.5},svg);
+    txt('สัญลักษณ์มุมที่ '+ang,{x:sx0+37,y:sy+48,fill:'#9db6d6','font-weight':400,'font-size':12},svg);
+    cap.innerHTML=ang===1
+      ?'<b style="color:#ffd54a">มุมที่ 1:</b> ภาพด้านบนวางใต้ภาพด้านหน้า · ภาพที่มองจากซ้ายวางทางขวา → ขั้นบันไดถูกบังเป็นเส้นประ'
+      :'<b style="color:#ffd54a">มุมที่ 3:</b> ภาพด้านบนวางเหนือภาพด้านหน้า · ภาพที่มองจากขวาวางทางขวา → เห็นขั้นบันไดเป็นเส้นเต็ม';
+    document.querySelectorAll('[data-ang]').forEach(b=>b.classList.toggle('on',+b.dataset.ang===ang));
+  }
+  document.querySelectorAll('[data-ang]').forEach(b=>b.onclick=()=>draw(+b.dataset.ang));
+  draw(1);
+})();
+
+/* ---------- Isometric vs Oblique ---------- */
+(function(){
+  const svg=document.getElementById('pictSvg'),bw=50,bd=30,bh=30;
+  // isometric box
+  const s=1.6,pr=(x,y,z)=>isoP(x,y,z,s,95,105);
+  poly([[0,bd,0],[bw,bd,0],[bw,bd,bh],[0,bd,bh]],'#1f5c99',svg,pr);
+  poly([[bw,0,0],[bw,bd,0],[bw,bd,bh],[bw,0,bh]],'#174a7d',svg,pr);
+  poly([[0,0,bh],[bw,0,bh],[bw,bd,bh],[0,bd,bh]],'#2c78c2',svg,pr);
+  // 30 deg marks
+  const x=pr(bw,bd,0);
+  el('line',{x1:x[0]-70,y1:x[1],x2:x[0]+75,y2:x[1],stroke:'#9db6d6','stroke-width':.8,'stroke-dasharray':'3 3'},svg);
+  txt('30°',{x:x[0]+58,y:x[1]-4,'font-size':12},svg);
+  txt('ไอโซเมตริก',{x:105,y:190,fill:CY,'font-size':15},svg);
+  // cabinet oblique box: front true shape, depth half at 45deg
+  const ox=270,oy=150,k=1.6,c=Math.cos(Math.PI/4)*0.5;
+  const ob=(x,y,z)=>[ox+(x+y*c)*k, oy-(z+y*c)*k];
+  poly([[0,0,0],[bw,0,0],[bw,0,bh],[0,0,bh]],'#1f5c99',svg,ob);
+  poly([[bw,0,0],[bw,bd,0],[bw,bd,bh],[bw,0,bh]],'#174a7d',svg,ob);
+  poly([[0,0,bh],[bw,0,bh],[bw,bd,bh],[0,bd,bh]],'#2c78c2',svg,ob);
+  const b0=ob(bw,0,0);
+  el('line',{x1:b0[0],y1:b0[1],x2:b0[0]+40,y2:b0[1],stroke:'#9db6d6','stroke-width':.8,'stroke-dasharray':'3 3'},svg);
+  txt('45°',{x:b0[0]+44,y:b0[1]-4,'font-size':12},svg);
+  txt('รูปจริง',{x:ox+bw*k/2,y:oy-bh*k/2+5,fill:LN,'font-size':12,'font-weight':400},svg);
+  txt('ออบลิค (คาบิเนต)',{x:320,y:190,fill:CY,'font-size':15},svg);
+})();
+
+/* ---------- Quiz ---------- */
+const QUIZ=[
+ ['กระดาษเขียนแบบขนาด A4 มีขนาดเท่าใด',['148 × 210 มม.','210 × 297 มม.','297 × 420 มม.','420 × 594 มม.'],1,'A4 = 210 × 297 มม. ส่วน A3 = 297 × 420 มม.'],
+ ['มาตราส่วน 1:2 หมายถึงข้อใด',['ขยาย 2 เท่า','ย่อลงครึ่งหนึ่ง','ขนาดเท่าของจริง','ย่อลง 20 เท่า'],1,'อ่านว่า แบบ 1 ส่วน : ของจริง 2 ส่วน จึงเป็นมาตราส่วนย่อ'],
+ ['ชิ้นงานยาวจริง 40 มม. เขียนด้วยมาตราส่วน 5:1 จะยาวในแบบกี่ มม.',['8 มม.','40 มม.','200 มม.','45 มม.'],2,'40 × 5 ÷ 1 = 200 มม. แต่ตัวเลขบอกขนาดยังเขียน 40'],
+ ['เมื่อเขียนแบบด้วยมาตราส่วน 1:10 ตัวเลขบอกขนาดต้องเขียนเป็น',['ขนาดที่วัดได้ในแบบ','ขนาดจริงของชิ้นงาน','ขนาดจริงหารด้วย 10','เขียนเฉพาะมาตราส่วน'],1,'ตัวเลขบอกขนาดเป็นขนาดจริงเสมอ ไม่ว่าใช้มาตราส่วนใด'],
+ ['เส้นที่ใช้แสดงขอบรูปที่มองเห็นคือเส้นชนิดใด',['เส้นเต็มบาง','เส้นประบาง','เส้นเต็มหนา','เส้นลูกโซ่บาง'],2,'ขอบที่มองเห็นใช้เส้นเต็มหนา เด่นที่สุดในแบบ'],
+ ['ขอบรูปที่ถูกบัง มองไม่เห็น เขียนด้วยเส้นชนิดใด',['เส้นประบาง','เส้นลูกโซ่บาง','เส้นมือเปล่า','เส้นเต็มบาง'],0,'ขอบที่มองไม่เห็นใช้เส้นประบาง'],
+ ['เส้นศูนย์กลางของรูเจาะ เขียนด้วยเส้นชนิดใด',['เส้นเต็มหนา','เส้นประ','เส้นลูกโซ่บาง (ยาว-จุด)','เส้นมือเปล่า'],2,'เส้นศูนย์กลางและแกนสมมาตรใช้เส้นลูกโซ่บาง'],
+ ['ตัวอักษรแบบเอียงตามมาตรฐาน ISO เอียงทำมุมกี่องศากับแนวนอน',['45°','60°','75°','90°'],2,'ตัวอักษรเอียงทำมุม 75° กับแนวนอน'],
+ ['ดินสอเกรดใดเหมาะกับการเขียนเส้นร่างบาง ๆ',['2B','HB','2H','B'],2,'2H แข็ง ให้เส้นบางและจาง เหมาะกับเส้นร่าง'],
+ ['ในภาพฉายมุมที่ 1 ภาพด้านบนวางไว้ตำแหน่งใด',['เหนือภาพด้านหน้า','ใต้ภาพด้านหน้า','ทางซ้ายของภาพด้านหน้า','ทางขวาของภาพด้านหน้า'],1,'มุมที่ 1: ภาพด้านบนอยู่ใต้ภาพด้านหน้า'],
+ ['ในภาพฉายมุมที่ 3 ภาพที่วางทางขวาของภาพด้านหน้าคือภาพที่มองจากด้านใด',['ด้านซ้าย','ด้านขวา','ด้านหลัง','ด้านล่าง'],1,'มุมที่ 3: มองจากด้านไหน ก็วางไว้ด้านนั้น'],
+ ['แกนของภาพไอโซเมตริกทำมุมกับแนวนอนกี่องศา',['15°','30°','45°','60°'],1,'แกนไอโซเมตริกเอียง 30° กับแนวนอนทั้งซ้ายและขวา'],
+ ['ภาพออบลิคแบบคาบิเนต เขียนความลึกอย่างไร',['เต็มขนาดจริง','ครึ่งหนึ่งของขนาดจริง','สองเท่าของขนาดจริง','ไม่เขียนความลึก'],1,'คาบิเนตลึกครึ่งเดียว คาวาเลียร์ลึกเต็มขนาด'],
+ ['สัญลักษณ์ "Ø" หน้าตัวเลขบอกขนาด หมายถึง',['รัศมี','เส้นผ่านศูนย์กลาง','สี่เหลี่ยมจัตุรัส','ความหนา'],1,'Ø = เส้นผ่านศูนย์กลาง ส่วน R = รัศมี'],
+ ['เส้นลายตัด (Hatching) ในภาพตัดนิยมเขียนอย่างไร',['เส้นเต็มหนา แนวตั้ง','เส้นประ เอียง 30°','เส้นเต็มบาง เอียง 45°','เส้นลูกโซ่ แนวนอน'],2,'ลายตัดใช้เส้นเต็มบาง เอียง 45° ระยะห่างเท่ากัน']
+];
+(function(){
+  const box=document.getElementById('quizBox'),sc=document.getElementById('score');
+  let score=0,answered=0;
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function render(doShuffle){
+    box.innerHTML='';score=0;answered=0;update();
+    const qs=doShuffle?shuffle(QUIZ.slice()):QUIZ;
+    qs.forEach(([t,opts,ans,ex],qi)=>{
+      const d=document.createElement('div');d.className='q';
+      d.innerHTML=`<div class="t">${qi+1}. ${t}</div>`;
+      opts.forEach((o,oi)=>{
+        const l=document.createElement('label');
+        l.innerHTML=`<input type="radio" name="q${qi}"> ${'กขคง'[oi]}. ${o}`;
+        l.querySelector('input').onchange=()=>{
+          if(d.classList.contains('done'))return;
+          d.classList.add('done');answered++;
+          if(oi===ans)score++;else l.classList.add('no');
+          d.querySelectorAll('label')[ans].classList.add('ok');
+          d.querySelectorAll('input').forEach(i=>i.disabled=true);
+          update();
+        };
+        d.appendChild(l);
+      });
+      const e=document.createElement('div');e.className='ex';e.textContent='💬 '+ex;d.appendChild(e);
+      box.appendChild(d);
+    });
+  }
+  function update(){
+    let msg=`คะแนน ${score} / ${QUIZ.length}`;
+    if(answered===QUIZ.length){const p=score/QUIZ.length;msg+=p>=.8?' 🏆 ยอดเยี่ยม!':p>=.5?' 👍 ผ่าน':' 📖 ทบทวนอีกนิด'}
+    sc.textContent=msg;
+  }
+  document.getElementById('resetQuiz').onclick=()=>render(true);
+  render(false);
+})();
+</script>
+</body>
+</html>
